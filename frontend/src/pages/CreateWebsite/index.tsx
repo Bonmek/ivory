@@ -11,9 +11,12 @@ import { Separator } from "@/components/ui/separator";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useTheme } from "@/context/ThemeContext";
 
 
 export default function CreateWebsitePage() {
+  useTheme();
+
   // State for file upload
   const [uploadMethod, setUploadMethod] = useState<'upload' | 'github'>('upload')
   const [isDragging, setIsDragging] = useState(false)
@@ -58,13 +61,6 @@ export default function CreateWebsitePage() {
         </svg>
       )
     },
-    // {
-    //   id: 'other',
-    //   name: 'Other',
-    //   icon: (
-    //     <Ellipsis className="w-6 h-6" />
-    //   )
-    // }
   ]
 
   // File handlers
@@ -124,13 +120,14 @@ export default function CreateWebsitePage() {
   }
 
   const handleGithubSignIn = () => {
-
+    // !TODO: Implement this with the backend
     // window.location.href = "http://localhost:4000/auth/github"
     console.log(user)
   }
 
   const fetchRepositories = async () => {
     try {
+      // !TODO: Implement this with the backend
       // const res = await axios.get("http://localhost:4000/api/repositories", {
       //   withCredentials: true,
       // });
@@ -142,6 +139,7 @@ export default function CreateWebsitePage() {
   };
 
   useEffect(() => {
+    // !TODO: Implement this with the backend
     // axios
     //   .get("http://localhost:4000/api/user", { withCredentials: true })
     //   .then((res) => setUser(res.data.user))
@@ -162,7 +160,7 @@ export default function CreateWebsitePage() {
 
   const handleSelectRepository = (id: number) => {
     setSelectedRepo(id)
-    setSelectedFramework(null) // Reset framework selection when repository changes
+    setSelectedFramework(null)
   }
 
   const handleSelectFramework = (frameworkId: string) => {
