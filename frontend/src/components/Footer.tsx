@@ -1,4 +1,5 @@
 import React from 'react';
+// TODO: Update social media links and replace logos/icons to match the actual project in the future.
 
 const Footer = () => {
   return (
@@ -6,47 +7,33 @@ const Footer = () => {
       {/* Social Media Section */}
       <div className="container mx-auto px-4 pb-4">
         <div className="flex justify-center space-x-2 mb-4">
-          {/* Facebook */}
+          {/* Twitter or X*/}
           <a
-            href="#!"
+            href="https://x.com/?lang=th"
             className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-white text-white hover:bg-white hover:text-gray-800 transition"
           >
-            <i className="fab fa-facebook-f"></i>
-          </a>
-          {/* Twitter */}
-          <a
-            href="#!"
-            className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-white text-white hover:bg-white hover:text-gray-800 transition"
-          >
-            <i className="fab fa-twitter"></i>
-          </a>
-          {/* Google */}
-          <a
-            href="#!"
-            className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-white text-white hover:bg-white hover:text-gray-800 transition"
-          >
-            <i className="fab fa-google"></i>
-          </a>
           {/* Instagram */}
           <a
-            href="#!"
+            href="https://www.instagram.com/"
             className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-white text-white hover:bg-white hover:text-gray-800 transition"
           >
             <i className="fab fa-instagram"></i>
           </a>
-          {/* LinkedIn */}
-          <a
-            href="#!"
-            className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-white text-white hover:bg-white hover:text-gray-800 transition"
-          >
-            <i className="fab fa-linkedin-in"></i>
+            <i className="fab fa-twitter"></i>
           </a>
-          {/* GitHub */}
+          {/* Discord */}
           <a
-            href="#!"
+            href="https://discord.com/"
             className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-white text-white hover:bg-white hover:text-gray-800 transition"
           >
-            <i className="fab fa-github"></i>
+            <i className="fab fa-discord"></i>
+          </a>
+          {/* Telegram */}
+          <a
+            href="https://web.telegram.org/"
+            className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-white text-white hover:bg-white hover:text-gray-800 transition"
+          >
+            <i className="fab fa-telegram"></i>
           </a>
         </div>
       </div>

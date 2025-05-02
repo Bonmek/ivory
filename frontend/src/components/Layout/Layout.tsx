@@ -11,7 +11,6 @@ const Layout: React.FC<PropsWithChildren> = ({ children, ...rest }) => {
     <main className={styles.layout} {...rest}>
       <Navbar/>
       <div className={styles.container}>{children}</div>
-      {/* <Footer/> */}
     </main>
   )
 }
