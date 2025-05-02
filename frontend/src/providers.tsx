@@ -17,7 +17,6 @@ const queryClient = new QueryClient();
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <ThemeProvider>
     <QueryClientProvider client={queryClient}>
       <WalletKitProvider>
         <WagmiProvider config={wagmiConfig}>
@@ -25,6 +24,5 @@ export function Providers({ children }: { children: React.ReactNode }) {
         </WagmiProvider>
       </WalletKitProvider>
     </QueryClientProvider>
-  </ThemeProvider>
   );
 }
