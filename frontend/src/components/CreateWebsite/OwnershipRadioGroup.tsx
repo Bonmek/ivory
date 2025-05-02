@@ -2,7 +2,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { HelpCircle } from "lucide-react";
 import React from "react";
-import { Ownership } from "@/types/enums";
+import { Ownership } from "@/types/CreateWebstie/enums";
 
 interface OwnershipRadioGroupProps {
   value: Ownership;

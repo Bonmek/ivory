@@ -1,11 +1,18 @@
 import { motion } from 'framer-motion'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../ui/collapsible'
-import { Button } from '../ui/button'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import { Button } from '@/components/ui/button'
 import { ChevronDown, HelpCircle, HelpCircleIcon, Plus } from 'lucide-react'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
-import { Input } from '../ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Input } from '@/components/ui/input'
+import { advancedOptionsType } from '@/types/CreateWebstie/types'
+import { CacheControl } from '@/types/CreateWebstie/enums'
 
-function AdvancedOptions() {
+interface AdvancedOptionsProps {
+  advancedOptions: advancedOptionsType
+  setAdvancedOptions: (options: advancedOptionsType) => void
+}
+
+function AdvancedOptions({ advancedOptions, setAdvancedOptions }: AdvancedOptionsProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -29,14 +36,14 @@ function AdvancedOptions() {
               <h3 className="text-sm text-gray-300  font-semibold">Cache Control</h3>
               <HelpCircleIcon className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
             </div>
-            <Select>
+            <Select onValueChange={(value) => setAdvancedOptions({ ...advancedOptions, cacheControl: value as CacheControl })}>
               <SelectTrigger className="bg-primary-500 border-gray-700 rounded-md h-12 transition-all duration-300 hover:border-secondary-500">
                 <SelectValue placeholder="Select cache control" />
               </SelectTrigger>
               <SelectContent className="bg-primary-500">
-                <SelectItem value="no-cache">No Cache</SelectItem>
-                <SelectItem value="public">Public</SelectItem>
-                <SelectItem value="private">Private</SelectItem>
+                <SelectItem value={CacheControl.NoCache}>No Cache</SelectItem>
+                <SelectItem value={CacheControl.Public}>Public</SelectItem>
+                <SelectItem value={CacheControl.Private}>Private</SelectItem>
               </SelectContent>
             </Select>
           </section>
@@ -47,9 +54,15 @@ function AdvancedOptions() {
               <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
             </div>
             <div className="flex items-center space-x-2 mb-4">
-              <Input className="bg-primary-500 border-gray-700 rounded-md h-8 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500" />
+              <Input
+                value={advancedOptions.route[0].name}
+                onChange={(e) => setAdvancedOptions({ ...advancedOptions, route: [{ ...advancedOptions.route[0], name: e.target.value }] })}
+                className="bg-primary-500 border-gray-700 rounded-md h-8 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500" />
               <span>to</span>
-              <Input className="bg-primary-500 border-gray-700 rounded-md h-8 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500" />
+              <Input
+                value={advancedOptions.route[0].path}
+                onChange={(e) => setAdvancedOptions({ ...advancedOptions, route: [{ ...advancedOptions.route[0], path: e.target.value }] })}
+                className="bg-primary-500 border-gray-700 rounded-md h-8 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500" />
               <Button variant="ghost" size="icon" className="rounded-full bg-secondary-500 hover:bg-secondary-700 transform transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-secondary-500/20">
                 <Plus className="h-5 w-5" />
               </Button>

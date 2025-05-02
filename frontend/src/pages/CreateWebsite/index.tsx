@@ -1,27 +1,48 @@
 import { Button } from "@/components/ui/button";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion"
-import { ChevronDown, Github, HelpCircle, Plus, Upload, X } from "lucide-react";
+import { Github, HelpCircle, Upload } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTheme } from "@/context/ThemeContext";
 import GithubRepoInput from "@/components/CreateWebsite/GitHubRepoInput";
 import FileUploadPreview from "@/components/CreateWebsite/FileUploadPreview";
 import FileUploadDrop from "@/components/CreateWebsite/FileUploadDrop";
 import FrameworkPresetSelector from "@/components/CreateWebsite/FrameworkPresetSelector";
 import OwnershipRadioGroup from "@/components/CreateWebsite/OwnershipRadioGroup";
-import { Ownership, UploadMethod } from "@/types/enums";
+import { CacheControl, Ownership, UploadMethod } from "@/types/CreateWebstie/enums";
 import BuildOutputSetting from "@/components/CreateWebsite/BuildOutputSetting";
 import AdvancedOptions from "@/components/CreateWebsite/AdvancedOptions";
+import { advancedOptionsType, buildOutputSettingsType } from "@/types/CreateWebstie/types";
 
 export default function CreateWebsitePage() {
   useTheme();
+
+  // State for build output settings
+  const [buildOutputSettings, setBuildOutputSettings] = useState<buildOutputSettingsType>({
+    rootDirectory: '',
+    buildCommand: '',
+    outputDirectory: '',
+  })
+
+  // State for advanced options
+  const [advancedOptions, setAdvancedOptions] = useState<advancedOptionsType>({
+    cacheControl: CacheControl.NoCache,
+    route: [
+      {
+        name: '',
+        path: ''
+      }
+    ]
+  })
+
+  useEffect(() => {
+    console.log("🚀 ~ useEffect ~ buildOutputSettings:", buildOutputSettings)
+    console.log("🚀 ~ useEffect ~ advancedOptions:", advancedOptions)
+  }, [advancedOptions, buildOutputSettings])
 
   // State for file upload
   const [uploadMethod, setUploadMethod] = useState<UploadMethod>(UploadMethod.Upload)
@@ -316,9 +337,14 @@ export default function CreateWebsitePage() {
                 <BuildOutputSetting
                   showBuildOutputSettings={showBuildOutputSettings}
                   setShowBuildOutputSettings={setShowBuildOutputSettings}
+                  buildOutputSettings={buildOutputSettings}
+                  setBuildOutputSettings={setBuildOutputSettings}
                 />
               )}
-              <AdvancedOptions />
+              <AdvancedOptions
+                advancedOptions={advancedOptions}
+                setAdvancedOptions={setAdvancedOptions}
+              />
             </article>
 
             <Separator className="mb-4" />

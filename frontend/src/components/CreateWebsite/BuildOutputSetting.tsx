@@ -1,16 +1,18 @@
 import { motion } from 'framer-motion'
-import React from 'react'
-import { Input } from '../ui/input'
+import { Input } from '@/components/ui/input'
 import { HelpCircle } from 'lucide-react'
-import { Checkbox } from '../ui/checkbox'
-import { Label } from '../ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
+import { buildOutputSettingsType } from '@/types/CreateWebstie/types'
 
 interface BuildOutputSettingProps {
   showBuildOutputSettings: boolean
   setShowBuildOutputSettings: (show: boolean) => void
+  buildOutputSettings: buildOutputSettingsType
+  setBuildOutputSettings: (settings: buildOutputSettingsType) => void
 }
 
-function BuildOutputSetting({ showBuildOutputSettings, setShowBuildOutputSettings }: BuildOutputSettingProps) {
+function BuildOutputSetting({ showBuildOutputSettings, setShowBuildOutputSettings, buildOutputSettings, setBuildOutputSettings }: BuildOutputSettingProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -37,6 +39,8 @@ function BuildOutputSetting({ showBuildOutputSettings, setShowBuildOutputSetting
                 <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
               </div>
               <Input
+                value={buildOutputSettings.rootDirectory}
+                onChange={(e) => setBuildOutputSettings({ ...buildOutputSettings, rootDirectory: e.target.value })}
                 placeholder="/"
                 className="bg-primary-500 border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500"
               />
@@ -48,6 +52,8 @@ function BuildOutputSetting({ showBuildOutputSettings, setShowBuildOutputSetting
                 <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
               </div>
               <Input
+                value={buildOutputSettings.buildCommand}
+                onChange={(e) => setBuildOutputSettings({ ...buildOutputSettings, buildCommand: e.target.value })}
                 placeholder="npm run build"
                 className="bg-primary-500 border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500"
               />
@@ -59,6 +65,8 @@ function BuildOutputSetting({ showBuildOutputSettings, setShowBuildOutputSetting
                 <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
               </div>
               <Input
+                value={buildOutputSettings.outputDirectory}
+                onChange={(e) => setBuildOutputSettings({ ...buildOutputSettings, outputDirectory: e.target.value })}
                 placeholder="dist"
                 className="bg-primary-500 border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500"
               />
