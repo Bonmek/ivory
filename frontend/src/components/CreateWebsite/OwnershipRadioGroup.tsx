@@ -2,10 +2,11 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { HelpCircle } from "lucide-react";
 import React from "react";
+import { Ownership } from "@/types/enums";
 
 interface OwnershipRadioGroupProps {
-  value: string;
-  onChange: (value: string) => void;
+  value: Ownership;
+  onChange: (value: Ownership) => void;
 }
 
 const OwnershipRadioGroup: React.FC<OwnershipRadioGroupProps> = ({ value, onChange }) => (
@@ -16,12 +17,12 @@ const OwnershipRadioGroup: React.FC<OwnershipRadioGroupProps> = ({ value, onChan
     </div>
     <RadioGroup defaultValue="leave" className="space-y-2" value={value} onValueChange={onChange}>
       <div className="flex items-center space-x-2 hover:text-[#e94057] transition-colors">
-        <RadioGroupItem value="leave" id="leave" />
+        <RadioGroupItem value={Ownership.Leave} id="leave" />
         <Label htmlFor="leave">Leave it to us</Label>
         <span className="text-gray-400 text-sm">(Default)</span>
       </div>
       <div className="flex items-center space-x-2 hover:text-[#e94057] transition-colors">
-        <RadioGroupItem value="own" id="own" />
+        <RadioGroupItem value={Ownership.Own} id="own" />
         <Label htmlFor="own">Own it</Label>
       </div>
     </RadioGroup>

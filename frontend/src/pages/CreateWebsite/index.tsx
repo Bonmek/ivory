@@ -16,27 +16,29 @@ import FileUploadPreview from "@/components/CreateWebsite/FileUploadPreview";
 import FileUploadDrop from "@/components/CreateWebsite/FileUploadDrop";
 import FrameworkPresetSelector from "@/components/CreateWebsite/FrameworkPresetSelector";
 import OwnershipRadioGroup from "@/components/CreateWebsite/OwnershipRadioGroup";
+import { Ownership, UploadMethod } from "@/types/enums";
 
 export default function CreateWebsitePage() {
   useTheme();
 
   // State for file upload
-  const [uploadMethod, setUploadMethod] = useState<'upload' | 'github'>('upload')
-  const [isDragging, setIsDragging] = useState(false)
+  const [uploadMethod, setUploadMethod] = useState<UploadMethod>(UploadMethod.Upload)
+  const [isDragging, setIsDragging] = useState<boolean>(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [user, setUser] = useState<string | null>(null)
 
   // GitHub state
+  const maxRepoView = 5
   const [githubUrl, setGithubUrl] = useState('')
   const [searchRepository, setSearchRepository] = useState('')
   const [repositories, setRepositories] = useState<Array<{ id: number; name: string }>>([])
-  const [visibleRepos, setVisibleRepos] = useState(5)
+  const [visibleRepos, setVisibleRepos] = useState(maxRepoView)
   const [selectedRepo, setSelectedRepo] = useState<number | null>(null)
   const [selectedFramework, setSelectedFramework] = useState<string | null>(null)
 
-  const [ownership, setOwnership] = useState<string>("leave");
+  const [ownership, setOwnership] = useState<Ownership>(Ownership.Leave)
 
   const frameworks = [
     {
@@ -104,7 +106,7 @@ export default function CreateWebsitePage() {
 
   const handleSearchRepository = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchRepository(e.target.value)
-    setVisibleRepos(5) // Reset pagination when searching
+    setVisibleRepos(maxRepoView)
   }
 
   const handleBrowseClick = () => {
@@ -126,35 +128,23 @@ export default function CreateWebsitePage() {
 
   const handleGithubSignIn = () => {
     // !TODO: Implement this with the backend
-    // window.location.href = "http://localhost:4000/auth/github"
-    console.log(user)
   }
 
   const fetchRepositories = async () => {
     try {
       // !TODO: Implement this with the backend
-      // const res = await axios.get("http://localhost:4000/api/repositories", {
-      //   withCredentials: true,
-      // });
-      // setRepositories(res.data);
     } catch (err) {
       console.error(err);
-      setRepositories([]);
     }
   };
 
   useEffect(() => {
     // !TODO: Implement this with the backend
-    // axios
-    //   .get("http://localhost:4000/api/user", { withCredentials: true })
-    //   .then((res) => setUser(res.data.user))
-    //   .catch(() => setUser(null));
-
     fetchRepositories()
   }, []);
 
   const handleShowMore = () => {
-    setVisibleRepos(prev => prev + 5)
+    setVisibleRepos(prev => prev + maxRepoView)
   }
 
   const filteredRepositories = repositories
@@ -206,7 +196,7 @@ export default function CreateWebsitePage() {
               defaultValue="upload"
               className="mb-6"
               value={uploadMethod}
-              onValueChange={(value) => setUploadMethod(value as 'upload' | 'github')}
+              onValueChange={(value) => setUploadMethod(value as UploadMethod)}
             >
               <section className="flex items-center space-x-8">
                 <div className="flex items-center space-x-2 hover:text-[#e94057] transition-colors">
@@ -226,7 +216,7 @@ export default function CreateWebsitePage() {
               </section>
             </RadioGroup>
 
-            {uploadMethod === 'upload' ? (
+            {uploadMethod === UploadMethod.Upload ? (
               <section
                 className={cn(
                   "border-2 border-dashed border-gray-700 rounded-lg p-12 flex flex-col items-center justify-center transition-all duration-300",
