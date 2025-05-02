@@ -1,4 +1,3 @@
-import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion"
@@ -12,7 +11,11 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTheme } from "@/context/ThemeContext";
-
+import GithubRepoInput from "@/components/CreateWebsite/GitHubRepoInput";
+import FileUploadPreview from "@/components/CreateWebsite/FileUploadPreview";
+import FileUploadDrop from "@/components/CreateWebsite/FileUploadDrop";
+import FrameworkPresetSelector from "@/components/CreateWebsite/FrameworkPresetSelector";
+import OwnershipRadioGroup from "@/components/CreateWebsite/OwnershipRadioGroup";
 
 export default function CreateWebsitePage() {
   useTheme();
@@ -22,7 +25,7 @@ export default function CreateWebsitePage() {
   const [isDragging, setIsDragging] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [user, setUser] = useState<string | null>(null)
 
   // GitHub state
@@ -32,6 +35,8 @@ export default function CreateWebsitePage() {
   const [visibleRepos, setVisibleRepos] = useState(5)
   const [selectedRepo, setSelectedRepo] = useState<number | null>(null)
   const [selectedFramework, setSelectedFramework] = useState<string | null>(null)
+
+  const [ownership, setOwnership] = useState<string>("leave");
 
   const frameworks = [
     {
@@ -168,380 +173,164 @@ export default function CreateWebsitePage() {
   }
 
   return (
-    <>
-      <div className="min-h-screen bg-[radial-gradient(circle_at_center,_#2a2a2a,_#000000)] relative">
-        <Navbar />
-        <motion.main
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="max-w-7xl mx-auto px-6 py-12 pt-28"
+    <main className="min-h-screen bg-[radial-gradient(circle_at_center,_#2a2a2a,_#000000)] relative">
+      <motion.main
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="max-w-7xl mx-auto px-6 py-12 pt-28"
+      >
+        <motion.h1
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="text-3xl font-bold mb-8 bg-gradient-to-r "
         >
-          <motion.h1
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="text-3xl font-bold mb-8 bg-gradient-to-r "
-          >
-            Create new project
-          </motion.h1>
+          Create new project
+        </motion.h1>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-            {/* Left Column */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
-              className="p-10 rounded-lg bg-[#1a1a1a]/60 border border-gray-800/50 backdrop-blur-lg shadow-lg"
+        <article className="grid grid-cols-1 md:grid-cols-2 gap-12">
+          {/* Left Column */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 }}
+            className="p-10 rounded-lg bg-[#1a1a1a]/60 border border-gray-800/50 backdrop-blur-lg shadow-lg"
+          >
+            <section className="mb-6 flex items-center">
+              <h2 className="text-lg font-semibold">Project files</h2>
+              <HelpCircle className="h-5 w-5 text-[#e94057] ml-2 hover:text-[#ff4d6d] transition-colors cursor-help" />
+            </section>
+
+            <RadioGroup
+              defaultValue="upload"
+              className="mb-6"
+              value={uploadMethod}
+              onValueChange={(value) => setUploadMethod(value as 'upload' | 'github')}
             >
-              <div className="mb-6 flex items-center">
-                <h2 className="text-lg font-semibold">Project files</h2>
+              <section className="flex items-center space-x-8">
+                <div className="flex items-center space-x-2 hover:text-[#e94057] transition-colors">
+                  <RadioGroupItem value="upload" id="upload" />
+                  <Label htmlFor="upload" className="flex items-center">
+                    <Upload className="h-4 w-4 mr-2" />
+                    Upload
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2 hover:text-[#e94057] transition-colors">
+                  <RadioGroupItem value="github" id="github" />
+                  <Label htmlFor="github" className="flex items-center">
+                    <Github className="h-4 w-4 mr-2" />
+                    Github
+                  </Label>
+                </div>
+              </section>
+            </RadioGroup>
+
+            {uploadMethod === 'upload' ? (
+              <section
+                className={cn(
+                  "border-2 border-dashed border-gray-700 rounded-lg p-12 flex flex-col items-center justify-center transition-all duration-300",
+                  isDragging && "border-[#e94057] bg-[#2a2a2a]/50",
+                  selectedFile && "border-green-500",
+                  error && "border-red-500"
+                )}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+              >
+                <input
+                  type="file"
+                  accept=".zip"
+                  className="hidden"
+                  ref={fileInputRef}
+                  onChange={handleFileInput}
+                />
+
+                {selectedFile ? (
+                  <FileUploadPreview fileName={selectedFile.name} onRemove={handleRemoveFile} />
+                ) : (
+                  <FileUploadDrop error={error} handleBrowseClick={handleBrowseClick} />
+                )}
+              </section>
+            ) : (
+              <GithubRepoInput
+                githubUrl={githubUrl}
+                handleGithubUrlChange={handleGithubUrlChange}
+                searchRepository={searchRepository}
+                handleSearchRepository={handleSearchRepository}
+                user={user}
+                handleGithubSignIn={handleGithubSignIn}
+                repositories={repositories}
+                filteredRepositories={filteredRepositories}
+                handleSelectRepository={handleSelectRepository}
+                selectedRepo={selectedRepo}
+                handleShowMore={handleShowMore}
+                visibleRepos={visibleRepos}
+                selectedFramework={selectedFramework}
+                frameworks={frameworks}
+                handleSelectFramework={handleSelectFramework}
+                selectedFile={selectedFile}
+                error={error}
+                fileInputRef={fileInputRef}
+                handleFileInput={handleFileInput}
+                handleBrowseClick={handleBrowseClick}
+                handleRemoveFile={handleRemoveFile}
+                isDragging={isDragging}
+                setIsDragging={setIsDragging}
+                setSelectedFile={setSelectedFile}
+                setError={setError}
+              />
+            )}
+          </motion.div>
+
+          {/* Right Column */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4 }}
+            className="space-y-8"
+          >
+
+            <section>
+              <Label htmlFor="name" className="text-lg font-semibold block mb-4 bg-gradient-to-r ">
+                Name
+              </Label>
+              <Input id="name" className="bg-[#2a2a2a] border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-[#e94057] focus:ring-[#e94057]" />
+            </section>
+
+            <section>
+              <div className="flex items-center mb-4">
+                <h2 className="text-sm text-gray-300 font-semibold bg-gradient-to-r ">Ownership</h2>
                 <HelpCircle className="h-5 w-5 text-[#e94057] ml-2 hover:text-[#ff4d6d] transition-colors cursor-help" />
               </div>
+              <OwnershipRadioGroup value={ownership} onChange={setOwnership} />
+            </section>
 
-              <RadioGroup
-                defaultValue="upload"
-                className="mb-6"
-                value={uploadMethod}
-                onValueChange={(value) => setUploadMethod(value as 'upload' | 'github')}
+            {(selectedRepo || selectedFile) && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
               >
-                <div className="flex items-center space-x-8">
-                  <div className="flex items-center space-x-2 hover:text-[#e94057] transition-colors">
-                    <RadioGroupItem value="upload" id="upload" />
-                    <Label htmlFor="upload" className="flex items-center">
-                      <Upload className="h-4 w-4 mr-2" />
-                      Upload
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2 hover:text-[#e94057] transition-colors">
-                    <RadioGroupItem value="github" id="github" />
-                    <Label htmlFor="github" className="flex items-center">
-                      <Github className="h-4 w-4 mr-2" />
-                      Github
-                    </Label>
-                  </div>
-                </div>
-              </RadioGroup>
+                <FrameworkPresetSelector
+                  frameworks={frameworks}
+                  selectedFramework={selectedFramework}
+                  handleSelectFramework={handleSelectFramework}
+                />
+              </motion.div>
+            )}
 
-              {uploadMethod === 'upload' ? (
-                <div
-                  className={cn(
-                    "border-2 border-dashed border-gray-700 rounded-lg p-12 flex flex-col items-center justify-center transition-all duration-300",
-                    isDragging && "border-[#e94057] bg-[#2a2a2a]/50",
-                    selectedFile && "border-green-500",
-                    error && "border-red-500"
-                  )}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                >
-                  <input
-                    type="file"
-                    accept=".zip"
-                    className="hidden"
-                    ref={fileInputRef}
-                    onChange={handleFileInput}
-                  />
-
-                  {selectedFile ? (
-                    <div className="flex flex-col items-center">
-                      <div className="flex items-center space-x-2 mb-4">
-                        <span className="text-green-500">{selectedFile.name}</span>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={handleRemoveFile}
-                          className="h-6 w-6 rounded-full hover:bg-red-500/20"
-                        >
-                          <X className="h-4 w-4 text-red-500" />
-                        </Button>
-                      </div>
-                      <p className="text-sm text-gray-400">File ready for upload</p>
-                    </div>
-                  ) : (
-                    <>
-                      <Button
-                        onClick={handleBrowseClick}
-                        className="bg-[#e94057] hover:bg-[#d13046] transform transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-[#e94057]/20"
-                      >
-                        Browse
-                      </Button>
-                      <p className="mt-4 text-sm text-gray-400 group-hover:text-gray-300">
-                        Drag and drop ZIP file here or click to browse
-                      </p>
-                      {error && (
-                        <p className="mt-2 text-sm text-red-500">{error}</p>
-                      )}
-                    </>
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {user ? (
-                    <div className='flex max-lg:flex-col items-center gap-2'>
-                      <Button
-                        className="max-lg:w-full w-fit bg-[#e94057] hover:bg-[#d13046] text-white border border-gray-700 rounded-md h-10 transition-all duration-300 flex items-center justify-center gap-2"
-                      >
-                        <Github className="h-5 w-5" />
-                        {user}
-                      </Button>
-                      <div className="relative w-full">
-                        <Input
-                          placeholder="Search repositories..."
-                          value={searchRepository}
-                          onChange={handleSearchRepository}
-                          className="w-full bg-[#2a2a2a] border-gray-700 rounded-md h-10 pl-10 transition-all duration-300 focus:border-[#e94057] focus:ring-[#e94057]"
-                        />
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="11" cy="11" r="8"></circle>
-                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                          </svg>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <Button
-                      onClick={handleGithubSignIn}
-                      className="w-full bg-[#2a2a2a] hover:bg-[#3a3a3a] text-white border border-gray-700 rounded-md h-10 transition-all duration-300 flex items-center justify-center gap-2"
-                    >
-                      <Github className="h-5 w-5" />
-                      Sign in with GitHub
-                    </Button>
-                  )}
-                  {repositories.length > 0 && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3 }}
-                      className='flex flex-col gap-2 border border-gray-700 rounded-md p-2 bg-[#1a1a1a]'
-                    >
-                      {filteredRepositories.length > 0 ? (
-                        <motion.div
-                          layout
-                          className="flex flex-col gap-2"
-                        >
-                          {filteredRepositories.map((repository, index) => (
-                            <motion.div
-                              layout
-                              key={repository.id}
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              exit={{ opacity: 0 }}
-                              transition={{
-                                duration: 0.15,
-                                delay: index * 0.03
-                              }}
-                              className={cn(
-                                "p-1 px-4 rounded-md hover:bg-[#3a3a3a] transition-all flex items-center justify-between group",
-                                selectedRepo === repository.id ? "bg-[#2a2a2a] border border-[#e94057]" : "border border-transparent"
-                              )}
-                            >
-                              <span className="truncate text-sm">{repository.name}</span>
-                              <Button
-                                onClick={() => handleSelectRepository(repository.id)}
-                                size="sm"
-                                className={cn(
-                                  "opacity-0 group-hover:opacity-100 text-sm transition-opacity",
-                                  selectedRepo === repository.id ? "bg-[#e94057] hover:bg-[#d13046]" : "bg-[#2a2a2a] hover:bg-[#1a1a1a]"
-                                )}
-                              >
-                                {selectedRepo === repository.id ? 'Selected' : 'Import'}
-                              </Button>
-                            </motion.div>
-                          ))}
-                          {filteredRepositories.length < repositories.filter(repo =>
-                            repo.name.toLowerCase().includes(searchRepository.toLowerCase().trim())
-                          ).length && (
-                              <motion.div
-                                layout
-                                className="mt-4 pt-4 border-t border-gray-800"
-                              >
-                                <motion.div
-                                  whileHover={{ scale: 1.01 }}
-                                  whileTap={{ scale: 0.99 }}
-                                  onClick={handleShowMore}
-                                  className="w-full group flex flex-col items-center gap-1 text-gray-400 hover:text-gray-200 transition-colors cursor-pointer"
-                                >
-                                  <span className="text-sm">
-                                    Show {Math.min(5, repositories.length - visibleRepos)} more repositories
-                                  </span>
-                                  <div className="flex items-center gap-1 text-xs text-gray-500 group-hover:text-gray-400">
-                                    <span>
-                                      {visibleRepos} of {repositories.length} shown
-                                    </span>
-                                    <ChevronDown className="h-3 w-3" />
-                                  </div>
-                                </motion.div>
-                              </motion.div>
-                            )}
-                        </motion.div>
-                      ) : (
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ duration: 0.2 }}
-                          className="text-center py-4 text-gray-400"
-                        >
-                          No repositories found matching "{searchRepository}"
-                        </motion.div>
-                      )}
-                    </motion.div>
-                  )}
-                  <div className="flex items-center gap-4">
-                    <Separator className="flex-1" />
-                    <p className="text-center text-gray-400 px-4">or</p>
-                    <Separator className="flex-1" />
-                  </div>
-                  <Input
-                    placeholder="Enter GitHub repository URL"
-                    value={githubUrl}
-                    onChange={handleGithubUrlChange}
-                    className="bg-[#2a2a2a] border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-[#e94057] focus:ring-[#e94057]"
-                  />
-                  <p className="text-sm text-gray-400">
-                    Example: https://github.com/username/repository
-                  </p>
-                </div>
-              )}
-            </motion.div>
-
-            {/* Right Column */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 }}
-              className="space-y-8"
-            >
-
-              <div>
-                <Label htmlFor="name" className="text-lg font-semibold block mb-4 bg-gradient-to-r ">
-                  Name
-                </Label>
-                <Input id="name" className="bg-[#2a2a2a] border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-[#e94057] focus:ring-[#e94057]" />
-              </div>
-
-              <div>
-                <div className="flex items-center mb-4">
-                  <h2 className="text-sm text-gray-300 font-semibold bg-gradient-to-r ">Ownership</h2>
-                  <HelpCircle className="h-5 w-5 text-[#e94057] ml-2 hover:text-[#ff4d6d] transition-colors cursor-help" />
-                </div>
-                <RadioGroup defaultValue="leave" className="space-y-2">
-                  <div className="flex items-center space-x-2 hover:text-[#e94057] transition-colors">
-                    <RadioGroupItem value="leave" id="leave" />
-                    <Label htmlFor="leave">Leave it to us</Label>
-                    <span className="text-gray-400 text-sm">(Default)</span>
-                  </div>
-                  <div className="flex items-center space-x-2 hover:text-[#e94057] transition-colors">
-                    <RadioGroupItem value="own" id="own" />
-                    <Label htmlFor="own">Own it</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-
+            <article className="flex flex-col gap-4">
               {(selectedRepo || selectedFile) && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <div className="text-sm text-gray-300 mb-3">Select a framework preset:</div>
-                  <div className="grid grid-cols-1 gap-2">
-                    {frameworks.map((framework) => (
-                      <motion.div
-                        key={framework.id}
-                        whileHover={{ scale: 1.01 }}
-                        whileTap={{ scale: 0.99 }}
-                        onClick={() => handleSelectFramework(framework.id)}
-                        className={cn(
-                          "p-3 rounded-md border transition-all cursor-pointer",
-                          selectedFramework === framework.id
-                            ? "border-[#e94057] bg-[#2a2a2a]"
-                            : "border-gray-800 hover:border-gray-700 hover:bg-[#2a2a2a]"
-                        )}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={cn(
-                            "text-gray-400 transition-colors",
-                            selectedFramework === framework.id && "text-[#e94057]"
-                          )}>
-                            {framework.icon}
-                          </div>
-                          <div>
-                            <div className="font-medium">{framework.name}</div>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-
-              <div className="flex flex-col gap-4">
-                {(selectedRepo || selectedFile) && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.1 }}
-                  >
-                    <Collapsible className="w-full bg-[#1a1a1a]/70  backdrop-blur-3xl shadow-lg p-2 px-4 rounded-xl">
-                      <div className="flex items-center justify-between px-2 ">
-                        <h2 className="font-semibold bg-gradient-to-r text-base text-white ">Build and Output settings</h2>
-                        <CollapsibleTrigger asChild>
-                          <Button variant="ghost" size="sm" className="ml-2 hover:text-[#e94057] transition-colors">
-                            <ChevronDown className="h-5 w-5" />
-                          </Button>
-                        </CollapsibleTrigger>
-                      </div>
-
-
-                      <CollapsibleContent className="space-y-6">
-                        <div className='px-2 mt-4 border-t border-gray-800'>
-                          <div className="flex items-center mt-4 mb-2">
-                            <h3 className="text-sm text-gray-300 font-semibold">Root Directory</h3>
-                            <HelpCircle className="h-5 w-5 text-[#e94057] ml-2 hover:text-[#ff4d6d] transition-colors cursor-help" />
-                          </div>
-                          <Input
-                            placeholder="/"
-                            className="bg-[#2a2a2a] border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-[#e94057] focus:ring-[#e94057]"
-                          />
-                        </div>
-
-                        <div className='px-2'>
-                          <div className="flex items-center mb-2">
-                            <h3 className="text-sm text-gray-300 font-semibold">Build Command</h3>
-                            <HelpCircle className="h-5 w-5 text-[#e94057] ml-2 hover:text-[#ff4d6d] transition-colors cursor-help" />
-                          </div>
-                          <Input
-                            placeholder="npm run build"
-                            className="bg-[#2a2a2a] border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-[#e94057] focus:ring-[#e94057]"
-                          />
-                        </div>
-
-                        <div className='px-2 mb-4'>
-                          <div className="flex items-center mb-2">
-                            <h3 className="text-sm text-gray-300 font-semibold">Output Directory</h3>
-                            <HelpCircle className="h-5 w-5 text-[#e94057] ml-2 hover:text-[#ff4d6d] transition-colors cursor-help" />
-                          </div>
-                          <Input
-                            placeholder="dist"
-                            className="bg-[#2a2a2a] border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-[#e94057] focus:ring-[#e94057]"
-                          />
-                        </div>
-
-                      </CollapsibleContent>
-                    </Collapsible>
-                  </motion.div>
-                )}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.2 }}
+                  transition={{ duration: 0.4, delay: 0.1 }}
                 >
                   <Collapsible className="w-full bg-[#1a1a1a]/70  backdrop-blur-3xl shadow-lg p-2 px-4 rounded-xl">
                     <div className="flex items-center justify-between px-2 ">
-                      <h2 className="font-semibold bg-gradient-to-r text-base text-white ">Advanced options</h2>
+                      <h2 className="font-semibold bg-gradient-to-r text-base text-white ">Build and Output settings</h2>
                       <CollapsibleTrigger asChild>
                         <Button variant="ghost" size="sm" className="ml-2 hover:text-[#e94057] transition-colors">
                           <ChevronDown className="h-5 w-5" />
@@ -553,74 +342,128 @@ export default function CreateWebsitePage() {
                     <CollapsibleContent className="space-y-6">
                       <div className='px-2 mt-4 border-t border-gray-800'>
                         <div className="flex items-center mt-4 mb-2">
-                          <h3 className="text-sm text-gray-300  font-semibold">Cache Control</h3>
+                          <h3 className="text-sm text-gray-300 font-semibold">Root Directory</h3>
                           <HelpCircle className="h-5 w-5 text-[#e94057] ml-2 hover:text-[#ff4d6d] transition-colors cursor-help" />
                         </div>
-                        <Select>
-                          <SelectTrigger className="bg-[#2a2a2a] border-gray-700 rounded-md h-12 transition-all duration-300 hover:border-[#e94057]">
-                            <SelectValue placeholder="Select cache control" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="no-cache">No Cache</SelectItem>
-                            <SelectItem value="public">Public</SelectItem>
-                            <SelectItem value="private">Private</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <Input
+                          placeholder="/"
+                          className="bg-[#2a2a2a] border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-[#e94057] focus:ring-[#e94057]"
+                        />
                       </div>
 
-                      <div className='px-4'>
-                        <div className="flex items-center mb-2 ">
-                          <h3 className="text-sm text-gray-300 font-semibold">Permissions</h3>
-                          <HelpCircle className="h-5 w-5 text-[#e94057] ml-2 hover:text-[#ff4d6d] transition-colors cursor-help" />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4 px-2">
-                          <div className="flex items-center space-x-2 hover:text-[#e94057] transition-colors">
-                            <Checkbox id="camera" className="border-gray-700" />
-                            <Label htmlFor="camera">Camera</Label>
-                          </div>
-                          <div className="flex items-center space-x-2 hover:text-[#e94057] transition-colors">
-                            <Checkbox id="microphone" className="border-gray-700" />
-                            <Label htmlFor="microphone">Microphone</Label>
-                          </div>
-                          <div className="flex items-center space-x-2 hover:text-[#e94057] transition-colors">
-                            <Checkbox id="location" className="border-gray-700" />
-                            <Label htmlFor="location">Location</Label>
-                          </div>
-                          <div className="flex items-center space-x-2 hover:text-[#e94057] transition-colors">
-                            <Checkbox id="notifications" className="border-gray-700" />
-                            <Label htmlFor="notifications">Notifications</Label>
-                          </div>
-                        </div>
-                      </div>
                       <div className='px-2'>
                         <div className="flex items-center mb-2">
-                          <h3 className="text-sm text-gray-300 font-semibold">Route</h3>
+                          <h3 className="text-sm text-gray-300 font-semibold">Build Command</h3>
                           <HelpCircle className="h-5 w-5 text-[#e94057] ml-2 hover:text-[#ff4d6d] transition-colors cursor-help" />
                         </div>
-                        <div className="flex items-center space-x-2 mb-4">
-                          <Input className="bg-[#2a2a2a] border-gray-700 rounded-md h-8 transition-all duration-300 focus:border-[#e94057] focus:ring-[#e94057]" />
-                          <span>to</span>
-                          <Input className="bg-[#2a2a2a] border-gray-700 rounded-md h-8 transition-all duration-300 focus:border-[#e94057] focus:ring-[#e94057]" />
-                          <Button variant="ghost" size="icon" className="rounded-full bg-[#e94057] hover:bg-[#d13046] transform transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-[#e94057]/20">
-                            <Plus className="h-5 w-5" />
-                          </Button>
-                        </div>
+                        <Input
+                          placeholder="npm run build"
+                          className="bg-[#2a2a2a] border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-[#e94057] focus:ring-[#e94057]"
+                        />
                       </div>
+
+                      <div className='px-2 mb-4'>
+                        <div className="flex items-center mb-2">
+                          <h3 className="text-sm text-gray-300 font-semibold">Output Directory</h3>
+                          <HelpCircle className="h-5 w-5 text-[#e94057] ml-2 hover:text-[#ff4d6d] transition-colors cursor-help" />
+                        </div>
+                        <Input
+                          placeholder="dist"
+                          className="bg-[#2a2a2a] border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-[#e94057] focus:ring-[#e94057]"
+                        />
+                      </div>
+
                     </CollapsibleContent>
                   </Collapsible>
                 </motion.div>
-              </div>
+              )}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.2 }}
+              >
+                <Collapsible className="w-full bg-[#1a1a1a]/70  backdrop-blur-3xl shadow-lg p-2 px-4 rounded-xl">
+                  <div className="flex items-center justify-between px-2 ">
+                    <h2 className="font-semibold bg-gradient-to-r text-base text-white ">Advanced options</h2>
+                    <CollapsibleTrigger asChild>
+                      <Button variant="ghost" size="sm" className="ml-2 hover:text-[#e94057] transition-colors">
+                        <ChevronDown className="h-5 w-5" />
+                      </Button>
+                    </CollapsibleTrigger>
+                  </div>
 
-              <Separator className="mb-4" />
-              <div className="pt-4 flex justify-end">
-                <Button className="bg-[#e94057] hover:bg-[#d13046] text-white p-6 rounded-md text-base transform transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-[#e94057]/20">
-                  Create project
-                </Button>
-              </div>
-            </motion.div>
-          </div>
-        </motion.main>
-      </div>
-    </>
+
+                  <CollapsibleContent className="space-y-6">
+                    <section className='px-2 mt-4 border-t border-gray-800'>
+                      <div className="flex items-center mt-4 mb-2">
+                        <h3 className="text-sm text-gray-300  font-semibold">Cache Control</h3>
+                        <HelpCircle className="h-5 w-5 text-[#e94057] ml-2 hover:text-[#ff4d6d] transition-colors cursor-help" />
+                      </div>
+                      <Select>
+                        <SelectTrigger className="bg-[#2a2a2a] border-gray-700 rounded-md h-12 transition-all duration-300 hover:border-[#e94057]">
+                          <SelectValue placeholder="Select cache control" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="no-cache">No Cache</SelectItem>
+                          <SelectItem value="public">Public</SelectItem>
+                          <SelectItem value="private">Private</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </section>
+
+                    <section className='px-4'>
+                      <div className="flex items-center mb-2 ">
+                        <h3 className="text-sm text-gray-300 font-semibold">Permissions</h3>
+                        <HelpCircle className="h-5 w-5 text-[#e94057] ml-2 hover:text-[#ff4d6d] transition-colors cursor-help" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 px-2">
+                        <div className="flex items-center space-x-2 hover:text-[#e94057] transition-colors">
+                          <Checkbox id="camera" className="border-gray-700" />
+                          <Label htmlFor="camera">Camera</Label>
+                        </div>
+                        <div className="flex items-center space-x-2 hover:text-[#e94057] transition-colors">
+                          <Checkbox id="microphone" className="border-gray-700" />
+                          <Label htmlFor="microphone">Microphone</Label>
+                        </div>
+                        <div className="flex items-center space-x-2 hover:text-[#e94057] transition-colors">
+                          <Checkbox id="location" className="border-gray-700" />
+                          <Label htmlFor="location">Location</Label>
+                        </div>
+                        <div className="flex items-center space-x-2 hover:text-[#e94057] transition-colors">
+                          <Checkbox id="notifications" className="border-gray-700" />
+                          <Label htmlFor="notifications">Notifications</Label>
+                        </div>
+                      </div>
+                    </section>
+
+                    <section className='px-2'>
+                      <div className="flex items-center mb-2">
+                        <h3 className="text-sm text-gray-300 font-semibold">Route</h3>
+                        <HelpCircle className="h-5 w-5 text-[#e94057] ml-2 hover:text-[#ff4d6d] transition-colors cursor-help" />
+                      </div>
+                      <div className="flex items-center space-x-2 mb-4">
+                        <Input className="bg-[#2a2a2a] border-gray-700 rounded-md h-8 transition-all duration-300 focus:border-[#e94057] focus:ring-[#e94057]" />
+                        <span>to</span>
+                        <Input className="bg-[#2a2a2a] border-gray-700 rounded-md h-8 transition-all duration-300 focus:border-[#e94057] focus:ring-[#e94057]" />
+                        <Button variant="ghost" size="icon" className="rounded-full bg-[#e94057] hover:bg-[#d13046] transform transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-[#e94057]/20">
+                          <Plus className="h-5 w-5" />
+                        </Button>
+                      </div>
+                    </section>
+                  </CollapsibleContent>
+                </Collapsible>
+              </motion.div>
+            </article>
+
+            <Separator className="mb-4" />
+            <div className="pt-4 flex justify-end">
+              <Button className="bg-[#e94057] hover:bg-[#d13046] text-white p-6 rounded-md text-base transform transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-[#e94057]/20">
+                Create project
+              </Button>
+            </div>
+          </motion.div>
+        </article>
+      </motion.main >
+    </main >
   )
 }
