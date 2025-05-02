@@ -39,11 +39,6 @@ export default function CreateWebsitePage() {
     ]
   })
 
-  useEffect(() => {
-    console.log("🚀 ~ useEffect ~ buildOutputSettings:", buildOutputSettings)
-    console.log("🚀 ~ useEffect ~ advancedOptions:", advancedOptions)
-  }, [advancedOptions, buildOutputSettings])
-
   // State for file upload
   const [uploadMethod, setUploadMethod] = useState<UploadMethod>(UploadMethod.Upload)
   const [isDragging, setIsDragging] = useState<boolean>(false)
