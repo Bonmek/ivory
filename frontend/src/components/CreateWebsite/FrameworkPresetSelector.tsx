@@ -27,14 +27,14 @@ const FrameworkPresetSelector: React.FC<FrameworkPresetSelectorProps> = ({ frame
           className={cn(
             "p-3 rounded-md border transition-all cursor-pointer",
             selectedFramework === framework.id
-              ? "border-[#e94057] bg-[#2a2a2a]"
-              : "border-gray-800 hover:border-gray-700 hover:bg-[#2a2a2a]"
+              ? "border-secondary-500 bg-primary-500"
+              : "border-gray-800 hover:border-gray-700 hover:bg-primary-500"
           )}
         >
           <div className="flex items-center gap-3">
             <div className={cn(
               "text-gray-400 transition-colors",
-              selectedFramework === framework.id && "text-[#e94057]"
+              selectedFramework === framework.id && "text-secondary-500"
             )}>
               {framework.icon}
             </div>

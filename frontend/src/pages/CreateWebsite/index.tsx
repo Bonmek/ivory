@@ -17,6 +17,8 @@ import FileUploadDrop from "@/components/CreateWebsite/FileUploadDrop";
 import FrameworkPresetSelector from "@/components/CreateWebsite/FrameworkPresetSelector";
 import OwnershipRadioGroup from "@/components/CreateWebsite/OwnershipRadioGroup";
 import { Ownership, UploadMethod } from "@/types/enums";
+import BuildOutputSetting from "@/components/CreateWebsite/BuildOutputSetting";
+import AdvancedOptions from "@/components/CreateWebsite/AdvancedOptions";
 
 export default function CreateWebsitePage() {
   useTheme();
@@ -28,6 +30,7 @@ export default function CreateWebsitePage() {
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [user, setUser] = useState<string | null>(null)
+  const [showBuildOutputSettings, setShowBuildOutputSettings] = useState(false)
 
   // GitHub state
   const maxRepoView = 5
@@ -162,6 +165,7 @@ export default function CreateWebsitePage() {
     setSelectedFramework(frameworkId)
   }
 
+
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_center,_#2a2a2a,_#000000)] relative">
       <motion.main
@@ -185,11 +189,11 @@ export default function CreateWebsitePage() {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 }}
-            className="p-10 rounded-lg bg-[#1a1a1a]/60 border border-gray-800/50 backdrop-blur-lg shadow-lg"
+            className="p-10 rounded-lg bg-primary-700/60 border border-gray-800/50 backdrop-blur-lg shadow-lg"
           >
             <section className="mb-6 flex items-center">
               <h2 className="text-lg font-semibold">Project files</h2>
-              <HelpCircle className="h-5 w-5 text-[#e94057] ml-2 hover:text-[#ff4d6d] transition-colors cursor-help" />
+              <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
             </section>
 
             <RadioGroup
@@ -199,14 +203,14 @@ export default function CreateWebsitePage() {
               onValueChange={(value) => setUploadMethod(value as UploadMethod)}
             >
               <section className="flex items-center space-x-8">
-                <div className="flex items-center space-x-2 hover:text-[#e94057] transition-colors">
+                <div className="flex items-center space-x-2 hover:text-secondary-500 transition-colors">
                   <RadioGroupItem value="upload" id="upload" />
                   <Label htmlFor="upload" className="flex items-center">
                     <Upload className="h-4 w-4 mr-2" />
                     Upload
                   </Label>
                 </div>
-                <div className="flex items-center space-x-2 hover:text-[#e94057] transition-colors">
+                <div className="flex items-center space-x-2 hover:text-secondary-500 transition-colors">
                   <RadioGroupItem value="github" id="github" />
                   <Label htmlFor="github" className="flex items-center">
                     <Github className="h-4 w-4 mr-2" />
@@ -220,7 +224,7 @@ export default function CreateWebsitePage() {
               <section
                 className={cn(
                   "border-2 border-dashed border-gray-700 rounded-lg p-12 flex flex-col items-center justify-center transition-all duration-300",
-                  isDragging && "border-[#e94057] bg-[#2a2a2a]/50",
+                  isDragging && "border-secondary-500 bg-primary-700/50",
                   selectedFile && "border-green-500",
                   error && "border-red-500"
                 )}
@@ -285,14 +289,10 @@ export default function CreateWebsitePage() {
               <Label htmlFor="name" className="text-lg font-semibold block mb-4 bg-gradient-to-r ">
                 Name
               </Label>
-              <Input id="name" className="bg-[#2a2a2a] border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-[#e94057] focus:ring-[#e94057]" />
+              <Input id="name" className="bg-primary-500 border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500" />
             </section>
 
             <section>
-              <div className="flex items-center mb-4">
-                <h2 className="text-sm text-gray-300 font-semibold bg-gradient-to-r ">Ownership</h2>
-                <HelpCircle className="h-5 w-5 text-[#e94057] ml-2 hover:text-[#ff4d6d] transition-colors cursor-help" />
-              </div>
               <OwnershipRadioGroup value={ownership} onChange={setOwnership} />
             </section>
 
@@ -313,144 +313,20 @@ export default function CreateWebsitePage() {
 
             <article className="flex flex-col gap-4">
               {(selectedRepo || selectedFile) && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.1 }}
-                >
-                  <Collapsible className="w-full bg-[#1a1a1a]/70  backdrop-blur-3xl shadow-lg p-2 px-4 rounded-xl">
-                    <div className="flex items-center justify-between px-2 ">
-                      <h2 className="font-semibold bg-gradient-to-r text-base text-white ">Build and Output settings</h2>
-                      <CollapsibleTrigger asChild>
-                        <Button variant="ghost" size="sm" className="ml-2 hover:text-[#e94057] transition-colors">
-                          <ChevronDown className="h-5 w-5" />
-                        </Button>
-                      </CollapsibleTrigger>
-                    </div>
-
-
-                    <CollapsibleContent className="space-y-6">
-                      <div className='px-2 mt-4 border-t border-gray-800'>
-                        <div className="flex items-center mt-4 mb-2">
-                          <h3 className="text-sm text-gray-300 font-semibold">Root Directory</h3>
-                          <HelpCircle className="h-5 w-5 text-[#e94057] ml-2 hover:text-[#ff4d6d] transition-colors cursor-help" />
-                        </div>
-                        <Input
-                          placeholder="/"
-                          className="bg-[#2a2a2a] border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-[#e94057] focus:ring-[#e94057]"
-                        />
-                      </div>
-
-                      <div className='px-2'>
-                        <div className="flex items-center mb-2">
-                          <h3 className="text-sm text-gray-300 font-semibold">Build Command</h3>
-                          <HelpCircle className="h-5 w-5 text-[#e94057] ml-2 hover:text-[#ff4d6d] transition-colors cursor-help" />
-                        </div>
-                        <Input
-                          placeholder="npm run build"
-                          className="bg-[#2a2a2a] border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-[#e94057] focus:ring-[#e94057]"
-                        />
-                      </div>
-
-                      <div className='px-2 mb-4'>
-                        <div className="flex items-center mb-2">
-                          <h3 className="text-sm text-gray-300 font-semibold">Output Directory</h3>
-                          <HelpCircle className="h-5 w-5 text-[#e94057] ml-2 hover:text-[#ff4d6d] transition-colors cursor-help" />
-                        </div>
-                        <Input
-                          placeholder="dist"
-                          className="bg-[#2a2a2a] border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-[#e94057] focus:ring-[#e94057]"
-                        />
-                      </div>
-
-                    </CollapsibleContent>
-                  </Collapsible>
-                </motion.div>
+                <BuildOutputSetting
+                  showBuildOutputSettings={showBuildOutputSettings}
+                  setShowBuildOutputSettings={setShowBuildOutputSettings}
+                />
               )}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.2 }}
-              >
-                <Collapsible className="w-full bg-[#1a1a1a]/70  backdrop-blur-3xl shadow-lg p-2 px-4 rounded-xl">
-                  <div className="flex items-center justify-between px-2 ">
-                    <h2 className="font-semibold bg-gradient-to-r text-base text-white ">Advanced options</h2>
-                    <CollapsibleTrigger asChild>
-                      <Button variant="ghost" size="sm" className="ml-2 hover:text-[#e94057] transition-colors">
-                        <ChevronDown className="h-5 w-5" />
-                      </Button>
-                    </CollapsibleTrigger>
-                  </div>
-
-
-                  <CollapsibleContent className="space-y-6">
-                    <section className='px-2 mt-4 border-t border-gray-800'>
-                      <div className="flex items-center mt-4 mb-2">
-                        <h3 className="text-sm text-gray-300  font-semibold">Cache Control</h3>
-                        <HelpCircle className="h-5 w-5 text-[#e94057] ml-2 hover:text-[#ff4d6d] transition-colors cursor-help" />
-                      </div>
-                      <Select>
-                        <SelectTrigger className="bg-[#2a2a2a] border-gray-700 rounded-md h-12 transition-all duration-300 hover:border-[#e94057]">
-                          <SelectValue placeholder="Select cache control" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="no-cache">No Cache</SelectItem>
-                          <SelectItem value="public">Public</SelectItem>
-                          <SelectItem value="private">Private</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </section>
-
-                    <section className='px-4'>
-                      <div className="flex items-center mb-2 ">
-                        <h3 className="text-sm text-gray-300 font-semibold">Permissions</h3>
-                        <HelpCircle className="h-5 w-5 text-[#e94057] ml-2 hover:text-[#ff4d6d] transition-colors cursor-help" />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4 px-2">
-                        <div className="flex items-center space-x-2 hover:text-[#e94057] transition-colors">
-                          <Checkbox id="camera" className="border-gray-700" />
-                          <Label htmlFor="camera">Camera</Label>
-                        </div>
-                        <div className="flex items-center space-x-2 hover:text-[#e94057] transition-colors">
-                          <Checkbox id="microphone" className="border-gray-700" />
-                          <Label htmlFor="microphone">Microphone</Label>
-                        </div>
-                        <div className="flex items-center space-x-2 hover:text-[#e94057] transition-colors">
-                          <Checkbox id="location" className="border-gray-700" />
-                          <Label htmlFor="location">Location</Label>
-                        </div>
-                        <div className="flex items-center space-x-2 hover:text-[#e94057] transition-colors">
-                          <Checkbox id="notifications" className="border-gray-700" />
-                          <Label htmlFor="notifications">Notifications</Label>
-                        </div>
-                      </div>
-                    </section>
-
-                    <section className='px-2'>
-                      <div className="flex items-center mb-2">
-                        <h3 className="text-sm text-gray-300 font-semibold">Route</h3>
-                        <HelpCircle className="h-5 w-5 text-[#e94057] ml-2 hover:text-[#ff4d6d] transition-colors cursor-help" />
-                      </div>
-                      <div className="flex items-center space-x-2 mb-4">
-                        <Input className="bg-[#2a2a2a] border-gray-700 rounded-md h-8 transition-all duration-300 focus:border-[#e94057] focus:ring-[#e94057]" />
-                        <span>to</span>
-                        <Input className="bg-[#2a2a2a] border-gray-700 rounded-md h-8 transition-all duration-300 focus:border-[#e94057] focus:ring-[#e94057]" />
-                        <Button variant="ghost" size="icon" className="rounded-full bg-[#e94057] hover:bg-[#d13046] transform transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-[#e94057]/20">
-                          <Plus className="h-5 w-5" />
-                        </Button>
-                      </div>
-                    </section>
-                  </CollapsibleContent>
-                </Collapsible>
-              </motion.div>
+              <AdvancedOptions />
             </article>
 
             <Separator className="mb-4" />
-            <div className="pt-4 flex justify-end">
-              <Button className="bg-[#e94057] hover:bg-[#d13046] text-white p-6 rounded-md text-base transform transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-[#e94057]/20">
+            <section className="pt-4 flex justify-end">
+              <Button className="bg-secondary-500 hover:bg-secondary-700 text-white p-6 rounded-md text-base transform transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-secondary-500/20">
                 Create project
               </Button>
-            </div>
+            </section>
           </motion.div>
         </article>
       </motion.main >
