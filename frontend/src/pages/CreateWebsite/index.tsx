@@ -183,6 +183,7 @@ export default function CreateWebsitePage() {
 
 
   return (
+    // TODO: Add a background image that relate with the theme
     <main className="min-h-screen bg-[radial-gradient(circle_at_center,_#2a2a2a,_#000000)] relative">
       <motion.main
         initial={{ opacity: 0, y: 20 }}
@@ -194,7 +195,7 @@ export default function CreateWebsitePage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="text-3xl font-bold mb-8 bg-gradient-to-r "
+          className="text-3xl font-semibold font-pixel mb-8 bg-gradient-to-r "
         >
           Create new project
         </motion.h1>
@@ -344,7 +345,7 @@ export default function CreateWebsitePage() {
 
             <Separator className="mb-4" />
             <section className="pt-4 flex justify-end">
-              <Button className="bg-secondary-500 hover:bg-secondary-700 text-white p-6 rounded-md text-base transform transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-secondary-500/20">
+              <Button className="bg-secondary-500 hover:bg-secondary-700 text-black p-6 rounded-md text-base transform transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-secondary-500/20">
                 Create project
               </Button>
             </section>

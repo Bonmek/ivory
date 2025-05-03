@@ -77,7 +77,7 @@ function AdvancedOptions({ advancedOptions, setAdvancedOptions }: AdvancedOption
                     onChange={(e) => setAdvancedOptions({ ...advancedOptions, route: [{ ...advancedOptions.route[0], path: e.target.value }] })}
                     className="bg-primary-500 border-gray-700 rounded-md h-8 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500" />
                   <Button variant="ghost" size="icon" className="rounded-full bg-secondary-500 hover:bg-secondary-700 transform transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-secondary-500/20">
-                    <Plus className="h-5 w-5" />
+                    <Plus className="h-5 w-5 text-black" />
                   </Button>
                 </div>
               </section>
