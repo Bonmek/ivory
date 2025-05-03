@@ -151,7 +151,7 @@ export default function HomePage() {
     )
     const particlesMaterial = new THREE.PointsMaterial({
       size: 0.02,
-      color: 0xff4444,
+      color: 0x3b82f6,
       transparent: true,
       opacity: 0.6,
       blending: THREE.AdditiveBlending,
