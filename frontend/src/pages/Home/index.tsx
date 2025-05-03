@@ -17,6 +17,7 @@ import {
 import * as THREE from 'three'
 import CustomCursor from '@/components/HomePage/CustomCursor'
 import LogoCarousel from '@/components/HomePage/LogoCarousel'
+import {Helmet} from "react-helmet";
 
 const floatingIconsVariants: Variants = {
   animate: {
@@ -193,6 +194,11 @@ export default function HomePage() {
 
   return (
     <>
+      <Helmet>
+        <meta charSet="utf-8" />
+        <title>Home | Ivory</title>
+        <link rel="canonical" href="http://mysite.com/example" />
+      </Helmet>
       <CustomCursor />
       <div className="min-h-screen bg-gradient-to-b from-black via-red-900/20 to-black text-white overflow-hidden relative">
         {/* Grid Background */}
