@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { motion, useMotionValue, useSpring } from 'framer-motion'
 import { Code, Cloud, Server, Terminal } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
 export default function CustomCursor() {
   const cursorX = useMotionValue(-100)
@@ -20,7 +20,8 @@ export default function CustomCursor() {
   ]
 
   useEffect(() => {
-    if (typeof window === 'undefined') return
+    // Check if it's mobile/touch device
+    if (typeof window === 'undefined' || 'ontouchstart' in window) return
 
     const moveCursor = (e) => {
       cursorX.set(e.clientX)
@@ -52,7 +53,7 @@ export default function CustomCursor() {
 
   return (
     <motion.div
-      className="fixed top-0 left-0 w-full h-full pointer-events-none"
+      className="fixed top-0 left-0 w-full h-full pointer-events-none hidden md:block"
       style={{
         x: springX,
         y: springY,
@@ -70,15 +71,15 @@ export default function CustomCursor() {
         }}
         transition={{
           scale: {
-            type: "spring",
+            type: 'spring',
             stiffness: 500,
-            damping: 20
+            damping: 20,
           },
           rotate: {
             duration: 2,
             repeat: Infinity,
-            ease: "linear"
-          }
+            ease: 'linear',
+          },
         }}
       >
         <CurrentIcon size={24} />
@@ -95,9 +96,9 @@ export default function CustomCursor() {
           opacity: isHovering ? 1 : 0.8,
         }}
         transition={{
-          type: "spring",
+          type: 'spring',
           stiffness: 500,
-          damping: 20
+          damping: 20,
         }}
       />
 
@@ -106,18 +107,19 @@ export default function CustomCursor() {
         className="absolute w-20 h-20 rounded-full"
         style={{
           transform: 'translate(-50%, -50%)',
-          background: 'radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, transparent 70%)',
+          background:
+            'radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, transparent 70%)',
         }}
         animate={{
           scale: isHovering ? 1.5 : 1,
           opacity: isHovering ? 0.5 : 0.3,
         }}
         transition={{
-          type: "spring",
+          type: 'spring',
           stiffness: 500,
-          damping: 20
+          damping: 20,
         }}
       />
     </motion.div>
   )
-} 
+}

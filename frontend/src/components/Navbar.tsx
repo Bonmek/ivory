@@ -1,117 +1,176 @@
-import { motion } from 'framer-motion'
-import { useLocation } from 'react-router'
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Menu, X, Blocks, Wallet, ChevronDown } from 'lucide-react';
+import { Link, useLocation } from 'react-router';
 
-const Navbar: React.FC = () => {
-  const location = useLocation()
+const Navbar = () => {
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const location = useLocation();
 
-  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, path: string) => {
-    if (location.pathname === path) {
-      e.preventDefault()
-    }
-  }
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const navItems = [
+    { name: 'Home', to: '/' },
+    { name: 'Dashboard', to: '/dashboard' },
+    { name: 'How to use', to: '/docs' },
+    { name: 'About', to: '/about' },
+  ];
+
+  const isActivePath = (path: string) => {
+    if (path === '/' && location.pathname === '/') return true;
+    if (path !== '/' && location.pathname.startsWith(path)) return true;
+    return false;
+  };
 
   return (
-    <motion.header
-      initial={{ y: -100, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="fixed inset-x-0 top-0 z-30 mx-auto w-full max-w-screen-md border border-gray-700 bg-gray-900/80 py-3 shadow-lg backdrop-blur-lg md:top-6 md:rounded-3xl lg:max-w-screen-lg transition-all duration-300"
-    >
-      <div className="px-4">
+    <>
+      <header 
+        className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
+          isScrolled 
+            ? 'bg-black/80 backdrop-blur-xl border-b border-red-500/20' 
+            : 'bg-transparent'
+        }`}
+      >
+        <nav className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          <motion.div whileHover={{ scale: 1.05 }} className="flex shrink-0">
-            <a aria-current="page" className="flex items-center" href="/">
-              <img
-                className="h-8 w-auto transition-transform hover:scale-110"
-                src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg"
-                alt="Logo"
-              />
-              <p className="ml-2 text-lg font-bold text-white">Ivory</p>
-            </a>
-          </motion.div>
-          <div className="hidden md:flex md:items-center md:justify-center md:gap-6">
-            <motion.a
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              aria-current="page"
-              className={`inline-block rounded-lg px-3 py-1 text-sm font-medium transition-all duration-200 ${
-                location.pathname === '/'
-                  ? 'bg-gray-700 text-white cursor-default'
-                  : 'text-gray-200 hover:bg-gray-700 hover:text-white'
-              }`}
-              href="/"
-              onClick={(e) => handleClick(e, '/')}
+            {/* Logo */}
+            <motion.div 
+              className="flex items-center space-x-2"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5 }}
             >
-              Home
-            </motion.a>
-            <motion.a
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className={`inline-block rounded-lg px-3 py-1 text-sm font-medium transition-all duration-200 ${
-                location.pathname === '/dashboard'
-                  ? 'bg-gray-700 text-white cursor-default'
-                  : 'text-gray-200 hover:bg-gray-700 hover:text-white'
-              }`}
-              href="/dashboard"
-              onClick={(e) => handleClick(e, '/dashboard')}
-            >
-              Dashboard
-            </motion.a>
-            <motion.a
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className={`inline-block rounded-lg px-3 py-1 text-sm font-medium transition-all duration-200 ${
-                location.pathname === '/guide'
-                  ? 'bg-gray-700 text-white cursor-default'
-                  : 'text-gray-200 hover:bg-gray-700 hover:text-white'
-              }`}
-              href="/guide"
-              onClick={(e) => handleClick(e, '/guide')}
-            >
-              How to use
-            </motion.a>
-            <motion.a
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className={`inline-block rounded-lg px-3 py-1 text-sm font-medium transition-all duration-200 ${
-                location.pathname === '/about'
-                  ? 'bg-gray-700 text-white cursor-default'
-                  : 'text-gray-200 hover:bg-gray-700 hover:text-white'
-              }`}
-              href="/about"
-              onClick={(e) => handleClick(e, '/about')}
-            >
-              About us
-            </motion.a>
-          </div>
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="relative flex items-center justify-end"
-          >
-            <motion.div
-              className="absolute inset-0 rounded-xl"
-              style={{
-                boxShadow:
-                  '0 0 10px rgba(239, 68, 68, 0.5), 0 0 15px rgba(59, 130, 246, 0.5), 0 0 20px rgba(147, 51, 234, 0.5), 0 0 25px rgba(34, 197, 94, 0.5)',
-              }}
-            />
-            <a
-              className={`relative inline-flex items-center justify-center rounded-xl px-6 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-150 ${
-                location.pathname === '/login'
-                  ? 'bg-red-700 cursor-default'
-                  : 'bg-red-600 hover:bg-red-500'
-              } focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500`}
-              href="/login"
-              onClick={(e) => handleClick(e, '/login')}
-            >
-              Login
-            </a>
-          </motion.div>
-        </div>
-      </div>
-    </motion.header>
-  )
-}
+              <Link to="/" className="flex items-center space-x-2">
+                <Blocks className="w-8 h-8 text-red-500" />
+                <span className="text-xl font-bold bg-gradient-to-r from-red-500 to-orange-400 bg-clip-text text-transparent">
+                  Ivory
+                </span>
+              </Link>
+            </motion.div>
 
-export { Navbar }
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center space-x-8">
+              {/* Nav Links */}
+              <div className="flex space-x-6">
+                {navItems.map((item, index) => (
+                  <Link
+                    key={item.name}
+                    to={item.to}
+                    className={`relative group transition-colors ${
+                      isActivePath(item.to) ? 'text-white font-medium' : 'text-gray-300 hover:text-white'
+                    }`}
+                  >
+                    <motion.div
+                      initial={{ opacity: 0, y: -20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
+                    >
+                      {item.name}
+                      <span 
+                        className={`absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-red-500 to-orange-500 transform transition-transform ${
+                          isActivePath(item.to) ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'
+                        }`}
+                      />
+                    </motion.div>
+                  </Link>
+                ))}
+              </div>
+
+              {/* Connect Wallet Button */}
+              <motion.button
+                className="flex items-center space-x-2 px-4 py-2 rounded-full bg-gradient-to-r from-red-500 to-orange-500 text-white hover:shadow-lg hover:shadow-red-500/20 transition-all"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              >
+                <Wallet className="w-4 h-4" />
+                <span>Connect Wallet</span>
+              </motion.button>
+            </div>
+
+            {/* Mobile Menu Button */}
+            <motion.button
+              className="md:hidden p-2 text-gray-400 hover:text-white"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              whileTap={{ scale: 0.9 }}
+            >
+              {isMobileMenuOpen ? <X /> : <Menu />}
+            </motion.button>
+          </div>
+        </nav>
+      </header>
+
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            className="fixed inset-0 z-40 md:hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            {/* Backdrop */}
+            <motion.div
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+
+            {/* Menu Content */}
+            <motion.div
+              className="absolute right-0 top-0 h-full w-64 bg-gray-900/95 shadow-lg shadow-red-500/10"
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 20 }}
+            >
+              <div className="p-6 space-y-6">
+                {navItems.map((item, index) => (
+                  <Link
+                    key={item.name}
+                    to={item.to}
+                    className={`block py-2 transition-colors ${
+                      isActivePath(item.to)
+                        ? 'text-white font-medium bg-gradient-to-r from-red-500/10 to-orange-500/10 rounded-lg px-3' 
+                        : 'text-gray-300 hover:text-white'
+                    }`}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <motion.div
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                    >
+                      {item.name}
+                    </motion.div>
+                  </Link>
+                ))}
+                <motion.button
+                  className="w-full flex items-center justify-center space-x-2 px-4 py-2 rounded-full bg-gradient-to-r from-red-500 to-orange-500 text-white"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  <Wallet className="w-4 h-4" />
+                  <span>Connect Wallet</span>
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+};
+
+export default Navbar;
