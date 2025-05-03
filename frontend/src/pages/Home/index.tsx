@@ -1,5 +1,3 @@
-'use client'
-
 import { useState, useEffect, useRef } from 'react'
 import { motion, useScroll, useTransform, Variants } from 'framer-motion'
 import {
@@ -10,11 +8,15 @@ import {
   Zap,
   FolderLock,
   Blocks,
+  Lock,
+  Server,
+  Wifi,
 } from 'lucide-react'
 import * as THREE from 'three'
 import CustomCursor from '@/components/HomePage/CustomCursor'
 import LogoCarousel from '@/components/HomePage/LogoCarousel'
 import { Helmet } from 'react-helmet'
+import { useNavigate } from 'react-router'
 
 const floatingIconsVariants: Variants = {
   animate: {
@@ -113,6 +115,7 @@ const cellVariants = {
 
 export default function HomePage() {
   const [scrollY, setScrollY] = useState(0)
+  const navigate = useNavigate()
   const heroRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const { scrollYProgress } = useScroll()
@@ -304,19 +307,19 @@ export default function HomePage() {
           </div>
 
           {[
-            { 
-              Icon: Globe, 
-              color: 'purple', 
+            {
+              Icon: Globe,
+              color: 'purple',
               position: 'top-1/4 left-1/5'
             },
-            { 
-              Icon: Shield, 
-              color: 'cyan', 
+            {
+              Icon: Shield,
+              color: 'cyan',
               position: 'bottom-1/3 right-1/4'
             },
-            { 
-              Icon: Blocks, 
-              color: 'pink', 
+            {
+              Icon: Blocks,
+              color: 'pink',
               position: 'top-1/2 right-1/3'
             },
             {
@@ -324,9 +327,9 @@ export default function HomePage() {
               color: 'yellow',
               position: 'bottom-1/4 left-1/3'
             },
-            { 
-              Icon: Zap, 
-              color: 'green', 
+            {
+              Icon: Zap,
+              color: 'green',
               position: 'top-1/3 right-1/5'
             },
           ].map(({ Icon, color, position }, index) => (
@@ -363,7 +366,7 @@ export default function HomePage() {
                 lineHeight: '1.2',
               }}
             >
-              {['Connect', 'Protect', 'and', 'Build'].map((word, wordIndex) => (
+              {['Deploy', 'Your', 'Site', 'In', 'Seconds'].map((word, wordIndex) => (
                 <span key={wordIndex} className="inline-block">
                   {word.split('').map((char, charIndex) => (
                     <motion.span
@@ -382,11 +385,11 @@ export default function HomePage() {
                       {char}
                     </motion.span>
                   ))}
-                  {wordIndex < 3 && <span className="inline-block w-4" />}
+                  {wordIndex < 4 && <span className="inline-block w-4" />}
                 </span>
               ))}
               <span className="inline-block w-4" />
-              <motion.span 
+              <motion.span
                 className="text-white inline-block"
               >
                 {'everywhere'.split('').map((char, index) => (
@@ -423,9 +426,9 @@ export default function HomePage() {
                 letterSpacing: '0.02em',
               }}
             >
-              We make websites, apps, and networks faster and more secure. Our
-              developer platform is the best place to build modern apps and
-              deliver AI initiatives.
+              Ivory is a no-code, low-cost platform for deploying static websites with Walrus. Enjoy high availability,
+              censorship resistance, data integrity,
+              and full ownership — all with free bandwidth and zero complexity.
             </motion.p>
 
             <motion.div
@@ -446,8 +449,9 @@ export default function HomePage() {
                 style={{
                   letterSpacing: '0.05em',
                 }}
+                onClick={() => navigate('/create-website')}
               >
-                <span className="relative z-10">Start Building</span>
+                <span className="text-black relative z-10">Deploy Now</span>
                 <motion.div
                   className="absolute inset-0 bg-gradient-to-r from-secondary-600 to-secondary-700"
                   animate={{
@@ -532,21 +536,39 @@ export default function HomePage() {
               {[
                 {
                   icon: <Globe className="w-10 h-10 text-purple-400" />,
-                  title: 'Global Network',
+                  title: 'Censorship-Resistant',
                   description:
-                    'Deploy your applications on our global edge network for maximum performance and reliability.',
+                    'Stay online — always. Ivory sites are immune to takedown and centralized control thanks to Walrus’s decentralized architecture.',
                 },
                 {
                   icon: <Shield className="w-10 h-10 text-cyan-400" />,
-                  title: 'Enhanced Security',
+                  title: 'Secure & Ownable',
                   description:
-                    'Protect your applications with advanced security features and DDoS protection.',
+                    'You control your data. Ivory guarantees full ownership and tamper-proof deployment with zero vendor lock-in.',
                 },
                 {
                   icon: <Code className="w-10 h-10 text-pink-400" />,
-                  title: 'Developer Experience',
+                  title: 'No-Code Deployment',
                   description:
-                    'Build and deploy with ease using our intuitive developer tools and workflows.',
+                    'Publish your site in seconds. No coding, no setup — just click, deploy, and go live.',
+                },
+                {
+                  icon: <Server className="w-10 h-10 text-emerald-400" />,
+                  title: 'High Availability',
+                  description:
+                    'Your site is served from a global edge network, ensuring blazing-fast load times and near-100% uptime.',
+                },
+                {
+                  icon: <Lock className="w-10 h-10 text-yellow-400" />,
+                  title: 'Data Integrity',
+                  description:
+                    'All deployments are cryptographically verified to prevent tampering and ensure content fidelity.',
+                },
+                {
+                  icon: <Wifi className="w-10 h-10 text-indigo-400" />,
+                  title: 'Free Bandwidth',
+                  description:
+                    'Enjoy truly free hosting. Ivory serves your traffic at no cost — ideal for creators, devs, and indie projects.',
                 },
               ].map((feature, index) => (
                 <motion.div
@@ -588,6 +610,10 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+        <div className="w-full flex justify-center items-center py-6 opacity-80 z-20 relative">
+          <span className="mr-2 text-sm text-gray-400">Powered by</span>
+          <img src="/images/logos/walrus_logo_white_RGB.png" alt="Powered by Logo" className="h-6" style={{ filter: 'brightness(1.2)' }} />
+        </div>
       </div>
     </>
   )

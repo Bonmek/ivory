@@ -21,7 +21,7 @@ const LogoCarousel = () => {
       url: 'https://sui.io',
     },
     {
-      src: '/images/logos/Nike_Symbol.svg',
+      src: '/images/logos/walrus_logo_white_RGB.png',
       alt: 'Walrus',
       url: 'https://walrus.tech',
     },
@@ -31,7 +31,7 @@ const LogoCarousel = () => {
       url: 'https://sui.io',
     },
     {
-      src: '/images/logos/Nike_Symbol.svg',
+      src: '/images/logos/walrus_logo_white_RGB.png',
       alt: 'Walrus',
       url: 'https://walrus.tech',
     },
@@ -41,7 +41,7 @@ const LogoCarousel = () => {
       url: 'https://sui.io',
     },
     {
-      src: '/images/logos/Nike_Symbol.svg',
+      src: '/images/logos/walrus_logo_white_RGB.png',
       alt: 'Walrus',
       url: 'https://walrus.tech',
     },
@@ -51,7 +51,7 @@ const LogoCarousel = () => {
       url: 'https://sui.io',
     },
     {
-      src: '/images/logos/Nike_Symbol.svg',
+      src: '/images/logos/walrus_logo_white_RGB.png',
       alt: 'Walrus',
       url: 'https://walrus.tech',
     },

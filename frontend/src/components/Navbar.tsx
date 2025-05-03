@@ -31,17 +31,17 @@ const Navbar = () => {
 
   return (
     <>
-      <header 
-        className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
-          isScrolled 
-            ? 'bg-black/80 backdrop-blur-xl border-b border-secondary-500/20' 
+      <header
+        className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ease-in-out
+          ${isScrolled
+            ? 'bg-gradient-to-r from-primary-800 via-primary-900 to-primary-800 backdrop-blur-xl border-b-2 border-secondary-400/30 rounded-b-2xl shadow-lg shadow-primary-900/10'
             : 'bg-transparent'
-        }`}
-    >
+          }`}
+      >
         <nav className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between">
             {/* Logo */}
-            <motion.div 
+            <motion.div
               className="flex items-center space-x-2"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -53,7 +53,7 @@ const Navbar = () => {
                   Ivory
                 </span>
               </Link>
-          </motion.div>
+            </motion.div>
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-8">
@@ -63,9 +63,8 @@ const Navbar = () => {
                   <Link
                     key={item.name}
                     to={item.to}
-                    className={`relative group transition-colors ${
-                      isActivePath(item.to) ? 'text-white font-medium' : 'text-secondary-200 hover:text-white'
-              }`}
+                    className={`relative group transition-colors ${isActivePath(item.to) ? 'text-white font-semibold' : 'text-secondary-200 hover:text-white font-medium'
+                      }`}
                   >
                     <motion.div
                       initial={{ opacity: 0, y: -20 }}
@@ -73,10 +72,9 @@ const Navbar = () => {
                       transition={{ duration: 0.5, delay: index * 0.1 }}
                     >
                       {item.name}
-                      <span 
-                        className={`absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-secondary-400 to-secondary-600 transform transition-transform ${
-                          isActivePath(item.to) ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'
-                        }`}
+                      <span
+                        className={`absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-secondary-400 to-secondary-600 transform transition-transform ${isActivePath(item.to) ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'
+                          }`}
                       />
                     </motion.div>
                   </Link>
@@ -88,11 +86,11 @@ const Navbar = () => {
                 className="flex items-center space-x-2 px-4 py-2 rounded-full bg-gradient-to-r from-secondary-500 to-secondary-600 text-white hover:shadow-lg hover:shadow-secondary-500/20 transition-all"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                <Wallet className="w-4 h-4" />
-                <span>Connect Wallet</span>
+                <Wallet className="w-4 h-4 text-black" />
+                <span className='text-black font-bold'>Connect Wallet</span>
               </motion.button>
             </div>
 
@@ -139,11 +137,10 @@ const Navbar = () => {
                   <Link
                     key={item.name}
                     to={item.to}
-                    className={`block py-2 transition-colors ${
-                      isActivePath(item.to)
-                        ? 'text-white font-medium bg-gradient-to-r from-secondary-400/10 to-secondary-600/10 rounded-lg px-3' 
-                        : 'text-secondary-200 hover:text-white'
-                    }`}
+                    className={`block py-2 transition-colors ${isActivePath(item.to)
+                      ? 'text-white font-medium bg-gradient-to-r from-secondary-400/10 to-secondary-600/10 rounded-lg px-3'
+                      : 'text-secondary-200 hover:text-white'
+                      }`}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     <motion.div
