@@ -8,8 +8,8 @@ import {
   Shield,
   Code,
   Zap,
-  ShieldCheck,
-  Network,
+  FolderLock,
+  Blocks,
 } from 'lucide-react'
 import * as THREE from 'three'
 import CustomCursor from '@/components/HomePage/CustomCursor'
@@ -304,27 +304,51 @@ export default function HomePage() {
           </div>
 
           {[
-            { Icon: Globe, color: 'purple', position: 'top-1/4 left-1/5' },
-            { Icon: Shield, color: 'cyan', position: 'bottom-1/3 right-1/4' },
-            { Icon: Network, color: 'pink', position: 'top-1/2 right-1/3' },
-            {
-              Icon: ShieldCheck,
-              color: 'yellow',
-              position: 'bottom-1/4 left-1/3',
+            { 
+              Icon: Globe, 
+              color: 'purple', 
+              position: 'top-1/4 left-1/5'
             },
-            { Icon: Zap, color: 'green', position: 'top-1/3 right-1/5' },
+            { 
+              Icon: Shield, 
+              color: 'cyan', 
+              position: 'bottom-1/3 right-1/4'
+            },
+            { 
+              Icon: Blocks, 
+              color: 'pink', 
+              position: 'top-1/2 right-1/3'
+            },
+            {
+              Icon: FolderLock,
+              color: 'yellow',
+              position: 'bottom-1/4 left-1/3'
+            },
+            { 
+              Icon: Zap, 
+              color: 'green', 
+              position: 'top-1/3 right-1/5'
+            },
           ].map(({ Icon, color, position }, index) => (
             <motion.div
               key={index}
-              className={`absolute ${position} text-${color}-400`}
+              className={`absolute ${position}`}
               variants={floatingIconsVariants}
               animate="animate"
               transition={{ delay: index * 0.3 }}
-              style={{
-                filter: 'drop-shadow(0 0 10px currentColor)',
-              }}
             >
-              <Icon size={32} />
+              <motion.div
+                className={`text-${color}-400`}
+                style={{
+                  filter: 'drop-shadow(0 0 10px currentColor)',
+                }}
+                whileHover={{
+                  scale: 1.2,
+                  filter: 'drop-shadow(0 0 20px currentColor) brightness(1.5)',
+                }}
+              >
+                <Icon size={32} />
+              </motion.div>
             </motion.div>
           ))}
 
