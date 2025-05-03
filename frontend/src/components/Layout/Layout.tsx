@@ -2,9 +2,9 @@ import type { PropsWithChildren } from 'react'
 import React from 'react'
 
 import styles from './Layout.module.css'
-import { Navbar } from '../Navbar'
 import Footer from '../Footer'
 import { ThemeProvider } from '@/context/ThemeContext'
+import Navbar from '../Navbar'
 
 const Layout: React.FC<PropsWithChildren> = ({ children, ...rest }) => {
   return (

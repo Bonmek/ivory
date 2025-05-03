@@ -7,17 +7,14 @@ import {
   Globe,
   Shield,
   Code,
-  Cpu,
   Zap,
-  Binary,
   ShieldCheck,
   Network,
-  Blocks,
 } from 'lucide-react'
 import * as THREE from 'three'
 import CustomCursor from '@/components/HomePage/CustomCursor'
 import LogoCarousel from '@/components/HomePage/LogoCarousel'
-import {Helmet} from "react-helmet";
+import { Helmet } from 'react-helmet'
 
 const floatingIconsVariants: Variants = {
   animate: {
