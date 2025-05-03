@@ -75,9 +75,9 @@ const itemVariants: Variants = {
 const glowingBorderVariants: Variants = {
   animate: {
     boxShadow: [
-      '0 0 10px rgba(239, 68, 68, 0.5)',
-      '0 0 20px rgba(239, 68, 68, 0.7)',
-      '0 0 30px rgba(239, 68, 68, 0.5)',
+      '0 0 10px var(--tw-color-secondary-500, #97f0e5, 0.5)',
+      '0 0 20px var(--tw-color-secondary-500, #97f0e5, 0.7)',
+      '0 0 30px var(--tw-color-secondary-500, #97f0e5, 0.5)',
     ],
     transition: {
       duration: 2,
@@ -88,7 +88,7 @@ const glowingBorderVariants: Variants = {
 }
 
 const GRID_SIZE = 15
-const GRID_COLOR = 'rgba(239, 68, 68, 0.05)' // Single static color
+const GRID_COLOR = 'rgba(59, 130, 246, 0.05)' // Single static color
 
 const gridVariants = {
   hidden: { opacity: 0 },
@@ -197,7 +197,7 @@ export default function HomePage() {
         <link rel="canonical" href="http://mysite.com/example" />
       </Helmet>
       <CustomCursor />
-      <div className="min-h-screen bg-gradient-to-b from-black via-red-900/20 to-black text-white overflow-hidden relative">
+      <div className="min-h-screen bg-gradient-to-b from-black via-primary-900/20 to-black text-white overflow-hidden relative">
         {/* Grid Background */}
         <motion.div
           className="fixed inset-0 z-0 grid"
@@ -230,7 +230,7 @@ export default function HomePage() {
                       className="absolute inset-0"
                       style={{
                         backgroundColor: GRID_COLOR,
-                        border: '1px solid rgba(255, 255, 255, 0.05)',
+                        border: '1px solid rgba(59, 130, 246, 0.05)',
                         transform: 'translateZ(0)',
                         willChange: 'background-color',
                       }}
@@ -247,7 +247,7 @@ export default function HomePage() {
         <div
           className="fixed inset-0 opacity-20"
           style={{
-            backgroundImage: `radial-gradient(circle at center, rgba(239, 68, 68, 0.2) 0%, transparent 60%), url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><filter id="glow"><feGaussianBlur stdDeviation="2" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><g opacity="0.2" filter="url(#glow)"><line x1="0" y1="50" x2="100" y2="50" stroke="rgba(239, 68, 68, 0.5)" stroke-width="0.5"/><line x1="50" y1="0" x2="50" y2="100" stroke="rgba(239, 68, 68, 0.5)" stroke-width="0.5"/></g></svg>')`,
+            backgroundImage: `radial-gradient(circle at center, rgba(59, 130, 246, 0.2) 0%, transparent 60%), url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><filter id="glow"><feGaussianBlur stdDeviation="2" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><g opacity="0.2" filter="url(#glow)"><line x1="0" y1="50" x2="100" y2="50" stroke="rgba(59, 130, 246, 0.5)" stroke-width="0.5"/><line x1="50" y1="0" x2="50" y2="100" stroke="rgba(59, 130, 246, 0.5)" stroke-width="0.5"/></g></svg>')`,
             backgroundSize: '100px 100px',
             backgroundPosition: 'center',
             animation: 'gridPulse 10s infinite linear',
@@ -264,7 +264,7 @@ export default function HomePage() {
         >
           <div className="absolute inset-0 overflow-hidden">
             <motion.div
-              className="absolute top-1/4 left-1/4 w-64 h-64 bg-red-500/20 rounded-full filter blur-3xl"
+              className="absolute top-1/4 left-1/4 w-64 h-64 bg-secondary-500/20 rounded-full filter blur-3xl"
               animate={{
                 scale: [1, 1.5, 1],
                 opacity: [0.3, 0.6, 0.3],
@@ -276,7 +276,7 @@ export default function HomePage() {
               }}
             />
             <motion.div
-              className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-red-500/20 rounded-full filter blur-3xl"
+              className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-secondary-500/20 rounded-full filter blur-3xl"
               animate={{
                 scale: [1.2, 0.8, 1.2],
                 opacity: [0.4, 0.7, 0.4],
@@ -289,7 +289,7 @@ export default function HomePage() {
               }}
             />
             <motion.div
-              className="absolute top-1/2 right-1/3 w-40 h-40 bg-red-500/20 rounded-full filter blur-3xl"
+              className="absolute top-1/2 right-1/3 w-40 h-40 bg-secondary-500/20 rounded-full filter blur-3xl"
               animate={{
                 scale: [0.8, 1.3, 0.8],
                 opacity: [0.3, 0.5, 0.3],
@@ -330,25 +330,73 @@ export default function HomePage() {
 
           <div className="max-w-5xl mx-auto text-center z-10 relative">
             <motion.h1
-              className="text-4xl md:text-6xl lg:text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-red-400 to-red-600 tracking-tight font-display"
+              className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 tracking-tight"
               variants={itemVariants}
               style={{
-                textShadow: '0 0 20px rgba(239, 68, 68, 0.5)',
-                fontFamily: "'Clash Display', 'Inter', sans-serif",
+                textShadow: '0 0 20px var(--tw-color-secondary-500, #97f0e5, 0.5)',
+                fontFamily: "'Pixelify Sans', sans-serif",
                 letterSpacing: '-0.02em',
+                lineHeight: '1.2',
               }}
             >
-              Connect, protect, and build{' '}
-              <span style={{ color: 'white' }}>everywhere</span>
+              {['Connect', 'Protect', 'and', 'Build'].map((word, wordIndex) => (
+                <span key={wordIndex} className="inline-block">
+                  {word.split('').map((char, charIndex) => (
+                    <motion.span
+                      key={`${wordIndex}-${charIndex}`}
+                      className="inline-block cursor-pointer bg-clip-text text-transparent bg-gradient-to-r from-secondary-400 to-secondary-600"
+                      whileHover={{
+                        y: [0, -30, 0, -15, 0],
+                        scale: [1, 1.1, 1],
+                        transition: {
+                          duration: 0.6,
+                          times: [0, 0.2, 0.4, 0.6, 1],
+                          ease: "easeInOut"
+                        }
+                      }}
+                    >
+                      {char}
+                    </motion.span>
+                  ))}
+                  {wordIndex < 3 && <span className="inline-block w-4" />}
+                </span>
+              ))}
+              <span className="inline-block w-4" />
+              <motion.span 
+                className="text-white inline-block"
+              >
+                {'everywhere'.split('').map((char, index) => (
+                  <motion.span
+                    key={index}
+                    className="inline-block cursor-pointer relative"
+                    initial={{ y: 0 }}
+                    whileHover={{
+                      y: [0, -30, 0, -15, 0],
+                      scale: [1, 1.1, 1],
+                      transition: {
+                        duration: 0.6,
+                        times: [0, 0.2, 0.4, 0.6, 1],
+                        ease: "easeInOut"
+                      }
+                    }}
+                    style={{
+                      transformOrigin: "bottom center"
+                    }}
+                  >
+                    {char}
+                  </motion.span>
+                ))}
+              </motion.span>
             </motion.h1>
 
             <motion.p
-              className="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto font-sans"
+              className="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto"
               variants={itemVariants}
               style={{
-                fontFamily: "'Inter', sans-serif",
+                fontFamily: "'Pixelify Sans', sans-serif",
                 fontWeight: 400,
-                lineHeight: 1.6,
+                lineHeight: '1.6',
+                letterSpacing: '0.02em',
               }}
             >
               We make websites, apps, and networks faster and more secure. Our
@@ -361,19 +409,23 @@ export default function HomePage() {
               variants={itemVariants}
             >
               <motion.button
-                className="bg-gradient-to-r from-red-500 to-red-600 px-8 py-4 rounded-full text-lg font-medium relative overflow-hidden"
+                className="font-pixel bg-gradient-to-r from-secondary-500 to-secondary-600 px-8 py-4 rounded-full text-lg font-medium relative overflow-hidden group"
                 whileHover={{
                   scale: 1.05,
                   textShadow: '0 0 8px rgb(255,255,255)',
-                  boxShadow: '0 0 15px rgb(239,68,68)',
+                  boxShadow: '0 0 30px var(--tw-color-secondary-500, #97f0e5, 0.7)',
+                  filter: 'brightness(1.2)',
                 }}
                 whileTap={{ scale: 0.95 }}
                 variants={glowingBorderVariants}
                 animate="animate"
+                style={{
+                  letterSpacing: '0.05em',
+                }}
               >
                 <span className="relative z-10">Start Building</span>
                 <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-red-600 to-red-700"
+                  className="absolute inset-0 bg-gradient-to-r from-secondary-600 to-secondary-700"
                   animate={{
                     opacity: [0.5, 0.8, 0.5],
                   }}
@@ -383,16 +435,31 @@ export default function HomePage() {
                     repeatType: 'reverse',
                   }}
                 />
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-secondary-500/20 to-secondary-600/20 blur-xl"
+                  whileHover={{
+                    scale: 1.2,
+                    opacity: [0.5, 0.8, 0.5],
+                  }}
+                  transition={{
+                    duration: 1,
+                    repeat: Infinity,
+                    repeatType: 'reverse',
+                  }}
+                />
               </motion.button>
 
               <motion.button
-                className="bg-white/10 backdrop-blur-sm border border-white/20 px-8 py-4 rounded-full text-lg font-medium"
+                className="font-pixel bg-white/10 backdrop-blur-sm border border-white/20 px-8 py-4 rounded-full text-lg font-medium"
                 whileHover={{
                   scale: 1.05,
                   textShadow: '0 0 8px rgb(255,255,255)',
                   boxShadow: '0 0 15px rgba(255,255,255,0.3)',
                 }}
                 whileTap={{ scale: 0.95 }}
+                style={{
+                  letterSpacing: '0.05em',
+                }}
               >
                 Explore Docs
               </motion.button>
@@ -425,12 +492,13 @@ export default function HomePage() {
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
               style={{
-                fontFamily: "'Clash Display', 'Inter', sans-serif",
+                fontFamily: "'Pixelify Sans', sans-serif",
                 letterSpacing: '-0.02em',
+                lineHeight: '1.2',
               }}
             >
               The future of{' '}
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-red-400 to-red-600">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-secondary-400 to-secondary-600">
                 Web3
               </span>{' '}
               development
@@ -473,8 +541,9 @@ export default function HomePage() {
                   <h3
                     className="text-xl font-bold mb-3"
                     style={{
-                      fontFamily: "'Clash Display', 'Inter', sans-serif",
+                      fontFamily: "'Pixelify Sans', sans-serif",
                       letterSpacing: '-0.02em',
+                      lineHeight: '1.2',
                     }}
                   >
                     {feature.title}
@@ -482,9 +551,10 @@ export default function HomePage() {
                   <p
                     className="text-gray-400"
                     style={{
-                      fontFamily: "'Inter', sans-serif",
+                      fontFamily: "'Pixelify Sans', sans-serif",
                       fontWeight: 400,
-                      lineHeight: 1.6,
+                      lineHeight: '1.6',
+                      letterSpacing: '0.02em',
                     }}
                   >
                     {feature.description}

@@ -34,10 +34,10 @@ const Navbar = () => {
       <header 
         className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
           isScrolled 
-            ? 'bg-black/80 backdrop-blur-xl border-b border-red-500/20' 
+            ? 'bg-black/80 backdrop-blur-xl border-b border-secondary-500/20' 
             : 'bg-transparent'
         }`}
-      >
+    >
         <nav className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
             {/* Logo */}
@@ -48,12 +48,12 @@ const Navbar = () => {
               transition={{ duration: 0.5 }}
             >
               <Link to="/" className="flex items-center space-x-2">
-                <Blocks className="w-8 h-8 text-red-500" />
-                <span className="text-xl font-bold bg-gradient-to-r from-red-500 to-orange-400 bg-clip-text text-transparent">
+                <Blocks className="w-8 h-8 text-secondary-500" />
+                <span className="text-xl font-bold bg-gradient-to-r from-secondary-400 to-secondary-600 bg-clip-text text-transparent">
                   Ivory
                 </span>
               </Link>
-            </motion.div>
+          </motion.div>
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-8">
@@ -64,8 +64,8 @@ const Navbar = () => {
                     key={item.name}
                     to={item.to}
                     className={`relative group transition-colors ${
-                      isActivePath(item.to) ? 'text-white font-medium' : 'text-gray-300 hover:text-white'
-                    }`}
+                      isActivePath(item.to) ? 'text-white font-medium' : 'text-secondary-200 hover:text-white'
+              }`}
                   >
                     <motion.div
                       initial={{ opacity: 0, y: -20 }}
@@ -74,7 +74,7 @@ const Navbar = () => {
                     >
                       {item.name}
                       <span 
-                        className={`absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-red-500 to-orange-500 transform transition-transform ${
+                        className={`absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-secondary-400 to-secondary-600 transform transition-transform ${
                           isActivePath(item.to) ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'
                         }`}
                       />
@@ -85,7 +85,7 @@ const Navbar = () => {
 
               {/* Connect Wallet Button */}
               <motion.button
-                className="flex items-center space-x-2 px-4 py-2 rounded-full bg-gradient-to-r from-red-500 to-orange-500 text-white hover:shadow-lg hover:shadow-red-500/20 transition-all"
+                className="flex items-center space-x-2 px-4 py-2 rounded-full bg-gradient-to-r from-secondary-500 to-secondary-600 text-white hover:shadow-lg hover:shadow-secondary-500/20 transition-all"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
               whileHover={{ scale: 1.05 }}
@@ -98,7 +98,7 @@ const Navbar = () => {
 
             {/* Mobile Menu Button */}
             <motion.button
-              className="md:hidden p-2 text-gray-400 hover:text-white"
+              className="md:hidden p-2 text-secondary-200 hover:text-white"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               whileTap={{ scale: 0.9 }}
             >
@@ -128,7 +128,7 @@ const Navbar = () => {
 
             {/* Menu Content */}
             <motion.div
-              className="absolute right-0 top-0 h-full w-64 bg-gray-900/95 shadow-lg shadow-red-500/10"
+              className="absolute right-0 top-0 h-full w-64 bg-gray-900/95 shadow-lg shadow-secondary-500/10"
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
@@ -141,8 +141,8 @@ const Navbar = () => {
                     to={item.to}
                     className={`block py-2 transition-colors ${
                       isActivePath(item.to)
-                        ? 'text-white font-medium bg-gradient-to-r from-red-500/10 to-orange-500/10 rounded-lg px-3' 
-                        : 'text-gray-300 hover:text-white'
+                        ? 'text-white font-medium bg-gradient-to-r from-secondary-400/10 to-secondary-600/10 rounded-lg px-3' 
+                        : 'text-secondary-200 hover:text-white'
                     }`}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
@@ -156,7 +156,7 @@ const Navbar = () => {
                   </Link>
                 ))}
                 <motion.button
-                  className="w-full flex items-center justify-center space-x-2 px-4 py-2 rounded-full bg-gradient-to-r from-red-500 to-orange-500 text-white"
+                  className="w-full flex items-center justify-center space-x-2 px-4 py-2 rounded-full bg-gradient-to-r from-secondary-500 to-secondary-600 text-white"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
