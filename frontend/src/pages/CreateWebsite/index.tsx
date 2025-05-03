@@ -261,7 +261,7 @@ export default function CreateWebsitePage() {
                   className={cn(
                     "relative flex flex-col items-center justify-center w-full min-h-[160px] backdrop-blur-xl transition-all duration-300 cursor-pointer overflow-hidden",
                     isDragging && "ring-4 ring-cyan-400/40",
-                    selectedFile && "ring-4 ring-green-400/40",
+                    selectedFile && "ring-2 [box-shadow:0_0_0_2px_rgba(34,211,238,0.3)]",
                     error && "ring-4 ring-red-400/40"
                   )}
                   onDragOver={handleDragOver}
@@ -272,7 +272,6 @@ export default function CreateWebsitePage() {
                   role="button"
                   style={{ margin: "0 auto" }}
                 >
-                  {/* Running dashed border (show only if no file) */}
                   {!selectedFile && (
                     <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" style={{ borderRadius: '0.75rem' }}>
                       <rect
@@ -305,9 +304,7 @@ export default function CreateWebsitePage() {
                       onChange={handleFileInput}
                     />
                     {selectedFile ? (
-                      <div className="relative z-10">
-                        <FileUploadPreview fileName={selectedFile.name} onRemove={handleRemoveFile} />
-                      </div>
+                      <FileUploadPreview file={selectedFile} onRemove={handleRemoveFile} />
                     ) : (
                       <div className="flex flex-col items-center justify-center py-6 w-full relative z-10">
                         <Upload className="w-14 h-14 text-cyan-400 mb-2 drop-shadow-lg" />
