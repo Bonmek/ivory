@@ -507,7 +507,7 @@ export default function Dashboard() {
                   onHoverEnd={() => setHoveredCard(null)}
                   className="rounded-lg overflow-hidden relative h-full"
                 >
-                  <Card className="flex flex-row items-center p-6 bg-primary-900/80 border-secondary-500/20 shadow-lg backdrop-blur-sm h-full min-h-[180px] relative">
+                  <Card className="flex flex-row items-center p-4 sm:p-6 bg-primary-900/80 border-secondary-500/20 shadow-lg backdrop-blur-sm h-full min-h-[180px] relative">
                     {/* Dropdown Menu: Top Right */}
                     <div className="absolute top-4 right-4 z-10">
                       <DropdownMenu>
@@ -543,33 +543,33 @@ export default function Dashboard() {
                       <img
                         src={project.urlImg}
                         alt="project avatar"
-                        className="w-20 h-20 rounded-full object-cover border-2 border-white/20 shadow"
+                        className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-white/20 shadow"
                       />
                     </div>
                     {/* Middle: Project Info */}
-                    <div className="ml-6 flex flex-col flex-1">
+                    <div className=" flex flex-col flex-1 min-w-0">
                       {/* Project Name */}
-                      <div className="font-bold text-lg text-yellow-400 mb-1">{project.name}</div>
+                      <div className="font-bold text-lg text-yellow-400 mb-1 truncate">{project.name}</div>
                       {/* Project Link */}
                       <div className="flex items-center text-base text-white/80 mb-4">
-                        <a href={`https://${project.url}`} target="_blank" rel="noopener noreferrer" className="flex items-center hover:underline">
+                        <a href={`https://${project.url}`} target="_blank" rel="noopener noreferrer" className="flex items-center hover:underline truncate">
                           {project.url}
-                          <ExternalLink className="ml-1 h-4 w-4" />
+                          <ExternalLink className="ml-1 h-4 w-4 flex-shrink-0" />
                         </a>
                       </div>
                       {/* Dates Row */}
-                      <div className="flex flex-row w-full gap-x-8 mt-auto min-h-[56px]">
+                      <div className="flex flex-row w-full gap-x-4 sm:gap-x-8 mt-auto min-h-[56px]">
                         <div className="flex-1 min-w-0 flex flex-col justify-center">
-                          <div className="text-[11px] text-white/50 font-medium">Start date</div>
-                          <div className="text-base text-white font-semibold mt-1">{formatDate(project.startDate)}</div>
+                          <div className="text-[11px] text-white/50 font-medium truncate">Start date</div>
+                          <div className="text-base text-white font-semibold mt-1 truncate">{formatDate(project.startDate)}</div>
                         </div>
-                        <div className="flex-1 min-w-0 flex flex-col justify-center border-l border-white/10 pl-4">
-                          <div className="text-[11px] text-white/50 font-medium">Expired date</div>
-                          <div className="text-base text-white font-semibold mt-1">{formatDate(project.expiredDate)}</div>
+                        <div className="flex-1 min-w-0 flex flex-col justify-center border-l border-white/10 pl-2 sm:pl-4">
+                          <div className="text-[11px] text-white/50 font-medium truncate">Expired date</div>
+                          <div className="text-base text-white font-semibold mt-1 truncate">{formatDate(project.expiredDate)}</div>
                         </div>
-                        <div className="flex-1 min-w-0 flex flex-col justify-center border-l border-white/10 pl-4">
-                          <div className="text-[11px] text-white/50 font-medium">Remaining</div>
-                          <div className="text-base text-yellow-300 font-bold mt-1">{calculateRemaining(project.expiredDate)} days</div>
+                        <div className="flex-1 min-w-0 flex flex-col justify-center border-l border-white/10 pl-2 sm:pl-4">
+                          <div className="text-[11px] text-white/50 font-medium truncate">Remaining</div>
+                          <div className="text-base text-yellow-300 font-bold mt-1 truncate">{calculateRemaining(project.expiredDate)} days</div>
                         </div>
                       </div>
                     </div>
