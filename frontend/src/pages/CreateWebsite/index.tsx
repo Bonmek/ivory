@@ -261,7 +261,6 @@ export default function CreateWebsitePage() {
                   className={cn(
                     "relative flex flex-col items-center justify-center w-full min-h-[160px] backdrop-blur-xl transition-all duration-300 cursor-pointer overflow-hidden",
                     isDragging && "ring-4 ring-cyan-400/40",
-                    selectedFile && "ring-2 [box-shadow:0_0_0_2px_rgba(34,211,238,0.3)]",
                     error && "ring-4 ring-red-400/40"
                   )}
                   onDragOver={handleDragOver}
