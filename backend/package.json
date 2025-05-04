@@ -14,7 +14,10 @@
   "description": "",
   "dependencies": {
     "@mysten/sui": "^1.29.1",
+    "@mysten/sui.js": "^0.54.1",
     "@mysten/walrus": "^0.0.21",
+    "bech32": "^2.0.0",
+    "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "nodemon": "^3.1.10"
   },
