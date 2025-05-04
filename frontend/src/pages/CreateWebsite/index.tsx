@@ -272,15 +272,23 @@ export default function CreateWebsitePage() {
                   style={{ margin: "0 auto" }}
                 >
                   {!selectedFile && (
-                    <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" style={{ borderRadius: '0.75rem' }}>
+                    <svg
+                      className="absolute inset-0 w-full h-full pointer-events-none z-10"
+                      style={{ borderRadius: '0.75rem', width: 'calc(100% - 8px)', height: 'calc(100% - 8px)', left: 4, top: 4 }}
+                    >
                       <rect
-                        x="4" y="4" width="calc(100% - 8px)" height="calc(100% - 8px)"
-                        rx="12" ry="12"
+                        x="0"
+                        y="0"
+                        width="100%"
+                        height="100%"
+                        rx="12"
+                        ry="12"
                         fill="none"
                         stroke="#22d3ee"
                         strokeWidth="2.5"
                         strokeDasharray="16,10"
                         strokeDashoffset="0"
+                        vectorEffect="non-scaling-stroke"
                         style={{
                           animation: 'dashmove 1.5s linear infinite'
                         }}
