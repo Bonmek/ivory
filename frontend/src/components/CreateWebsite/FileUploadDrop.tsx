@@ -10,7 +10,7 @@ const FileUploadDrop: React.FC<FileUploadDropProps> = ({ error, handleBrowseClic
   <>
     <Button
       onClick={handleBrowseClick}
-      className="bg-[#e94057] hover:bg-[#d13046] transform transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-[#e94057]/20"
+      className="bg-secondary-500 hover:bg-secondary-700 transform transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-secondary-500/20"
     >
       Browse
     </Button>
