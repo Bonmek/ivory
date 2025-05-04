@@ -2,13 +2,11 @@ import { ConnectButton, useWalletKit } from '@mysten/wallet-kit'
 import { useAccount, useConnect, useDisconnect, useBalance } from 'wagmi'
 import { injected } from '@wagmi/connectors'
 import { useState } from 'react'
-import { Navbar } from '@/components/Navbar'
 
 export default function Home() {
   return (
     <>
       <main className="flex flex-col items-center justify-center min-h-screen px-6 py-12 gap-12 bg-gradient-to-br from-gray-50 to-gray-200">
-        <Navbar />
         <h1 className="text-4xl font-extrabold text-gray-800">
           🔗 Wallet Connect Deffffmo
         </h1>
