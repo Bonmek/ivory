@@ -7,7 +7,7 @@ import HomePage from './pages/Home'
 import CreateWebsitePage from './pages/CreateWebsite'
 import GuidePage from './pages/Guide'
 import DashboardPage from './pages/Dashboard'
-
+import EditWebsitePage from './pages/EditWebsite'
 const router = createBrowserRouter([
   {
     path: '/',
@@ -30,6 +30,14 @@ const router = createBrowserRouter([
     element: (
       <Layout>
         <GuidePage />
+      </Layout>
+    ),
+  },
+  {
+    path: '/edit-website',
+    element: (
+      <Layout>
+        <EditWebsitePage />
       </Layout>
     ),
   },
