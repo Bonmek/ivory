@@ -7,6 +7,7 @@ import ProjectCard from '@/components/Dashboard/ProjectCard'
 import DashboardHeader from '@/components/Dashboard/DashboardHeader'
 import DashboardTabs from '@/components/Dashboard/DashboardTabs'
 import EmptyState from '@/components/Dashboard/EmptyState'
+import { Helmet } from 'react-helmet'
 
 // Sample data - replace with your actual data source
 const projects = [
@@ -37,7 +38,8 @@ const projects = [
     startDate: new Date(2023, 9, 5),
     expiredDate: new Date(2024, 9, 5),
     color: '#97f0e5',
-    urlImg: 'https://i.pinimg.com/736x/6c/2e/62/6c2e62530a7a063da7bb33cd4f9db066.jpg',
+    urlImg:
+      'https://i.pinimg.com/736x/6c/2e/62/6c2e62530a7a063da7bb33cd4f9db066.jpg',
   },
   {
     id: 4,
@@ -56,7 +58,8 @@ const projects = [
     startDate: new Date(2023, 11, 1),
     expiredDate: new Date(2024, 11, 1),
     color: '#FFCCFF',
-    urlImg: 'https://i.pinimg.com/736x/1a/ad/76/1aad761232cf0897a3cc5cd5bc515740.jpg',
+    urlImg:
+      'https://i.pinimg.com/736x/1a/ad/76/1aad761232cf0897a3cc5cd5bc515740.jpg',
   },
   {
     id: 6,
@@ -65,7 +68,8 @@ const projects = [
     startDate: new Date(2024, 0, 15),
     expiredDate: new Date(2025, 0, 15),
     color: '#CCFFFF',
-    urlImg: 'https://i.pinimg.com/736x/97/c2/a2/97c2a213211e28e1c7dbdc1d86df4713.jpg',
+    urlImg:
+      'https://i.pinimg.com/736x/97/c2/a2/97c2a213211e28e1c7dbdc1d86df4713.jpg',
   },
 ]
 
@@ -156,37 +160,43 @@ export default function Dashboard() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black via-primary-900/20 to-black relative overflow-hidden">
-      <ThreeJSBackground />
+    <>
+      <Helmet>
+        <meta charSet="utf-8" />
+        <title>Dashboard | Ivory</title>
+        <link rel="canonical" href="http://mysite.com/example" />
+      </Helmet>
+      <div className="min-h-screen bg-gradient-to-b from-black via-primary-900/20 to-black relative overflow-hidden">
+        <ThreeJSBackground />
+        <div className="mt-20 container mx-auto py-8 relative z-10">
+          <DashboardHeader
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            sortType={sortType}
+            setSortType={setSortType}
+            date={date}
+            setDate={setDate}
+          />
 
-      <div className="mt-20 container mx-auto py-8 relative z-10">
-        <DashboardHeader
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          sortType={sortType}
-          setSortType={setSortType}
-          date={date}
-          setDate={setDate}
-        />
+          <DashboardTabs activeTab={activeTab} setActiveTab={setActiveTab} />
 
-        <DashboardTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+          <AnimatePresence mode="wait">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 items-stretch">
+              {sortedProjects.map((project, index) => (
+                <ProjectCard
+                  key={project.id}
+                  project={project}
+                  index={index}
+                  onHoverStart={handleHoverStart}
+                  onHoverEnd={handleHoverEnd}
+                />
+              ))}
+            </div>
+          </AnimatePresence>
 
-        <AnimatePresence mode="wait">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 items-stretch">
-            {sortedProjects.map((project, index) => (
-              <ProjectCard
-                key={project.id}
-                project={project}
-                index={index}
-                onHoverStart={handleHoverStart}
-                onHoverEnd={handleHoverEnd}
-              />
-            ))}
-          </div>
-        </AnimatePresence>
-
-        {sortedProjects.length === 0 && <EmptyState onReset={handleReset} />}
+          {sortedProjects.length === 0 && <EmptyState onReset={handleReset} />}
+        </div>
       </div>
-    </div>
+    </>
   )
 }

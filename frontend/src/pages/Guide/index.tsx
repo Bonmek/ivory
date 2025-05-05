@@ -1,7 +1,14 @@
 import React from 'react'
+import { Helmet } from 'react-helmet'
 
 function GuidePage() {
   return (
+    <>
+      <Helmet>
+        <meta charSet="utf-8" />
+        <title>Guide | Ivory</title>
+        <link rel="canonical" href="http://mysite.com/example" />
+      </Helmet>
     <div className="bg-gray-900 text-white font-sans min-h-screen flex flex-col">
       {/* Navigation Bar */}
       <nav className="flex justify-between items-center p-4 border-b border-gray-700">
@@ -154,6 +161,7 @@ function GuidePage() {
         </div>
       </div>
     </div>
+    </>
   )
 }
 
