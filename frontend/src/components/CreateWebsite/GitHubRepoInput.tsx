@@ -68,7 +68,7 @@ export default function GithubRepoInput({
       {user ? (
         <div className='flex max-lg:flex-col items-center gap-2'>
           <Button
-            className="max-lg:w-full w-fit bg-[#e94057] hover:bg-[#d13046] text-white border border-gray-700 rounded-md h-10 transition-all duration-300 flex items-center justify-center gap-2"
+            className="max-lg:w-full w-fit bg-secondary-500 hover:bg-secondary-700 text-white border border-gray-700 rounded-md h-10 transition-all duration-300 flex items-center justify-center gap-2"
           >
             <Github className="h-5 w-5" />
             {user}
@@ -78,7 +78,7 @@ export default function GithubRepoInput({
               placeholder="Search repositories..."
               value={searchRepository}
               onChange={handleSearchRepository}
-              className="w-full bg-[#2a2a2a] border-gray-700 rounded-md h-10 pl-10 transition-all duration-300 focus:border-[#e94057] focus:ring-[#e94057]"
+              className="w-full bg-primary-500 border-gray-700 rounded-md h-10 pl-10 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500"
             />
             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -91,7 +91,7 @@ export default function GithubRepoInput({
       ) : (
         <Button
           onClick={handleGithubSignIn}
-          className="w-full bg-[#2a2a2a] hover:bg-[#3a3a3a] text-white border border-gray-700 rounded-md h-10 transition-all duration-300 flex items-center justify-center gap-2"
+          className="w-full bg-secondary-500 hover:bg-secondary-700 text-black border border-gray-700 rounded-md h-10 transition-all duration-300 flex items-center justify-center gap-2"
         >
           <Github className="h-5 w-5" />
           Sign in with GitHub
@@ -102,7 +102,7 @@ export default function GithubRepoInput({
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className='flex flex-col gap-2 border border-gray-700 rounded-md p-2 bg-[#1a1a1a]'
+          className='flex flex-col gap-2 border border-gray-700 rounded-md p-2 bg-primary-500'
         >
           {filteredRepositories.length > 0 ? (
             <motion.div
@@ -121,8 +121,8 @@ export default function GithubRepoInput({
                     delay: index * 0.03
                   }}
                   className={cn(
-                    "p-1 px-4 rounded-md hover:bg-[#3a3a3a] transition-all flex items-center justify-between group",
-                    selectedRepo === repository.id ? "bg-[#2a2a2a] border border-[#e94057]" : "border border-transparent"
+                    "p-1 px-4 rounded-md hover:bg-primary-700 transition-all flex items-center justify-between group",
+                    selectedRepo === repository.id ? "bg-primary-500 border border-secondary-500" : "border border-transparent"
                   )}
                 >
                   <span className="truncate text-sm">{repository.name}</span>
@@ -131,7 +131,7 @@ export default function GithubRepoInput({
                     size="sm"
                     className={cn(
                       "opacity-0 group-hover:opacity-100 text-sm transition-opacity",
-                      selectedRepo === repository.id ? "bg-[#e94057] hover:bg-[#d13046]" : "bg-[#2a2a2a] hover:bg-[#1a1a1a]"
+                      selectedRepo === repository.id ? "bg-secondary-500 hover:bg-secondary-700" : "bg-primary-500 hover:bg-primary-700"
                     )}
                   >
                     {selectedRepo === repository.id ? 'Selected' : 'Import'}
@@ -185,7 +185,7 @@ export default function GithubRepoInput({
         placeholder="Enter GitHub repository URL"
         value={githubUrl}
         onChange={handleGithubUrlChange}
-        className="bg-[#2a2a2a] border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-[#e94057] focus:ring-[#e94057]"
+        className="bg-primary-500 border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500"
       />
       <p className="text-sm text-gray-400">
         Example: https://github.com/username/repository
