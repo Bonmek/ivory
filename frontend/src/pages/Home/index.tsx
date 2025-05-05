@@ -17,6 +17,7 @@ import CustomCursor from '@/components/HomePage/CustomCursor'
 import LogoCarousel from '@/components/HomePage/LogoCarousel'
 import { Helmet } from 'react-helmet'
 import { useNavigate } from 'react-router'
+import Loading from '@/components/Loading'
 
 const floatingIconsVariants: Variants = {
   animate: {
@@ -115,6 +116,15 @@ const cellVariants = {
 
 export default function HomePage() {
   const [scrollY, setScrollY] = useState(0)
+  const [isLoading, setIsLoading] = useState(() => {
+    // Check if this is the first visit
+    const hasVisited = localStorage.getItem('hasVisitedHome')
+    if (!hasVisited) {
+      localStorage.setItem('hasVisitedHome', 'true')
+      return true
+    }
+    return false
+  })
   const navigate = useNavigate()
   const heroRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -123,6 +133,17 @@ export default function HomePage() {
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
   const scale = useTransform(scrollYProgress, [0, 0.5], [1, 0.8])
   const y = useTransform(scrollYProgress, [0, 0.5], [0, -100])
+
+  useEffect(() => {
+    if (isLoading) {
+      // Only show loading animation if it's the first visit
+      const timer = setTimeout(() => {
+        setIsLoading(false)
+      }, 2000)
+
+      return () => clearTimeout(timer)
+    }
+  }, [isLoading])
 
   useEffect(() => {
     if (!canvasRef.current) return
@@ -191,6 +212,10 @@ export default function HomePage() {
       window.removeEventListener('resize', handleResize)
     }
   }, [])
+
+  if (isLoading) {
+    return <Loading />
+  }
 
   return (
     <>
@@ -538,7 +563,7 @@ export default function HomePage() {
                   icon: <Globe className="w-10 h-10 text-purple-400" />,
                   title: 'Censorship-Resistant',
                   description:
-                    'Stay online — always. Ivory sites are immune to takedown and centralized control thanks to Walrus’s decentralized architecture.',
+                    'Stay online — always. Ivory sites are immune to takedown and centralized control thanks to Walrus\'s decentralized architecture.',
                 },
                 {
                   icon: <Shield className="w-10 h-10 text-cyan-400" />,
