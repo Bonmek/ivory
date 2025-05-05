@@ -1,29 +1,49 @@
 {
   "name": "backend",
   "version": "1.0.0",
+  "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc --build",
+    "build": "tsc",
     "start": "node dist/index.js",
-    "dev": "nodemon ./src/index.ts"
+    "dev": "nodemon ./src/index.ts",
+    "lint": "eslint . --config eslint.config.mjs",
+    "lint:fix": "eslint . --config eslint.config.mjs --fix"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "packageManager": "pnpm@10.10.0",
   "dependencies": {
     "@mysten/sui": "^1.29.1",
-    "@mysten/sui.js": "^0.54.1",
+    "@mysten/wallet-standard": "^0.14.9",
     "@mysten/walrus": "^0.0.21",
+    "@types/express": "^5.0.1",
+    "axios": "^1.9.0",
     "bech32": "^2.0.0",
+    "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
-    "nodemon": "^3.1.10"
+    "express-session": "^1.18.1",
+    "multer": "1.4.5-lts.2",
+    "passport": "^0.7.0",
+    "passport-github2": "^0.1.12"
   },
   "devDependencies": {
-    "@types/express": "^5.0.1",
+    "@eslint/js": "^9.26.0",
+    "@types/cors": "^2.8.17",
+    "@types/express-session": "^1.18.1",
+    "@types/multer": "^1.4.12",
+    "@types/passport": "^1.0.17",
+    "@types/passport-github2": "^1.2.9",
+    "@typescript-eslint/eslint-plugin": "^8.31.1",
+    "@typescript-eslint/parser": "^8.31.1",
+    "eslint": "^9.26.0",
+    "globals": "^16.0.0",
+    "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.31.1"
   }
 }
