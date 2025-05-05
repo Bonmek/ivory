@@ -4,9 +4,7 @@ import { WalrusClient } from "@mysten/walrus";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import multer from "multer";
 import dotenv from "dotenv";
-import { Transaction } from "@mysten/sui/transactions";
 
-const tx = new Transaction();
 dotenv.config();
 const upload = multer();
 const app = express();
@@ -30,7 +28,7 @@ app.post("/write-blob", upload.single("file"), async (req, res, next) => {
     }
     const fileBuffer = new Uint8Array(req.file.buffer);
 
-    let attributes = req.body.attributes
+    const attributes = req.body.attributes
       ? typeof req.body.attributes === "string"
         ? JSON.parse(req.body.attributes)
         : req.body.attributes
@@ -41,25 +39,21 @@ app.post("/write-blob", upload.single("file"), async (req, res, next) => {
       deletable: false,
       epochs: 1,
       signer: keypair,
-      attributes,
+      attributes: attributes,
     });
 
     const blobObjectId =
       typeof blobObject.id === "string" ? blobObject.id : blobObject.id.id;
 
     // Write blobId in attributes
-    const { digest } = await walrusClient.executeWriteBlobAttributesTransaction(
+    await walrusClient.executeWriteBlobAttributesTransaction(
       {
         blobObjectId: blobObjectId,
         signer: keypair,
         attributes: { blobId: blobId },
       }
     );
-    
-    // Wait for transaction to be confirmed
-    const txResult = await suiClient.getTransactionBlock({ digest });
-    const status = txResult.effects?.status?.status;
-    console.log("Transaction status:", status);
+
     const attrs = await walrusClient.readBlobAttributes({ blobObjectId });
 
     res.json({ blobId, objectId: blobObjectId, attributes: attrs });
