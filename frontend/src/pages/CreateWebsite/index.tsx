@@ -18,6 +18,7 @@ import AdvancedOptions from "@/components/CreateWebsite/AdvancedOptions";
 import { advancedOptionsType, buildOutputSettingsType } from "@/types/CreateWebstie/types";
 import { frameworks } from "@/constants/frameworks";
 import ThreeJSBackground from "@/components/ThreeJsBackground";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export default function CreateWebsitePage() {
   useTheme();
@@ -178,37 +179,27 @@ export default function CreateWebsitePage() {
               <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
             </section>
 
-            <RadioGroup
-              defaultValue="upload"
-              className="mb-6"
+            <Tabs
               value={uploadMethod}
               onValueChange={(value) => setUploadMethod(value as UploadMethod)}
+              className="mb-6 w-full"
             >
-              <section className="flex items-center space-x-8">
-                <div className="flex items-center space-x-2 hover:text-secondary-500 transition-colors">
-                  <RadioGroupItem value="upload" id="upload" />
-                  <Label htmlFor="upload" className="flex items-center">
-                    <Upload className="h-4 w-4 mr-2" />
-                    Upload
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2 hover:text-secondary-500 transition-colors">
-                  <RadioGroupItem value="github" id="github" />
-                  <Label htmlFor="github" className="flex items-center">
-                    <Github className="h-4 w-4 mr-2" />
-                    Github
-                  </Label>
-                </div>
-              </section>
-            </RadioGroup>
-
-            {uploadMethod === UploadMethod.Upload ? (
-              <>
+              <TabsList className="w-full mb-2 bg-primary-700">
+                <TabsTrigger value={UploadMethod.Upload}>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload
+                </TabsTrigger>
+                <TabsTrigger value={UploadMethod.GitHub}>
+                  <Github className="h-4 w-4 mr-2" />
+                  Github
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value={UploadMethod.Upload}>
                 <section
                   className={cn(
                     "relative flex flex-col items-center justify-center w-full min-h-[160px] backdrop-blur-xl transition-all duration-300 cursor-pointer overflow-hidden",
                     isDragging && "ring-4 ring-cyan-400/40",
-                    error && "ring-4 ring-red-400/40"
+                    // error && "ring-4 ring-red-400/40"
                   )}
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
@@ -216,7 +207,6 @@ export default function CreateWebsitePage() {
                   onClick={handleBrowseClick}
                   tabIndex={0}
                   role="button"
-                  style={{ margin: "0 auto" }}
                 >
                   {!selectedFile && (
                     <svg
@@ -231,7 +221,7 @@ export default function CreateWebsitePage() {
                         rx="12"
                         ry="12"
                         fill="none"
-                        stroke="#97f0e5"
+                        stroke="#8c8c8c"
                         strokeWidth="2.5"
                         strokeDasharray="16,10"
                         strokeDashoffset="0"
@@ -261,9 +251,9 @@ export default function CreateWebsitePage() {
                             tabIndex={0}
                             role="button"
                           >
-                            <Upload className="w-14 h-14 mb-2 drop-shadow-lg" />
+                            <Upload className="w-14 h-14 mb-2 text-secondary-500 drop-shadow-lg" />
                             <p className="text-base font-bold text-center">
-                              Drag & drop <span className="text-secondary-400">ZIP file</span> here
+                              Drag & drop <span className="text-secondary-500">ZIP file</span> here
                             </p>
                           </div>
                           <div className="flex items-center justify-center w-5/6 my-4">
@@ -284,36 +274,37 @@ export default function CreateWebsitePage() {
                     )}
                   </div>
                 </section>
-              </>
-            ) : (
-              <GithubRepoInput
-                githubUrl={githubUrl}
-                handleGithubUrlChange={handleGithubUrlChange}
-                searchRepository={searchRepository}
-                handleSearchRepository={handleSearchRepository}
-                user={user}
-                handleGithubSignIn={handleGithubSignIn}
-                repositories={repositories}
-                filteredRepositories={filteredRepositories}
-                handleSelectRepository={handleSelectRepository}
-                selectedRepo={selectedRepo}
-                handleShowMore={handleShowMore}
-                visibleRepos={visibleRepos}
-                selectedFramework={selectedFramework}
-                frameworks={frameworks}
-                handleSelectFramework={handleSelectFramework}
-                selectedFile={selectedFile}
-                error={error}
-                fileInputRef={fileInputRef}
-                handleFileInput={handleFileInput}
-                handleBrowseClick={handleBrowseClick}
-                handleRemoveFile={handleRemoveFile}
-                isDragging={isDragging}
-                setIsDragging={setIsDragging}
-                setSelectedFile={setSelectedFile}
-                setError={setError}
-              />
-            )}
+              </TabsContent>
+              <TabsContent value={UploadMethod.GitHub}>
+                <GithubRepoInput
+                  githubUrl={githubUrl}
+                  handleGithubUrlChange={handleGithubUrlChange}
+                  searchRepository={searchRepository}
+                  handleSearchRepository={handleSearchRepository}
+                  user={user}
+                  handleGithubSignIn={handleGithubSignIn}
+                  repositories={repositories}
+                  filteredRepositories={filteredRepositories}
+                  handleSelectRepository={handleSelectRepository}
+                  selectedRepo={selectedRepo}
+                  handleShowMore={handleShowMore}
+                  visibleRepos={visibleRepos}
+                  selectedFramework={selectedFramework}
+                  frameworks={frameworks}
+                  handleSelectFramework={handleSelectFramework}
+                  selectedFile={selectedFile}
+                  error={error}
+                  fileInputRef={fileInputRef}
+                  handleFileInput={handleFileInput}
+                  handleBrowseClick={handleBrowseClick}
+                  handleRemoveFile={handleRemoveFile}
+                  isDragging={isDragging}
+                  setIsDragging={setIsDragging}
+                  setSelectedFile={setSelectedFile}
+                  setError={setError}
+                />
+              </TabsContent>
+            </Tabs>
           </motion.div>
 
           {/* Right Column */}
@@ -372,7 +363,7 @@ export default function CreateWebsitePage() {
             </section>
           </motion.div>
         </article>
-      </motion.main>
-    </main>
+      </motion.main >
+    </main >
   )
 }

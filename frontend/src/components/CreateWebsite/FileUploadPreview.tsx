@@ -80,16 +80,16 @@ const FileList: React.FC<{ files: string[] }> = ({ files }) => {
     if (item.isFolder) {
       return (
         <div key={item.path} className="space-y-1">
-          <div 
+          <div
             className="flex items-center text-cyan-100 hover:bg-cyan-900/30 rounded px-2 py-1 cursor-pointer"
             onClick={e => toggleFolder(item.path, e)}
           >
             {expandedFolders.has(item.path) ? (
-              <ChevronDown className="w-4 h-4 mr-2 text-cyan-400" />
+              <ChevronDown className="w-4 h-4 mr-2 text-secondary-500" />
             ) : (
-              <ChevronRight className="w-4 h-4 mr-2 text-cyan-400" />
+              <ChevronRight className="w-4 h-4 mr-2 text-secondary-500" />
             )}
-            <Folder className="w-4 h-4 mr-2 text-cyan-400" />
+            <Folder className="w-4 h-4 mr-2 text-secondary-500" />
             <span>{item.name}</span>
           </div>
           {expandedFolders.has(item.path) && item.children && (
@@ -126,7 +126,7 @@ const FileUploadPreview: React.FC<FileUploadPreviewProps> = ({ file, onRemove })
     setLoading(true);
     setError(null);
     setFiles([]);
-    
+
     if (!file.name.endsWith('.zip')) {
       setError('Please upload a ZIP file');
       setLoading(false);
@@ -163,10 +163,10 @@ const FileUploadPreview: React.FC<FileUploadPreviewProps> = ({ file, onRemove })
 
   return (
     <div className="flex flex-col items-center w-full">
-      <div className="w-full max-w-[420px] bg-gradient-to-br from-cyan-900/40 to-cyan-900/30 backdrop-blur-md rounded-xl shadow-md p-4">
+      <div className="w-full max-w-full bg-gradient-to-br from-cyan-900/40 to-cyan-900/30 backdrop-blur-md rounded-xl shadow-md p-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-2">
-            <Folder className="w-5 h-5 text-cyan-400" />
+            <Folder className="w-5 h-5 text-secondary-500" />
             <span className="text-cyan-100 font-semibold truncate max-w-[200px]">{file.name}</span>
           </div>
           <Button
