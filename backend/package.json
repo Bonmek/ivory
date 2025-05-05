@@ -11,6 +11,8 @@
   "license": "ISC",
   "packageManager": "pnpm@10.10.0",
   "dependencies": {
+    "@mysten/sui": "^1.29.1",
+    "@mysten/walrus": "^0.0.21",
     "express": "^5.1.0"
   },
   "devDependencies": {
