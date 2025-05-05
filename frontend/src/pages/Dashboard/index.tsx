@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import {
   CalendarIcon,
   ExternalLink,
@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion'
 import * as THREE from 'three'
+import { memo } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -34,6 +35,7 @@ import {
 } from '@/components/ui/popover'
 import { Calendar } from '@/components/ui/calendar'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import ThreeJSBackground from '@/components/ThreeJsBackground'
 
 // Sample data - replace with your actual data source
 const projects = [
@@ -44,7 +46,8 @@ const projects = [
     startDate: new Date(2023, 5, 15),
     expiredDate: new Date(2024, 5, 15),
     color: '#97f0e5',
-    urlImg: 'https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg',
+    urlImg:
+      'https://i.pinimg.com/originals/8d/33/da/8d33da6e29c1108b834c176483e376b9.gif',
   },
   {
     id: 2,
@@ -53,7 +56,8 @@ const projects = [
     startDate: new Date(2023, 7, 10),
     expiredDate: new Date(2024, 7, 10),
     color: '#97f0e5',
-    urlImg: 'https://images.pexels.com/photos/1103970/pexels-photo-1103970.jpeg',
+    urlImg:
+      'https://i.pinimg.com/736x/ba/10/29/ba1029e64ee8e2e4fdf94192fb7a26d0.jpg',
   },
   {
     id: 3,
@@ -62,7 +66,7 @@ const projects = [
     startDate: new Date(2023, 9, 5),
     expiredDate: new Date(2024, 9, 5),
     color: '#97f0e5',
-    urlImg: 'https://images.pexels.com/photos/34950/pexels-photo.jpg',
+    urlImg: 'https://i.pinimg.com/736x/6c/2e/62/6c2e62530a7a063da7bb33cd4f9db066.jpg',
   },
   {
     id: 4,
@@ -71,7 +75,8 @@ const projects = [
     startDate: new Date(2023, 10, 20),
     expiredDate: new Date(2024, 10, 20),
     color: '#FFCCCC',
-    urlImg: 'https://images.pexels.com/photos/2102416/pexels-photo-2102416.jpeg',
+    urlImg:
+      'https://i.pinimg.com/736x/57/38/bf/5738bfa4aac857c3da147999a0f2022f.jpg',
   },
   {
     id: 5,
@@ -80,7 +85,7 @@ const projects = [
     startDate: new Date(2023, 11, 1),
     expiredDate: new Date(2024, 11, 1),
     color: '#FFCCFF',
-    urlImg: 'https://images.pexels.com/photos/325185/pexels-photo-325185.jpeg',
+    urlImg: 'https://i.pinimg.com/736x/1a/ad/76/1aad761232cf0897a3cc5cd5bc515740.jpg',
   },
   {
     id: 6,
@@ -89,129 +94,44 @@ const projects = [
     startDate: new Date(2024, 0, 15),
     expiredDate: new Date(2025, 0, 15),
     color: '#CCFFFF',
-    urlImg: 'https://images.pexels.com/photos/459225/pexels-photo-459225.jpeg',
+    urlImg: 'https://i.pinimg.com/736x/97/c2/a2/97c2a213211e28e1c7dbdc1d86df4713.jpg',
   },
 ]
 
-// Enhanced ThreeJS Background Component with beautiful effects
-const ThreeJSBackground = () => {
-  const mountRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    // Scene setup
-    const scene = new THREE.Scene()
-    const camera = new THREE.PerspectiveCamera(
-      75,
-      window.innerWidth / window.innerHeight,
-      0.1,
-      1000,
-    )
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true })
-
-    renderer.setSize(window.innerWidth, window.innerHeight)
-    renderer.setClearColor(0x000000, 0)
-
-    if (mountRef.current) {
-      mountRef.current.appendChild(renderer.domElement)
-    }
-
-    // Create particles
-    const particlesGeometry = new THREE.BufferGeometry()
-    const particlesCount = 1000
-    const posArray = new Float32Array(particlesCount * 3)
-
-    for (let i = 0; i < particlesCount * 3; i++) {
-      posArray[i] = (Math.random() - 0.5) * 30
-    }
-
-    particlesGeometry.setAttribute(
-      'position',
-      new THREE.BufferAttribute(posArray, 3),
-    )
-
-    const particlesMaterial = new THREE.PointsMaterial({
-      size: 0.02,
-      color: 0x97f0e5, // Secondary color
-      transparent: true,
-      opacity: 0.6,
-    })
-
-    const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial)
-    scene.add(particlesMesh)
-
-    camera.position.z = 15
-
-    // Animation
-    const animate = () => {
-      requestAnimationFrame(animate)
-      particlesMesh.rotation.y += 0.001
-      particlesMesh.rotation.x += 0.0005
-      renderer.render(scene, camera)
-    }
-
-    animate()
-
-    // Handle resize
-    const handleResize = () => {
-      camera.aspect = window.innerWidth / window.innerHeight
-      camera.updateProjectionMatrix()
-      renderer.setSize(window.innerWidth, window.innerHeight)
-    }
-
-    window.addEventListener('resize', handleResize)
-
-    // Cleanup
-    return () => {
-      window.removeEventListener('resize', handleResize)
-      if (mountRef.current) {
-        mountRef.current.removeChild(renderer.domElement)
-      }
-    }
-  }, [])
-
-  return <div ref={mountRef} className="fixed inset-0 -z-10" />
-}
-
-// Card animation variants
+// Update card animation variants
 const cardVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: {
-      delay: i * 0.05,
-      duration: 0.5,
-      type: 'spring',
-      stiffness: 100,
-      damping: 15,
-    },
-  }),
-  exit: {
-    opacity: 0,
-    y: -20,
-    transition: {
-      duration: 0.3,
-      ease: 'easeInOut',
-    },
-  },
+  hidden: { opacity: 0 },
+  visible: { opacity: 1 },
+  exit: { opacity: 0 },
   hover: {
-    y: -5,
-    boxShadow: '0 10px 30px -10px rgba(151, 240, 229, 0.4)',
+    y: -4,
+    scale: 1.02,
     transition: {
       type: 'spring',
-      stiffness: 400,
-      damping: 10,
+      stiffness: 300,
+      damping: 20,
     },
   },
 }
 
-// Tab indicator animation
-const tabVariants = {
-  inactive: { scale: 0.95, opacity: 0.7 },
-  active: { scale: 1, opacity: 1 },
+// Add hover effect variants for card elements
+const cardElementVariants = {
+  initial: { opacity: 0.8 },
+  hover: {
+    opacity: 1,
+    transition: {
+      duration: 0.2,
+    },
+  },
 }
 
-// Helper function to format date
+// Simplified tab animation
+const tabVariants = {
+  inactive: { opacity: 0.7 },
+  active: { opacity: 1 },
+}
+
+// Memoize helper functions
 const formatDate = (date: Date) => {
   return date.toLocaleDateString('en-GB', {
     year: 'numeric',
@@ -220,11 +140,216 @@ const formatDate = (date: Date) => {
   })
 }
 
-// Helper function to calculate days between dates
 const calculateDaysBetween = (date1: Date, date2: Date) => {
   const diffTime = Math.abs(date2.getTime() - date1.getTime())
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 }
+
+// Update ProjectCard component with TypeScript types
+interface ProjectCardProps {
+  project: {
+    id: number
+    name: string
+    url: string
+    startDate: Date
+    expiredDate: Date
+    color: string
+    urlImg: string
+  }
+  index: number
+  onHoverStart: (id: number) => void
+  onHoverEnd: () => void
+}
+
+const ProjectCard = memo(
+  ({ project, index, onHoverStart, onHoverEnd }: ProjectCardProps) => {
+    const remainingDays = useMemo(
+      () => calculateDaysBetween(new Date(), project.expiredDate),
+      [project.expiredDate],
+    )
+
+    const [startDateOpen, setStartDateOpen] = useState(false)
+    const [expiredDateOpen, setExpiredDateOpen] = useState(false)
+    const [remainingOpen, setRemainingOpen] = useState(false)
+
+    return (
+      <div
+        key={project.id}
+        className="rounded-lg overflow-hidden relative h-full group transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02]"
+        onMouseEnter={() => onHoverStart(project.id)}
+        onMouseLeave={() => onHoverEnd()}
+      >
+        <Card className="flex flex-row items-center p-4 sm:p-6 bg-primary-900/80 border-secondary-500/20 shadow-lg backdrop-blur-sm h-full min-h-[180px] relative transition-all duration-300 hover:bg-primary-900/90 hover:border-secondary-500/30">
+          {/* Dropdown Menu: Top Right */}
+          <div className="absolute top-4 right-4 z-10 opacity-80 group-hover:opacity-100 transition-opacity duration-200">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="h-10 w-10 flex items-center justify-center rounded-full text-secondary-300 hover:text-white hover:bg-primary-800/50 transition-all duration-200 hover:scale-110 active:scale-95">
+                  <MoreHorizontal className="h-6 w-6" />
+                  <span className="sr-only">Open menu</span>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="w-48 bg-primary-900 border-secondary-500/20 text-white backdrop-blur-sm"
+              >
+                <DropdownMenuItem className="focus:bg-primary-800">
+                  <Users className="mr-2 h-4 w-4" />
+                  <span>Transfer ownership</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="focus:bg-primary-800">
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  <span>Extend site</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="focus:bg-primary-800">
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  <span>Update site</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="bg-secondary-500/20" />
+                <DropdownMenuItem className="text-red-400 focus:text-red-400 focus:bg-primary-800">
+                  <Trash className="mr-2 h-4 w-4" />
+                  <span>Delete site</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          {/* Left: Project Image */}
+          <div className="flex-shrink-0 opacity-80 group-hover:opacity-100 transition-opacity duration-200">
+            <img
+              src={project.urlImg}
+              alt="project avatar"
+              className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-white/20 shadow transition-all duration-300 group-hover:border-secondary-500/50 group-hover:scale-105"
+            />
+          </div>
+
+          {/* Middle: Project Info */}
+          <div className="flex flex-col flex-1 min-w-0 opacity-80 group-hover:opacity-100 transition-opacity duration-200">
+            {/* Project Name */}
+            <div className="font-bold text-lg text-secondary-400 mb-1 truncate group-hover:translate-x-0.5 transition-transform duration-200">
+              {project.name}
+            </div>
+
+            {/* Project Link */}
+            <div className="flex items-center text-base text-white/80 mb-4 group-hover:translate-x-0.5 transition-transform duration-200">
+              <a
+                href={`https://${project.url}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center hover:underline truncate transition-colors duration-200 hover:text-secondary-500"
+              >
+                {project.url}
+                <span className="ml-1 group-hover:translate-x-0.5 transition-transform duration-200">
+                  <ExternalLink className="h-4 w-4 flex-shrink-0" />
+                </span>
+              </a>
+            </div>
+
+            {/* Dates Row */}
+            <div className="flex flex-row w-full gap-x-4 sm:gap-x-8 mt-auto min-h-[56px] opacity-80 group-hover:opacity-100 transition-opacity duration-200">
+              <div className="flex-1 min-w-0 flex flex-col justify-center">
+                <div className="text-[11px] text-white/50 font-medium truncate">
+                  Start date
+                </div>
+                <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
+                  <PopoverTrigger asChild>
+                    <div
+                      className="text-sm text-white font-semibold mt-1 truncate cursor-help group-hover:translate-x-0.5 transition-transform duration-200"
+                      onMouseEnter={() => setStartDateOpen(true)}
+                      onMouseLeave={() => setStartDateOpen(false)}
+                    >
+                      {formatDate(project.startDate)}
+                    </div>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="w-auto p-2 bg-primary-900 border-secondary-500/20 text-white backdrop-blur-sm"
+                    onMouseEnter={() => setStartDateOpen(true)}
+                    onMouseLeave={() => setStartDateOpen(false)}
+                  >
+                    <div className="text-sm">
+                      {project.startDate.toLocaleDateString('en-GB', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      })}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div className="flex-1 min-w-0 flex flex-col justify-center border-l border-white/10 pl-2 sm:pl-4">
+                <div className="text-[11px] text-white/50 font-medium truncate">
+                  Expired date
+                </div>
+                <Popover
+                  open={expiredDateOpen}
+                  onOpenChange={setExpiredDateOpen}
+                >
+                  <PopoverTrigger asChild>
+                    <div
+                      className="text-sm text-white font-semibold mt-1 truncate cursor-help group-hover:translate-x-0.5 transition-transform duration-200"
+                      onMouseEnter={() => setExpiredDateOpen(true)}
+                      onMouseLeave={() => setExpiredDateOpen(false)}
+                    >
+                      {formatDate(project.expiredDate)}
+                    </div>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="w-auto p-2 bg-primary-900 border-secondary-500/20 text-white backdrop-blur-sm"
+                    onMouseEnter={() => setExpiredDateOpen(true)}
+                    onMouseLeave={() => setExpiredDateOpen(false)}
+                  >
+                    <div className="text-sm">
+                      {project.expiredDate.toLocaleDateString('en-GB', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      })}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div className="flex-1 min-w-0 flex flex-col justify-center border-l border-white/10 pl-2 sm:pl-4">
+                <div className="text-[11px] text-white/50 font-medium truncate">
+                  Remaining
+                </div>
+                <Popover open={remainingOpen} onOpenChange={setRemainingOpen}>
+                  <PopoverTrigger asChild>
+                    <div
+                      className="text-sm text-secondary-300 font-bold mt-1 truncate cursor-help group-hover:translate-x-0.5 transition-transform duration-200"
+                      onMouseEnter={() => setRemainingOpen(true)}
+                      onMouseLeave={() => setRemainingOpen(false)}
+                    >
+                      {remainingDays} days
+                    </div>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="w-auto p-2 bg-primary-900 border-secondary-500/20 text-white backdrop-blur-sm"
+                    onMouseEnter={() => setRemainingOpen(true)}
+                    onMouseLeave={() => setRemainingOpen(false)}
+                  >
+                    <div className="text-sm">
+                      Expires on{' '}
+                      {project.expiredDate.toLocaleDateString('en-GB', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      })}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+          </div>
+        </Card>
+      </div>
+    )
+  },
+)
+
+ProjectCard.displayName = 'ProjectCard'
 
 export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -234,52 +359,65 @@ export default function Dashboard() {
   const [sortType, setSortType] = useState('latest')
   const [statusFilter, setStatusFilter] = useState<string[]>([])
 
-  // Calculate remaining days
-  const calculateRemaining = (expiredDate: Date) => {
-    return calculateDaysBetween(new Date(), expiredDate)
-  }
+  // Memoize filtered and sorted projects
+  const filteredProjects = useMemo(() => {
+    return projects.filter((project) => {
+      const matchesSearch =
+        project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        project.url.toLowerCase().includes(searchQuery.toLowerCase())
 
-  // Filter projects based on search query, date, and tab
-  const filteredProjects = projects.filter((project) => {
-    const matchesSearch =
-      project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.url.toLowerCase().includes(searchQuery.toLowerCase())
+      const matchesDate =
+        !date ||
+        formatDate(project.startDate) === formatDate(date) ||
+        formatDate(project.expiredDate) === formatDate(date)
 
-    const matchesDate =
-      !date ||
-      formatDate(project.startDate) === formatDate(date) ||
-      formatDate(project.expiredDate) === formatDate(date)
+      const remaining = calculateDaysBetween(new Date(), project.expiredDate)
 
-    const remaining = calculateRemaining(project.expiredDate)
-    const status = remaining <= 30 ? 'expiring-soon' : 'active'
+      const matchesTab =
+        activeTab === 'all' ||
+        (activeTab === 'expiring' && remaining <= 30) ||
+        (activeTab === 'recent' &&
+          calculateDaysBetween(new Date(), project.startDate) <= 30)
 
-    const matchesTab =
-      activeTab === 'all' ||
-      (activeTab === 'expiring' && remaining <= 30) ||
-      (activeTab === 'recent' &&
-        calculateDaysBetween(new Date(), project.startDate) <= 30)
+      return matchesSearch && matchesDate && matchesTab
+    })
+  }, [searchQuery, date, activeTab])
 
-    return matchesSearch && matchesDate && matchesTab
-  })
+  const sortedProjects = useMemo(() => {
+    return [...filteredProjects].sort((a, b) => {
+      if (sortType === 'latest') {
+        return b.startDate.getTime() - a.startDate.getTime()
+      }
+      if (sortType === 'name-az') {
+        return a.name.localeCompare(b.name)
+      }
+      if (sortType === 'name-za') {
+        return b.name.localeCompare(a.name)
+      }
+      if (sortType === 'remaining-low') {
+        return (
+          calculateDaysBetween(new Date(), a.expiredDate) -
+          calculateDaysBetween(new Date(), b.expiredDate)
+        )
+      }
+      if (sortType === 'remaining-high') {
+        return (
+          calculateDaysBetween(new Date(), b.expiredDate) -
+          calculateDaysBetween(new Date(), a.expiredDate)
+        )
+      }
+      return 0
+    })
+  }, [filteredProjects, sortType])
 
-  const sortedProjects = [...filteredProjects].sort((a, b) => {
-    if (sortType === 'latest') {
-      return b.startDate.getTime() - a.startDate.getTime()
-    }
-    if (sortType === 'name-az') {
-      return a.name.localeCompare(b.name)
-    }
-    if (sortType === 'name-za') {
-      return b.name.localeCompare(a.name)
-    }
-    if (sortType === 'remaining-low') {
-      return calculateRemaining(a.expiredDate) - calculateRemaining(b.expiredDate)
-    }
-    if (sortType === 'remaining-high') {
-      return calculateRemaining(b.expiredDate) - calculateRemaining(a.expiredDate)
-    }
-    return 0
-  })
+  // Memoize handlers
+  const handleHoverStart = useCallback((id: number) => {
+    setHoveredCard(id)
+  }, [])
+
+  const handleHoverEnd = useCallback(() => {
+    setHoveredCard(null)
+  }, [])
 
   const sortTypeLabel = {
     latest: 'Latest',
@@ -348,7 +486,10 @@ export default function Dashboard() {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>
+                <motion.div
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.97 }}
+                >
                   <Button
                     variant="outline"
                     className={`
@@ -365,20 +506,58 @@ export default function Dashboard() {
                   </Button>
                 </motion.div>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-primary-900 border-secondary-500/20 text-white backdrop-blur-sm min-w-[220px]">
-                <DropdownMenuItem onClick={() => setSortType('latest')} className={sortType === 'latest' ? 'bg-secondary-500/10 text-secondary-500 font-bold' : ''}>
+              <DropdownMenuContent
+                align="end"
+                className="bg-primary-900 border-secondary-500/20 text-white backdrop-blur-sm min-w-[220px]"
+              >
+                <DropdownMenuItem
+                  onClick={() => setSortType('latest')}
+                  className={
+                    sortType === 'latest'
+                      ? 'bg-secondary-500/10 text-secondary-500 font-bold'
+                      : ''
+                  }
+                >
                   Latest
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortType('name-az')} className={sortType === 'name-az' ? 'bg-secondary-500/10 text-secondary-500 font-bold' : ''}>
+                <DropdownMenuItem
+                  onClick={() => setSortType('name-az')}
+                  className={
+                    sortType === 'name-az'
+                      ? 'bg-secondary-500/10 text-secondary-500 font-bold'
+                      : ''
+                  }
+                >
                   Name A-Z
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortType('name-za')} className={sortType === 'name-za' ? 'bg-secondary-500/10 text-secondary-500 font-bold' : ''}>
+                <DropdownMenuItem
+                  onClick={() => setSortType('name-za')}
+                  className={
+                    sortType === 'name-za'
+                      ? 'bg-secondary-500/10 text-secondary-500 font-bold'
+                      : ''
+                  }
+                >
                   Name Z-A
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortType('remaining-low')} className={sortType === 'remaining-low' ? 'bg-secondary-500/10 text-secondary-500 font-bold' : ''}>
+                <DropdownMenuItem
+                  onClick={() => setSortType('remaining-low')}
+                  className={
+                    sortType === 'remaining-low'
+                      ? 'bg-secondary-500/10 text-secondary-500 font-bold'
+                      : ''
+                  }
+                >
                   Remaining Days: low to high
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortType('remaining-high')} className={sortType === 'remaining-high' ? 'bg-secondary-500/10 text-secondary-500 font-bold' : ''}>
+                <DropdownMenuItem
+                  onClick={() => setSortType('remaining-high')}
+                  className={
+                    sortType === 'remaining-high'
+                      ? 'bg-secondary-500/10 text-secondary-500 font-bold'
+                      : ''
+                  }
+                >
                   Remaining Days: high to low
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -489,94 +668,15 @@ export default function Dashboard() {
 
         <AnimatePresence mode="wait">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 items-stretch">
-            {sortedProjects.map((project, index) => {
-              const remainingDays = calculateRemaining(project.expiredDate)
-              const isHovered = hoveredCard === project.id
-
-              return (
-                <motion.div
-                  key={project.id}
-                  custom={index}
-                  variants={cardVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  whileHover="hover"
-                  layout
-                  onHoverStart={() => setHoveredCard(project.id)}
-                  onHoverEnd={() => setHoveredCard(null)}
-                  className="rounded-lg overflow-hidden relative h-full"
-                >
-                  <Card className="flex flex-row items-center p-4 sm:p-6 bg-primary-900/80 border-secondary-500/20 shadow-lg backdrop-blur-sm h-full min-h-[180px] relative">
-                    {/* Dropdown Menu: Top Right */}
-                    <div className="absolute top-4 right-4 z-10">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className="h-10 w-10 flex items-center justify-center rounded-full text-secondary-300 hover:text-white hover:bg-primary-800/50 transition">
-                            <MoreHorizontal className="h-6 w-6" />
-                            <span className="sr-only">Open menu</span>
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48 bg-primary-900 border-secondary-500/20 text-white backdrop-blur-sm">
-                          <DropdownMenuItem className="focus:bg-primary-800">
-                            <Users className="mr-2 h-4 w-4" />
-                            <span>Transfer ownership</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="focus:bg-primary-800">
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            <span>Extend site</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="focus:bg-primary-800">
-                            <RefreshCw className="mr-2 h-4 w-4" />
-                            <span>Update site</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator className="bg-secondary-500/20" />
-                          <DropdownMenuItem className="text-red-400 focus:text-red-400 focus:bg-primary-800">
-                            <Trash className="mr-2 h-4 w-4" />
-                            <span>Delete site</span>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                    {/* Left: Project Image */}
-                    <div className="flex-shrink-0">
-                      <img
-                        src={project.urlImg}
-                        alt="project avatar"
-                        className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-white/20 shadow"
-                      />
-                    </div>
-                    {/* Middle: Project Info */}
-                    <div className=" flex flex-col flex-1 min-w-0">
-                      {/* Project Name */}
-                      <div className="font-bold text-lg text-yellow-400 mb-1 truncate">{project.name}</div>
-                      {/* Project Link */}
-                      <div className="flex items-center text-base text-white/80 mb-4">
-                        <a href={`https://${project.url}`} target="_blank" rel="noopener noreferrer" className="flex items-center hover:underline truncate">
-                          {project.url}
-                          <ExternalLink className="ml-1 h-4 w-4 flex-shrink-0" />
-                        </a>
-                      </div>
-                      {/* Dates Row */}
-                      <div className="flex flex-row w-full gap-x-4 sm:gap-x-8 mt-auto min-h-[56px]">
-                        <div className="flex-1 min-w-0 flex flex-col justify-center">
-                          <div className="text-[11px] text-white/50 font-medium truncate">Start date</div>
-                          <div className="text-base text-white font-semibold mt-1 truncate">{formatDate(project.startDate)}</div>
-                        </div>
-                        <div className="flex-1 min-w-0 flex flex-col justify-center border-l border-white/10 pl-2 sm:pl-4">
-                          <div className="text-[11px] text-white/50 font-medium truncate">Expired date</div>
-                          <div className="text-base text-white font-semibold mt-1 truncate">{formatDate(project.expiredDate)}</div>
-                        </div>
-                        <div className="flex-1 min-w-0 flex flex-col justify-center border-l border-white/10 pl-2 sm:pl-4">
-                          <div className="text-[11px] text-white/50 font-medium truncate">Remaining</div>
-                          <div className="text-base text-yellow-300 font-bold mt-1 truncate">{calculateRemaining(project.expiredDate)} days</div>
-                        </div>
-                      </div>
-                    </div>
-                  </Card>
-                </motion.div>
-              )
-            })}
+            {sortedProjects.map((project, index) => (
+              <ProjectCard
+                key={project.id}
+                project={project}
+                index={index}
+                onHoverStart={handleHoverStart}
+                onHoverEnd={handleHoverEnd}
+              />
+            ))}
           </div>
         </AnimatePresence>
 
