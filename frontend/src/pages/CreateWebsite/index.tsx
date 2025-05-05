@@ -10,7 +10,6 @@ import { Separator } from "@/components/ui/separator";
 import { useTheme } from "@/context/ThemeContext";
 import GithubRepoInput from "@/components/CreateWebsite/GitHubRepoInput";
 import FileUploadPreview from "@/components/CreateWebsite/FileUploadPreview";
-import FileUploadDrop from "@/components/CreateWebsite/FileUploadDrop";
 import FrameworkPresetSelector from "@/components/CreateWebsite/FrameworkPresetSelector";
 import OwnershipRadioGroup from "@/components/CreateWebsite/OwnershipRadioGroup";
 import { CacheControl, Ownership, UploadMethod } from "@/types/CreateWebstie/enums";
@@ -18,6 +17,7 @@ import BuildOutputSetting from "@/components/CreateWebsite/BuildOutputSetting";
 import AdvancedOptions from "@/components/CreateWebsite/AdvancedOptions";
 import { advancedOptionsType, buildOutputSettingsType } from "@/types/CreateWebstie/types";
 import { frameworks } from "@/constants/frameworks";
+import ThreeJSBackground from "@/components/ThreeJsBackground";
 
 export default function CreateWebsitePage() {
   useTheme();
@@ -152,62 +152,9 @@ export default function CreateWebsitePage() {
     setSelectedFramework(frameworkId)
   }
 
-
   return (
-    <main className="min-h-screen relative overflow-hidden">
-      {/* Radial background เหมือนหน้า Home */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_#16202a_0%,_#10151c_100%)]" />
-      {/* Layer gradient ฟ้าอ่อน */}
-      <div className="absolute inset-0 bg-gradient-to-b from-cyan-900/30 via-transparent to-cyan-900/20" />
-      {/* Animated background */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute left-1/2 top-1/3 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-cyan-400/10 rounded-full blur-3xl animate-pulse-slow" />
-        <div className="absolute left-1/3 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-2xl animate-pulse-slower" />
-        <div className="absolute right-1/4 bottom-1/4 w-[400px] h-[400px] bg-cyan-300/10 rounded-full blur-2xl animate-pulse-slower" />
-      </div>
-      <style>{`
-        @keyframes pulse-slow {
-          0%, 100% { opacity: 0.7; transform: scale(1); }
-          50% { opacity: 1; transform: scale(1.08); }
-        }
-        .animate-pulse-slow {
-          animation: pulse-slow 7s ease-in-out infinite;
-        }
-        .animate-pulse-slower {
-          animation: pulse-slow 12s ease-in-out infinite;
-        }
-        .animated-border {
-          position: relative;
-          background: #10151c;
-          border-radius: 0.75rem;
-          padding: 2px;
-          overflow: hidden;
-        }
-        .animated-border::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          border-radius: 0.75rem;
-          padding: 2px;
-          background: linear-gradient(90deg, #22d3ee 0%, #0ea5e9 25%, #22d3ee 50%, #0ea5e9 75%, #22d3ee 100%);
-          -webkit-mask: 
-            linear-gradient(#fff 0 0) content-box, 
-            linear-gradient(#fff 0 0);
-          mask: 
-            linear-gradient(#fff 0 0) content-box, 
-            linear-gradient(#fff 0 0);
-          -webkit-mask-composite: xor;
-          mask-composite: exclude;
-          background-size: 200% 100%;
-          animation: shine 3s linear infinite;
-        }
-        @keyframes shine {
-          to {
-            background-position: 200% 0;
-          }
-        }
-      `}</style>
-      {/* เนื้อหา */}
+    <main className="min-h-screen bg-gradient-to-b from-black via-primary-900/20 to-black relative overflow-hidden">
+      <ThreeJSBackground />
       <motion.main className="relative z-10 max-w-7xl mx-auto px-6 py-12 pt-28">
         <motion.h1
           initial={{ opacity: 0 }}
@@ -284,24 +231,14 @@ export default function CreateWebsitePage() {
                         rx="12"
                         ry="12"
                         fill="none"
-                        stroke="#22d3ee"
+                        stroke="#97f0e5"
                         strokeWidth="2.5"
                         strokeDasharray="16,10"
                         strokeDashoffset="0"
                         vectorEffect="non-scaling-stroke"
-                        style={{
-                          animation: 'dashmove 1.5s linear infinite'
-                        }}
                       />
                     </svg>
                   )}
-                  <style>{`
-                    @keyframes dashmove {
-                      to {
-                        stroke-dashoffset: -52px;
-                      }
-                    }
-                  `}</style>
                   <div className="relative z-20 w-full h-full flex flex-col items-center justify-center">
                     <input
                       type="file"
@@ -314,27 +251,35 @@ export default function CreateWebsitePage() {
                       <FileUploadPreview file={selectedFile} onRemove={handleRemoveFile} />
                     ) : (
                       <div className="flex flex-col items-center justify-center py-6 w-full relative z-10">
-                        <Upload className="w-14 h-14 text-cyan-400 mb-2 drop-shadow-lg" />
-                        <p className="text-base font-bold text-cyan-100 text-center mb-1">
-                          Drag & drop <span className="text-cyan-400">ZIP file</span> here
-                        </p>
-                        <div className="flex items-center gap-3 my-3 w-full max-w-[240px]">
-                          <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent"></div>
-                          <div className="relative px-3 py-1 rounded-full bg-cyan-400/5 backdrop-blur-sm">
-                            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-400/0 via-cyan-400/50 to-cyan-400/0 animate-[spin_3s_linear_infinite]"></div>
-                            <div className="absolute inset-[1px] rounded-full bg-[#10151c]"></div>
-                            <span className="relative text-[11px] font-medium bg-gradient-to-r from-cyan-200 to-cyan-400 bg-clip-text text-transparent uppercase tracking-wider">or</span>
+                        <div className="w-full flex flex-col items-center">
+                          <div
+                            className="flex flex-col items-center justify-center w-full"
+                            style={{ pointerEvents: 'auto' }}
+                            onDragOver={handleDragOver}
+                            onDragLeave={handleDragLeave}
+                            onDrop={handleDrop}
+                            tabIndex={0}
+                            role="button"
+                          >
+                            <Upload className="w-14 h-14 mb-2 drop-shadow-lg" />
+                            <p className="text-base font-bold text-center">
+                              Drag & drop <span className="text-secondary-400">ZIP file</span> here
+                            </p>
                           </div>
-                          <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent"></div>
+                          <div className="flex items-center justify-center w-5/6 my-4">
+                            <Separator className="flex-1" />
+                            <span className="mx-4 text-sm text-gray-400 font-semibold select-none">or</span>
+                            <Separator className="flex-1" />
+                          </div>
+                          <button
+                            type="button"
+                            className="px-6 py-2 rounded-lg bg-secondary-500 text-black font-semibold shadow-md hover:bg-secondary-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all duration-200"
+                            onClick={e => { e.stopPropagation(); handleBrowseClick(); }}
+                          >
+                            Browse file
+                          </button>
                         </div>
-                        <button
-                          type="button"
-                          className="px-6 py-2 rounded-lg bg-gradient-to-r from-cyan-400 to-blue-500 text-white font-semibold shadow-md hover:from-cyan-300 hover:to-blue-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all duration-200"
-                          onClick={e => { e.stopPropagation(); handleBrowseClick(); }}
-                        >
-                          Browse file
-                        </button>
-                        {error && <p className="text-red-400 text-xs mt-2">{error}</p>}
+                        {error && <p className="text-red-400 text-xs mt-2 text-center w-full">{error}</p>}
                       </div>
                     )}
                   </div>
