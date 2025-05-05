@@ -1,6 +1,6 @@
 'use client'
 
-import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
+import { motion, useMotionValue, useSpring } from 'framer-motion'
 import { Code, Cloud, Server, Terminal } from 'lucide-react'
 import { useEffect, useState, useCallback, memo } from 'react'
 
@@ -19,10 +19,13 @@ const CustomCursor = memo(() => {
   const [isHovering, setIsHovering] = useState(false)
   const [iconIndex, setIconIndex] = useState(0)
 
-  const moveCursor = useCallback((e) => {
-    cursorX.set(e.clientX)
-    cursorY.set(e.clientY)
-  }, [cursorX, cursorY])
+  const moveCursor = useCallback(
+    (e) => {
+      cursorX.set(e.clientX)
+      cursorY.set(e.clientY)
+    },
+    [cursorX, cursorY],
+  )
 
   const handleMouseEnter = useCallback(() => setIsHovering(true), [])
   const handleMouseLeave = useCallback(() => setIsHovering(false), [])
@@ -71,7 +74,7 @@ const CustomCursor = memo(() => {
             type: 'spring',
             stiffness: 400,
             damping: 15,
-            mass: 0.1
+            mass: 0.1,
           },
           rotate: {
             duration: 2,
@@ -96,7 +99,7 @@ const CustomCursor = memo(() => {
           type: 'spring',
           stiffness: 400,
           damping: 15,
-          mass: 0.1
+          mass: 0.1,
         }}
       />
 
@@ -104,7 +107,8 @@ const CustomCursor = memo(() => {
         className="absolute w-20 h-20 rounded-full"
         style={{
           transform: 'translate(-50%, -50%)',
-          background: 'radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, transparent 70%)',
+          background:
+            'radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, transparent 70%)',
         }}
         animate={{
           scale: isHovering ? 1.5 : 1,
@@ -114,7 +118,7 @@ const CustomCursor = memo(() => {
           type: 'spring',
           stiffness: 400,
           damping: 15,
-          mass: 0.1
+          mass: 0.1,
         }}
       />
     </motion.div>
