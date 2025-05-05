@@ -91,7 +91,7 @@ export default function GithubRepoInput({
       ) : (
         <Button
           onClick={handleGithubSignIn}
-          className="w-full bg-primary-500 hover:bg-primary-700 text-white border border-gray-700 rounded-md h-10 transition-all duration-300 flex items-center justify-center gap-2"
+          className="w-full bg-secondary-500 hover:bg-secondary-700 text-black border border-gray-700 rounded-md h-10 transition-all duration-300 flex items-center justify-center gap-2"
         >
           <Github className="h-5 w-5" />
           Sign in with GitHub
