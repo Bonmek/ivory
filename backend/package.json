@@ -13,7 +13,9 @@
   "dependencies": {
     "@mysten/sui": "^1.29.1",
     "@mysten/walrus": "^0.0.21",
+    "@types/express": "^5.0.1",
     "axios": "^1.9.0",
+    "bech32": "^2.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
