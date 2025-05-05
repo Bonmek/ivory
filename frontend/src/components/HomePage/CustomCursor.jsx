@@ -2,40 +2,41 @@
 
 import { motion, useMotionValue, useSpring } from 'framer-motion'
 import { Code, Cloud, Server, Terminal } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback, memo } from 'react'
 
-export default function CustomCursor() {
+const icons = [
+  { Icon: Code, color: 'text-blue-500' },
+  { Icon: Cloud, color: 'text-cyan-500' },
+  { Icon: Server, color: 'text-purple-500' },
+  { Icon: Terminal, color: 'text-green-500' },
+]
+
+const CustomCursor = memo(() => {
   const cursorX = useMotionValue(-100)
   const cursorY = useMotionValue(-100)
-  const springX = useSpring(cursorX, { stiffness: 100, damping: 20 })
-  const springY = useSpring(cursorY, { stiffness: 100, damping: 20 })
+  const springX = useSpring(cursorX, { stiffness: 200, damping: 20, mass: 0.1 })
+  const springY = useSpring(cursorY, { stiffness: 200, damping: 20, mass: 0.1 })
   const [isHovering, setIsHovering] = useState(false)
   const [iconIndex, setIconIndex] = useState(0)
 
-  const icons = [
-    { Icon: Code, color: 'text-blue-500' },
-    { Icon: Cloud, color: 'text-cyan-500' },
-    { Icon: Server, color: 'text-purple-500' },
-    { Icon: Terminal, color: 'text-green-500' },
-  ]
-
-  useEffect(() => {
-    // Check if it's mobile/touch device
-    if (typeof window === 'undefined' || 'ontouchstart' in window) return
-
-    const moveCursor = (e) => {
+  const moveCursor = useCallback(
+    (e) => {
       cursorX.set(e.clientX)
       cursorY.set(e.clientY)
-    }
+    },
+    [cursorX, cursorY],
+  )
 
-    const handleMouseEnter = () => setIsHovering(true)
-    const handleMouseLeave = () => setIsHovering(false)
+  const handleMouseEnter = useCallback(() => setIsHovering(true), [])
+  const handleMouseLeave = useCallback(() => setIsHovering(false), [])
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || 'ontouchstart' in window) return
 
     window.addEventListener('mousemove', moveCursor)
     window.addEventListener('mouseenter', handleMouseEnter)
     window.addEventListener('mouseleave', handleMouseLeave)
 
-    // Rotate through icons every 2 seconds
     const iconInterval = setInterval(() => {
       setIconIndex((prev) => (prev + 1) % icons.length)
     }, 2000)
@@ -46,7 +47,7 @@ export default function CustomCursor() {
       window.removeEventListener('mouseleave', handleMouseLeave)
       clearInterval(iconInterval)
     }
-  }, [cursorX, cursorY, icons.length])
+  }, [moveCursor, handleMouseEnter, handleMouseLeave])
 
   const CurrentIcon = icons[iconIndex].Icon
   const iconColor = icons[iconIndex].color
@@ -59,7 +60,6 @@ export default function CustomCursor() {
         y: springY,
       }}
     >
-      {/* Icon */}
       <motion.div
         className={`absolute ${iconColor}`}
         style={{
@@ -72,8 +72,9 @@ export default function CustomCursor() {
         transition={{
           scale: {
             type: 'spring',
-            stiffness: 500,
-            damping: 20,
+            stiffness: 400,
+            damping: 15,
+            mass: 0.1,
           },
           rotate: {
             duration: 2,
@@ -85,7 +86,6 @@ export default function CustomCursor() {
         <CurrentIcon size={24} />
       </motion.div>
 
-      {/* Circle border */}
       <motion.div
         className="absolute w-8 h-8 border-2 border-current rounded-full"
         style={{
@@ -97,12 +97,12 @@ export default function CustomCursor() {
         }}
         transition={{
           type: 'spring',
-          stiffness: 500,
-          damping: 20,
+          stiffness: 400,
+          damping: 15,
+          mass: 0.1,
         }}
       />
 
-      {/* Glow effect */}
       <motion.div
         className="absolute w-20 h-20 rounded-full"
         style={{
@@ -116,10 +116,15 @@ export default function CustomCursor() {
         }}
         transition={{
           type: 'spring',
-          stiffness: 500,
-          damping: 20,
+          stiffness: 400,
+          damping: 15,
+          mass: 0.1,
         }}
       />
     </motion.div>
   )
-}
+})
+
+CustomCursor.displayName = 'CustomCursor'
+
+export default CustomCursor
