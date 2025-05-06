@@ -17,7 +17,7 @@ const ProjectNameInput: React.FC<ProjectNameInputProps> = ({ value, onChange, id
       id={id}
       value={value}
       onChange={onChange}
-      className="bg-[#2a2a2a] border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-[#e94057] focus:ring-[#e94057]"
+      className="bg-primary-500 border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500"
     />
   </section>
 );

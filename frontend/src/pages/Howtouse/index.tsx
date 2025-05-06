@@ -1,44 +1,12 @@
+import ThreeJSBackground from '@/components/ThreeJsBackground'
 import React from 'react'
 
-function GuidePage() {
+function HowToUsePage() {
   return (
-    <div className="bg-gray-900 text-white font-sans min-h-screen flex flex-col">
-      {/* Navigation Bar */}
-      <nav className="flex justify-between items-center p-4 border-b border-gray-700">
-        <div className="text-2xl font-bold">IVORY</div>
-        <ul className="flex space-x-6">
-          <li>
-            <a href="#" className="hover:text-gray-400">
-              Home
-            </a>
-          </li>
-          <li>
-            <a href="#" className="hover:text-gray-400">
-              Dashboard
-            </a>
-          </li>
-          <li>
-            <a href="#" className="hover:text-gray-400">
-              How to use
-            </a>
-          </li>
-          <li>
-            <a href="#" className="hover:text-gray-400">
-              About us
-            </a>
-          </li>
-        </ul>
-        <div className="flex space-x-4">
-          <button className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded">
-            Create
-          </button>
-          <button className="text-gray-400 hover:text-white">🔔</button>
-          <button className="text-gray-400 hover:text-white">👤</button>
-        </div>
-      </nav>
-
+    <div className="text-white font-sans min-h-screen flex flex-col">
+      <ThreeJSBackground />
       {/* Main Content */}
-      <div className="flex p-8">
+      <div className="mt-20 flex p-8">
         {/* Left Section */}
         <div className="w-3/4 pr-8">
           <h1 id="how-to-launch-website-with-us" className="text-4xl font-bold mb-4">
@@ -87,7 +55,8 @@ function GuidePage() {
           <br></br>
           <div className="flex justify-between items-center mb-6">
             <h1 id="how-to-bind-sui-ns" className="text-4xl font-bold">How to bind Sui NS</h1>
-            <button className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded">
+            <button className="hover:bg-red-600 px-4 py-2 rounded 
+            bg-gradient-to-r from-secondary-500 to-secondary-600 text-black">
               Dashboard
             </button>
           </div>
@@ -131,7 +100,7 @@ function GuidePage() {
         </div>
 
         {/* Right Sidebar */}
-        <div className="w-1/4 p-4 border-l border-gray-700 sticky top-0 self-start h-[calc(100vh-72px)] overflow-auto">
+        <div className="w-1/4 p-4 border-l border-gray-700 sticky top-20 self-start h-[calc(100vh-72px)] overflow-auto">
           <h3 className="text-lg font-semibold mb-4">On this page</h3>
           <ul className="space-y-2">
             <li>
@@ -157,4 +126,4 @@ function GuidePage() {
   )
 }
 
-export default GuidePage
+export default HowToUsePage
