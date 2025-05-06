@@ -124,7 +124,6 @@ function HowToUsePage() {
         </div>
       </div>
     </div>
-    </>
   )
 }
 
