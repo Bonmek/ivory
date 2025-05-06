@@ -32,6 +32,9 @@ def publish_walrus_site(object_id):
             raise Exception(f"❌ STEP 2 FAILED: walrus read failed. stderr: {e.stderr or e}")
 
         with zipfile.ZipFile("Site.zip", 'r') as zip_ref:
+            bad_file = zip_ref.testzip()
+            if bad_file:
+                raise Exception(f"❌ Corrupt zip file. First bad file: {bad_file}")
             zip_ref.extractall("Site")
 
         print("✅ STEP 2 DONE: Site.zip extracted.")
@@ -48,20 +51,67 @@ def publish_walrus_site(object_id):
         # STEP 4: Run install/build
         if attributes.get("is_build") == "0":
             print("🔹 STEP 4: Running install/build commands...")
-            subprocess.run(shlex.split(attributes["install_command"]), cwd=root_path, check=True)
-            subprocess.run(shlex.split(attributes["build_command"]), cwd=root_path, check=True)
-            print("✅ STEP 4 DONE: Build completed.")
+            print(f"📦 install_command: {attributes['install_command']}")
+            print(f"📦 build_command: {attributes['build_command']}")
+            print(f"📂 cwd: {root_path}")
+
+            try:
+                install_proc = subprocess.run(
+                    shlex.split(attributes["install_command"]),
+                    cwd=root_path,
+                    check=True,
+                    capture_output=True,
+                    text=True
+                )
+                print("📦 npm install output:\n", install_proc.stdout)
+                if install_proc.stderr:
+                    print("📦 npm install warnings:\n", install_proc.stderr)
+
+                print("🧪 Running shell command:", shlex.split(attributes["build_command"]))
+                build_proc = subprocess.run(
+                    shlex.split(attributes["build_command"]),
+                    cwd=root_path,
+                    check=True,
+                    capture_output=True,
+                    text=True
+                )
+                print("🛠️ build output:\n", build_proc.stdout, build_proc)
+                if build_proc.stderr:
+                    print("🛠️ build warnings:\n", build_proc.stderr)
+
+                print("✅ STEP 4 DONE: Build completed.")
+            except subprocess.CalledProcessError as e:
+                print("❌ STEP 4 FAILED: Install or build command failed.")
+                print("STDOUT:\n", e.stdout)
+                print("STDERR:\n", e.stderr)
+                raise Exception("Build failed: " + (e.stderr or e.stdout or str(e)))
 
         # STEP 5: Find index.html
         print("🔹 STEP 5: Searching for index.html...")
         final_path = None
-        for dirpath, _, filenames in os.walk(root_path):
-            if "index.html" in filenames:
-                final_path = dirpath
-                break
+
+        # สำหรับกรณี is_build == 1: ต้องหา path ที่ลึกสุดที่มี index.html
+        if attributes.get("is_build") == "1":
+            max_depth = -1
+            for dirpath, _, filenames in os.walk(root_path):
+                if "index.html" in filenames:
+                    # คำนวณระดับความลึกจาก root_path
+                    relative_path = os.path.relpath(dirpath, root_path)
+                    depth = relative_path.count(os.sep)
+                    if depth > max_depth:
+                        max_depth = depth
+                        final_path = dirpath
+        else:
+            # ถ้าไม่ build ให้เอาอันแรกที่เจอ
+            for dirpath, _, filenames in os.walk(root_path):
+                if "index.html" in filenames:
+                    final_path = dirpath
+                    break
+
         if not final_path:
             raise FileNotFoundError("❌ STEP 5 FAILED: index.html not found.")
         print(f"✅ STEP 5 DONE: index.html found in {final_path}")
+
 
         # STEP 6: Create ws-resources.json
         print("🔹 STEP 6: Creating ws-resources.json...")
