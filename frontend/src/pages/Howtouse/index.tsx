@@ -1,5 +1,6 @@
 import ThreeJSBackground from '@/components/ThreeJsBackground'
 import React from 'react'
+import { Helmet } from 'react-helmet'
 
 function HowToUsePage() {
   return (
@@ -123,6 +124,7 @@ function HowToUsePage() {
         </div>
       </div>
     </div>
+    </>
   )
 }
 
