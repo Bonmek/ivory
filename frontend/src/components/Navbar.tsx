@@ -1,12 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Blocks, Wallet, ChevronDown } from 'lucide-react';
+import { Menu, X, Blocks, Wallet, ChevronDown, LogOut } from 'lucide-react';
 import { Link, useLocation } from 'react-router';
+import LoginDialog from './LoginDialog';
+import { useWalletKit } from '@mysten/wallet-kit';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from './ui/dropdown-menu';
+import { Button } from './ui/button';
 
 const Navbar = () => {
+  const { currentAccount, disconnect } = useWalletKit();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [open, setOpen] = useState<boolean>(false);
   const location = useLocation();
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -72,11 +84,10 @@ const Navbar = () => {
                   <Link
                     key={item.name}
                     to={item.to}
-                    className={`relative group transition-all duration-300 ${
-                      isActivePath(item.to) 
-                        ? 'text-white font-bold tracking-wide' 
+                    className={`relative group transition-all duration-300 ${isActivePath(item.to)
+                        ? 'text-white font-bold tracking-wide'
                         : 'text-secondary-200 hover:text-white font-medium'
-                    }`}
+                      }`}
                   >
                     <motion.div
                       initial={{ opacity: 0, y: -20 }}
@@ -162,11 +173,10 @@ const Navbar = () => {
                   <Link
                     key={item.name}
                     to={item.to}
-                    className={`block py-3 transition-all duration-300 ${
-                      isActivePath(item.to)
+                    className={`block py-3 transition-all duration-300 ${isActivePath(item.to)
                         ? 'text-white font-bold bg-gradient-to-r from-secondary-400/20 to-secondary-600/20 rounded-lg px-4'
                         : 'text-secondary-200 hover:text-white hover:bg-secondary-500/10 rounded-lg px-4'
-                    }`}
+                      }`}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     <motion.div
@@ -195,7 +205,9 @@ const Navbar = () => {
           </div>
         )}
       </AnimatePresence>
+      <LoginDialog open={open} setOpen={setOpen} />
     </>
+
   );
 };
 
