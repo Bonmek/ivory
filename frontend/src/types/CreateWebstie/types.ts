@@ -12,4 +12,5 @@ export interface advancedOptionsType {
     name: string
     path: string
   }[]
+  defaultPath: string
 }

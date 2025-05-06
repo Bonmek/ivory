@@ -48,6 +48,7 @@ export default function CreateWebsitePage() {
         path: '',
       },
     ],
+    defaultPath: '',
   })
 
   // State for file upload
@@ -73,8 +74,6 @@ export default function CreateWebsitePage() {
   const [selectedFramework, setSelectedFramework] = useState<string | null>(
     null,
   )
-
-  const [ownership, setOwnership] = useState<Ownership>(Ownership.Leave)
 
   // File handlers
   const handleDragOver = (e: React.DragEvent) => {
@@ -301,7 +300,7 @@ export default function CreateWebsitePage() {
                             </div>
                             <button
                               type="button"
-                              className="px-6 py-2 rounded-lg bg-secondary-500 text-black font-semibold shadow-md hover:bg-secondary-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all duration-200"
+                              className="px-6 py-2 rounded-md bg-secondary-500 text-black font-semibold shadow-md hover:bg-secondary-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all duration-200"
                               onClick={(e) => {
                                 e.stopPropagation()
                                 handleBrowseClick()
@@ -319,6 +318,7 @@ export default function CreateWebsitePage() {
                       )}
                     </div>
                   </section>
+
                 </TabsContent>
                 <TabsContent value={UploadMethod.GitHub}>
                   <GithubRepoInput
@@ -372,37 +372,28 @@ export default function CreateWebsitePage() {
                 />
               </section>
 
-              <section>
-                <OwnershipRadioGroup
-                  value={ownership}
-                  onChange={setOwnership}
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <FrameworkPresetSelector
+                  frameworks={frameworks}
+                  selectedFramework={selectedFramework}
+                  handleSelectFramework={handleSelectFramework}
                 />
-              </section>
+              </motion.div>
 
-              {(selectedRepo || selectedFile) && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <FrameworkPresetSelector
-                    frameworks={frameworks}
-                    selectedFramework={selectedFramework}
-                    handleSelectFramework={handleSelectFramework}
-                  />
-                </motion.div>
-              )}
 
               <article className="flex flex-col gap-4">
-                {(selectedRepo || selectedFile) && (
-                  <BuildOutputSetting
-                    showBuildOutputSettings={showBuildOutputSettings}
-                    setShowBuildOutputSettings={setShowBuildOutputSettings}
-                    buildOutputSettings={buildOutputSettings}
-                    setBuildOutputSettings={setBuildOutputSettings}
-                  />
-                )}
+                <BuildOutputSetting
+                  showBuildOutputSettings={showBuildOutputSettings}
+                  setShowBuildOutputSettings={setShowBuildOutputSettings}
+                  buildOutputSettings={buildOutputSettings}
+                  setBuildOutputSettings={setBuildOutputSettings}
+                />
+
                 <AdvancedOptions
                   advancedOptions={advancedOptions}
                   setAdvancedOptions={setAdvancedOptions}
