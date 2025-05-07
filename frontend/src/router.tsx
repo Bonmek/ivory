@@ -5,9 +5,9 @@ import Index from './pages/Index'
 import Notfound from './pages/Notfound'
 import HomePage from './pages/Home'
 import CreateWebsitePage from './pages/CreateWebsite'
-import GuidePage from './pages/Guide'
+import HowToUsePage from './pages/Howtouse'
 import DashboardPage from './pages/Dashboard'
-
+import EditWebsitePage from './pages/EditWebsite'
 const router = createBrowserRouter([
   {
     path: '/',
@@ -26,10 +26,18 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/guide',
+    path: '/how-to-use',
     element: (
       <Layout>
-        <GuidePage />
+        <HowToUsePage />
+      </Layout>
+    ),
+  },
+  {
+    path: '/edit-website',
+    element: (
+      <Layout>
+        <EditWebsitePage />
       </Layout>
     ),
   },
