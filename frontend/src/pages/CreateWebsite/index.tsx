@@ -211,12 +211,12 @@ export default function CreateWebsitePage() {
     console.log('attributes',attributes)
     console.log('file', selectedFile)
 
-    // const response = await writeBlobAndRunJob({
-    //   file: selectedFile!,
-    //   attributes,
-    // })
+    const response = await writeBlobAndRunJob({
+      file: selectedFile!,
+      attributes,
+    })
 
-    // console.log(response)
+    console.log(response)
    } catch (error) {
     console.error(error)
    } 
