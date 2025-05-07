@@ -1,64 +1,53 @@
-import { CacheControl, Ownership, UploadMethod } from '@/types/CreateWebstie/enums';
-import { buildOutputSettingsType, advancedOptionsType } from '@/types/CreateWebstie/types';
-import { frameworks } from '@/constants/frameworks';
+import { buildOutputSettingsType } from '@/types/CreateWebstie/types';
 import axios from 'axios';
 
-interface CreateWebsiteRequest {
-  name: string;
-  ownership: Ownership;
-  uploadMethod: UploadMethod;
-  framework: string;
-  buildOutputSettings: buildOutputSettingsType;
-  advancedOptions: advancedOptionsType;
-  githubRepo?: {
-    owner: string;
-    repo: string;
-  };
-  files?: File[];
+export interface WebsiteAttributes {
+  'site-name': string;
+  owner: string;
+  ownership: '0' | '1';
+  send_to: string;
+  epochs: string;
+  start_date: string;
+  end_date: string;
+  status: '0' | '1';
+  cache: string;
+  root: string;
+  install_command: string;
+  build_command: string;
+  default_route: string;
+  is_build: string;
 }
 
-interface CreateWebsiteResponse {
-  id: string;
-  name: string;
-  status: 'pending' | 'building' | 'completed' | 'failed';
+interface WriteBlobRequest {
+  file: File;
+  attributes: WebsiteAttributes;
+}
+
+interface WriteBlobResponse {
+  jobId: string;
+  status: 'pending' | 'running' | 'completed' | 'failed';
   message?: string;
 }
 
-export const createWebsite = async (data: CreateWebsiteRequest): Promise<CreateWebsiteResponse> => {
-  try {
-    const response = await axios.post('/api/websites', data);
-    return response.data;
-  } catch (error) {
-    throw new Error('Failed to create website: ' + (error as Error).message);
-  }
-};
-
-export const getWebsiteStatus = async (websiteId: string): Promise<CreateWebsiteResponse> => {
-  try {
-    const response = await axios.get(`/api/websites/${websiteId}/status`);
-    return response.data;
-  } catch (error) {
-    throw new Error('Failed to get website status: ' + (error as Error).message);
-  }
-};
-
-export const uploadFiles = async (files: File[], websiteId: string): Promise<void> => {
+export const writeBlobAndRunJob = async (data: WriteBlobRequest): Promise<WriteBlobResponse> => {
   const formData = new FormData();
-  files.forEach((file, index) => {
-    formData.append('files', file, file.name);
-  });
+  
+  // Validate file type
+  if (!data.file.name.endsWith('.zip')) {
+    throw new Error('Only ZIP files are allowed');
+  }
+
+  formData.append('file', data.file);
+  formData.append('attributes', JSON.stringify(data.attributes));
 
   try {
-    await axios.post(`/api/websites/${websiteId}/upload`, formData, {
+    const response = await axios.post('/write-blob-n-run-job', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     });
+    return response.data;
   } catch (error) {
-    throw new Error('Failed to upload files: ' + (error as Error).message);
+    throw new Error('Failed to write blob and run job: ' + (error as Error).message);
   }
-};
-
-export const getFrameworks = (): typeof frameworks => {
-  return frameworks;
 };

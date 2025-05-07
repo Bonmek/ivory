@@ -27,9 +27,14 @@ import { frameworks } from '@/constants/frameworks'
 import ThreeJSBackground from '@/components/ThreeJsBackground'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Helmet } from 'react-helmet'
+import { WebsiteAttributes, writeBlobAndRunJob } from '@/api/createWebsiteApi'
+import { useWalletKit } from '@mysten/wallet-kit'
+import { addDays } from 'date-fns'
 
 export default function CreateWebsitePage() {
   useTheme()
+
+  const { currentAccount } = useWalletKit()
 
   // State for project name
   const [name, setName] = useState('')
@@ -39,6 +44,7 @@ export default function CreateWebsitePage() {
     useState<buildOutputSettingsType>({
       rootDirectory: '',
       buildCommand: '',
+      installCommand: '',
       outputDirectory: '',
     })
 
@@ -160,16 +166,41 @@ export default function CreateWebsitePage() {
     setSelectedFramework(null)
   }
 
-  const handleSelectFramework = (frameworkId: string) => {
+  const handleSelectFramework = async (frameworkId: string) => {
     setSelectedFramework(frameworkId)
   }
 
-  useEffect(() => {
-    console.log("🚀 ~ CreateWebsitePage ~ name:", name)
-    console.log("🚀 ~ CreateWebsitePage ~ selectedFramework:", selectedFramework)
-    console.log("🚀 ~ CreateWebsitePage ~ buildOutputSettings:", buildOutputSettings)
-    console.log("🚀 ~ CreateWebsitePage ~ advancedOptions:", advancedOptions)
-  }, [name, selectedFramework, buildOutputSettings, advancedOptions])
+  const handleClickDeploy = async () => {
+   try {
+    const attributes: WebsiteAttributes = {
+      'site-name': name,
+      owner: currentAccount?.address!,
+      ownership: '0',
+      send_to: currentAccount?.address!,
+      epochs: '1',
+      start_date: new Date().toISOString(),
+      end_date: addDays(new Date(), 14).toISOString(),
+      status: '0',
+      cache: '7',
+      root: buildOutputSettings.rootDirectory,
+      install_command: buildOutputSettings.installCommand,
+      build_command: buildOutputSettings.buildCommand,
+      default_route: advancedOptions.defaultPath,
+      is_build: showBuildOutputSettings ? '1' : '0',
+    }
+    console.log('attributes',attributes)
+    console.log('file', selectedFile)
+
+    // const response = await writeBlobAndRunJob({
+    //   file: selectedFile!,
+    //   attributes,
+    // })
+
+    // console.log(response)
+   } catch (error) {
+    console.error(error)
+   } 
+  }
 
   return (
     <>
@@ -410,8 +441,10 @@ export default function CreateWebsitePage() {
 
               <Separator className="mb-4" />
               <section className="pt-4 flex justify-end">
-                <Button className="bg-secondary-500 hover:bg-secondary-700 text-black p-6 rounded-md text-base transform transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-secondary-500/20">
-                  Create project
+                <Button 
+                onClick={handleClickDeploy}
+                className="bg-secondary-500 hover:bg-secondary-700 text-black p-6 rounded-md text-base transform transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-secondary-500/20">
+                  Deploy project
                 </Button>
               </section>
             </motion.div>

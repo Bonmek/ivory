@@ -57,6 +57,19 @@ function BuildOutputSetting({ showBuildOutputSettings, setShowBuildOutputSetting
 
               <section className='px-2'>
                 <div className="flex items-center mb-2">
+                  <h3 className="text-sm text-gray-300 font-semibold">Install Command</h3>
+                  <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
+                </div>
+                <Input
+                  value={buildOutputSettings.installCommand}
+                  onChange={(e) => setBuildOutputSettings({ ...buildOutputSettings, installCommand: e.target.value })}
+                  placeholder="npm install"
+                  className="bg-primary-500 border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500"
+                />
+              </section>
+
+              <section className='px-2'>
+                <div className="flex items-center mb-2">
                   <h3 className="text-sm text-gray-300 font-semibold">Build Command</h3>
                   <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
                 </div>

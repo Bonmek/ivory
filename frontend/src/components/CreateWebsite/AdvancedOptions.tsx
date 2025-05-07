@@ -64,13 +64,15 @@ function AdvancedOptions({ advancedOptions, setAdvancedOptions }: AdvancedOption
                   <HelpCircleIcon className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
                 </div>
                 <Select onValueChange={(value) => setAdvancedOptions({ ...advancedOptions, cacheControl: value as CacheControl })}>
-                  <SelectTrigger className="bg-primary-500 border-gray-700 rounded-md h-12 transition-all duration-300 hover:border-secondary-500">
+                  <SelectTrigger className="bg-primary-500 border-gray-700 rounded-md h-12 transition-all duration-300 hover:border-secondary-500 w-full">
                     <SelectValue placeholder="Select cache control" />
                   </SelectTrigger>
                   <SelectContent className="bg-primary-500">
                     <SelectItem value={CacheControl.NoCache}>No Cache</SelectItem>
-                    <SelectItem value={CacheControl.Public}>Public</SelectItem>
-                    <SelectItem value={CacheControl.Private}>Private</SelectItem>
+                    <SelectItem value={CacheControl.OneDay}>1 Day</SelectItem>
+                    <SelectItem value={CacheControl.OneWeek}>1 Week</SelectItem>
+                    <SelectItem value={CacheControl.OneMonth}>1 Month</SelectItem>
+                    <SelectItem value={CacheControl.OneYear}>1 Year</SelectItem>
                   </SelectContent>
                 </Select>
               </section>

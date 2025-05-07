@@ -4,6 +4,7 @@ export interface buildOutputSettingsType {
   rootDirectory: string
   buildCommand: string
   outputDirectory: string
+  installCommand: string
 }
 
 export interface advancedOptionsType {
