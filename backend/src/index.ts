@@ -18,12 +18,7 @@ const auth = new GoogleAuth({
 dotenv.config();
 const upload = multer();
 const app = express();
-app.use(passport.initialize());
-app.use(passport.session());
-app.use(githubRoutes);
 app.use(express.json());
-
-console.log("Server starting...");
 
 app.use(
   cors({
@@ -40,6 +35,9 @@ app.use(
   })
 );
 
+app.use(passport.initialize());
+app.use(passport.session());
+app.use(githubRoutes);
 
 const hex = process.env.SUI_Hex || "";
 const secretKey = Uint8Array.from(Buffer.from(hex, "hex"));
@@ -83,8 +81,6 @@ app.post("/write-blob-n-run-job", upload.single("file"), async (req, res) => {
       attributes: { blobId: blobId },
     });
 
-    console.log("Blob written successfully:", blobId, blobObjectId);
-
     const objectId = blobObjectId;
 
     if (!objectId) {
@@ -96,11 +92,6 @@ app.post("/write-blob-n-run-job", upload.single("file"), async (req, res) => {
 
     const client = await auth.getClient();
     const token = await client.getAccessToken();
-
-    console.log("Triggering Cloud Run job with arguments:", [
-      "publish",
-      objectId,
-    ]);
 
     const response = await axios.post(
       url,
