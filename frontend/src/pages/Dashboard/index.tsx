@@ -166,9 +166,8 @@ export default function Dashboard() {
         <title>Dashboard | Ivory</title>
         <link rel="canonical" href="http://mysite.com/example" />
       </Helmet>
-      <div className="px-8 md:px-0 min-h-screen bg-gradient-to-b from-black via-primary-900/20 to-black relative overflow-hidden">
-        <ThreeJSBackground />
-        <div className="mt-20 container mx-auto py-8 relative z-10">
+      <main>
+        <div className="container mx-auto relative z-10">
           <DashboardHeader
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
@@ -196,7 +195,7 @@ export default function Dashboard() {
 
           {sortedProjects.length === 0 && <EmptyState onReset={handleReset} />}
         </div>
-      </div>
+      </main>
     </>
   )
 }
