@@ -1,4 +1,4 @@
-import express, { Request, Response } from "express";
+import express from "express";
 import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
 import { WalrusClient } from "@mysten/walrus";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
@@ -11,10 +11,10 @@ import "./github/githubAuth";
 import { githubRoutes } from "./github/routes";
 import { JobsClient } from "@google-cloud/run";
 
-
 dotenv.config();
 const upload = multer();
 const app = express();
+const jobsClient = new JobsClient();
 
 app.use(express.json());
 
@@ -35,7 +35,6 @@ app.use(
 
 app.use(passport.initialize());
 app.use(passport.session());
-
 app.use(githubRoutes);
 
 const hex = process.env.SUI_Hex || "";
@@ -47,69 +46,6 @@ const walrusClient = new WalrusClient({
   network: "mainnet",
   suiClient,
 });
-
-app.post("/write-blob", upload.single("file"), async (req, res) => {
-  try {
-    if (!req.file) {
-      res.status(400).json({ error: "No file uploaded" });
-      return;
-    }
-    const fileBuffer = new Uint8Array(req.file.buffer);
-
-    const attributes = req.body.attributes
-      ? typeof req.body.attributes === "string"
-        ? JSON.parse(req.body.attributes)
-        : req.body.attributes
-      : {};
-
-    const { blobId, blobObject } = await walrusClient.writeBlob({
-      blob: fileBuffer,
-      deletable: false,
-      epochs: 1,
-      signer: keypair,
-      attributes: attributes,
-    });
-
-    const blobObjectId =
-      typeof blobObject.id === "string" ? blobObject.id : blobObject.id.id;
-
-    // Write blobId in attributes
-    await walrusClient
-      .executeWriteBlobAttributesTransaction({
-        blobObjectId: blobObjectId,
-        signer: keypair,
-        attributes: { blobId: blobId },
-      })
-
-    const attrs = await walrusClient.readBlobAttributes({ blobObjectId });
-
-    res.json({ statusCode: 1, data: { attributes: attrs } });
-  } catch (error) {
-    if (error instanceof Error) {
-      res.json({
-        statusCode: 0,
-        data: {
-          error: {
-            message: error.message,
-            name: error.name,
-            stack: error.stack,
-          },
-        },
-      });
-    } else {
-      res.json({
-        statusCode: 0,
-        data: { error: "Unknown error occurred" },
-      });
-    }
-  }
-});
-
-const jobsClient = new JobsClient();
-
-interface JobRequestBody {
-  objectId: string;
-}
 
 // Helper function to execute Cloud Run job
 async function executeCloudRunJob(objectId: string): Promise<string> {
@@ -143,38 +79,72 @@ async function executeCloudRunJob(objectId: string): Promise<string> {
   }
 }
 
-// Endpoint to trigger Cloud Run job
-app.post("/trigger-job", async (req: Request, res: Response) => {
+app.post("/write-blob-n-run-job", upload.single("file"), async (req, res) => {
   try {
-    const { objectId } = req.body as JobRequestBody;
+    if (!req.file) {
+      res.status(400).json({ error: "No file uploaded" });
+      return;
+    }
+
+    const fileBuffer = new Uint8Array(req.file.buffer);
+
+    const attributes = req.body.attributes
+      ? typeof req.body.attributes === "string"
+        ? JSON.parse(req.body.attributes)
+        : req.body.attributes
+      : {};
+
+    const { blobId, blobObject } = await walrusClient.writeBlob({
+      blob: fileBuffer,
+      deletable: false,
+      epochs: 1,
+      signer: keypair,
+      attributes: attributes,
+    });
+
+    const blobObjectId =
+      typeof blobObject.id === "string" ? blobObject.id : blobObject.id.id;
+
+    await walrusClient.executeWriteBlobAttributesTransaction({
+      blobObjectId: blobObjectId,
+      signer: keypair,
+      attributes: { blobId: blobId },
+    });
+
+    const  objectId  = blobObjectId;
 
     if (!objectId) {
       res.status(400).json({ error: "objectId is required" });
       return;
     }
 
-    const jobExecutionName = await executeCloudRunJob(objectId);
+    await executeCloudRunJob(objectId);
 
     res.status(200).json({
+      statusCode: 1,
       message: "Cloud Run job triggered successfully",
-      jobExecutionName,
     });
   } catch (error) {
-    console.error("Error in trigger-job endpoint:", error);
-    res.status(500).json({
-      error: "Failed to trigger Cloud Run job",
-      details: (error as Error).message,
-    });
+    if (error instanceof Error) {
+      res.json({
+        statusCode: 0,
+        data: {
+          error: {
+            message: error.message,
+            name: error.name,
+            stack: error.stack,
+          },
+        },
+      });
+    } else {
+      res.json({
+        statusCode: 0,
+        data: { error: "Unknown error occurred" },
+      });
+    }
   }
 });
-
-// Health check endpoint
-app.get("/health", (req: Request, res: Response) => {
-  res.status(200).json({ status: "OK" });
-});
-
 
 app.listen(5000, () => {
   console.log("Server running on port 5000");
 });
-
