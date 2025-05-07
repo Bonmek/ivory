@@ -115,16 +115,6 @@ const cellVariants = {
 }
 
 export default function HomePage() {
-  const [scrollY, setScrollY] = useState(0)
-  const [isLoading, setIsLoading] = useState(() => {
-    // Check if this is the first visit
-    const hasVisited = localStorage.getItem('hasVisitedHome')
-    if (!hasVisited) {
-      localStorage.setItem('hasVisitedHome', 'true')
-      return true
-    }
-    return false
-  })
   const navigate = useNavigate()
   const heroRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -133,17 +123,6 @@ export default function HomePage() {
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
   const scale = useTransform(scrollYProgress, [0, 0.5], [1, 0.8])
   const y = useTransform(scrollYProgress, [0, 0.5], [0, -100])
-
-  useEffect(() => {
-    if (isLoading) {
-      // Only show loading animation if it's the first visit
-      const timer = setTimeout(() => {
-        setIsLoading(false)
-      }, 2000)
-
-      return () => clearTimeout(timer)
-    }
-  }, [isLoading])
 
   useEffect(() => {
     if (!canvasRef.current) return
@@ -212,10 +191,6 @@ export default function HomePage() {
       window.removeEventListener('resize', handleResize)
     }
   }, [])
-
-  if (isLoading) {
-    return <Loading />
-  }
 
   return (
     <>
@@ -335,27 +310,27 @@ export default function HomePage() {
             {
               Icon: Globe,
               color: 'purple',
-              position: 'top-1/4 left-1/5'
+              position: 'top-1/4 left-1/5',
             },
             {
               Icon: Shield,
               color: 'cyan',
-              position: 'bottom-1/3 right-1/4'
+              position: 'bottom-1/3 right-1/4',
             },
             {
               Icon: Blocks,
               color: 'pink',
-              position: 'top-1/2 right-1/3'
+              position: 'top-1/2 right-1/3',
             },
             {
               Icon: FolderLock,
               color: 'yellow',
-              position: 'bottom-1/4 left-1/3'
+              position: 'bottom-1/4 left-1/3',
             },
             {
               Icon: Zap,
               color: 'green',
-              position: 'top-1/3 right-1/5'
+              position: 'top-1/3 right-1/5',
             },
           ].map(({ Icon, color, position }, index) => (
             <motion.div
@@ -385,38 +360,39 @@ export default function HomePage() {
               className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 tracking-tight"
               variants={itemVariants}
               style={{
-                textShadow: '0 0 20px var(--tw-color-secondary-500, #97f0e5, 0.5)',
+                textShadow:
+                  '0 0 20px var(--tw-color-secondary-500, #97f0e5, 0.5)',
                 fontFamily: "'Pixelify Sans', sans-serif",
                 letterSpacing: '-0.02em',
                 lineHeight: '1.2',
               }}
             >
-              {['Deploy', 'Your', 'Site', 'In', 'Seconds'].map((word, wordIndex) => (
-                <span key={wordIndex} className="inline-block">
-                  {word.split('').map((char, charIndex) => (
-                    <motion.span
-                      key={`${wordIndex}-${charIndex}`}
-                      className="inline-block cursor-pointer bg-clip-text text-transparent bg-gradient-to-r from-secondary-400 to-secondary-600"
-                      whileHover={{
-                        y: [0, -30, 0, -15, 0],
-                        scale: [1, 1.1, 1],
-                        transition: {
-                          duration: 0.6,
-                          times: [0, 0.2, 0.4, 0.6, 1],
-                          ease: "easeInOut"
-                        }
-                      }}
-                    >
-                      {char}
-                    </motion.span>
-                  ))}
-                  {wordIndex < 4 && <span className="inline-block w-4" />}
-                </span>
-              ))}
+              {['Deploy', 'Your', 'Site', 'In', 'Seconds'].map(
+                (word, wordIndex) => (
+                  <span key={wordIndex} className="inline-block">
+                    {word.split('').map((char, charIndex) => (
+                      <motion.span
+                        key={`${wordIndex}-${charIndex}`}
+                        className="inline-block cursor-pointer bg-clip-text text-transparent bg-gradient-to-r from-secondary-400 to-secondary-600"
+                        whileHover={{
+                          y: [0, -30, 0, -15, 0],
+                          scale: [1, 1.1, 1],
+                          transition: {
+                            duration: 0.6,
+                            times: [0, 0.2, 0.4, 0.6, 1],
+                            ease: 'easeInOut',
+                          },
+                        }}
+                      >
+                        {char}
+                      </motion.span>
+                    ))}
+                    {wordIndex < 4 && <span className="inline-block w-4" />}
+                  </span>
+                ),
+              )}
               <span className="inline-block w-4" />
-              <motion.span
-                className="text-white inline-block"
-              >
+              <motion.span className="text-white inline-block">
                 {'everywhere'.split('').map((char, index) => (
                   <motion.span
                     key={index}
@@ -428,11 +404,11 @@ export default function HomePage() {
                       transition: {
                         duration: 0.6,
                         times: [0, 0.2, 0.4, 0.6, 1],
-                        ease: "easeInOut"
-                      }
+                        ease: 'easeInOut',
+                      },
                     }}
                     style={{
-                      transformOrigin: "bottom center"
+                      transformOrigin: 'bottom center',
                     }}
                   >
                     {char}
@@ -451,9 +427,10 @@ export default function HomePage() {
                 letterSpacing: '0.02em',
               }}
             >
-              Ivory is a no-code, low-cost platform for deploying static websites with Walrus. Enjoy high availability,
-              censorship resistance, data integrity,
-              and full ownership — all with free bandwidth and zero complexity.
+              Ivory is a no-code, low-cost platform for deploying static
+              websites with Walrus. Enjoy high availability, censorship
+              resistance, data integrity, and full ownership — all with free
+              bandwidth and zero complexity.
             </motion.p>
 
             <motion.div
@@ -465,7 +442,8 @@ export default function HomePage() {
                 whileHover={{
                   scale: 1.05,
                   textShadow: '0 0 8px rgb(255,255,255)',
-                  boxShadow: '0 0 30px var(--tw-color-secondary-500, #97f0e5, 0.7)',
+                  boxShadow:
+                    '0 0 30px var(--tw-color-secondary-500, #97f0e5, 0.7)',
                   filter: 'brightness(1.2)',
                 }}
                 whileTap={{ scale: 0.95 }}
@@ -563,7 +541,7 @@ export default function HomePage() {
                   icon: <Globe className="w-10 h-10 text-purple-400" />,
                   title: 'Censorship-Resistant',
                   description:
-                    'Stay online — always. Ivory sites are immune to takedown and centralized control thanks to Walrus\'s decentralized architecture.',
+                    "Stay online — always. Ivory sites are immune to takedown and centralized control thanks to Walrus's decentralized architecture.",
                 },
                 {
                   icon: <Shield className="w-10 h-10 text-cyan-400" />,
@@ -637,7 +615,12 @@ export default function HomePage() {
         </section>
         <div className="w-full flex justify-center items-center py-6 opacity-80 z-20 relative">
           <span className="mr-2 text-sm text-gray-400">Powered by</span>
-          <img src="/images/logos/walrus_logo_white_RGB.png" alt="Powered by Logo" className="h-6" style={{ filter: 'brightness(1.2)' }} />
+          <img
+            src="/images/logos/walrus_logo_white_RGB.png"
+            alt="Powered by Logo"
+            className="h-6"
+            style={{ filter: 'brightness(1.2)' }}
+          />
         </div>
       </div>
     </>
