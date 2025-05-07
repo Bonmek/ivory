@@ -102,7 +102,7 @@ const ProjectCard = memo(
           {/* Left: Project Image */}
           <div className="flex-shrink-0 opacity-80 group-hover:opacity-100 transition-opacity duration-200">
             <img
-              src={project.urlImg}
+              src="/images/walrus.png"
               alt="project avatar"
               className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-white/20 shadow transition-all duration-300 group-hover:border-secondary-500/50 group-hover:scale-105"
             />

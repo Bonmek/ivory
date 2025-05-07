@@ -1,77 +1,16 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import ThreeJSBackground from '@/components/ThreeJsBackground'
 import ProjectCard from '@/components/Dashboard/ProjectCard'
 import DashboardHeader from '@/components/Dashboard/DashboardHeader'
 import DashboardTabs from '@/components/Dashboard/DashboardTabs'
 import EmptyState from '@/components/Dashboard/EmptyState'
+import Loading from '@/components/Loading'
 import { Helmet } from 'react-helmet'
-
-// Sample data - replace with your actual data source
-const projects = [
-  {
-    id: 1,
-    name: 'E-commerce Website',
-    url: 'ecommerce.wal.app',
-    startDate: new Date(2023, 5, 15),
-    expiredDate: new Date(2024, 5, 15),
-    color: '#97f0e5',
-    urlImg:
-      'https://i.pinimg.com/originals/8d/33/da/8d33da6e29c1108b834c176483e376b9.gif',
-  },
-  {
-    id: 2,
-    name: 'Portfolio Site',
-    url: 'portfolio.wal.app',
-    startDate: new Date(2023, 7, 10),
-    expiredDate: new Date(2024, 7, 10),
-    color: '#97f0e5',
-    urlImg:
-      'https://i.pinimg.com/736x/ba/10/29/ba1029e64ee8e2e4fdf94192fb7a26d0.jpg',
-  },
-  {
-    id: 3,
-    name: 'Blog Platform',
-    url: 'blog.wal.app',
-    startDate: new Date(2023, 9, 5),
-    expiredDate: new Date(2024, 9, 5),
-    color: '#97f0e5',
-    urlImg:
-      'https://i.pinimg.com/736x/6c/2e/62/6c2e62530a7a063da7bb33cd4f9db066.jpg',
-  },
-  {
-    id: 4,
-    name: 'Corporate Website',
-    url: 'corporate.wal.app',
-    startDate: new Date(2023, 10, 20),
-    expiredDate: new Date(2024, 10, 20),
-    color: '#FFCCCC',
-    urlImg:
-      'https://i.pinimg.com/736x/57/38/bf/5738bfa4aac857c3da147999a0f2022f.jpg',
-  },
-  {
-    id: 5,
-    name: 'Mobile App Landing',
-    url: 'app-landing.wal.app',
-    startDate: new Date(2023, 11, 1),
-    expiredDate: new Date(2024, 11, 1),
-    color: '#FFCCFF',
-    urlImg:
-      'https://i.pinimg.com/736x/1a/ad/76/1aad761232cf0897a3cc5cd5bc515740.jpg',
-  },
-  {
-    id: 6,
-    name: 'SaaS Dashboard',
-    url: 'saas.wal.app',
-    startDate: new Date(2024, 0, 15),
-    expiredDate: new Date(2025, 0, 15),
-    color: '#CCFFFF',
-    urlImg:
-      'https://i.pinimg.com/736x/97/c2/a2/97c2a213211e28e1c7dbdc1d86df4713.jpg',
-  },
-]
+import { useSuiData } from '@/hooks/useSuiData'
+import { transformMetadataToProject } from '@/utils/metadataUtils'
 
 const formatDate = (date: Date) => {
   return date.toLocaleDateString('en-GB', {
@@ -92,30 +31,42 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('all')
   const [hoveredCard, setHoveredCard] = useState<number | null>(null)
   const [sortType, setSortType] = useState('latest')
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 6 // 2 rows of 3 items
 
-  // Memoize filtered and sorted projects
+  // TODO: Replace hardcoded address with user's connected wallet address
+  const [inputAddress, setAddress] = useState(
+    '0x18a4c45a96c15d62b82b341f18738125bf875fee86057d88589a183700601a1c',
+  )
+
+  const { metadata, isLoading } = useSuiData(inputAddress)
+
+  // Transform metadata into project format
   const filteredProjects = useMemo(() => {
-    return projects.filter((project) => {
-      const matchesSearch =
-        project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        project.url.toLowerCase().includes(searchQuery.toLowerCase())
+    if (!metadata || metadata.length === 0) return []
+    return metadata
+      .map((meta, index) => transformMetadataToProject(meta, index))
+      .filter((project) => {
+        const matchesSearch =
+          project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          project.url.toLowerCase().includes(searchQuery.toLowerCase())
 
-      const matchesDate =
-        !date ||
-        formatDate(project.startDate) === formatDate(date) ||
-        formatDate(project.expiredDate) === formatDate(date)
+        const matchesDate =
+          !date ||
+          formatDate(project.startDate) === formatDate(date) ||
+          formatDate(project.expiredDate) === formatDate(date)
 
-      const remaining = calculateDaysBetween(new Date(), project.expiredDate)
+        const remaining = calculateDaysBetween(new Date(), project.expiredDate)
 
-      const matchesTab =
-        activeTab === 'all' ||
-        (activeTab === 'expiring' && remaining <= 30) ||
-        (activeTab === 'recent' &&
-          calculateDaysBetween(new Date(), project.startDate) <= 30)
+        const matchesTab =
+          activeTab === 'all' ||
+          (activeTab === 'expiring' && remaining <= 30) ||
+          (activeTab === 'recent' &&
+            calculateDaysBetween(new Date(), project.startDate) <= 30)
 
-      return matchesSearch && matchesDate && matchesTab
-    })
-  }, [searchQuery, date, activeTab])
+        return matchesSearch && matchesDate && matchesTab
+      })
+  }, [metadata, searchQuery, date, activeTab])
 
   const sortedProjects = useMemo(() => {
     return [...filteredProjects].sort((a, b) => {
@@ -144,6 +95,22 @@ export default function Dashboard() {
     })
   }, [filteredProjects, sortType])
 
+  // Pagination
+  const totalPages = Math.ceil(filteredProjects.length / itemsPerPage)
+  const paginatedProjects = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage
+    return sortedProjects.slice(startIndex, startIndex + itemsPerPage)
+  }, [sortedProjects, currentPage])
+
+  // Reset to first page when search changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, date, activeTab])
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
   // Memoize handlers
   const handleHoverStart = useCallback((id: number) => {
     setHoveredCard(id)
@@ -151,12 +118,6 @@ export default function Dashboard() {
 
   const handleHoverEnd = useCallback(() => {
     setHoveredCard(null)
-  }, [])
-
-  const handleReset = useCallback(() => {
-    setSearchQuery('')
-    setDate(undefined)
-    setActiveTab('all')
   }, [])
 
   return (
@@ -179,21 +140,87 @@ export default function Dashboard() {
 
           <DashboardTabs activeTab={activeTab} setActiveTab={setActiveTab} />
 
-          <AnimatePresence mode="wait">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 items-stretch">
-              {sortedProjects.map((project, index) => (
-                <ProjectCard
-                  key={project.id}
-                  project={project}
-                  index={index}
-                  onHoverStart={handleHoverStart}
-                  onHoverEnd={handleHoverEnd}
-                />
-              ))}
+          {isLoading ? (
+            <div className="flex justify-center items-center min-h-[400px]">
+              <Loading />
             </div>
-          </AnimatePresence>
+          ) : (
+            <>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentPage}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 items-stretch"
+                >
+                  {paginatedProjects.map((project, index) => (
+                    <motion.div
+                      key={project.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.1 }}
+                    >
+                      <ProjectCard
+                        project={project}
+                        index={index}
+                        onHoverStart={handleHoverStart}
+                        onHoverEnd={handleHoverEnd}
+                      />
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </AnimatePresence>
 
-          {sortedProjects.length === 0 && <EmptyState onReset={handleReset} />}
+              {totalPages > 1 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.2 }}
+                  className="flex justify-center items-center gap-2 mt-8"
+                >
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="px-4 py-2 rounded-md bg-primary-700 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary-600"
+                  >
+                    Previous
+                  </motion.button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <motion.button
+                      key={page}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => handlePageChange(page)}
+                      className={`px-4 py-2 rounded-md ${
+                        currentPage === page
+                          ? 'bg-secondary-500 text-black'
+                          : 'bg-primary-700 text-white hover:bg-primary-600'
+                      }`}
+                    >
+                      {page}
+                    </motion.button>
+                  ))}
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="px-4 py-2 rounded-md bg-primary-700 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary-600"
+                  >
+                    Next
+                  </motion.button>
+                </motion.div>
+              )}
+            </>
+          )}
+
+          {!isLoading && sortedProjects.length === 0 && (
+            <EmptyState onReset={() => setSearchQuery('')} />
+          )}
         </div>
       </main>
     </>
