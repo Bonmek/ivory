@@ -31,42 +31,6 @@ router.get("/api/user", ((req, res) => {
   }
 }) as import("express").RequestHandler);
 
-// File content endpoint
-router.get("/api/file", (async (req, res) => {
-  const authReq = req as AuthenticatedRequest;
-  if (!authReq.isAuthenticated() || !authReq.user) {
-    return res.status(401).send("Unauthorized");
-  }
-
-  const accessToken = authReq.user.accessToken;
-  const owner = authReq.user.username;
-  const repo = "private-repo-name"; // Replace with actual repo name
-  const filePath = "README.md";
-
-  try {
-    const response: AxiosResponse<string> = await axios.get(
-      `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`,
-      {
-        headers: {
-          Authorization: `token ${accessToken}`,
-          Accept: "application/vnd.github.v3.raw",
-        },
-      }
-    );
-    res.send(response.data);
-  } catch (err: unknown) {
-    if (axios.isAxiosError(err)) {
-      res
-        .status(err.response?.status || 500)
-        .send(err.response?.data || err.message);
-    } else if (err instanceof Error) {
-      res.status(500).send(err.message);
-    } else {
-      res.status(500).send("Unknown error");
-    }
-  }
-}) as import("express").RequestHandler);
-
 // Repositories endpoint
 router.get("/api/repositories", (async (req, res) => {
   const authReq = req as AuthenticatedRequest;

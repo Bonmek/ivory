@@ -1,12 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Blocks, Wallet, ChevronDown } from 'lucide-react';
+import { Menu, X, Blocks, Wallet, ChevronDown, LogOut } from 'lucide-react';
 import { Link, useLocation } from 'react-router';
+import LoginDialog from './LoginDialog';
+import { useWalletKit } from '@mysten/wallet-kit';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from './ui/dropdown-menu';
+import { Button } from './ui/button';
 
 const Navbar = () => {
+  const { currentAccount, disconnect } = useWalletKit();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [open, setOpen] = useState<boolean>(false);
   const location = useLocation();
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -15,10 +27,6 @@ const Navbar = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  useEffect(() => {
-    setIsMobileMenuOpen(false);
-  }, [location]);
 
   const navItems = [
     { name: 'Home', to: '/' },
@@ -36,7 +44,7 @@ const Navbar = () => {
   return (
     <>
       <header
-        className={`fixed inset-x-0 top-0 z-30 transition-all duration-300 ease-in-out
+        className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ease-in-out
           ${isScrolled
             ? 'bg-gradient-to-r from-primary-800/90 via-primary-900/90 to-primary-800/90 backdrop-blur-xl border-b-2 border-secondary-400/30 rounded-b-2xl shadow-lg shadow-primary-900/10'
             : 'bg-transparent'
@@ -72,11 +80,10 @@ const Navbar = () => {
                   <Link
                     key={item.name}
                     to={item.to}
-                    className={`relative group transition-all duration-300 ${
-                      isActivePath(item.to) 
-                        ? 'text-white font-bold tracking-wide' 
-                        : 'text-secondary-200 hover:text-white font-medium'
-                    }`}
+                    className={`relative group transition-all duration-300 ${isActivePath(item.to)
+                      ? 'text-white font-bold tracking-wide'
+                      : 'text-secondary-200 hover:text-white font-medium'
+                      }`}
                   >
                     <motion.div
                       initial={{ opacity: 0, y: -20 }}
@@ -105,23 +112,68 @@ const Navbar = () => {
               </div>
 
               {/* Connect Wallet Button */}
-              <motion.button
-                className="flex items-center space-x-2 px-6 py-2.5 rounded-full bg-gradient-to-r from-secondary-500 to-secondary-600 text-black hover:shadow-lg hover:shadow-secondary-500/20 transition-all duration-300 group"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <motion.div
-                  whileHover={{ rotate: 360 }}
-                  transition={{ duration: 0.5, ease: "easeInOut" }}
+              {currentAccount?.address ?
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <motion.button
+                      className="flex items-center space-x-2 px-6 py-2.5 rounded-full bg-gradient-to-r from-secondary-500 to-secondary-600 text-black hover:shadow-lg hover:shadow-secondary-500/20 transition-all duration-300 group"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      whileHover={{ scale: 1.05, y: -2 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Wallet className="w-4 h-4 text-black" />
+                      <span className='text-black font-semibold'>{currentAccount?.address.slice(0, 10)}...</span>
+                      <ChevronDown className="w-4 h-4 text-black ml-1" />
+                    </motion.button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="end"
+                    className="min-w-[240px] bg-primary-900/95 border border-secondary-500/20 text-white shadow-2xl rounded-2xl p-3 backdrop-blur-2xl"
+                  >
+                    <div className="flex items-center space-x-2 px-2 pt-1 pb-2">
+                      <Wallet className="w-4 h-4 text-secondary-400" />
+                      <span className="block text-xs text-secondary-200 font-mono break-all select-all">
+                        {currentAccount?.address.slice(0, 25)}...
+                      </span>
+                      <button
+                        className="ml-auto px-2 py-1 rounded bg-secondary-700/30 hover:bg-secondary-500/40 text-xs text-secondary-200 transition"
+                        onClick={() => {
+                          if (currentAccount?.address) {
+                            navigator.clipboard.writeText(currentAccount.address);
+                            setCopied(true);
+                            setTimeout(() => setCopied(false), 1200);
+                          }
+                        }}
+                        title="Copy address"
+                      >
+                        {copied ? "Copied!" : "Copy"}
+                      </button>
+                    </div>
+                    <div className="my-2 h-px bg-secondary-500/20" />
+                    <DropdownMenuItem
+                      onClick={disconnect}
+                      className="text-red-400 hover:bg-primary-800/80 hover:text-red-500 focus:bg-primary-800/80 focus:text-red-500 font-semibold rounded-lg transition-colors duration-150 cursor-pointer px-3 py-2 flex items-center"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                :
+                <motion.button
+                  className="flex items-center space-x-2 px-6 py-2.5 rounded-full bg-gradient-to-r from-secondary-500 to-secondary-600 text-black hover:shadow-lg hover:shadow-secondary-500/20 transition-all duration-300 group"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setOpen(true)
+                  }
                 >
-                  <Wallet className="w-5 h-5 text-black group-hover:text-primary-900 transition-colors duration-300" />
-                </motion.div>
-                <span className='text-black font-bold tracking-wide group-hover:text-primary-900 transition-colors duration-300'>
-                  Connect Wallet
-                </span>
-              </motion.button>
+                  <Wallet className="w-4 h-4 text-black" />
+                  <span className='text-black font-bold font-pixel'>Connect Wallet</span>
+                </motion.button>
+              }
             </div>
 
             {/* Mobile Menu Button */}
@@ -139,7 +191,12 @@ const Navbar = () => {
       {/* Mobile Menu */}
       <AnimatePresence>
         {isMobileMenuOpen && (
-          <div className="fixed inset-0 z-40 md:hidden">
+          <motion.div
+            className="fixed inset-0 z-40 md:hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
             {/* Backdrop */}
             <motion.div
               className="absolute inset-0 bg-black/60 backdrop-blur-sm"
@@ -162,11 +219,10 @@ const Navbar = () => {
                   <Link
                     key={item.name}
                     to={item.to}
-                    className={`block py-3 transition-all duration-300 ${
-                      isActivePath(item.to)
-                        ? 'text-white font-bold bg-gradient-to-r from-secondary-400/20 to-secondary-600/20 rounded-lg px-4'
-                        : 'text-secondary-200 hover:text-white hover:bg-secondary-500/10 rounded-lg px-4'
-                    }`}
+                    className={`block py-3 transition-all duration-300 ${isActivePath(item.to)
+                      ? 'text-white font-bold bg-gradient-to-r from-secondary-400/20 to-secondary-600/20 rounded-lg px-4'
+                      : 'text-secondary-200 hover:text-white hover:bg-secondary-500/10 rounded-lg px-4'
+                      }`}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     <motion.div
@@ -179,23 +235,56 @@ const Navbar = () => {
                     </motion.div>
                   </Link>
                 ))}
-                <motion.button
-                  className="w-full flex items-center justify-center space-x-2 px-6 py-3 rounded-full bg-gradient-to-r from-secondary-500 to-secondary-600 text-black font-bold tracking-wide hover:shadow-lg hover:shadow-secondary-500/20 transition-all duration-300"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Wallet className="w-5 h-5" />
-                  <span>Connect Wallet</span>
-                </motion.button>
+                {currentAccount?.address ?
+                  <section className='space-y-2'>
+                    <Button
+                      className="block w-full px-3 py-2 rounded-lg bg-primary-300/20 text-secondary-200 font-mono font-semibold text-sm text-center truncate select-all mb-2 border border-secondary-500/20 shadow-sm transition-colors duration-200 hover:bg-primary-300/40 focus:outline-none"
+                      onClick={() => {
+                        if (currentAccount?.address) {
+                          navigator.clipboard.writeText(currentAccount.address);
+                          setCopied(true);
+                          setTimeout(() => setCopied(false), 1200);
+                        }
+                      }}
+                      title="Copy address"
+                    >
+                      {copied ? 'Copied!' : `${currentAccount?.address.slice(0, 25)}...`}
+                    </Button>
+                    <motion.button
+                      className="w-full flex items-center justify-center mt-5 space-x-2 px-6 py-3 rounded-full bg-red-500 text-white font-bold tracking-wide hover:shadow-lg hover:shadow-secondary-500/20 transition-all duration-300"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3 }}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={disconnect}
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span>Logout</span>
+                    </motion.button>
+                  </section>
+                  :
+                  <motion.button
+                    className="w-full flex items-center justify-center space-x-2 px-6 py-3 rounded-full bg-gradient-to-r from-secondary-500 to-secondary-600 text-black font-bold tracking-wide hover:shadow-lg hover:shadow-secondary-500/20 transition-all duration-300"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setOpen(true)}
+                  >
+                    <Wallet className="w-5 h-5" />
+                    <span>Connect Wallet</span>
+                  </motion.button>
+                }
               </div>
             </motion.div>
-          </div>
+          </motion.div>
         )}
       </AnimatePresence>
+      <LoginDialog open={open} setOpen={setOpen} />
     </>
+
   );
 };
 

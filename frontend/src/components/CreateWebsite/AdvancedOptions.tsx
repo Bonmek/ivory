@@ -21,13 +21,13 @@ function AdvancedOptions({ advancedOptions, setAdvancedOptions }: AdvancedOption
       transition={{ duration: 0.4, delay: 0.2 }}
     >
       <section className="w-full bg-primary-700/70  backdrop-blur-3xl shadow-lg p-2 px-4 rounded-xl">
-        <div className="flex items-center justify-between px-2 ">
+        <div className="flex items-center justify-between px-2 cursor-pointer"
+          onClick={() => setIsOpen((prev) => !prev)}>
           <h2 className="font-semibold bg-gradient-to-r text-base text-white ">Advanced options</h2>
           <Button
             variant="link"
             size="sm"
-            className="ml-2 hover:bg-primary-700/70 hover:text-secondary-500 transition-colors"
-            onClick={() => setIsOpen((prev) => !prev)}
+            className="ml-2 hover:bg-primary-700/70 cursor-pointer hover:text-secondary-500 transition-colors"
             aria-expanded={isOpen}
             aria-controls="advanced-options-content"
           >
@@ -44,6 +44,20 @@ function AdvancedOptions({ advancedOptions, setAdvancedOptions }: AdvancedOption
               transition={{ duration: 0.3, ease: "easeInOut" }}
               className='space-y-6'
             >
+
+              <section className='px-2 mt-4 border-t border-gray-800'>
+                <div className="flex items-center mt-4 mb-2">
+                  <h3 className="text-sm text-gray-300 font-semibold">Default Path</h3>
+                  <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
+                </div>
+                <Input
+                  value={advancedOptions.defaultPath}
+                  onChange={(e) => setAdvancedOptions({ ...advancedOptions, defaultPath: e.target.value })}
+                  placeholder="/"
+                  className="bg-primary-500 border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500"
+                />
+              </section>
+
               <section className='px-2 mt-4 border-t border-gray-800'>
                 <div className="flex items-center mt-4 mb-2">
                   <h3 className="text-sm text-gray-300  font-semibold">Cache Control</h3>
@@ -66,20 +80,38 @@ function AdvancedOptions({ advancedOptions, setAdvancedOptions }: AdvancedOption
                   <h3 className="text-sm text-gray-300 font-semibold">Route</h3>
                   <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
                 </div>
-                <div className="flex items-center space-x-2 mb-4">
-                  <Input
-                    value={advancedOptions.route[0].name}
-                    onChange={(e) => setAdvancedOptions({ ...advancedOptions, route: [{ ...advancedOptions.route[0], name: e.target.value }] })}
-                    className="bg-primary-500 border-gray-700 rounded-md h-8 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500" />
-                  <span>to</span>
-                  <Input
-                    value={advancedOptions.route[0].path}
-                    onChange={(e) => setAdvancedOptions({ ...advancedOptions, route: [{ ...advancedOptions.route[0], path: e.target.value }] })}
-                    className="bg-primary-500 border-gray-700 rounded-md h-8 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500" />
-                  <Button variant="ghost" size="icon" className="rounded-full bg-secondary-500 hover:bg-secondary-700 transform transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-secondary-500/20">
-                    <Plus className="h-5 w-5 text-black" />
-                  </Button>
-                </div>
+                {advancedOptions.route.map((route, idx) => (
+                  <div key={idx} className="flex items-center space-x-2 mb-4">
+                    <Input
+                      value={route.name}
+                      onChange={(e) => {
+                        const newRoutes = [...advancedOptions.route]
+                        newRoutes[idx] = { ...newRoutes[idx], name: e.target.value }
+                        setAdvancedOptions({ ...advancedOptions, route: newRoutes })
+                      }}
+                      className="bg-primary-500 border-gray-700 rounded-md h-8 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500" />
+                    <span>to</span>
+                    <Input
+                      value={route.path}
+                      onChange={(e) => {
+                        const newRoutes = [...advancedOptions.route]
+                        newRoutes[idx] = { ...newRoutes[idx], path: e.target.value }
+                        setAdvancedOptions({ ...advancedOptions, route: newRoutes })
+                      }}
+                      className="bg-primary-500 border-gray-700 rounded-md h-8 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500" />
+                    {idx === advancedOptions.route.length - 1 && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="rounded-full bg-secondary-500 hover:bg-secondary-700 transform transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-secondary-500/20"
+                        onClick={() => setAdvancedOptions({ ...advancedOptions, route: [...advancedOptions.route, { name: '', path: '' }] })}
+                        type="button"
+                      >
+                        <Plus className="h-5 w-5 text-black" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
               </section>
             </motion.div>
           )}
