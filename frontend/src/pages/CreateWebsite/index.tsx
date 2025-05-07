@@ -2,7 +2,6 @@ import { Button } from '@/components/ui/button'
 import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Github, HelpCircle, Upload } from 'lucide-react'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
@@ -11,10 +10,8 @@ import { useTheme } from '@/context/ThemeContext'
 import GithubRepoInput from '@/components/CreateWebsite/GitHubRepoInput'
 import FileUploadPreview from '@/components/CreateWebsite/FileUploadPreview'
 import FrameworkPresetSelector from '@/components/CreateWebsite/FrameworkPresetSelector'
-import OwnershipRadioGroup from '@/components/CreateWebsite/OwnershipRadioGroup'
 import {
   CacheControl,
-  Ownership,
   UploadMethod,
 } from '@/types/CreateWebstie/enums'
 import BuildOutputSetting from '@/components/CreateWebsite/BuildOutputSetting'
@@ -22,11 +19,14 @@ import AdvancedOptions from '@/components/CreateWebsite/AdvancedOptions'
 import {
   advancedOptionsType,
   buildOutputSettingsType,
+  Repository,
 } from '@/types/CreateWebstie/types'
 import { frameworks } from '@/constants/frameworks'
 import ThreeJSBackground from '@/components/ThreeJsBackground'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Helmet } from 'react-helmet'
+import apiClient from '@/lib/axiosConfig'
+import { useQuery } from 'wagmi/query'
 
 export default function CreateWebsitePage() {
   useTheme()
@@ -66,14 +66,14 @@ export default function CreateWebsitePage() {
   const maxRepoView = 5
   const [githubUrl, setGithubUrl] = useState('')
   const [searchRepository, setSearchRepository] = useState('')
-  const [repositories, setRepositories] = useState<
-    Array<{ id: number; name: string }>
-  >([])
   const [visibleRepos, setVisibleRepos] = useState(maxRepoView)
   const [selectedRepo, setSelectedRepo] = useState<number | null>(null)
   const [selectedFramework, setSelectedFramework] = useState<string | null>(
     null,
   )
+  const [repoContents, setRepoContents] = useState<any[] | null>(null);
+  const [repoContentsLoading, setRepoContentsLoading] = useState(false);
+  const [repoContentsError, setRepoContentsError] = useState<string | null>(null);
 
   // File handlers
   const handleDragOver = (e: React.DragEvent) => {
@@ -132,33 +132,35 @@ export default function CreateWebsitePage() {
   }
 
   const handleGithubSignIn = () => {
-    // !TODO: Implement this with the backend
+    window.location.href = `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_GITHUB_AUTH}`;
   }
 
   const fetchRepositories = async () => {
-    try {
-      // !TODO: Implement this with the backend
-    } catch (err) {
-      console.error(err)
-    }
+    const res = await apiClient.get(process.env.REACT_APP_API_REPOSITORIES || '');
+    return Array.isArray(res.data) ? res.data : [];
   }
 
   useEffect(() => {
-    // !TODO: Implement this with the backend
-    fetchRepositories()
+    apiClient
+      .get(process.env.REACT_APP_API_USER || '')
+      .then((res) => setUser(res.data.user))
+      .catch(() => setUser(null));
   }, [])
 
   const handleShowMore = () => {
     setVisibleRepos((prev) => prev + maxRepoView)
   }
 
+  const { data, isLoading, refetch } = useQuery({ queryKey: ['repositories'], queryFn: fetchRepositories });
+  const repositories = (data ?? []) as Repository[];
+
   const filteredRepositories = repositories
-    .filter((repo) =>
+    .filter((repo: Repository) =>
       repo.name.toLowerCase().includes(searchRepository.toLowerCase().trim()),
     )
     .slice(0, visibleRepos)
 
-  const handleSelectRepository = (id: number) => {
+  const handleSelectRepository = (id: number | null) => {
     setSelectedRepo(id)
     setSelectedFramework(null)
   }
@@ -166,6 +168,40 @@ export default function CreateWebsitePage() {
   const handleSelectFramework = (frameworkId: string) => {
     setSelectedFramework(frameworkId)
   }
+
+  const handleLogout = () => {
+    setUser(null);
+    setSelectedRepo(null);
+    setGithubUrl("");
+    setSearchRepository("");
+    setRepoContents(null);
+    setRepoContentsError(null);
+    setRepoContentsLoading(false);
+    window.location.reload();
+  };
+
+  useEffect(() => {
+    if (selectedRepo == null) {
+      setRepoContents(null);
+      setRepoContentsError(null);
+      setRepoContentsLoading(false);
+      return;
+    }
+    const repo = repositories.find((r) => r.id === selectedRepo);
+    if (!repo) return;
+    setRepoContentsLoading(true);
+    setRepoContentsError(null);
+    apiClient
+      .get(`${process.env.REACT_APP_API_REPOSITORIES}/${repo.owner}/${repo.name}/contents`)
+      .then((res) => {
+        setRepoContents(res.data);
+        setRepoContentsLoading(false);
+      })
+      .catch((err) => {
+        setRepoContentsError('Failed to fetch repository contents');
+        setRepoContentsLoading(false);
+      });
+  }, [selectedRepo, repositories]);
 
   return (
     <>
@@ -334,19 +370,10 @@ export default function CreateWebsitePage() {
                     selectedRepo={selectedRepo}
                     handleShowMore={handleShowMore}
                     visibleRepos={visibleRepos}
-                    selectedFramework={selectedFramework}
-                    frameworks={frameworks}
-                    handleSelectFramework={handleSelectFramework}
-                    selectedFile={selectedFile}
-                    error={error}
-                    fileInputRef={fileInputRef}
-                    handleFileInput={handleFileInput}
-                    handleBrowseClick={handleBrowseClick}
-                    handleRemoveFile={handleRemoveFile}
-                    isDragging={isDragging}
-                    setIsDragging={setIsDragging}
-                    setSelectedFile={setSelectedFile}
-                    setError={setError}
+                    repoContents={repoContents}
+                    repoContentsLoading={repoContentsLoading}
+                    repoContentsError={repoContentsError}
+                    handleLogout={handleLogout}
                   />
                 </TabsContent>
               </Tabs>
