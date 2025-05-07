@@ -27,7 +27,7 @@ import { frameworks } from '@/constants/frameworks'
 import ThreeJSBackground from '@/components/ThreeJsBackground'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Helmet } from 'react-helmet'
-import CreateWebsiteDialog from '@/components/CreateWebsiteDialog'
+import CreateWebsiteDialog from '../../components/CreateWebsiteDialog'
 
 export default function CreateWebsitePage() {
   useTheme()
