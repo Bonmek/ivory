@@ -22,11 +22,11 @@ import {
   Repository,
 } from '@/types/CreateWebstie/types'
 import { frameworks } from '@/constants/frameworks'
-import ThreeJSBackground from '@/components/ThreeJsBackground'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Helmet } from 'react-helmet'
 import apiClient from '@/lib/axiosConfig'
 import { useQuery } from 'wagmi/query'
+import CreateWebsiteDialog from '@/components/CreateWebsiteDialog'
 
 export default function CreateWebsitePage() {
   useTheme()
