@@ -9,11 +9,12 @@ import passport from "passport";
 import session from "express-session";
 import "./github/githubAuth";
 import { githubRoutes } from "./github/routes";
-
+import { JobsClient } from "@google-cloud/run";
 
 dotenv.config();
 const upload = multer();
 const app = express();
+const jobsClient = new JobsClient();
 
 app.use(express.json());
 
@@ -34,7 +35,6 @@ app.use(
 
 app.use(passport.initialize());
 app.use(passport.session());
-
 app.use(githubRoutes);
 
 const hex = process.env.SUI_Hex || "";
@@ -47,12 +47,45 @@ const walrusClient = new WalrusClient({
   suiClient,
 });
 
-app.post("/write-blob", upload.single("file"), async (req, res) => {
+// Helper function to execute Cloud Run job
+async function executeCloudRunJob(objectId: string): Promise<string> {
+  try {
+    // Format for Cloud Run Jobs
+    const jobName = `projects/${process.env.PROJECT_ID}/locations/${process.env.REGION}/jobs/${process.env.CLOUD_RUN_JOB_NAME}`;
+
+    // Create task with environment variables
+    const [response] = await jobsClient.runJob({
+      name: jobName,
+      overrides: {
+        containerOverrides: [
+          {
+            env: [
+              {
+                name: "OBJECT_ID",
+                value: objectId,
+              },
+            ],
+          },
+        ],
+      },
+    });
+
+    return response.name || "Job execution started";
+  } catch (error) {
+    console.error("Error executing Cloud Run job:", error);
+    throw new Error(
+      `Failed to execute Cloud Run job: ${(error as Error).message}`
+    );
+  }
+}
+
+app.post("/write-blob-n-run-job", upload.single("file"), async (req, res) => {
   try {
     if (!req.file) {
       res.status(400).json({ error: "No file uploaded" });
       return;
     }
+
     const fileBuffer = new Uint8Array(req.file.buffer);
 
     const attributes = req.body.attributes
@@ -72,16 +105,25 @@ app.post("/write-blob", upload.single("file"), async (req, res) => {
     const blobObjectId =
       typeof blobObject.id === "string" ? blobObject.id : blobObject.id.id;
 
-    await walrusClient
-      .executeWriteBlobAttributesTransaction({
-        blobObjectId: blobObjectId,
-        signer: keypair,
-        attributes: { blobId: blobId },
-      })
+    await walrusClient.executeWriteBlobAttributesTransaction({
+      blobObjectId: blobObjectId,
+      signer: keypair,
+      attributes: { blobId: blobId },
+    });
 
-    const attrs = await walrusClient.readBlobAttributes({ blobObjectId });
+    const  objectId  = blobObjectId;
 
-    res.json({ statusCode: 1, data: { attributes: attrs } });
+    if (!objectId) {
+      res.status(400).json({ error: "objectId is required" });
+      return;
+    }
+
+    await executeCloudRunJob(objectId);
+
+    res.status(200).json({
+      statusCode: 1,
+      message: "Cloud Run job triggered successfully",
+    });
   } catch (error) {
     if (error instanceof Error) {
       res.json({
@@ -106,4 +148,3 @@ app.post("/write-blob", upload.single("file"), async (req, res) => {
 app.listen(5000, () => {
   console.log("Server running on port 5000");
 });
-
