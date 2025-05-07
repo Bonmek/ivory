@@ -10,6 +10,7 @@ export default defineConfig({
       'REACT_APP_API_USER',
       'REACT_APP_API_REPOSITORIES',
       'REACT_APP_API_GITHUB_AUTH',
+      'REACT_APP_API_WRITE_BLOB_N_RUN_JOB',
     ]) as any,
   ],
   resolve: {
