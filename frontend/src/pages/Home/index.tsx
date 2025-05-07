@@ -225,7 +225,7 @@ export default function HomePage() {
         <link rel="canonical" href="http://mysite.com/example" />
       </Helmet>
       <CustomCursor />
-      <div className="min-h-screen bg-gradient-to-b from-black via-primary-900/20 to-black text-white overflow-hidden relative">
+      <div>
         {/* Grid Background */}
         <motion.div
           className="fixed inset-0 z-0 grid"

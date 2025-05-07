@@ -210,9 +210,8 @@ export default function CreateWebsitePage() {
         <title>Create Website | Ivory</title>
         <link rel="canonical" href="http://mysite.com/example" />
       </Helmet>
-      <main className="min-h-screen bg-gradient-to-b from-black via-primary-900/20 to-black relative overflow-hidden">
-        <ThreeJSBackground />
-        <motion.main className="relative z-10 max-w-7xl mx-auto px-6 py-12 pt-28">
+      <main>
+        <motion.main className="relative z-10 mx-auto">
           <motion.h1
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
