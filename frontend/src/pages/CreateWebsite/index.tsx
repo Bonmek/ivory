@@ -51,6 +51,9 @@ export default function CreateWebsitePage() {
     defaultPath: '',
   })
 
+  //State for create website dialog
+  const [open, setOpen] = useState(false)
+
   // State for file upload
   const [uploadMethod, setUploadMethod] = useState<UploadMethod>(
     UploadMethod.Upload,
@@ -428,7 +431,9 @@ export default function CreateWebsitePage() {
 
               <Separator className="mb-4" />
               <section className="pt-4 flex justify-end">
-                <Button className="bg-secondary-500 hover:bg-secondary-700 text-black p-6 rounded-md text-base transform transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-secondary-500/20">
+                <Button
+                  onClick={() => setOpen(true)}
+                  className="bg-secondary-500 hover:bg-secondary-700 text-black p-6 rounded-md text-base transform transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-secondary-500/20">
                   Create project
                 </Button>
               </section>
@@ -436,6 +441,7 @@ export default function CreateWebsitePage() {
           </article>
         </motion.main>
       </main>
+      <CreateWebsiteDialog open={open} setOpen={setOpen} />
     </>
   )
 }
