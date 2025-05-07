@@ -1,13 +1,13 @@
 import { CacheControl } from './enums'
 
 export interface buildOutputSettingsType {
-  rootDirectory: string
   buildCommand: string
   outputDirectory: string
   installCommand: string
 }
 
 export interface advancedOptionsType {
+  rootDirectory: string
   cacheControl: CacheControl
   defaultPath: string
 }
@@ -24,4 +24,15 @@ export interface Repository {
   private: boolean
   updated_at: string
   visibility: string
+}
+
+export interface ApiResponse<T> {
+  data: T;
+  status: number;
+}
+
+export interface ApiError {
+  response?: {
+    status: number;
+  };
 }

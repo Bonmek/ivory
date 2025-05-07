@@ -41,7 +41,7 @@ export const writeBlobAndRunJob = async (data: WriteBlobRequest): Promise<WriteB
   formData.append('attributes', JSON.stringify(data.attributes));
 
   try {
-    const response = await axios.post('/write-blob-n-run-job', formData, {
+    const response = await axios.post(process.env.REACT_APP_SERVER_URL + process.env.REACT_APP_API_WRITE_BLOB_N_RUN_JOB!, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },

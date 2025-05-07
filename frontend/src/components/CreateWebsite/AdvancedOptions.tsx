@@ -45,7 +45,20 @@ function AdvancedOptions({ advancedOptions, setAdvancedOptions }: AdvancedOption
               className='space-y-6'
             >
 
-              <section className='px-2 mt-4 border-t border-gray-800'>
+              <section className='px-2 mt-4'>
+                <div className="flex items-center mt-4 mb-2">
+                  <h3 className="text-sm text-gray-300 font-semibold">Root Directory</h3>
+                  <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
+                </div>
+                <Input
+                  value={advancedOptions.rootDirectory}
+                  onChange={(e) => setAdvancedOptions({ ...advancedOptions, rootDirectory: e.target.value })}
+                  placeholder="/"
+                  className="bg-primary-500 border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500"
+                />
+              </section>
+
+              <section className='px-2 mt-4'>
                 <div className="flex items-center mt-4 mb-2">
                   <h3 className="text-sm text-gray-300 font-semibold">Default Path</h3>
                   <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />

@@ -18,6 +18,8 @@ import BuildOutputSetting from '@/components/CreateWebsite/BuildOutputSetting'
 import AdvancedOptions from '@/components/CreateWebsite/AdvancedOptions'
 import {
   advancedOptionsType,
+  ApiError,
+  ApiResponse,
   buildOutputSettingsType,
   Repository,
 } from '@/types/CreateWebstie/types'
@@ -42,7 +44,6 @@ export default function CreateWebsitePage() {
   // State for build output settings
   const [buildOutputSettings, setBuildOutputSettings] =
     useState<buildOutputSettingsType>({
-      rootDirectory: '',
       buildCommand: '',
       installCommand: '',
       outputDirectory: '',
@@ -52,6 +53,7 @@ export default function CreateWebsitePage() {
   const [advancedOptions, setAdvancedOptions] = useState<advancedOptionsType>({
     cacheControl: CacheControl.NoCache,
     defaultPath: '',
+    rootDirectory: '',
   })
 
   // State for file upload
@@ -139,8 +141,20 @@ export default function CreateWebsitePage() {
   }
 
   const fetchRepositories = async () => {
-    const res = await apiClient.get(process.env.REACT_APP_API_REPOSITORIES || '');
-    return Array.isArray(res.data) ? res.data : [];
+    try {
+      const res: ApiResponse<Repository[]> = await apiClient.get(process.env.REACT_APP_API_REPOSITORIES || '');
+      if (res.status === 401) {
+        throw new Error('Unauthorized');
+      }
+      return Array.isArray(res.data) ? res.data : [];
+    } catch (error) {
+      const apiError = error as ApiError;
+      if (apiError.response?.status === 401) {
+        setUser(null);
+        throw new Error('Unauthorized');
+      }
+      throw error;
+    }
   }
 
   useEffect(() => {
@@ -154,7 +168,11 @@ export default function CreateWebsitePage() {
     setVisibleRepos((prev) => prev + maxRepoView)
   }
 
-  const { data, isLoading, refetch } = useQuery({ queryKey: ['repositories'], queryFn: fetchRepositories });
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ['repositories'],
+    queryFn: fetchRepositories,
+    enabled: !!user,
+  });
   const repositories = (data ?? []) as Repository[];
 
   const filteredRepositories = repositories
@@ -183,12 +201,12 @@ export default function CreateWebsitePage() {
       start_date: new Date().toISOString(),
       end_date: addDays(new Date(), 14).toISOString(),
       status: '0',
-      cache: '7',
-      root: buildOutputSettings.rootDirectory,
+      cache: advancedOptions.cacheControl,
+      root: advancedOptions.rootDirectory,
       install_command: buildOutputSettings.installCommand,
       build_command: buildOutputSettings.buildCommand,
       default_route: advancedOptions.defaultPath,
-      is_build: showBuildOutputSettings ? '1' : '0',
+      is_build: showBuildOutputSettings ? '0' : '1',
     }
     console.log('attributes',attributes)
     console.log('file', selectedFile)
@@ -205,6 +223,7 @@ export default function CreateWebsitePage() {
   }
   
   const handleLogout = () => {
+    // !TODO: Not working right now
     setUser(null);
     setSelectedRepo(null);
     setGithubUrl("");
@@ -226,6 +245,7 @@ export default function CreateWebsitePage() {
     if (!repo) return;
     setRepoContentsLoading(true);
     setRepoContentsError(null);
+    
     apiClient
       .get(`${process.env.REACT_APP_API_REPOSITORIES}/${repo.owner}/${repo.name}/contents`)
       .then((res) => {
@@ -233,7 +253,13 @@ export default function CreateWebsitePage() {
         setRepoContentsLoading(false);
       })
       .catch((err) => {
-        setRepoContentsError('Failed to fetch repository contents');
+        if (err.response?.status === 401) {
+          setUser(null);
+          setRepoContents(null);
+          setRepoContentsError('Unauthorized. Please sign in to GitHub to access repository contents.');
+        } else {
+          setRepoContentsError('Failed to fetch repository contents');
+        }
         setRepoContentsLoading(false);
       });
   }, [selectedRepo, repositories]);

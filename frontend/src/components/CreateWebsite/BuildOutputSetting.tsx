@@ -42,20 +42,8 @@ function BuildOutputSetting({ showBuildOutputSettings, setShowBuildOutputSetting
               transition={{ duration: 0.3, ease: "easeInOut" }}
               className='space-y-6'
             >
-              <section className='px-2 mt-4 border-t border-gray-800'>
-                <div className="flex items-center mt-4 mb-2">
-                  <h3 className="text-sm text-gray-300 font-semibold">Root Directory</h3>
-                  <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
-                </div>
-                <Input
-                  value={buildOutputSettings.rootDirectory}
-                  onChange={(e) => setBuildOutputSettings({ ...buildOutputSettings, rootDirectory: e.target.value })}
-                  placeholder="/"
-                  className="bg-primary-500 border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500"
-                />
-              </section>
 
-              <section className='px-2'>
+              <section className='px-2 mt-6'>
                 <div className="flex items-center mb-2">
                   <h3 className="text-sm text-gray-300 font-semibold">Install Command</h3>
                   <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
