@@ -1,6 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
+import styles from './Loading.module.css'
 
 // Snowflake SVG component
 const Snowflake = ({ delay = 0, size = 20, x = 0 }) => (
@@ -34,9 +35,46 @@ const Snowflake = ({ delay = 0, size = 20, x = 0 }) => (
   </motion.div>
 )
 
+const LoadingText = () => {
+  const letters = "LOADING".split("")
+  
+  return (
+    <div className="flex space-x-1 mt-4">
+      {letters.map((letter, index) => (
+        <motion.span
+          key={index}
+          className="font-pixel text-white text-2xl"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            duration: 0.3,
+            delay: index * 0.1,
+            repeat: Number.POSITIVE_INFINITY,
+            repeatDelay: 1.5,
+            repeatType: "reverse"
+          }}
+        >
+          {letter}
+        </motion.span>
+      ))}
+    </div>
+  )
+}
+
+const Spinner = () => (
+  <div className={styles.spinner}>
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+  </div>
+)
+
 export default function Loading() {
   return (
-    <div className="flex items-center justify-center h-screen bg-gradient-to-br from-[#0f2027] via-[#203a43] to-[#2c5364] overflow-hidden">
+    <div className="flex items-center justify-center h-screen">
       {/* Snowflakes */}
       {[...Array(20)].map((_, i) => (
         <Snowflake
@@ -48,37 +86,9 @@ export default function Loading() {
       ))}
 
       {/* Loading spinner */}
-      <div className="relative z-10">
-        <motion.div
-          className="h-16 w-16 border-3 border-[#38ef7d] border-t-transparent rounded-full"
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-        />
-
-        {/* Pulsing glow effect */}
-        <motion.div
-          className="absolute inset-0 rounded-full bg-[#38ef7d]"
-          animate={{
-            opacity: [0.1, 0.3, 0.1],
-            scale: [0.8, 1.2, 0.8],
-          }}
-          transition={{
-            duration: 2,
-            repeat: Number.POSITIVE_INFINITY,
-            ease: "easeInOut",
-          }}
-          style={{ filter: "blur(8px)" }}
-        />
-
-        {/* Loading text */}
-        <motion.p
-          className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-white font-medium"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-        >
-          Loading...
-        </motion.p>
+      <div className="relative z-10 flex flex-col items-center">
+        <Spinner />
+        <LoadingText/>
       </div>
     </div>
   )
