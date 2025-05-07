@@ -58,7 +58,7 @@ function AdvancedOptions({ advancedOptions, setAdvancedOptions }: AdvancedOption
                 />
               </section>
 
-              <section className='px-2 mt-4 border-t border-gray-800'>
+              <section className='px-2 mt-4 mb-4'>
                 <div className="flex items-center mt-4 mb-2">
                   <h3 className="text-sm text-gray-300  font-semibold">Cache Control</h3>
                   <HelpCircleIcon className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
@@ -73,45 +73,6 @@ function AdvancedOptions({ advancedOptions, setAdvancedOptions }: AdvancedOption
                     <SelectItem value={CacheControl.Private}>Private</SelectItem>
                   </SelectContent>
                 </Select>
-              </section>
-
-              <section className='px-2'>
-                <div className="flex items-center mb-2">
-                  <h3 className="text-sm text-gray-300 font-semibold">Route</h3>
-                  <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
-                </div>
-                {advancedOptions.route.map((route, idx) => (
-                  <div key={idx} className="flex items-center space-x-2 mb-4">
-                    <Input
-                      value={route.name}
-                      onChange={(e) => {
-                        const newRoutes = [...advancedOptions.route]
-                        newRoutes[idx] = { ...newRoutes[idx], name: e.target.value }
-                        setAdvancedOptions({ ...advancedOptions, route: newRoutes })
-                      }}
-                      className="bg-primary-500 border-gray-700 rounded-md h-8 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500" />
-                    <span>to</span>
-                    <Input
-                      value={route.path}
-                      onChange={(e) => {
-                        const newRoutes = [...advancedOptions.route]
-                        newRoutes[idx] = { ...newRoutes[idx], path: e.target.value }
-                        setAdvancedOptions({ ...advancedOptions, route: newRoutes })
-                      }}
-                      className="bg-primary-500 border-gray-700 rounded-md h-8 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500" />
-                    {idx === advancedOptions.route.length - 1 && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="rounded-full bg-secondary-500 hover:bg-secondary-700 transform transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-secondary-500/20"
-                        onClick={() => setAdvancedOptions({ ...advancedOptions, route: [...advancedOptions.route, { name: '', path: '' }] })}
-                        type="button"
-                      >
-                        <Plus className="h-5 w-5 text-black" />
-                      </Button>
-                    )}
-                  </div>
-                ))}
               </section>
             </motion.div>
           )}

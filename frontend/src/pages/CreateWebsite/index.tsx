@@ -378,12 +378,13 @@ export default function CreateWebsitePage() {
                 exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.3 }}
               >
-                <FrameworkPresetSelector
-                  frameworks={frameworks}
-                  selectedFramework={selectedFramework}
-                  handleSelectFramework={handleSelectFramework}
-                />
               </motion.div>
+
+              <FrameworkPresetSelector
+                frameworks={frameworks}
+                selectedFramework={selectedFramework}
+                handleSelectFramework={handleSelectFramework}
+              />
 
 
               <article className="flex flex-col gap-4">
