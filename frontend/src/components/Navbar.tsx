@@ -19,7 +19,7 @@ const Navbar = () => {
   const [open, setOpen] = useState<boolean>(false);
   const location = useLocation();
   const [copied, setCopied] = useState(false);
-  const logo = '../../public/images/logos/Ivory_cliped.png';
+  const logo = '/images/logos/Ivory_cliped.png';
 
   useEffect(() => {
     const handleScroll = () => {
