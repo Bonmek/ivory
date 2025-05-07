@@ -138,7 +138,6 @@ const FileUploadPreview: React.FC<FileUploadPreviewProps> = ({ file, onRemove })
         if (cancelled) return;
         try {
           const fileList = Object.keys(zip.files);
-          console.log('ZIP files:', fileList);
           if (fileList.length === 0) {
             setError('ZIP file is empty');
             return;
@@ -163,7 +162,7 @@ const FileUploadPreview: React.FC<FileUploadPreviewProps> = ({ file, onRemove })
 
   return (
     <div className="flex flex-col items-center w-full">
-      <div className="w-full max-w-full bg-gradient-to-br from-cyan-900/40 to-cyan-900/30 backdrop-blur-md rounded-xl shadow-md p-4">
+      <div className="w-full max-w-full bg-primary-900 backdrop-blur-md rounded-xl shadow-md p-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-2">
             <Folder className="w-5 h-5 text-secondary-500" />
@@ -178,8 +177,8 @@ const FileUploadPreview: React.FC<FileUploadPreviewProps> = ({ file, onRemove })
             <X className="h-4 w-4 text-red-500" />
           </Button>
         </div>
-        <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent mb-4" />
-        <div className="w-full bg-[#10151c]/70 rounded-lg shadow-inner p-3 max-h-[300px] overflow-y-auto custom-scrollbar">
+        <div className="w-full h-[1px] bg-gray-900 mb-4" />
+        <div className="w-full bg-gray-900 rounded-lg shadow-inner p-3 max-h-[300px] overflow-y-auto custom-scrollbar">
           {loading && <div className="text-cyan-300 text-sm">Loading ZIP contents...</div>}
           {error && <div className="text-red-400 text-sm">{error}</div>}
           {files.length > 0 && <FileList files={files} />}
