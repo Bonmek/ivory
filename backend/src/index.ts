@@ -105,17 +105,6 @@ app.post("/write-blob", upload.single("file"), async (req, res) => {
   }
 });
 
-// app.get("/read-blob/:blobId", async (req, res) => {
-//   try {
-//     const { blobId } = req.params;
-//     const blob = await walrusClient.readBlob({ blobId });
-//     res.send(Buffer.from(blob));
-//   } catch (error) {
-//     console.error("An unknown error occurred:", error);
-//     res.status(500).json({ error: "Unknown error" });
-//   }
-// });
-
 const jobsClient = new JobsClient();
 
 interface JobRequestBody {
@@ -155,7 +144,6 @@ async function executeCloudRunJob(objectId: string): Promise<string> {
 }
 
 // Endpoint to trigger Cloud Run job
-// app.post("/write-blob", upload.single("file"), async (req, res) => {
 app.post("/trigger-job", async (req: Request, res: Response) => {
   try {
     const { objectId } = req.body as JobRequestBody;
