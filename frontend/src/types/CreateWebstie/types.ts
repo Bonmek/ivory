@@ -8,9 +8,5 @@ export interface buildOutputSettingsType {
 
 export interface advancedOptionsType {
   cacheControl: CacheControl
-  route: {
-    name: string
-    path: string
-  }[]
   defaultPath: string
 }

@@ -31,6 +31,9 @@ import { Helmet } from 'react-helmet'
 export default function CreateWebsitePage() {
   useTheme()
 
+  // State for project name
+  const [name, setName] = useState('')
+
   // State for build output settings
   const [buildOutputSettings, setBuildOutputSettings] =
     useState<buildOutputSettingsType>({
@@ -42,12 +45,6 @@ export default function CreateWebsitePage() {
   // State for advanced options
   const [advancedOptions, setAdvancedOptions] = useState<advancedOptionsType>({
     cacheControl: CacheControl.NoCache,
-    route: [
-      {
-        name: '',
-        path: '',
-      },
-    ],
     defaultPath: '',
   })
 
@@ -166,6 +163,13 @@ export default function CreateWebsitePage() {
   const handleSelectFramework = (frameworkId: string) => {
     setSelectedFramework(frameworkId)
   }
+
+  useEffect(() => {
+    console.log("🚀 ~ CreateWebsitePage ~ name:", name)
+    console.log("🚀 ~ CreateWebsitePage ~ selectedFramework:", selectedFramework)
+    console.log("🚀 ~ CreateWebsitePage ~ buildOutputSettings:", buildOutputSettings)
+    console.log("🚀 ~ CreateWebsitePage ~ advancedOptions:", advancedOptions)
+  }, [name, selectedFramework, buildOutputSettings, advancedOptions])
 
   return (
     <>
@@ -369,6 +373,9 @@ export default function CreateWebsitePage() {
                 <Input
                   id="name"
                   className="bg-primary-500 border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500"
+                  onChange={(e) => {
+                    setName(e.target.value)
+                  }}
                 />
               </section>
 
