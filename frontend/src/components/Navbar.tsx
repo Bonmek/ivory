@@ -19,6 +19,7 @@ const Navbar = () => {
   const [open, setOpen] = useState<boolean>(false);
   const location = useLocation();
   const [copied, setCopied] = useState(false);
+  const logo = '/images/logos/Ivory_cliped.png';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -53,24 +54,9 @@ const Navbar = () => {
         <nav className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <motion.div
-              className="flex items-center space-x-2"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <Link to="/" className="flex items-center space-x-2 group">
-                <motion.div
-                  whileHover={{ rotate: 360 }}
-                  transition={{ duration: 0.5, ease: "easeInOut" }}
-                >
-                  <Blocks className="w-8 h-8 text-secondary-500 group-hover:text-secondary-400 transition-colors duration-300" />
-                </motion.div>
-                <span className="text-2xl font-black tracking-wider bg-gradient-to-r from-secondary-400 via-secondary-500 to-secondary-600 bg-clip-text text-transparent font-pixel">
-                  IVORY
-                </span>
-              </Link>
-            </motion.div>
+            <Link to="/" className="flex items-center space-x-2 group">
+              <img src={logo} alt="logo" className="w-25 h-auto" />
+            </Link>
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-8">
@@ -100,7 +86,7 @@ const Navbar = () => {
                         whileHover={{ scaleX: 1 }}
                       />
                       <motion.span
-                        className="absolute inset-0 bg-gradient-to-r from-secondary-400/10 to-secondary-600/10 rounded-lg -z-10"
+                        className="absolute inset-0 rounded-lg -z-10"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: isActivePath(item.to) ? 1 : 0 }}
                         transition={{ duration: 0.3 }}
@@ -220,8 +206,8 @@ const Navbar = () => {
                     key={item.name}
                     to={item.to}
                     className={`block py-3 transition-all duration-300 ${isActivePath(item.to)
-                      ? 'text-white font-bold bg-gradient-to-r from-secondary-400/20 to-secondary-600/20 rounded-lg px-4'
-                      : 'text-secondary-200 hover:text-white hover:bg-secondary-500/10 rounded-lg px-4'
+                      ? 'text-white font-bold bg-gradient-to-r from-secondary-400/20 to-secondary-600/20 rounded-lg p-4'
+                      : 'text-secondary-200 hover:text-white hover:bg-secondary-500/10 rounded-lg p-4'
                       }`}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
