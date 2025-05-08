@@ -124,7 +124,7 @@ export default function GithubRepoInput({
   const userBtnRef = useRef<HTMLButtonElement>(null);
   const [userBtnWidth, setUserBtnWidth] = useState<number | undefined>(undefined);
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
-
+  
   useLayoutEffect(() => {
     if (userBtnRef.current) {
       setUserBtnWidth(userBtnRef.current.offsetWidth);
@@ -178,7 +178,7 @@ export default function GithubRepoInput({
           )}
         </div>
       )}
-      {(!user && !selectedRepo) && (
+      {(!user) && (
         <Button
           onClick={handleGithubSignIn}
           className="w-full bg-secondary-500 hover:bg-secondary-700 text-black border border-gray-700 rounded-md h-10 transition-all duration-300 flex items-center justify-center gap-2"
@@ -194,12 +194,16 @@ export default function GithubRepoInput({
           transition={{ duration: 0.3 }}
           className='flex flex-col gap-2 border border-gray-700 rounded-md p-2 bg-primary-900'
         >
-          {filteredRepositories.length > 0 ? (
+          {repositories.filter(repo =>
+                repo.name.toLowerCase().includes(searchRepository.toLowerCase().trim())
+              ).length > 0 ? (
             <motion.div
               layout
-              className="flex flex-col gap-2"
+              className="flex flex-col gap-2 max-h-[400px] overflow-y-auto pr-2"
             >
-              {filteredRepositories.map((repository, index) => (
+              {repositories.filter(repo =>
+                repo.name.toLowerCase().includes(searchRepository.toLowerCase().trim())
+              ).map((repository, index) => (
                 <motion.div
                   layout
                   key={repository.id}
@@ -238,31 +242,8 @@ export default function GithubRepoInput({
                   </Button>
                 </motion.div>
               ))}
-              {filteredRepositories.length < repositories.filter(repo =>
-                repo.name.toLowerCase().includes(searchRepository.toLowerCase().trim())
-              ).length && (
-                  <motion.div
-                    layout
-                    className="mt-2 pt-2 border-t border-gray-700"
-                  >
-                    <motion.div
-                      whileHover={{ scale: 1.01 }}
-                      whileTap={{ scale: 0.99 }}
-                      onClick={handleShowMore}
-                      className="w-full group flex flex-col items-center gap-1 text-gray-400 hover:text-gray-200 transition-colors cursor-pointer"
-                    >
-                      <span className="text-sm">
-                        Show {Math.min(5, repositories.length - visibleRepos)} more repositories
-                      </span>
-                      <div className="flex items-center gap-1 text-xs text-gray-500 group-hover:text-gray-400">
-                        <span>
-                          {visibleRepos} of {repositories.length} shown
-                        </span>
-                        <ChevronDown className="h-3 w-3" />
-                      </div>
-                    </motion.div>
-                  </motion.div>
-                )}
+
+
             </motion.div>
           ) : (
             <motion.div

@@ -171,7 +171,7 @@ export default function CreateWebsitePage() {
     setVisibleRepos((prev) => prev + maxRepoView)
   }
 
-  const { data, isLoading, refetch } = useQuery({
+  const { data } = useQuery({
     queryKey: ['repositories'],
     queryFn: fetchRepositories,
     enabled: !!user,
