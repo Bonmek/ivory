@@ -9,13 +9,15 @@ import passport from "passport";
 import session from "express-session";
 import "./github/githubAuth";
 import { githubRoutes } from "./github/routes";
-import { JobsClient } from "@google-cloud/run";
+import axios from "axios";
+import { GoogleAuth } from "google-auth-library";
 
+const auth = new GoogleAuth({
+  scopes: ["https://www.googleapis.com/auth/cloud-platform"],
+});
 dotenv.config();
 const upload = multer();
 const app = express();
-const jobsClient = new JobsClient();
-
 app.use(express.json());
 
 app.use(
@@ -46,38 +48,6 @@ const walrusClient = new WalrusClient({
   network: "mainnet",
   suiClient,
 });
-
-// Helper function to execute Cloud Run job
-async function executeCloudRunJob(objectId: string): Promise<string> {
-  try {
-    // Format for Cloud Run Jobs
-    const jobName = `projects/${process.env.PROJECT_ID}/locations/${process.env.REGION}/jobs/${process.env.CLOUD_RUN_JOB_NAME}`;
-
-    // Create task with environment variables
-    const [response] = await jobsClient.runJob({
-      name: jobName,
-      overrides: {
-        containerOverrides: [
-          {
-            env: [
-              {
-                name: "OBJECT_ID",
-                value: objectId,
-              },
-            ],
-          },
-        ],
-      },
-    });
-
-    return response.name || "Job execution started";
-  } catch (error) {
-    console.error("Error executing Cloud Run job:", error);
-    throw new Error(
-      `Failed to execute Cloud Run job: ${(error as Error).message}`
-    );
-  }
-}
 
 app.post("/write-blob-n-run-job", upload.single("file"), async (req, res) => {
   try {
@@ -111,17 +81,40 @@ app.post("/write-blob-n-run-job", upload.single("file"), async (req, res) => {
       attributes: { blobId: blobId },
     });
 
-    const  objectId  = blobObjectId;
+    const objectId = blobObjectId;
 
     if (!objectId) {
       res.status(400).json({ error: "objectId is required" });
       return;
     }
 
-    await executeCloudRunJob(objectId);
+    const url = `https://run.googleapis.com/v2/projects/${process.env.PROJECT_ID}/locations/${process.env.REGION}/jobs/${process.env.CLOUD_RUN_JOB_NAME}:run`;
+
+    const client = await auth.getClient();
+    const token = await client.getAccessToken();
+
+    const response = await axios.post(
+      url,
+      {
+        overrides: {
+          containerOverrides: [
+            {
+              args: ["publish", objectId],
+            },
+          ],
+        },
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token.token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
     res.status(200).json({
       statusCode: 1,
+      details: response.data,
       message: "Cloud Run job triggered successfully",
     });
   } catch (error) {
@@ -129,11 +122,7 @@ app.post("/write-blob-n-run-job", upload.single("file"), async (req, res) => {
       res.json({
         statusCode: 0,
         data: {
-          error: {
-            message: error.message,
-            name: error.name,
-            stack: error.stack,
-          },
+          message: error.message,
         },
       });
     } else {
