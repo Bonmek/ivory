@@ -11,6 +11,7 @@ import Loading from '@/components/Loading'
 import { Helmet } from 'react-helmet'
 import { useSuiData } from '@/hooks/useSuiData'
 import { transformMetadataToProject } from '@/utils/metadataUtils'
+import { useWalletKit } from '@mysten/wallet-kit'
 import { useAuth } from '@/context/AuthContext'
 
 const formatDate = (date: Date) => {

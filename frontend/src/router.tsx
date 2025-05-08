@@ -8,6 +8,8 @@ import Notfound from './pages/Notfound'
 import HomePage from './pages/Home'
 import CreateWebsitePage from './pages/CreateWebsite'
 import HowToUsePage from './pages/Howtouse'
+import DashboardPage from './pages/Dashboard'
+import Callback from './pages/Callback'
 import EditWebsitePage from './pages/EditWebsite'
 
 const router = createBrowserRouter([
@@ -58,6 +60,14 @@ const router = createBrowserRouter([
     element: (
       <Layout>
         <Notfound />
+      </Layout>
+    ),
+  },
+  {
+    path: '/callback',
+    element: (
+      <Layout>
+        <Callback />
       </Layout>
     ),
   },

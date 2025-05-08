@@ -5,36 +5,40 @@ import './global.css'
 import App from './App'
 import { Providers } from './providers'
 import { ThemeProvider } from './context/ThemeContext'
+import { WalletKitProvider } from '@mysten/wallet-kit'
+import { BrowserRouter } from 'react-router-dom'
 
 const root = ReactDOM.createRoot(document.getElementById('root')!)
 
 // Setup MSW mock server in development
 if (process.env.NODE_ENV === 'development') {
-  // Certify MSW's Service Worker is available before start React app.
   import('../mocks/browser')
     .then(async ({ worker }) => {
       return worker.start()
-    }) // Run <App /> when Service Worker is ready to intercept requests.
+    })
     .then(() => {
       root.render(
-        <ThemeProvider>
-          <React.StrictMode>
+        <WalletKitProvider>
+          <ThemeProvider>
+            <React.StrictMode>
+                <Providers>
+                  <App />
+                </Providers>
+            </React.StrictMode>
+          </ThemeProvider>
+        </WalletKitProvider>,
+      )
+    })
+} else if (process.env.NODE_ENV === 'production') {
+  root.render(
+    <WalletKitProvider>
+      <ThemeProvider>
+        <React.StrictMode>
             <Providers>
               <App />
             </Providers>
-          </React.StrictMode>
-        </ThemeProvider>,
-      )
-    })
-  // Never setup MSW mock server in production
-} else if (process.env.NODE_ENV === 'production') {
-  root.render(
-    <ThemeProvider>
-      <React.StrictMode>
-        <Providers>
-          <App />
-        </Providers>
-      </React.StrictMode>
-    </ThemeProvider>,
+        </React.StrictMode>
+      </ThemeProvider>
+    </WalletKitProvider>,
   )
 }
