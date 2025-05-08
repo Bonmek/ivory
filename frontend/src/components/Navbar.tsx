@@ -1,54 +1,65 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Blocks, Wallet, ChevronDown, LogOut } from 'lucide-react';
-import { Link, useLocation } from 'react-router';
-import LoginDialog from './LoginDialog';
-import { useWalletKit } from '@mysten/wallet-kit';
+import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Menu, X, Blocks, Wallet, ChevronDown, LogOut } from 'lucide-react'
+import { Link, useLocation } from 'react-router'
+import LoginDialog from './LoginDialog'
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-} from './ui/dropdown-menu';
-import { Button } from './ui/button';
+} from './ui/dropdown-menu'
+import { Button } from './ui/button'
+import { useWalletKit } from '@mysten/wallet-kit'
+import { useAuth } from '@/context/AuthContext'
 
 const Navbar = () => {
-  const { currentAccount, disconnect } = useWalletKit();
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [open, setOpen] = useState<boolean>(false);
-  const location = useLocation();
-  const [copied, setCopied] = useState(false);
+  const { currentAccount, disconnect } = useWalletKit()
+  const { zkloginAddress, logout } = useAuth()
+  const [isScrolled, setIsScrolled] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [open, setOpen] = useState<boolean>(false)
+  const location = useLocation()
+  const [copied, setCopied] = useState(false)
   const logo = '/images/logos/Ivory_cliped.png';
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+      setIsScrolled(window.scrollY > 20)
+    }
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  const handleDisconnect = () => {
+    if (currentAccount) {
+      disconnect()
+    } else if (zkloginAddress) {
+      logout()
+    }
+  }
 
   const navItems = [
     { name: 'Home', to: '/' },
     { name: 'Dashboard', to: '/dashboard' },
     { name: 'How to use', to: '/how-to-use' },
     { name: 'About', to: '/about' },
-  ];
+  ]
 
   const isActivePath = (path: string) => {
-    if (path === '/' && location.pathname === '/') return true;
-    if (path !== '/' && location.pathname.startsWith(path)) return true;
-    return false;
-  };
+    if (path === '/' && location.pathname === '/') return true
+    if (path !== '/' && location.pathname.startsWith(path)) return true
+    return false
+  }
 
   return (
     <>
       <header
         className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ease-in-out
-          ${isScrolled
-            ? 'bg-gradient-to-r from-primary-800/90 via-primary-900/90 to-primary-800/90 backdrop-blur-xl border-b-2 border-secondary-400/30 rounded-b-2xl shadow-lg shadow-primary-900/10'
-            : 'bg-transparent'
+          ${
+            isScrolled
+              ? 'bg-gradient-to-r from-primary-800/90 via-primary-900/90 to-primary-800/90 backdrop-blur-xl border-b-2 border-secondary-400/30 rounded-b-2xl shadow-lg shadow-primary-900/10'
+              : 'bg-transparent'
           }`}
       >
         <nav className="container mx-auto px-4 py-4">
@@ -66,10 +77,11 @@ const Navbar = () => {
                   <Link
                     key={item.name}
                     to={item.to}
-                    className={`relative group transition-all duration-300 ${isActivePath(item.to)
-                      ? 'text-white font-bold tracking-wide'
-                      : 'text-secondary-200 hover:text-white font-medium'
-                      }`}
+                    className={`relative group transition-all duration-300 ${
+                      isActivePath(item.to)
+                        ? 'text-white font-bold tracking-wide'
+                        : 'text-secondary-200 hover:text-white font-medium'
+                    }`}
                   >
                     <motion.div
                       initial={{ opacity: 0, y: -20 }}
@@ -98,7 +110,7 @@ const Navbar = () => {
               </div>
 
               {/* Connect Wallet Button */}
-              {currentAccount?.address ?
+              {currentAccount?.address || zkloginAddress ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <motion.button
@@ -109,7 +121,12 @@ const Navbar = () => {
                       whileTap={{ scale: 0.95 }}
                     >
                       <Wallet className="w-4 h-4 text-black" />
-                      <span className='text-black font-semibold'>{currentAccount?.address.slice(0, 10)}...</span>
+                      <span className="text-black font-semibold">
+                        {currentAccount
+                          ? currentAccount.address.slice(0, 10)
+                          : zkloginAddress?.slice(0, 10)}
+                        ...
+                      </span>
                       <ChevronDown className="w-4 h-4 text-black ml-1" />
                     </motion.button>
                   </DropdownMenuTrigger>
@@ -120,25 +137,34 @@ const Navbar = () => {
                     <div className="flex items-center space-x-2 px-2 pt-1 pb-2">
                       <Wallet className="w-4 h-4 text-secondary-400" />
                       <span className="block text-xs text-secondary-200 font-mono break-all select-all">
-                        {currentAccount?.address.slice(0, 25)}...
+                        {currentAccount
+                          ? currentAccount.address.slice(0, 25)
+                          : zkloginAddress?.slice(0, 25)}
+                        ...
                       </span>
                       <button
                         className="ml-auto px-2 py-1 rounded bg-secondary-700/30 hover:bg-secondary-500/40 text-xs text-secondary-200 transition"
                         onClick={() => {
                           if (currentAccount?.address) {
-                            navigator.clipboard.writeText(currentAccount.address);
-                            setCopied(true);
-                            setTimeout(() => setCopied(false), 1200);
+                            navigator.clipboard.writeText(
+                              currentAccount.address,
+                            )
+                            setCopied(true)
+                            setTimeout(() => setCopied(false), 1200)
+                          } else if (zkloginAddress) {
+                            navigator.clipboard.writeText(zkloginAddress)
+                            setCopied(true)
+                            setTimeout(() => setCopied(false), 1200)
                           }
                         }}
                         title="Copy address"
                       >
-                        {copied ? "Copied!" : "Copy"}
+                        {copied ? 'Copied!' : 'Copy'}
                       </button>
                     </div>
                     <div className="my-2 h-px bg-secondary-500/20" />
                     <DropdownMenuItem
-                      onClick={disconnect}
+                      onClick={handleDisconnect}
                       className="text-red-400 hover:bg-primary-800/80 hover:text-red-500 focus:bg-primary-800/80 focus:text-red-500 font-semibold rounded-lg transition-colors duration-150 cursor-pointer px-3 py-2 flex items-center"
                     >
                       <LogOut className="w-4 h-4 mr-2" />
@@ -146,20 +172,21 @@ const Navbar = () => {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-                :
+              ) : (
                 <motion.button
                   className="flex items-center space-x-2 px-6 py-2.5 rounded-full bg-gradient-to-r from-secondary-500 to-secondary-600 text-black hover:shadow-lg hover:shadow-secondary-500/20 transition-all duration-300 group"
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   whileHover={{ scale: 1.05, y: -2 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => setOpen(true)
-                  }
+                  onClick={() => setOpen(true)}
                 >
                   <Wallet className="w-4 h-4 text-black" />
-                  <span className='text-black font-bold font-pixel'>Connect Wallet</span>
+                  <span className="text-black font-bold font-pixel">
+                    Connect Wallet
+                  </span>
                 </motion.button>
-              }
+              )}
             </div>
 
             {/* Mobile Menu Button */}
@@ -168,7 +195,11 @@ const Navbar = () => {
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               whileTap={{ scale: 0.9 }}
             >
-              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {isMobileMenuOpen ? (
+                <X className="w-6 h-6" />
+              ) : (
+                <Menu className="w-6 h-6" />
+              )}
             </motion.button>
           </div>
         </nav>
@@ -221,20 +252,28 @@ const Navbar = () => {
                     </motion.div>
                   </Link>
                 ))}
-                {currentAccount?.address ?
-                  <section className='space-y-2'>
+                {currentAccount?.address || zkloginAddress ? (
+                  <section className="space-y-2">
                     <Button
                       className="block w-full px-3 py-2 rounded-lg bg-primary-300/20 text-secondary-200 font-mono font-semibold text-sm text-center truncate select-all mb-2 border border-secondary-500/20 shadow-sm transition-colors duration-200 hover:bg-primary-300/40 focus:outline-none"
                       onClick={() => {
                         if (currentAccount?.address) {
-                          navigator.clipboard.writeText(currentAccount.address);
-                          setCopied(true);
-                          setTimeout(() => setCopied(false), 1200);
+                          navigator.clipboard.writeText(currentAccount.address)
+                          setCopied(true)
+                          setTimeout(() => setCopied(false), 1200)
+                        } else if (zkloginAddress) {
+                          navigator.clipboard.writeText(zkloginAddress)
+                          setCopied(true)
+                          setTimeout(() => setCopied(false), 1200)
                         }
                       }}
                       title="Copy address"
                     >
-                      {copied ? 'Copied!' : `${currentAccount?.address.slice(0, 25)}...`}
+                      {copied
+                        ? 'Copied!'
+                        : currentAccount
+                          ? `${currentAccount?.address.slice(0, 25)}...`
+                          : `${zkloginAddress?.slice(0, 25)}...`}
                     </Button>
                     <motion.button
                       className="w-full flex items-center justify-center mt-5 space-x-2 px-6 py-3 rounded-full bg-red-500 text-white font-bold tracking-wide hover:shadow-lg hover:shadow-secondary-500/20 transition-all duration-300"
@@ -243,13 +282,13 @@ const Navbar = () => {
                       transition={{ delay: 0.3 }}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      onClick={disconnect}
+                      onClick={handleDisconnect}
                     >
                       <LogOut className="w-4 h-4" />
                       <span>Logout</span>
                     </motion.button>
                   </section>
-                  :
+                ) : (
                   <motion.button
                     className="w-full flex items-center justify-center space-x-2 px-6 py-3 rounded-full bg-gradient-to-r from-secondary-500 to-secondary-600 text-black font-bold tracking-wide hover:shadow-lg hover:shadow-secondary-500/20 transition-all duration-300"
                     initial={{ opacity: 0, y: 20 }}
@@ -262,7 +301,7 @@ const Navbar = () => {
                     <Wallet className="w-5 h-5" />
                     <span>Connect Wallet</span>
                   </motion.button>
-                }
+                )}
               </div>
             </motion.div>
           </motion.div>
@@ -270,8 +309,7 @@ const Navbar = () => {
       </AnimatePresence>
       <LoginDialog open={open} setOpen={setOpen} />
     </>
+  )
+}
 
-  );
-};
-
-export default Navbar;
+export default Navbar
