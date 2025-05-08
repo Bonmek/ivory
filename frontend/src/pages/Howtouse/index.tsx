@@ -7,7 +7,7 @@ function HowToUsePage() {
     <div className="text-white font-sans flex flex-col">
       <ThreeJSBackground />
       {/* Main Content */}
-      <div className="flex p-8">
+      <div className="flex">
         {/* Left Section */}
         <div className="w-3/4 pr-8">
           <h1 id="how-to-launch-website-with-us" className="text-4xl font-bold mb-4">

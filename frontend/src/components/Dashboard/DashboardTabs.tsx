@@ -34,7 +34,7 @@ const DashboardTabs = ({ activeTab, setActiveTab }: DashboardTabsProps) => {
         <TabsList className="grid w-full grid-cols-3 md:w-[400px] bg-primary-900/80 backdrop-blur-sm relative">
           <TabsTrigger
             value="all"
-            className="relative z-10 data-[state=active]:text-secondary-500"
+            className="relative z-10 data-[state=active]:text-black"
           >
             {activeTab === 'all' && (
               <motion.div
@@ -47,13 +47,14 @@ const DashboardTabs = ({ activeTab, setActiveTab }: DashboardTabsProps) => {
               variants={tabVariants}
               animate={activeTab === 'all' ? 'active' : 'inactive'}
               transition={{ duration: 0.2 }}
+              className={activeTab === 'all' ? 'text-black' : 'text-white'}
             >
               All Sites
             </motion.span>
           </TabsTrigger>
           <TabsTrigger
             value="recent"
-            className="relative z-10 data-[state=active]:text-secondary-500"
+            className="relative z-10 data-[state=active]:text-black"
           >
             {activeTab === 'recent' && (
               <motion.div
@@ -66,13 +67,14 @@ const DashboardTabs = ({ activeTab, setActiveTab }: DashboardTabsProps) => {
               variants={tabVariants}
               animate={activeTab === 'recent' ? 'active' : 'inactive'}
               transition={{ duration: 0.2 }}
+              className={activeTab === 'recent' ? 'text-black' : 'text-white'}
             >
               Recently Added
             </motion.span>
           </TabsTrigger>
           <TabsTrigger
             value="expiring"
-            className="relative z-10 data-[state=active]:text-secondary-500"
+            className="relative z-10 data-[state=active]:text-black"
           >
             {activeTab === 'expiring' && (
               <motion.div
@@ -85,6 +87,7 @@ const DashboardTabs = ({ activeTab, setActiveTab }: DashboardTabsProps) => {
               variants={tabVariants}
               animate={activeTab === 'expiring' ? 'active' : 'inactive'}
               transition={{ duration: 0.2 }}
+              className={activeTab === 'expiring' ? 'text-black' : 'text-white'}
             >
               Expiring Soon
             </motion.span>

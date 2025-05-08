@@ -20,7 +20,7 @@ const Layout: React.FC<PropsWithChildren> = ({ children, ...rest }) => {
         <div
           className={clsx(
             'relative flex h-full min-h-[calc(100vh-8rem)] w-full flex-1 flex-col p-0 max-w-7xl mx-auto',
-            !isHomePage && 'mt-32'
+            !isHomePage && 'mt-20 md:mt-28 px-8 md:px-0'
           )}
         >
           <Navbar />

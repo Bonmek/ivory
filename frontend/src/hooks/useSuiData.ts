@@ -1,8 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
-import { suiService } from '@/services/suiService'
 import { WEBSITE_OWNER_ADDRESS } from '@/constants'
+import { suiService } from '@/service/suiService'
+import { useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 
 export const useSuiData = (userAddress: string) => {
+  const queryClient = useQueryClient()
+
   // Fetch blobs using website owner's address
   const { data: blobs = [], isLoading: isLoadingBlobs } = useQuery({
     queryKey: ['blobs', WEBSITE_OWNER_ADDRESS],
@@ -55,7 +59,6 @@ export const useSuiData = (userAddress: string) => {
     const ownerEntry = metadataFields.find((entry: any) => entry.fields?.key === 'owner')
     const owner = ownerEntry?.fields?.value
     
-    console.log('Metadata owner:', owner, 'User address:', userAddress)
     return owner === userAddress
   })
   console.log('Filtered Metadata:', filteredMetadata)
@@ -65,5 +68,12 @@ export const useSuiData = (userAddress: string) => {
     dynamicFields,
     metadata: filteredMetadata,
     isLoading: isLoadingBlobs || isLoadingFields || isLoadingMetadata,
+    refetch: () => {
+      return Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['blobs', WEBSITE_OWNER_ADDRESS] }),
+        queryClient.invalidateQueries({ queryKey: ['dynamicFields'] }),
+        queryClient.invalidateQueries({ queryKey: ['metadata'] })
+      ])
+    }
   }
 }
