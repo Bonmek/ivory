@@ -183,4 +183,122 @@ router.get("/api/repositories/:owner/:repo/download", (async (req, res) => {
   }
 }) as import("express").RequestHandler);
 
+// Logout endpoint
+router.get("/auth/github/logout", (req: Request, res: Response) => {
+  req.logout((err) => {
+    if (err) {
+      return res.status(500).json({ error: "Logout failed" });
+    }
+    // Clear the session cookie
+    res.clearCookie("connect.sid", {
+      path: "/"
+    });
+    res.redirect(`${process.env.FRONTEND_URL}`);
+  });
+});
+
+// Fetch directory contents endpoint
+router.get("/api/repositories/:owner/:repo/contents", (async (req, res) => {
+  const authReq = req as AuthenticatedRequest;
+  if (!authReq.isAuthenticated() || !authReq.user) {
+    return res.status(401).send("Unauthorized");
+  }
+
+  const accessToken = authReq.user.accessToken;
+  const { owner, repo } = req.params;
+  const branch = (req.query.branch as string) || undefined;
+
+  try {
+    // Step 1: Get repo info to determine default branch if not provided
+    const repoResponse: AxiosResponse<unknown> = await axios.get(
+      `https://api.github.com/repos/${owner}/${repo}`,
+      {
+        headers: {
+          Authorization: `token ${accessToken}`,
+          Accept: "application/vnd.github.v3+json",
+          "User-Agent": "node.js",
+        },
+      }
+    );
+    const defaultBranch = (repoResponse.data as { default_branch: string })
+      .default_branch;
+    const branchToUse = branch || defaultBranch;
+
+    // Step 2: Get branch info to get the commit SHA
+    const branchResponse: AxiosResponse<unknown> = await axios.get(
+      `https://api.github.com/repos/${owner}/${repo}/branches/${branchToUse}`,
+      {
+        headers: {
+          Authorization: `token ${accessToken}`,
+          Accept: "application/vnd.github.v3+json",
+          "User-Agent": "node.js",
+        },
+      }
+    );
+    const treeSha = (
+      branchResponse.data as { commit: { commit: { tree: { sha: string } } } }
+    ).commit.commit.tree.sha;
+
+    // Step 3: Get the full tree recursively
+    const treeResponse: AxiosResponse<unknown> = await axios.get(
+      `https://api.github.com/repos/${owner}/${repo}/git/trees/${treeSha}?recursive=1`,
+      {
+        headers: {
+          Authorization: `token ${accessToken}`,
+          Accept: "application/vnd.github.v3+json",
+          "User-Agent": "node.js",
+        },
+      }
+    );
+
+    // Step 4: Return the tree (list of all files and directories)
+    res.json((treeResponse.data as { tree: unknown[] }).tree);
+  } catch (err: unknown) {
+    let statusCode = 500;
+    let errorMessage = "An unknown error occurred";
+    let details = "";
+    let data: unknown = undefined;
+    if (axios.isAxiosError(err)) {
+      statusCode = err.response?.status || 500;
+      details = err.message;
+      if (err.response) {
+        data = err.response.data;
+        switch (statusCode) {
+          case 401:
+            errorMessage = "Authentication failed. Please log in again.";
+            break;
+          case 403:
+            errorMessage =
+              "Access denied. Please ensure you have access to this repository.";
+            break;
+          case 404:
+            errorMessage =
+              "Repository or branch not found, or you don't have access to it.";
+            break;
+          default:
+            if (
+              typeof data === "object" &&
+              data !== null &&
+              "message" in data &&
+              typeof (data as { message?: unknown }).message === "string"
+            ) {
+              errorMessage = (data as { message: string }).message;
+            } else {
+              errorMessage = "Failed to fetch repository tree";
+            }
+        }
+      } else if (err.code === "ECONNABORTED") {
+        statusCode = 504;
+        errorMessage = "Request timed out.";
+      }
+    } else if (err instanceof Error) {
+      details = err.message;
+    }
+    res.status(statusCode).json({
+      error: errorMessage,
+      details,
+    });
+  }
+}) as import("express").RequestHandler);
+
 export { router as githubRoutes };
