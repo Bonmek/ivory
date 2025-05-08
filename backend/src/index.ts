@@ -11,6 +11,7 @@ import "./github/githubAuth";
 import { githubRoutes } from "./github/routes";
 import axios from "axios";
 import { GoogleAuth } from "google-auth-library";
+import { inputScheme } from "./schemas/inputScheme";
 
 const auth = new GoogleAuth({
   scopes: ["https://www.googleapis.com/auth/cloud-platform"],
@@ -52,10 +53,12 @@ const walrusClient = new WalrusClient({
 app.post("/write-blob-n-run-job", upload.single("file"), async (req, res) => {
   try {
     if (!req.file) {
-      res.status(400).json({ error: "No file uploaded" });
+      res.status(400).json({
+        statusCode: 0,
+        error: "No file uploaded",
+      });
       return;
     }
-
     const fileBuffer = new Uint8Array(req.file.buffer);
 
     const attributes = req.body.attributes
@@ -63,6 +66,19 @@ app.post("/write-blob-n-run-job", upload.single("file"), async (req, res) => {
         ? JSON.parse(req.body.attributes)
         : req.body.attributes
       : {};
+
+    const result = inputScheme.safeParse(attributes);
+
+    if (!result.success) {
+      res.status(400).json({
+        statusCode: 0,
+        errors: result.error.errors.map((err) => ({
+          field: err.path.join("."),
+          message: err.message,
+        })),
+      });
+      return;
+    }
 
     const { blobId, blobObject } = await walrusClient.writeBlob({
       blob: fileBuffer,
@@ -81,13 +97,6 @@ app.post("/write-blob-n-run-job", upload.single("file"), async (req, res) => {
       attributes: { blobId: blobId },
     });
 
-    const objectId = blobObjectId;
-
-    if (!objectId) {
-      res.status(400).json({ error: "objectId is required" });
-      return;
-    }
-
     const url = `https://run.googleapis.com/v2/projects/${process.env.PROJECT_ID}/locations/${process.env.REGION}/jobs/${process.env.CLOUD_RUN_JOB_NAME}:run`;
 
     const client = await auth.getClient();
@@ -99,7 +108,7 @@ app.post("/write-blob-n-run-job", upload.single("file"), async (req, res) => {
         overrides: {
           containerOverrides: [
             {
-              args: ["publish", objectId],
+              args: ["publish", blobObjectId],
             },
           ],
         },
@@ -121,14 +130,14 @@ app.post("/write-blob-n-run-job", upload.single("file"), async (req, res) => {
     if (error instanceof Error) {
       res.json({
         statusCode: 0,
-        data: {
+        error: {
           message: error.message,
         },
       });
     } else {
       res.json({
         statusCode: 0,
-        data: { error: "Unknown error occurred" },
+        error: "Unknown error occurred" ,
       });
     }
   }

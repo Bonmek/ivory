@@ -53,6 +53,9 @@ importers:
       passport-github2:
         specifier: ^0.1.12
         version: 0.1.12
+      zod:
+        specifier: ^3.24.4
+        version: 3.24.4
     devDependencies:
       '@eslint/js':
         specifier: ^9.26.0
