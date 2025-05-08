@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/dialog";
 import { AlertTriangle } from "lucide-react";
 
+
+
 interface GithubRepoInputProps {
   githubUrl: string;
   handleGithubUrlChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -132,7 +134,7 @@ export default function GithubRepoInput({
   }, [user, userHover]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 overflow-y-auto">
       {(user && !selectedRepo) && (
         <div className='flex max-lg:flex-col items-center gap-2'>
           <div
