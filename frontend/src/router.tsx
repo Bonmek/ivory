@@ -1,5 +1,5 @@
 import { createBrowserRouter } from 'react-router'
-import ProtectedRoute from '@/components/ProtectedRoute'
+import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import Dashboard from '@/pages/Dashboard'
 
 import Layout from './components/Layout/Layout'
