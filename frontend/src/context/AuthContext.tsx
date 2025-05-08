@@ -9,6 +9,7 @@ interface AuthContextType {
   zkloginAddress: string | null
   currentAccount: { address: string } | null
   address: string | null
+  isLoading: boolean
   login: ({ authType }: AuthProps) => Promise<void>
   logout: () => void
 }
@@ -23,6 +24,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [zkloginAddress, setZkloginAddress] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
   const { currentAccount } = useWalletKit()
   const suiClient = useSuiClient()
  
@@ -48,13 +50,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setZkloginAddress(getZkloginAddress())
+      const address = getZkloginAddress()
+      setZkloginAddress(address)
+      setIsLoading(false)
     }, 1000)
     return () => clearInterval(interval)
   }, [])
 
   return (
-    <AuthContext.Provider value={{ zkloginAddress, currentAccount, address, login, logout }}>
+    <AuthContext.Provider value={{ zkloginAddress, currentAccount, address, isLoading, login, logout }}>
       {children}
     </AuthContext.Provider>
   )
