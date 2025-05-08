@@ -23,7 +23,7 @@ interface WriteBlobRequest {
   attributes: WebsiteAttributes;
 }
 
-interface WriteBlobResponse {
+export interface WriteBlobResponse {
   jobId: string;
   status: 'pending' | 'running' | 'completed' | 'failed';
   message?: string;

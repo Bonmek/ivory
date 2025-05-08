@@ -33,6 +33,8 @@ import apiClient from '@/lib/axiosConfig'
 import { useQuery } from 'wagmi/query'
 import CreateWebsiteDialog from '@/components/CreateWebsiteDialog'
 
+// !TODO: validate All Input before click deploy
+
 export default function CreateWebsitePage() {
   useTheme()
 
@@ -194,7 +196,7 @@ export default function CreateWebsitePage() {
   }
 
   const handleClickDeploy = async () => {
-   try {
+    try {
     const attributes: WebsiteAttributes = {
       'site-name': name,
       owner: currentAccount?.address!,
@@ -205,24 +207,27 @@ export default function CreateWebsitePage() {
       end_date: addDays(new Date(), 14).toISOString(),
       status: '0',
       cache: advancedOptions.cacheControl,
-      root: advancedOptions.rootDirectory,
-      install_command: buildOutputSettings.installCommand,
-      build_command: buildOutputSettings.buildCommand,
-      default_route: advancedOptions.defaultPath,
+      root: advancedOptions.rootDirectory || '/',
+      install_command: buildOutputSettings.installCommand || 'npm install',
+      build_command: buildOutputSettings.buildCommand || 'npm run build',
+      default_route: advancedOptions.defaultPath || 'index.html',
       is_build: showBuildOutputSettings ? '0' : '1',
     }
-    console.log('attributes',attributes)
-    console.log('file', selectedFile)
 
-    const response = await writeBlobAndRunJob({
-      file: selectedFile!,
-      attributes,
-    })
+      console.log('attributes', attributes)
+      console.log('file', selectedFile)
 
-    console.log(response)
-   } catch (error) {
-    console.error(error)
-   } 
+      const response = await writeBlobAndRunJob({
+        file: selectedFile!,
+        attributes,
+      })
+
+      console.log('Response:', response)
+      return response
+    } catch (error) {
+      console.error('Error:', error)
+      throw error
+    }
   }
   
   const handleLogout = () => {
@@ -506,7 +511,7 @@ export default function CreateWebsitePage() {
           </article>
         </motion.main>
       </main>
-      <CreateWebsiteDialog open={open} setOpen={setOpen} />
+      <CreateWebsiteDialog open={open} setOpen={setOpen} handleClickDeploy={handleClickDeploy} />
     </>
   )
 }
