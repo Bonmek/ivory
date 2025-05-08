@@ -24,7 +24,6 @@ import {
   Repository,
 } from '@/types/CreateWebstie/types'
 import { frameworks } from '@/constants/frameworks'
-import ThreeJSBackground from '@/components/ThreeJsBackground'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Helmet } from 'react-helmet'
 import { WebsiteAttributes, writeBlobAndRunJob } from '@/api/createWebsiteApi'
@@ -32,6 +31,7 @@ import { useWalletKit } from '@mysten/wallet-kit'
 import { addDays } from 'date-fns'
 import apiClient from '@/lib/axiosConfig'
 import { useQuery } from 'wagmi/query'
+import CreateWebsiteDialog from '@/components/CreateWebsiteDialog'
 
 export default function CreateWebsitePage() {
   useTheme()
@@ -55,6 +55,9 @@ export default function CreateWebsitePage() {
     defaultPath: '',
     rootDirectory: '',
   })
+
+  //State for create website dialog
+  const [open, setOpen] = useState(false)
 
   // State for file upload
   const [uploadMethod, setUploadMethod] = useState<UploadMethod>(
@@ -271,9 +274,8 @@ export default function CreateWebsitePage() {
         <title>Create Website | Ivory</title>
         <link rel="canonical" href="http://mysite.com/example" />
       </Helmet>
-      <main className="min-h-screen bg-gradient-to-b from-black via-primary-900/20 to-black relative overflow-hidden">
-        <ThreeJSBackground />
-        <motion.main className="relative z-10 max-w-7xl mx-auto px-6 py-12 pt-28">
+      <main>
+        <motion.main className="relative z-10 mx-auto">
           <motion.h1
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -494,16 +496,17 @@ export default function CreateWebsitePage() {
 
               <Separator className="mb-4" />
               <section className="pt-4 flex justify-end">
-                <Button 
-                onClick={handleClickDeploy}
-                className="bg-secondary-500 hover:bg-secondary-700 text-black p-6 rounded-md text-base transform transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-secondary-500/20">
-                  Deploy project
+                <Button
+                  onClick={() => setOpen(true)}
+                  className="bg-secondary-500 hover:bg-secondary-700 text-black p-6 rounded-md text-base transform transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-secondary-500/20">
+                  Create project
                 </Button>
               </section>
             </motion.div>
           </article>
         </motion.main>
       </main>
+      <CreateWebsiteDialog open={open} setOpen={setOpen} />
     </>
   )
 }
