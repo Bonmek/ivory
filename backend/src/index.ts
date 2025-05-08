@@ -9,12 +9,15 @@ import passport from "passport";
 import session from "express-session";
 import "./github/githubAuth";
 import { githubRoutes } from "./github/routes";
+import axios from "axios";
+import { GoogleAuth } from "google-auth-library";
 
-
+const auth = new GoogleAuth({
+  scopes: ["https://www.googleapis.com/auth/cloud-platform"],
+});
 dotenv.config();
 const upload = multer();
 const app = express();
-
 app.use(express.json());
 
 app.use(
@@ -34,7 +37,6 @@ app.use(
 
 app.use(passport.initialize());
 app.use(passport.session());
-
 app.use(githubRoutes);
 
 const hex = process.env.SUI_Hex || "";
@@ -47,12 +49,13 @@ const walrusClient = new WalrusClient({
   suiClient,
 });
 
-app.post("/write-blob", upload.single("file"), async (req, res) => {
+app.post("/write-blob-n-run-job", upload.single("file"), async (req, res) => {
   try {
     if (!req.file) {
       res.status(400).json({ error: "No file uploaded" });
       return;
     }
+
     const fileBuffer = new Uint8Array(req.file.buffer);
 
     const attributes = req.body.attributes
@@ -72,26 +75,54 @@ app.post("/write-blob", upload.single("file"), async (req, res) => {
     const blobObjectId =
       typeof blobObject.id === "string" ? blobObject.id : blobObject.id.id;
 
-    await walrusClient
-      .executeWriteBlobAttributesTransaction({
-        blobObjectId: blobObjectId,
-        signer: keypair,
-        attributes: { blobId: blobId },
-      })
+    await walrusClient.executeWriteBlobAttributesTransaction({
+      blobObjectId: blobObjectId,
+      signer: keypair,
+      attributes: { blobId: blobId },
+    });
 
-    const attrs = await walrusClient.readBlobAttributes({ blobObjectId });
+    const objectId = blobObjectId;
 
-    res.json({ statusCode: 1, data: { attributes: attrs } });
+    if (!objectId) {
+      res.status(400).json({ error: "objectId is required" });
+      return;
+    }
+
+    const url = `https://run.googleapis.com/v2/projects/${process.env.PROJECT_ID}/locations/${process.env.REGION}/jobs/${process.env.CLOUD_RUN_JOB_NAME}:run`;
+
+    const client = await auth.getClient();
+    const token = await client.getAccessToken();
+
+    const response = await axios.post(
+      url,
+      {
+        overrides: {
+          containerOverrides: [
+            {
+              args: ["publish", objectId],
+            },
+          ],
+        },
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token.token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    res.status(200).json({
+      statusCode: 1,
+      details: response.data,
+      message: "Cloud Run job triggered successfully",
+    });
   } catch (error) {
     if (error instanceof Error) {
       res.json({
         statusCode: 0,
         data: {
-          error: {
-            message: error.message,
-            name: error.name,
-            stack: error.stack,
-          },
+          message: error.message,
         },
       });
     } else {
@@ -106,4 +137,3 @@ app.post("/write-blob", upload.single("file"), async (req, res) => {
 app.listen(5000, () => {
   console.log("Server running on port 5000");
 });
-
