@@ -3,6 +3,9 @@ import { WagmiProvider, createConfig, http } from 'wagmi';
 import { mainnet } from 'wagmi/chains';
 import { injected } from '@wagmi/connectors';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthProvider } from '@/context/AuthContext';
+import { RouterProvider } from 'react-router';
+import router from './router';
 
 const wagmiConfig = createConfig({
   chains: [mainnet],
@@ -19,7 +22,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <WalletKitProvider>
         <WagmiProvider config={wagmiConfig}>
-          {children}
+          <AuthProvider>
+            <RouterProvider router={router} />
+          </AuthProvider>
         </WagmiProvider>
       </WalletKitProvider>
     </QueryClientProvider>

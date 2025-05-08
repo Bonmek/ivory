@@ -11,9 +11,11 @@ import {
   DropdownMenuItem,
 } from './ui/dropdown-menu';
 import { Button } from './ui/button';
+import { useAuth } from '@/context/AuthContext'
 
 const Navbar = () => {
-  const { currentAccount, disconnect } = useWalletKit();
+  const { isAuthenticated, address } = useAuth()
+  const { disconnect } = useWalletKit();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [open, setOpen] = useState<boolean>(false);
@@ -31,7 +33,7 @@ const Navbar = () => {
 
   const navItems = [
     { name: 'Home', to: '/' },
-    { name: 'Dashboard', to: '/dashboard' },
+    ...(isAuthenticated ? [{ name: 'Dashboard', to: '/dashboard' }] : []),
     { name: 'How to use', to: '/how-to-use' },
     { name: 'About', to: '/about' },
   ];
@@ -98,7 +100,7 @@ const Navbar = () => {
               </div>
 
               {/* Connect Wallet Button */}
-              {currentAccount?.address ?
+              {isAuthenticated ?
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <motion.button
@@ -109,7 +111,7 @@ const Navbar = () => {
                       whileTap={{ scale: 0.95 }}
                     >
                       <Wallet className="w-4 h-4 text-black" />
-                      <span className='text-black font-semibold'>{currentAccount?.address.slice(0, 10)}...</span>
+                      <span className='text-black font-semibold'>{address?.slice(0, 10)}...</span>
                       <ChevronDown className="w-4 h-4 text-black ml-1" />
                     </motion.button>
                   </DropdownMenuTrigger>
@@ -120,13 +122,13 @@ const Navbar = () => {
                     <div className="flex items-center space-x-2 px-2 pt-1 pb-2">
                       <Wallet className="w-4 h-4 text-secondary-400" />
                       <span className="block text-xs text-secondary-200 font-mono break-all select-all">
-                        {currentAccount?.address.slice(0, 25)}...
+                        {address?.slice(0, 25)}...
                       </span>
                       <button
                         className="ml-auto px-2 py-1 rounded bg-secondary-700/30 hover:bg-secondary-500/40 text-xs text-secondary-200 transition"
                         onClick={() => {
-                          if (currentAccount?.address) {
-                            navigator.clipboard.writeText(currentAccount.address);
+                          if (address) {
+                            navigator.clipboard.writeText(address);
                             setCopied(true);
                             setTimeout(() => setCopied(false), 1200);
                           }
@@ -221,20 +223,20 @@ const Navbar = () => {
                     </motion.div>
                   </Link>
                 ))}
-                {currentAccount?.address ?
+                {isAuthenticated ?
                   <section className='space-y-2'>
                     <Button
                       className="block w-full px-3 py-2 rounded-lg bg-primary-300/20 text-secondary-200 font-mono font-semibold text-sm text-center truncate select-all mb-2 border border-secondary-500/20 shadow-sm transition-colors duration-200 hover:bg-primary-300/40 focus:outline-none"
                       onClick={() => {
-                        if (currentAccount?.address) {
-                          navigator.clipboard.writeText(currentAccount.address);
+                        if (address) {
+                          navigator.clipboard.writeText(address);
                           setCopied(true);
                           setTimeout(() => setCopied(false), 1200);
                         }
                       }}
                       title="Copy address"
                     >
-                      {copied ? 'Copied!' : `${currentAccount?.address.slice(0, 25)}...`}
+                      {copied ? 'Copied!' : `${address?.slice(0, 25)}...`}
                     </Button>
                     <motion.button
                       className="w-full flex items-center justify-center mt-5 space-x-2 px-6 py-3 rounded-full bg-red-500 text-white font-bold tracking-wide hover:shadow-lg hover:shadow-secondary-500/20 transition-all duration-300"
