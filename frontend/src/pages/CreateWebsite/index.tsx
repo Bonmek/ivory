@@ -210,7 +210,7 @@ export default function CreateWebsitePage() {
       root: advancedOptions.rootDirectory || '/',
       install_command: buildOutputSettings.installCommand || 'npm install',
       build_command: buildOutputSettings.buildCommand || 'npm run build',
-      default_route: advancedOptions.defaultPath || 'index.html',
+      default_route: advancedOptions.defaultPath || '/index.html',
       is_build: showBuildOutputSettings ? '0' : '1',
     }
 

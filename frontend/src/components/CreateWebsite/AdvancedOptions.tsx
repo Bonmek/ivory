@@ -66,7 +66,7 @@ function AdvancedOptions({ advancedOptions, setAdvancedOptions }: AdvancedOption
                 <Input
                   value={advancedOptions.defaultPath}
                   onChange={(e) => setAdvancedOptions({ ...advancedOptions, defaultPath: e.target.value })}
-                  placeholder="index.html"
+                  placeholder="/index.html"
                   className="bg-primary-500 border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500"
                 />
               </section>
