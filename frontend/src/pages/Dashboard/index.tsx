@@ -11,6 +11,8 @@ import Loading from '@/components/Loading'
 import { Helmet } from 'react-helmet'
 import { useSuiData } from '@/hooks/useSuiData'
 import { transformMetadataToProject } from '@/utils/metadataUtils'
+import { useWalletKit } from '@mysten/wallet-kit'
+import { useAuth } from '@/context/AuthContext'
 
 const formatDate = (date: Date) => {
   return date.toLocaleDateString('en-GB', {
@@ -26,6 +28,7 @@ const calculateDaysBetween = (date1: Date, date2: Date) => {
 }
 
 export default function Dashboard() {
+  const { address } = useAuth()
   const [searchQuery, setSearchQuery] = useState('')
   const [date, setDate] = useState<Date | undefined>(undefined)
   const [activeTab, setActiveTab] = useState('all')
@@ -33,13 +36,9 @@ export default function Dashboard() {
   const [sortType, setSortType] = useState('latest')
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 6 // 2 rows of 3 items
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
-  // TODO: Replace hardcoded address with user's connected wallet address
-  const [inputAddress, setAddress] = useState(
-    '0x18a4c45a96c15d62b82b341f18738125bf875fee86057d88589a183700601a1c',
-  )
-
-  const { metadata, isLoading } = useSuiData(inputAddress)
+  const { metadata, isLoading, refetch } = useSuiData(address || '')
 
   // Transform metadata into project format
   const filteredProjects = useMemo(() => {
@@ -120,6 +119,15 @@ export default function Dashboard() {
     setHoveredCard(null)
   }, [])
 
+  const handleRefresh = async () => {
+    setIsRefreshing(true)
+    try {
+      await refetch()
+    } finally {
+      setIsRefreshing(false)
+    }
+  }
+
   return (
     <>
       <Helmet>
@@ -136,6 +144,8 @@ export default function Dashboard() {
             setSortType={setSortType}
             date={date}
             setDate={setDate}
+            onRefresh={handleRefresh}
+            isRefreshing={isRefreshing}
           />
 
           <DashboardTabs activeTab={activeTab} setActiveTab={setActiveTab} />
@@ -153,7 +163,7 @@ export default function Dashboard() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.3 }}
-                  className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 items-stretch"
+                  className="grid grid-cols-1 gap-4 md:grid-cols-2  items-stretch"
                 >
                   {paginatedProjects.map((project, index) => (
                     <motion.div
@@ -178,7 +188,7 @@ export default function Dashboard() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: 0.2 }}
-                  className="flex justify-center items-center gap-2 mt-8"
+                  className="flex justify-center items-center gap-2 mt-8 flex-wrap"
                 >
                   <motion.button
                     whileHover={{ scale: 1.05 }}
@@ -189,21 +199,64 @@ export default function Dashboard() {
                   >
                     Previous
                   </motion.button>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+
+                  {/* First page */}
+                  {currentPage > 2 && (
                     <motion.button
-                      key={page}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      onClick={() => handlePageChange(page)}
-                      className={`px-4 py-2 rounded-md ${
-                        currentPage === page
-                          ? 'bg-secondary-500 text-black'
-                          : 'bg-primary-700 text-white hover:bg-primary-600'
-                      }`}
+                      onClick={() => handlePageChange(1)}
+                      className="px-4 py-2 rounded-md bg-primary-700 text-white hover:bg-primary-600"
                     >
-                      {page}
+                      1
                     </motion.button>
-                  ))}
+                  )}
+
+                  {/* Ellipsis if needed */}
+                  {currentPage > 3 && (
+                    <span className="px-2 text-white">...</span>
+                  )}
+
+                  {/* Current page and surrounding pages */}
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter((page) => {
+                      if (totalPages <= 5) return true
+                      if (page === 1 || page === totalPages) return false
+                      return Math.abs(currentPage - page) <= 1
+                    })
+                    .map((page) => (
+                      <motion.button
+                        key={page}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => handlePageChange(page)}
+                        className={`px-4 py-2 rounded-md ${
+                          currentPage === page
+                            ? 'bg-secondary-500 text-black'
+                            : 'bg-primary-700 text-white hover:bg-primary-600'
+                        }`}
+                      >
+                        {page}
+                      </motion.button>
+                    ))}
+
+                  {/* Ellipsis if needed */}
+                  {currentPage < totalPages - 2 && (
+                    <span className="px-2 text-white">...</span>
+                  )}
+
+                  {/* Last page */}
+                  {currentPage < totalPages - 1 && (
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => handlePageChange(totalPages)}
+                      className="px-4 py-2 rounded-md bg-primary-700 text-white hover:bg-primary-600"
+                    >
+                      {totalPages}
+                    </motion.button>
+                  )}
+
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
