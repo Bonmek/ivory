@@ -11,6 +11,7 @@ import Loading from '@/components/Loading'
 import { Helmet } from 'react-helmet'
 import { useSuiData } from '@/hooks/useSuiData'
 import { transformMetadataToProject } from '@/utils/metadataUtils'
+import { useAuth } from '@/context/AuthContext'
 
 const formatDate = (date: Date) => {
   return date.toLocaleDateString('en-GB', {
@@ -26,6 +27,7 @@ const calculateDaysBetween = (date1: Date, date2: Date) => {
 }
 
 export default function Dashboard() {
+  const { address } = useAuth()
   const [searchQuery, setSearchQuery] = useState('')
   const [date, setDate] = useState<Date | undefined>(undefined)
   const [activeTab, setActiveTab] = useState('all')
@@ -34,12 +36,7 @@ export default function Dashboard() {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 6 // 2 rows of 3 items
 
-  // TODO: Replace hardcoded address with user's connected wallet address
-  const [inputAddress, setAddress] = useState(
-    '0x18a4c45a96c15d62b82b341f18738125bf875fee86057d88589a183700601a1c',
-  )
-
-  const { metadata, isLoading } = useSuiData(inputAddress)
+  const { metadata, isLoading } = useSuiData(address || '')
 
   // Transform metadata into project format
   const filteredProjects = useMemo(() => {

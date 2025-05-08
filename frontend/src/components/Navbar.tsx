@@ -4,6 +4,7 @@ import { Menu, X, Blocks, Wallet, ChevronDown, LogOut } from 'lucide-react';
 import { Link, useLocation } from 'react-router';
 import LoginDialog from './LoginDialog';
 import { useWalletKit } from '@mysten/wallet-kit';
+import { useAuth } from '@/context/AuthContext';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -11,10 +12,9 @@ import {
   DropdownMenuItem,
 } from './ui/dropdown-menu';
 import { Button } from './ui/button';
-import { useAuth } from '@/context/AuthContext'
 
 const Navbar = () => {
-  const { isAuthenticated, address } = useAuth()
+  const { isAuthenticated, address } = useAuth();
   const { disconnect } = useWalletKit();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -155,8 +155,7 @@ const Navbar = () => {
                   animate={{ opacity: 1, scale: 1 }}
                   whileHover={{ scale: 1.05, y: -2 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => setOpen(true)
-                  }
+                  onClick={() => setOpen(true)}
                 >
                   <Wallet className="w-4 h-4 text-black" />
                   <span className='text-black font-bold font-pixel'>Connect Wallet</span>
