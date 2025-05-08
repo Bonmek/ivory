@@ -3,8 +3,6 @@ import { suiService } from '@/services/suiService'
 import { WEBSITE_OWNER_ADDRESS } from '@/constants'
 
 export const useSuiData = (userAddress: string) => {
-  console.log('User Address:', userAddress)
-
   // Fetch blobs using website owner's address
   const { data: blobs = [], isLoading: isLoadingBlobs } = useQuery({
     queryKey: ['blobs', WEBSITE_OWNER_ADDRESS],
