@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { useTheme } from '@/context/ThemeContext'
+import { toast } from 'sonner'
 
 import GithubRepoInput from '@/components/CreateWebsite/GitHubRepoInput'
 import FileUploadPreview from '@/components/CreateWebsite/FileUploadPreview'
@@ -46,11 +47,9 @@ export default function CreateWebsitePage() {
   // Fixed useEffect for previewRef
   useEffect(() => {
     if (showPreview && previewRef.current) {
-      console.log('Preview ref is ready:', previewRef.current)
-      // Optional: Scroll to the preview section smoothly
       previewRef.current.scrollIntoView({ behavior: 'smooth' })
     }
-  }, [showPreview]) // Only depend on showPreview, as previewRef is stable
+  }, [showPreview])
 
   // State for project name
   const [name, setName] = useState('')
@@ -98,7 +97,7 @@ export default function CreateWebsitePage() {
   // Validate file
   const validateFile = () => {
     const errors: string[] = []
-    if (!selectedFile) {
+    if (!selectedFile && !selectedRepoFile) {
       errors.push('Please select a ZIP file or Import GitHub repository')
     }
     if (selectedFile && !selectedFile.name.endsWith('.zip')) {
@@ -118,6 +117,7 @@ export default function CreateWebsitePage() {
   // GitHub state
   const maxRepoView = 5
   const [githubUrl, setGithubUrl] = useState('')
+  const [selectedRepoFile, setSelectedRepoFile] = useState<File | null>(null)
   const [searchRepository, setSearchRepository] = useState('')
   const [visibleRepos, setVisibleRepos] = useState(maxRepoView)
   const [selectedRepo, setSelectedRepo] = useState<number | null>(null)
@@ -204,6 +204,32 @@ export default function CreateWebsitePage() {
     }
   }
 
+  // Function to download repository zip and set as selected file
+  const downloadRepositoryZip = async (owner: string, repo: string) => {
+    try {
+      const response = await apiClient.get(`/api/repositories/${owner}/${repo}/download`, {
+        responseType: 'blob',
+        params: {
+          branch: 'main'
+        }
+      });
+
+      const file = new File([
+        response.data
+      ], `${repo}-main.zip`, {
+        type: 'application/zip'
+      });
+
+      setSelectedRepoFile(file);
+      setFileErrors([]);
+      setUploadMethod(UploadMethod.GitHub);
+      toast.success('Repository downloaded successfully');
+    } catch (error) {
+      console.error('Error downloading repository:', error);
+      toast.error('Failed to download repository. Please try again.');
+    }
+  };
+
   useEffect(() => {
     apiClient
       .get(process.env.REACT_APP_API_USER || '')
@@ -221,6 +247,7 @@ export default function CreateWebsitePage() {
     enabled: !!user,
   })
   const repositories = (data ?? []) as Repository[]
+
 
   const filteredRepositories = repositories
     .filter((repo: Repository) =>
@@ -256,11 +283,8 @@ export default function CreateWebsitePage() {
         is_build: showBuildOutputSettings ? '0' : '1',
       }
 
-      console.log('attributes', attributes)
-      console.log('file', selectedFile)
-
       const response = await writeBlobAndRunJob({
-        file: selectedFile!,
+        file: uploadMethod === "upload" ? selectedFile! : selectedRepoFile!,
         attributes,
       })
 
@@ -272,15 +296,42 @@ export default function CreateWebsitePage() {
     }
   }
 
-  const handleLogout = () => {
-    setUser(null)
-    setSelectedRepo(null)
-    setGithubUrl('')
-    setSearchRepository('')
-    setRepoContents(null)
-    setRepoContentsError(null)
-    setRepoContentsLoading(false)
-    window.location.reload()
+  const handleLogout = async () => {
+    try {
+      const response = await apiClient.get('/auth/github/logout');
+      if (response.status !== 200) {
+        throw new Error('Logout failed');
+      }
+
+      // Clear local state
+      setUser(null)
+      setSelectedRepo(null)
+      setGithubUrl('')
+      setSearchRepository('')
+      setRepoContents(null)
+      setRepoContentsError(null)
+      setRepoContentsLoading(false)
+
+      // Show success toast
+      toast.success('Successfully logged out');
+
+      // Redirect to home page
+      window.location.href = '/create-website';
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Show error toast
+      toast.error('Failed to log out. Please try again.');
+
+      // Still clear local state even if backend logout fails
+      setUser(null)
+      setSelectedRepo(null)
+      setGithubUrl('')
+      setSearchRepository('')
+      setRepoContents(null)
+      setRepoContentsError(null)
+      setRepoContentsLoading(false)
+      window.location.href = '/create-website';
+    }
   }
 
   useEffect(() => {
@@ -491,6 +542,8 @@ export default function CreateWebsitePage() {
                     repoContentsLoading={repoContentsLoading}
                     repoContentsError={repoContentsError}
                     handleLogout={handleLogout}
+                    downloadRepositoryZip={downloadRepositoryZip}
+                    setSelectedRepoFile={setSelectedRepoFile}
                   />
                 </TabsContent>
               </Tabs>
@@ -561,11 +614,10 @@ export default function CreateWebsitePage() {
                         if (!validateName(name)) return
                         if (!validateFile()) return
                         setShowPreview(true)
-                        setOpen(true)
                       }}
                       className="bg-secondary-500 hover:bg-secondary-700 text-black p-6 rounded-md text-base transform transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-secondary-500/20"
                     >
-                      Create project
+                      Create website
                     </Button>
                   </section>
                 </>}
@@ -594,6 +646,7 @@ export default function CreateWebsitePage() {
               selectedFile={selectedFile}
               setOpen={setOpen}
               setShowPreview={setShowPreview}
+              selectedRepoFile={selectedRepoFile}
             />
           </motion.div>
         )}

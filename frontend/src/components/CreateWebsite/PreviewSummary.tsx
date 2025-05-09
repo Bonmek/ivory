@@ -14,6 +14,7 @@ interface PreviewSummaryProps {
   selectedFile?: File | null;
   setOpen: (open: boolean) => void;
   setShowPreview: (showPreview: boolean) => void;
+  selectedRepoFile?: File | null;
 }
 
 const sectionVariants = {
@@ -51,6 +52,7 @@ export function PreviewSummary({
   selectedFile,
   setOpen,
   setShowPreview,
+  selectedRepoFile,
 }: PreviewSummaryProps) {
   const framework = selectedFramework
     ? frameworks.find((f) => f.id === selectedFramework)
@@ -128,7 +130,7 @@ export function PreviewSummary({
                           <span className="text-right flex-1 font-semibold text-gray-100">{value}</span>
                         </motion.div>
                       ))}
-                      {selectedFile && (
+                      {uploadMethod === "upload" && selectedFile && (
                         <motion.div
                           variants={itemVariants}
                           initial="hidden"
@@ -140,6 +142,20 @@ export function PreviewSummary({
                             <span className="text-muted-foreground font-medium">Selected File</span>
                           </div>
                           <span className="text-right flex-1 font-semibold text-gray-100">{selectedFile.name}</span>
+                        </motion.div>
+                      )}
+                      {(uploadMethod === "github" && selectedRepoFile) && (
+                        <motion.div
+                          variants={itemVariants}
+                          initial="hidden"
+                          animate="visible"
+                          custom={3}
+                          className="flex items-center justify-between py-2 px-3 bg-gray-800 rounded-lg hover:bg-gray-900 transition-colors"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-muted-foreground font-medium">Selected File</span>
+                          </div>
+                          <span className="text-right flex-1 font-semibold text-gray-100">{selectedRepoFile.name}</span>
                         </motion.div>
                       )}
                     </div>
