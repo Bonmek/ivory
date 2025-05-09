@@ -1,6 +1,7 @@
 from walrus_info import get_walrus_info
 from publish import publish_walrus_site
 from delete_site import delete_walrus_site
+from update import update_walrus_site
 import sys
 import os
 import json
@@ -40,6 +41,11 @@ def main():
             print("❌ Missing object_id for delete operation.")
         else:
             delete_walrus_site(object_id)
+    elif operation == "update":
+        if not object_id:
+            print("❌ Missing object_id for update operation.")
+        else:
+            update_walrus_site(object_id)
     else:
         print(f"❌ Unknown operation: {operation}")
 
