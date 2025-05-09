@@ -10,4 +10,4 @@ export const messages = {
 export type MessageId = keyof typeof enUS
 
 // Type guard for available locales
-export type AvailableLocale = keyof typeof messages 
+export type AvailableLocale = 'en-US' | 'zh-CN' 
