@@ -61,33 +61,21 @@ const LoadingText = () => {
   )
 }
 
-const Spinner = () => (
-  <div className={styles.spinner}>
-    <div></div>
-    <div></div>
-    <div></div>
-    <div></div>
-    <div></div>
-    <div></div>
-  </div>
-)
-
 export default function Loading() {
   return (
-    <div className="flex items-center justify-center h-screen">
+    <div className="flex items-center justify-center w-full h-full min-h-[200px] relative">
       {/* Snowflakes */}
       {[...Array(20)].map((_, i) => (
         <Snowflake
           key={i}
           delay={i * 0.1}
           size={Math.random() * 15 + 10}
-          x={(Math.random() - 0.5) * window.innerWidth * 0.8}
+          x={(Math.random() - 0.5) * 400}
         />
       ))}
 
       {/* Loading spinner */}
       <div className="relative z-10 flex flex-col items-center">
-        <Spinner />
         <LoadingText/>
       </div>
     </div>

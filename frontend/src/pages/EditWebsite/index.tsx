@@ -3,9 +3,9 @@ import React from 'react'
 
 function EditWebsite() {
   return (
-    <div className="p-8 text-white min-h-screen">
+    <div className=" text-white">
       <ThreeJSBackground />
-      <div className="mt-24 flex justify-center items-center mb-8">
+      <div className="flex justify-center items-center mb-8">
         <div className="flex items-center gap-6">
           <h1 className="text-3xl">651f0a9f3c2a7d5e8f1c1234</h1>
           <button className="bg-gradient-to-r from-secondary-500 to-secondary-600 text-black px-4 py-2 rounded hover:bg-red-600 flex items-center text-lg">
