@@ -67,7 +67,7 @@ const FrameworkPresetSelector: React.FC<FrameworkPresetSelectorProps> = ({ frame
     <>
       <div className="text-sm text-gray-300 mb-2">Select a framework preset:</div>
       <Select
-        value={selectedFramework ?? undefined}
+        value={selectedFramework ?? 'none'}
         onValueChange={(frameworkId) => {
           onSelectFramework(frameworkId);
         }}
