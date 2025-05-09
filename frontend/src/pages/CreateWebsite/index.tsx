@@ -482,6 +482,8 @@ export default function CreateWebsitePage() {
                 frameworks={frameworks}
                 selectedFramework={selectedFramework}
                 handleSelectFramework={handleSelectFramework}
+                setShowBuildOutputSettings={setShowBuildOutputSettings}
+                setBuildOutputSettings={setBuildOutputSettings}
               />
 
 
