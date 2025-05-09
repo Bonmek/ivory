@@ -20,6 +20,7 @@ export default defineConfig({
       'REACT_APP_API_WRITE_BLOB_N_RUN_JOB',
       'REACT_APP_SUI_NETWORK',
       'REACT_APP_BLOB_TYPE',
+      'REACT_APP_OWNER_ADDRESS',
     ]),
   ],
   publicDir: 'public',
