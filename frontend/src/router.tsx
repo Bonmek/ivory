@@ -1,4 +1,6 @@
 import { createBrowserRouter } from 'react-router'
+import ProtectedRoute from '@/components/auth/ProtectedRoute'
+import Dashboard from '@/pages/Dashboard'
 
 import Layout from './components/Layout/Layout'
 import Index from './pages/Index'
@@ -8,8 +10,8 @@ import CreateWebsitePage from './pages/CreateWebsite'
 import HowToUsePage from './pages/Howtouse'
 import DashboardPage from './pages/Dashboard'
 import Callback from './pages/Callback'
-
 import EditWebsitePage from './pages/EditWebsite'
+
 const router = createBrowserRouter([
   {
     path: '/',
@@ -47,23 +49,9 @@ const router = createBrowserRouter([
     path: '/dashboard',
     element: (
       <Layout>
-        <DashboardPage />
-      </Layout>
-    ),
-  },
-  {
-    path: '/create-website',
-    element: (
-      <Layout>
-        <CreateWebsitePage />
-      </Layout>
-    ),
-  },
-  {
-    path: '*',
-    element: (
-      <Layout>
-        <Notfound />
+        <ProtectedRoute>
+          <Dashboard />
+        </ProtectedRoute>
       </Layout>
     ),
   },

@@ -41,7 +41,7 @@ const Navbar = () => {
 
   const navItems = [
     { name: 'Home', to: '/' },
-    { name: 'Dashboard', to: '/dashboard' },
+    ...((currentAccount?.address || zkloginAddress) ? [{ name: 'Dashboard', to: '/dashboard' }] : []),
     { name: 'How to use', to: '/how-to-use' },
     { name: 'About', to: '/about' },
   ]

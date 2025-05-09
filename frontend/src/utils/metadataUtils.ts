@@ -30,6 +30,7 @@ export const transformMetadataToProject = (metadata: any, index: number) => {
   const fields = metadata.content.fields as any
   const metadataFields = fields.value.fields.metadata.fields.contents
   const metadataMap = extractMetadataMap(metadataFields)
+  const status = parseInt(metadataMap['status'] || '0')
 
   return {
     id: index,
@@ -42,8 +43,9 @@ export const transformMetadataToProject = (metadata: any, index: number) => {
     color: '#97f0e5',
     urlImg: '/walrus.png',
     description: metadataMap['description'] || '',
-    status: metadataMap['status'] || '0',
-    siteId: metadataMap['site_id'] || '',
+    status,
+    siteId: status === 1 ? metadataMap['site_id'] : '',
+    suins: metadataMap['suins'] || '',
     blobId: metadataMap['blobId'] || '',
     installCommand: metadataMap['install_command'] || '',
     buildCommand: metadataMap['build_command'] || '',
