@@ -90,17 +90,30 @@ def publish_walrus_site(object_id):
         print("🔹 STEP 5: Searching for index.html...")
         final_path = None
 
-        # สำหรับกรณี is_build == 1: ต้องหา path ที่ลึกสุดที่มี index.html
-        if attributes.get("is_build") == "1":
-            max_depth = -1
-            for dirpath, _, filenames in os.walk(root_path):
-                if "index.html" in filenames:
-                    # คำนวณระดับความลึกจาก root_path
-                    relative_path = os.path.relpath(dirpath, root_path)
-                    depth = relative_path.count(os.sep)
-                    if depth > max_depth:
-                        max_depth = depth
-                        final_path = dirpath
+        # สำหรับกรณี is_build == 0: ต้องหา path ที่ลึกสุดที่มี index.html
+        if attributes.get("is_build") == "0":
+            output_dir = attributes.get("output_dir")
+            final_path = None  # ต้องกำหนดไว้ก่อนเพื่อใช้เช็คด้านล่าง
+
+            if output_dir:
+                candidate_path = os.path.join(root_path, output_dir)
+                index_path = os.path.join(candidate_path, "index.html")
+
+                if os.path.isfile(index_path):
+                    final_path = candidate_path
+                    print(f"✅ STEP 5 DONE: index.html found in output_dir path: {final_path}")
+            
+            # ถ้ายังไม่เจอจาก output_dir หรือไม่มี output_dir
+            if not final_path:
+                max_depth = -1
+                for dirpath, _, filenames in os.walk(root_path):
+                    if "index.html" in filenames:
+                        relative_path = os.path.relpath(dirpath, root_path)
+                        depth = relative_path.count(os.sep)
+                        if depth > max_depth:
+                            max_depth = depth
+                            final_path = dirpath
+
         else:
             # ถ้าไม่ build ให้เอาอันแรกที่เจอ
             for dirpath, _, filenames in os.walk(root_path):
