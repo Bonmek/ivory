@@ -52,15 +52,30 @@ export const useSuiData = (userAddress: string) => {
       console.log('Invalid metadata:', meta)
       return false
     }
-    
+
     const fields = meta.content.fields as any
     const metadataFields = fields?.value?.fields?.metadata?.fields?.contents || []
     const ownerEntry = metadataFields.find((entry: any) => entry.fields?.key === 'owner')
     const owner = ownerEntry?.fields?.value
-    
+
     return owner === userAddress
   })
   console.log('Filtered Metadata:', filteredMetadata)
+
+  // Filter metadata by owner address
+  const filteredMetadata = metadata.filter((meta) => {
+    if (!meta?.content || meta.content.dataType !== 'moveObject') {
+      console.log('Invalid metadata:', meta)
+      return false
+    }
+
+    const fields = meta.content.fields as any
+    const metadataFields = fields?.value?.fields?.metadata?.fields?.contents || []
+    const ownerEntry = metadataFields.find((entry: any) => entry.fields?.key === 'owner')
+    const owner = ownerEntry?.fields?.value
+
+    return owner === userAddress
+  })
 
   return {
     blobs,

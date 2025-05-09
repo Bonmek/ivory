@@ -27,6 +27,22 @@ const calculateDaysBetween = (date1: Date, date2: Date) => {
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 }
 
+function getPageList(current: number, total: number) {
+  const pages: (number | string)[] = []
+  if (total <= 5) {
+    for (let i = 1; i <= total; i++) pages.push(i)
+  } else {
+    if (current > 2) pages.push(1)
+    if (current > 3) pages.push('...')
+    for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) {
+      pages.push(i)
+    }
+    if (current < total - 2) pages.push('...')
+    if (current < total - 1) pages.push(total)
+  }
+  return pages
+}
+
 export default function Dashboard() {
   const { address } = useAuth()
   const [searchQuery, setSearchQuery] = useState('')
@@ -200,61 +216,23 @@ export default function Dashboard() {
                     Previous
                   </motion.button>
 
-                  {/* First page */}
-                  {currentPage > 2 && (
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => handlePageChange(1)}
-                      className="px-4 py-2 rounded-md bg-primary-700 text-white hover:bg-primary-600"
-                    >
-                      1
-                    </motion.button>
-                  )}
-
-                  {/* Ellipsis if needed */}
-                  {currentPage > 3 && (
-                    <span className="px-2 text-white">...</span>
-                  )}
-
-                  {/* Current page and surrounding pages */}
-                  {Array.from({ length: totalPages }, (_, i) => i + 1)
-                    .filter((page) => {
-                      if (totalPages <= 5) return true
-                      if (page === 1 || page === totalPages) return false
-                      return Math.abs(currentPage - page) <= 1
-                    })
-                    .map((page) => (
+                  {getPageList(currentPage, totalPages).map((page, idx) =>
+                    typeof page === 'number' ? (
                       <motion.button
                         key={page}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => handlePageChange(page)}
-                        className={`px-4 py-2 rounded-md ${
-                          currentPage === page
+                        className={`px-4 py-2 rounded-md ${currentPage === page
                             ? 'bg-secondary-500 text-black'
                             : 'bg-primary-700 text-white hover:bg-primary-600'
-                        }`}
+                          }`}
                       >
                         {page}
                       </motion.button>
-                    ))}
-
-                  {/* Ellipsis if needed */}
-                  {currentPage < totalPages - 2 && (
-                    <span className="px-2 text-white">...</span>
-                  )}
-
-                  {/* Last page */}
-                  {currentPage < totalPages - 1 && (
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => handlePageChange(totalPages)}
-                      className="px-4 py-2 rounded-md bg-primary-700 text-white hover:bg-primary-600"
-                    >
-                      {totalPages}
-                    </motion.button>
+                    ) : (
+                      <span key={`ellipsis-${idx}`} className="px-2 text-white">...</span>
+                    )
                   )}
 
                   <motion.button

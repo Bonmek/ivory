@@ -14,13 +14,14 @@ export const inputScheme = z
       message: "Invalid end_date",
     }),
     status: z.union([z.literal("0"), z.literal("1"), z.literal("2")]),
-    cache: z.string().regex(/^\d+$/, { message: "cache must be a numeric string" }),
-    root: z.string().startsWith("/"),
+    cache: z.string().regex(/^\d+$/),
+    root: z.string(),
     install_command: z.string().min(3),
     build_command: z.string().min(3),
-    default_route: z.string().startsWith("/"),
+    default_route: z.string(),
     is_build: z.union([z.literal("0"), z.literal("1")]),
     sui_ns: z.string().regex(/^0x[a-fA-F0-9]{64}$/).optional(),
+    output_dir: z.string().optional(),
   })
   .superRefine((data, ctx) => {
     const start = Date.parse(data.start_date);

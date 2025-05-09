@@ -18,37 +18,44 @@ import BuildOutputSetting from '@/components/CreateWebsite/BuildOutputSetting'
 import AdvancedOptions from '@/components/CreateWebsite/AdvancedOptions'
 import {
   advancedOptionsType,
+  ApiError,
+  ApiResponse,
   buildOutputSettingsType,
   Repository,
 } from '@/types/CreateWebstie/types'
 import { frameworks } from '@/constants/frameworks'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Helmet } from 'react-helmet'
+import { WebsiteAttributes, writeBlobAndRunJob } from '@/api/createWebsiteApi'
+import { useWalletKit } from '@mysten/wallet-kit'
+import { addDays } from 'date-fns'
 import apiClient from '@/lib/axiosConfig'
 import { useQuery } from 'wagmi/query'
 import CreateWebsiteDialog from '@/components/CreateWebsiteDialog'
 
+// !TODO: validate All Input before click deploy
+
 export default function CreateWebsitePage() {
   useTheme()
+
+  const { currentAccount } = useWalletKit()
+
+  // State for project name
+  const [name, setName] = useState('')
 
   // State for build output settings
   const [buildOutputSettings, setBuildOutputSettings] =
     useState<buildOutputSettingsType>({
-      rootDirectory: '',
       buildCommand: '',
+      installCommand: '',
       outputDirectory: '',
     })
 
   // State for advanced options
   const [advancedOptions, setAdvancedOptions] = useState<advancedOptionsType>({
     cacheControl: CacheControl.NoCache,
-    route: [
-      {
-        name: '',
-        path: '',
-      },
-    ],
     defaultPath: '',
+    rootDirectory: '',
   })
 
   //State for create website dialog
@@ -139,8 +146,20 @@ export default function CreateWebsitePage() {
   }
 
   const fetchRepositories = async () => {
-    const res = await apiClient.get(process.env.REACT_APP_API_REPOSITORIES || '');
-    return Array.isArray(res.data) ? res.data : [];
+    try {
+      const res: ApiResponse<Repository[]> = await apiClient.get(process.env.REACT_APP_API_REPOSITORIES || '');
+      if (res.status === 401) {
+        throw new Error('Unauthorized');
+      }
+      return Array.isArray(res.data) ? res.data : [];
+    } catch (error) {
+      const apiError = error as ApiError;
+      if (apiError.response?.status === 401) {
+        setUser(null);
+        throw new Error('Unauthorized');
+      }
+      throw error;
+    }
   }
 
   useEffect(() => {
@@ -154,7 +173,11 @@ export default function CreateWebsitePage() {
     setVisibleRepos((prev) => prev + maxRepoView)
   }
 
-  const { data, isLoading, refetch } = useQuery({ queryKey: ['repositories'], queryFn: fetchRepositories });
+  const { data } = useQuery({
+    queryKey: ['repositories'],
+    queryFn: fetchRepositories,
+    enabled: !!user,
+  });
   const repositories = (data ?? []) as Repository[];
 
   const filteredRepositories = repositories
@@ -168,11 +191,47 @@ export default function CreateWebsitePage() {
     setSelectedFramework(null)
   }
 
-  const handleSelectFramework = (frameworkId: string) => {
+  const handleSelectFramework = async (frameworkId: string) => {
     setSelectedFramework(frameworkId)
   }
 
+  const handleClickDeploy = async () => {
+    try {
+    const attributes: WebsiteAttributes = {
+      'site-name': name,
+      owner: currentAccount?.address!,
+      ownership: '0',
+      send_to: currentAccount?.address!,
+      epochs: '1',
+      start_date: new Date().toISOString(),
+      end_date: addDays(new Date(), 14).toISOString(),
+      status: '0',
+      cache: advancedOptions.cacheControl,
+      root: advancedOptions.rootDirectory || '/',
+      install_command: buildOutputSettings.installCommand || 'npm install',
+      build_command: buildOutputSettings.buildCommand || 'npm run build',
+      default_route: advancedOptions.defaultPath || '/index.html',
+      is_build: showBuildOutputSettings ? '0' : '1',
+    }
+
+      console.log('attributes', attributes)
+      console.log('file', selectedFile)
+
+      const response = await writeBlobAndRunJob({
+        file: selectedFile!,
+        attributes,
+      })
+
+      console.log('Response:', response)
+      return response
+    } catch (error) {
+      console.error('Error:', error)
+      throw error
+    }
+  }
+  
   const handleLogout = () => {
+    // !TODO: Not working right now
     setUser(null);
     setSelectedRepo(null);
     setGithubUrl("");
@@ -194,6 +253,7 @@ export default function CreateWebsitePage() {
     if (!repo) return;
     setRepoContentsLoading(true);
     setRepoContentsError(null);
+    
     apiClient
       .get(`${process.env.REACT_APP_API_REPOSITORIES}/${repo.owner}/${repo.name}/contents`)
       .then((res) => {
@@ -201,7 +261,13 @@ export default function CreateWebsitePage() {
         setRepoContentsLoading(false);
       })
       .catch((err) => {
-        setRepoContentsError('Failed to fetch repository contents');
+        if (err.response?.status === 401) {
+          setUser(null);
+          setRepoContents(null);
+          setRepoContentsError('Unauthorized. Please sign in to GitHub to access repository contents.');
+        } else {
+          setRepoContentsError('Failed to fetch repository contents');
+        }
         setRepoContentsLoading(false);
       });
   }, [selectedRepo, repositories]);
@@ -398,6 +464,9 @@ export default function CreateWebsitePage() {
                 <Input
                   id="name"
                   className="bg-primary-500 border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500"
+                  onChange={(e) => {
+                    setName(e.target.value)
+                  }}
                 />
               </section>
 
@@ -407,12 +476,13 @@ export default function CreateWebsitePage() {
                 exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.3 }}
               >
-                <FrameworkPresetSelector
-                  frameworks={frameworks}
-                  selectedFramework={selectedFramework}
-                  handleSelectFramework={handleSelectFramework}
-                />
               </motion.div>
+
+              <FrameworkPresetSelector
+                frameworks={frameworks}
+                selectedFramework={selectedFramework}
+                handleSelectFramework={handleSelectFramework}
+              />
 
 
               <article className="flex flex-col gap-4">
@@ -441,7 +511,7 @@ export default function CreateWebsitePage() {
           </article>
         </motion.main>
       </main>
-      <CreateWebsiteDialog open={open} setOpen={setOpen} />
+      <CreateWebsiteDialog open={open} setOpen={setOpen} handleClickDeploy={handleClickDeploy} />
     </>
   )
 }
