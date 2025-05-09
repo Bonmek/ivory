@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { useTheme } from '@/context/ThemeContext'
+
 import GithubRepoInput from '@/components/CreateWebsite/GitHubRepoInput'
 import FileUploadPreview from '@/components/CreateWebsite/FileUploadPreview'
 import FrameworkPresetSelector from '@/components/CreateWebsite/FrameworkPresetSelector'
@@ -42,6 +43,7 @@ export default function CreateWebsitePage() {
 
   // State for project name
   const [name, setName] = useState('')
+  const [nameErrors, setNameErrors] = useState<string[]>([])
 
   // State for build output settings
   const [buildOutputSettings, setBuildOutputSettings] =
@@ -67,10 +69,49 @@ export default function CreateWebsitePage() {
   )
   const [isDragging, setIsDragging] = useState<boolean>(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [fileErrors, setFileErrors] = useState<string[]>([])
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [user, setUser] = useState<string | null>(null)
   const [showBuildOutputSettings, setShowBuildOutputSettings] = useState(false)
+
+  // Validate name field
+  const validateName = (value: string) => {
+    const errors: string[] = []
+    
+    if (!value.trim()) {
+      errors.push('Project name is required')
+    }
+
+    setNameErrors(errors)
+    return errors.length === 0
+  }
+
+  // Validate file
+  const validateFile = () => {
+    const errors: string[] = []
+    
+    if (!selectedFile) {
+      errors.push('Please select a ZIP file or Import GitHub repository')
+    }
+    if (selectedFile && !selectedFile.name.endsWith('.zip')) {
+      errors.push('Please upload a ZIP file')
+    }
+
+    if (errors.length > 0) {
+      setFileErrors(errors)
+      return false
+    }
+
+    setFileErrors([])
+    return true
+  }
+
+  // Handle name change with validation
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setName(value)
+    validateName(value)
+  }
 
   // GitHub state
   const maxRepoView = 5
@@ -103,9 +144,9 @@ export default function CreateWebsitePage() {
     const file = e.dataTransfer.files[0]
     if (file && file.name.endsWith('.zip')) {
       setSelectedFile(file)
-      setError(null)
+      setFileErrors([])
     } else {
-      setError('Please upload a ZIP file')
+      setFileErrors(['Please upload a ZIP file'])
     }
   }
 
@@ -113,9 +154,9 @@ export default function CreateWebsitePage() {
     const file = e.target.files?.[0]
     if (file && file.name.endsWith('.zip')) {
       setSelectedFile(file)
-      setError(null)
+      setFileErrors([])
     } else {
-      setError('Please upload a ZIP file')
+      setFileErrors(['Please upload a ZIP file'])
     }
   }
 
@@ -130,7 +171,7 @@ export default function CreateWebsitePage() {
 
   const handleRemoveFile = () => {
     setSelectedFile(null)
-    setError(null)
+    setFileErrors([])
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
@@ -413,16 +454,21 @@ export default function CreateWebsitePage() {
                               Browse file
                             </button>
                           </div>
-                          {error && (
-                            <p className="text-red-400 text-xs mt-2 text-center w-full">
-                              {error}
-                            </p>
+                            </div>
                           )}
-                        </div>
-                      )}
                     </div>
                   </section>
-
+                  {fileErrors.length > 0 && (
+                    <div className="mt-4">
+                      <div className="bg-red-500/10 border border-red-500/20 rounded-md p-3">
+                        {fileErrors.map((error, index) => (
+                          <p key={index} className="text-red-400 text-sm">
+                            {error}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </TabsContent>
                 <TabsContent value={UploadMethod.GitHub}>
                   <GithubRepoInput
@@ -463,11 +509,22 @@ export default function CreateWebsitePage() {
                 </Label>
                 <Input
                   id="name"
-                  className="bg-primary-500 border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500"
-                  onChange={(e) => {
-                    setName(e.target.value)
-                  }}
+                  className={cn(
+                    "bg-primary-500 border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500",
+                    nameErrors.length > 0 && "border-red-500"
+                  )}
+                  onChange={handleNameChange}
+                  value={name}
                 />
+                {nameErrors.length > 0 && (
+                  <div className="mt-2">
+                      {nameErrors.map((error, index) => (
+                        <p key={index} className="text-red-400 text-sm">
+                          {error}
+                        </p>
+                      ))}
+                  </div>
+                )}
               </section>
 
               <motion.div
@@ -504,7 +561,12 @@ export default function CreateWebsitePage() {
               <Separator className="mb-4" />
               <section className="pt-4 flex justify-end">
                 <Button
-                  onClick={() => setOpen(true)}
+                  onClick={() => {
+                    if (!validateName(name) && !validateFile()) {
+                      return
+                    }
+                    setOpen(true)
+                  }}
                   className="bg-secondary-500 hover:bg-secondary-700 text-black p-6 rounded-md text-base transform transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-secondary-500/20">
                   Create project
                 </Button>

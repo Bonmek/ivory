@@ -18,9 +18,10 @@ export interface WebsiteAttributes {
   is_build: string;
 }
 
-interface WriteBlobRequest {
-  file: File;
+export interface WriteBlobRequest {
+  file?: File;
   attributes: WebsiteAttributes;
+  githubUrl?: string;
 }
 
 export interface WriteBlobResponse {
@@ -31,13 +32,21 @@ export interface WriteBlobResponse {
 
 export const writeBlobAndRunJob = async (data: WriteBlobRequest): Promise<WriteBlobResponse> => {
   const formData = new FormData();
-  
-  // Validate file type
-  if (!data.file.name.endsWith('.zip')) {
-    throw new Error('Only ZIP files are allowed');
+
+  // Add file parameter if it exists
+  if (data.file) {
+    if (!data.file.name.endsWith('.zip')) {
+      throw new Error('Only ZIP files are allowed');
+    }
+    formData.append('file', data.file);
   }
 
-  formData.append('file', data.file);
+  // Add GitHub URL if it exists
+  if (data.githubUrl) {
+    formData.append('githubUrl', data.githubUrl);
+  }
+
+  // Always add attributes
   formData.append('attributes', JSON.stringify(data.attributes));
 
   try {
