@@ -76,7 +76,7 @@ function AdvancedOptions({ advancedOptions, setAdvancedOptions }: AdvancedOption
                   <h3 className="text-sm text-gray-300  font-semibold">Cache Control</h3>
                   <HelpCircleIcon className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
                 </div>
-                <Select onValueChange={(value) => setAdvancedOptions({ ...advancedOptions, cacheControl: value as CacheControl })}>
+                <Select value={advancedOptions.cacheControl} onValueChange={(value) => setAdvancedOptions({ ...advancedOptions, cacheControl: value as CacheControl })}>
                   <SelectTrigger className="bg-primary-500 border-gray-700 rounded-md h-12 transition-all duration-300 hover:border-secondary-500 w-full">
                     <SelectValue placeholder="Select cache control" />
                   </SelectTrigger>

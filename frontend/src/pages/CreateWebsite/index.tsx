@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { useEffect, useRef, useState } from 'react'
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { Github, HelpCircle, Upload } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
@@ -32,14 +32,25 @@ import { useWalletKit } from '@mysten/wallet-kit'
 import { addDays } from 'date-fns'
 import apiClient from '@/lib/axiosConfig'
 import { useQuery } from 'wagmi/query'
+import { PreviewSummary } from '@/components/CreateWebsite/PreviewSummary'
 import CreateWebsiteDialog from '@/components/CreateWebsiteDialog'
-
-// !TODO: validate All Input before click deploy
 
 export default function CreateWebsitePage() {
   useTheme()
-
+  const previewRef = useRef<HTMLDivElement>(null)
   const { currentAccount } = useWalletKit()
+
+  // State to control preview visibility
+  const [showPreview, setShowPreview] = useState(false)
+
+  // Fixed useEffect for previewRef
+  useEffect(() => {
+    if (showPreview && previewRef.current) {
+      console.log('Preview ref is ready:', previewRef.current)
+      // Optional: Scroll to the preview section smoothly
+      previewRef.current.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [showPreview]) // Only depend on showPreview, as previewRef is stable
 
   // State for project name
   const [name, setName] = useState('')
@@ -56,11 +67,11 @@ export default function CreateWebsitePage() {
   // State for advanced options
   const [advancedOptions, setAdvancedOptions] = useState<advancedOptionsType>({
     cacheControl: CacheControl.NoCache,
-    defaultPath: '',
-    rootDirectory: '',
+    defaultPath: '/index.html',
+    rootDirectory: '/',
   })
 
-  //State for create website dialog
+  // State for create website dialog
   const [open, setOpen] = useState(false)
 
   // State for file upload
@@ -77,11 +88,9 @@ export default function CreateWebsitePage() {
   // Validate name field
   const validateName = (value: string) => {
     const errors: string[] = []
-    
     if (!value.trim()) {
       errors.push('Project name is required')
     }
-
     setNameErrors(errors)
     return errors.length === 0
   }
@@ -89,21 +98,14 @@ export default function CreateWebsitePage() {
   // Validate file
   const validateFile = () => {
     const errors: string[] = []
-    
     if (!selectedFile) {
       errors.push('Please select a ZIP file or Import GitHub repository')
     }
     if (selectedFile && !selectedFile.name.endsWith('.zip')) {
       errors.push('Please upload a ZIP file')
     }
-
-    if (errors.length > 0) {
-      setFileErrors(errors)
-      return false
-    }
-
-    setFileErrors([])
-    return true
+    setFileErrors(errors)
+    return errors.length === 0
   }
 
   // Handle name change with validation
@@ -119,12 +121,10 @@ export default function CreateWebsitePage() {
   const [searchRepository, setSearchRepository] = useState('')
   const [visibleRepos, setVisibleRepos] = useState(maxRepoView)
   const [selectedRepo, setSelectedRepo] = useState<number | null>(null)
-  const [selectedFramework, setSelectedFramework] = useState<string | null>(
-    null,
-  )
-  const [repoContents, setRepoContents] = useState<any[] | null>(null);
-  const [repoContentsLoading, setRepoContentsLoading] = useState(false);
-  const [repoContentsError, setRepoContentsError] = useState<string | null>(null);
+  const [selectedFramework, setSelectedFramework] = useState<string | null>(null)
+  const [repoContents, setRepoContents] = useState<any[] | null>(null)
+  const [repoContentsLoading, setRepoContentsLoading] = useState(false)
+  const [repoContentsError, setRepoContentsError] = useState<string | null>(null)
 
   // File handlers
   const handleDragOver = (e: React.DragEvent) => {
@@ -140,7 +140,6 @@ export default function CreateWebsitePage() {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
     setIsDragging(false)
-
     const file = e.dataTransfer.files[0]
     if (file && file.name.endsWith('.zip')) {
       setSelectedFile(file)
@@ -183,23 +182,25 @@ export default function CreateWebsitePage() {
   }
 
   const handleGithubSignIn = () => {
-    window.location.href = `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_GITHUB_AUTH}`;
+    window.location.href = `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_GITHUB_AUTH}`
   }
 
   const fetchRepositories = async () => {
     try {
-      const res: ApiResponse<Repository[]> = await apiClient.get(process.env.REACT_APP_API_REPOSITORIES || '');
+      const res: ApiResponse<Repository[]> = await apiClient.get(
+        process.env.REACT_APP_API_REPOSITORIES || '',
+      )
       if (res.status === 401) {
-        throw new Error('Unauthorized');
+        throw new Error('Unauthorized')
       }
-      return Array.isArray(res.data) ? res.data : [];
+      return Array.isArray(res.data) ? res.data : []
     } catch (error) {
-      const apiError = error as ApiError;
+      const apiError = error as ApiError
       if (apiError.response?.status === 401) {
-        setUser(null);
-        throw new Error('Unauthorized');
+        setUser(null)
+        throw new Error('Unauthorized')
       }
-      throw error;
+      throw error
     }
   }
 
@@ -207,7 +208,7 @@ export default function CreateWebsitePage() {
     apiClient
       .get(process.env.REACT_APP_API_USER || '')
       .then((res) => setUser(res.data.user))
-      .catch(() => setUser(null));
+      .catch(() => setUser(null))
   }, [])
 
   const handleShowMore = () => {
@@ -218,8 +219,8 @@ export default function CreateWebsitePage() {
     queryKey: ['repositories'],
     queryFn: fetchRepositories,
     enabled: !!user,
-  });
-  const repositories = (data ?? []) as Repository[];
+  })
+  const repositories = (data ?? []) as Repository[]
 
   const filteredRepositories = repositories
     .filter((repo: Repository) =>
@@ -238,22 +239,22 @@ export default function CreateWebsitePage() {
 
   const handleClickDeploy = async () => {
     try {
-    const attributes: WebsiteAttributes = {
-      'site-name': name,
-      owner: currentAccount?.address!,
-      ownership: '0',
-      send_to: currentAccount?.address!,
-      epochs: '1',
-      start_date: new Date().toISOString(),
-      end_date: addDays(new Date(), 14).toISOString(),
-      status: '0',
-      cache: advancedOptions.cacheControl,
-      root: advancedOptions.rootDirectory || '/',
-      install_command: buildOutputSettings.installCommand || 'npm install',
-      build_command: buildOutputSettings.buildCommand || 'npm run build',
-      default_route: advancedOptions.defaultPath || '/index.html',
-      is_build: showBuildOutputSettings ? '0' : '1',
-    }
+      const attributes: WebsiteAttributes = {
+        'site-name': name,
+        owner: currentAccount?.address!,
+        ownership: '0',
+        send_to: currentAccount?.address!,
+        epochs: '1',
+        start_date: new Date().toISOString(),
+        end_date: addDays(new Date(), 14).toISOString(),
+        status: '0',
+        cache: advancedOptions.cacheControl,
+        root: advancedOptions.rootDirectory || '/',
+        install_command: buildOutputSettings.installCommand || 'npm install',
+        build_command: buildOutputSettings.buildCommand || 'npm run build',
+        default_route: advancedOptions.defaultPath || '/index.html',
+        is_build: showBuildOutputSettings ? '0' : '1',
+      }
 
       console.log('attributes', attributes)
       console.log('file', selectedFile)
@@ -270,48 +271,51 @@ export default function CreateWebsitePage() {
       throw error
     }
   }
-  
+
   const handleLogout = () => {
-    // !TODO: Not working right now
-    setUser(null);
-    setSelectedRepo(null);
-    setGithubUrl("");
-    setSearchRepository("");
-    setRepoContents(null);
-    setRepoContentsError(null);
-    setRepoContentsLoading(false);
-    window.location.reload();
-  };
+    setUser(null)
+    setSelectedRepo(null)
+    setGithubUrl('')
+    setSearchRepository('')
+    setRepoContents(null)
+    setRepoContentsError(null)
+    setRepoContentsLoading(false)
+    window.location.reload()
+  }
 
   useEffect(() => {
     if (selectedRepo == null) {
-      setRepoContents(null);
-      setRepoContentsError(null);
-      setRepoContentsLoading(false);
-      return;
+      setRepoContents(null)
+      setRepoContentsError(null)
+      setRepoContentsLoading(false)
+      return
     }
-    const repo = repositories.find((r) => r.id === selectedRepo);
-    if (!repo) return;
-    setRepoContentsLoading(true);
-    setRepoContentsError(null);
-    
+    const repo = repositories.find((r) => r.id === selectedRepo)
+    if (!repo) return
+    setRepoContentsLoading(true)
+    setRepoContentsError(null)
+
     apiClient
-      .get(`${process.env.REACT_APP_API_REPOSITORIES}/${repo.owner}/${repo.name}/contents`)
+      .get(
+        `${process.env.REACT_APP_API_REPOSITORIES}/${repo.owner}/${repo.name}/contents`,
+      )
       .then((res) => {
-        setRepoContents(res.data);
-        setRepoContentsLoading(false);
+        setRepoContents(res.data)
+        setRepoContentsLoading(false)
       })
       .catch((err) => {
         if (err.response?.status === 401) {
-          setUser(null);
-          setRepoContents(null);
-          setRepoContentsError('Unauthorized. Please sign in to GitHub to access repository contents.');
+          setUser(null)
+          setRepoContents(null)
+          setRepoContentsError(
+            'Unauthorized. Please sign in to GitHub to access repository contents.',
+          )
         } else {
-          setRepoContentsError('Failed to fetch repository contents');
+          setRepoContentsError('Failed to fetch repository contents')
         }
-        setRepoContentsLoading(false);
-      });
-  }, [selectedRepo, repositories]);
+        setRepoContentsLoading(false)
+      })
+  }, [selectedRepo, repositories])
 
   return (
     <>
@@ -366,7 +370,6 @@ export default function CreateWebsitePage() {
                     className={cn(
                       'relative flex flex-col items-center justify-center w-full min-h-[160px] backdrop-blur-xl transition-all duration-300 cursor-pointer overflow-hidden',
                       isDragging && 'ring-4 ring-cyan-400/40',
-                      // error && "ring-4 ring-red-400/40"
                     )}
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
@@ -454,8 +457,8 @@ export default function CreateWebsitePage() {
                               Browse file
                             </button>
                           </div>
-                            </div>
-                          )}
+                        </div>
+                      )}
                     </div>
                   </section>
                   {fileErrors.length > 0 && (
@@ -510,30 +513,22 @@ export default function CreateWebsitePage() {
                 <Input
                   id="name"
                   className={cn(
-                    "bg-primary-500 border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500",
-                    nameErrors.length > 0 && "border-red-500"
+                    'bg-primary-500 border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500',
+                    nameErrors.length > 0 && 'border-red-500',
                   )}
                   onChange={handleNameChange}
                   value={name}
                 />
                 {nameErrors.length > 0 && (
                   <div className="mt-2">
-                      {nameErrors.map((error, index) => (
-                        <p key={index} className="text-red-400 text-sm">
-                          {error}
-                        </p>
-                      ))}
+                    {nameErrors.map((error, index) => (
+                      <p key={index} className="text-red-400 text-sm">
+                        {error}
+                      </p>
+                    ))}
                   </div>
                 )}
               </section>
-
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-              </motion.div>
 
               <FrameworkPresetSelector
                 frameworks={frameworks}
@@ -542,7 +537,6 @@ export default function CreateWebsitePage() {
                 setShowBuildOutputSettings={setShowBuildOutputSettings}
                 setBuildOutputSettings={setBuildOutputSettings}
               />
-
 
               <article className="flex flex-col gap-4">
                 <BuildOutputSetting
@@ -558,24 +552,57 @@ export default function CreateWebsitePage() {
                 />
               </article>
 
-              <Separator className="mb-4" />
-              <section className="pt-4 flex justify-end">
-                <Button
-                  onClick={() => {
-                    if (!validateName(name) && !validateFile()) {
-                      return
-                    }
-                    setOpen(true)
-                  }}
-                  className="bg-secondary-500 hover:bg-secondary-700 text-black p-6 rounded-md text-base transform transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-secondary-500/20">
-                  Create project
-                </Button>
-              </section>
+              {!showPreview &&
+                <>
+                  <Separator className="mb-4" />
+                  <section className="pt-4 flex justify-end">
+                    <Button
+                      onClick={async () => {
+                        if (!validateName(name)) return
+                        if (!validateFile()) return
+                        setShowPreview(true)
+                        setOpen(true)
+                      }}
+                      className="bg-secondary-500 hover:bg-secondary-700 text-black p-6 rounded-md text-base transform transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-secondary-500/20"
+                    >
+                      Create project
+                    </Button>
+                  </section>
+                </>}
             </motion.div>
           </article>
+          {showPreview && <Separator className="mb-4 mt-8" />}
         </motion.main>
       </main>
-      <CreateWebsiteDialog open={open} setOpen={setOpen} handleClickDeploy={handleClickDeploy} />
+      <AnimatePresence mode="wait">
+        {showPreview && (
+          <motion.div
+            ref={previewRef}
+            key="preview"
+            className="mt-8"
+            initial={{ opacity: 0, y: 20 }}
+            exit={{ opacity: 0, y: -20, transition: { duration: 0.2, ease: [0.4, 0, 0.2, 1] } }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <PreviewSummary
+              name={name}
+              selectedFramework={selectedFramework}
+              buildOutputSettings={buildOutputSettings}
+              advancedOptions={advancedOptions}
+              uploadMethod={uploadMethod}
+              selectedFile={selectedFile}
+              setOpen={setOpen}
+              setShowPreview={setShowPreview}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <CreateWebsiteDialog
+        open={open}
+        setOpen={setOpen}
+        handleClickDeploy={handleClickDeploy}
+      />
     </>
   )
 }
