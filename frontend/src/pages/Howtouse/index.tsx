@@ -46,12 +46,18 @@ function HowToUsePage() {
           >
             How to launch website with us
           </h1>
-          <p className="text-gray-400 italic mb-6">
-            "Neque porro quisquam est qui dolorem ipsum quia dolor sit amet,
-            consectetur, adipisci velit..." "There is no one who loves pain
-            itself, who seeks after it and wants to have it, simply because it
-            is pain..."
-          </p>
+
+          <h2 className="text-xl font-semibold mb-2">Get Started</h2>
+            <p className="text-gray-300 mb-4">
+              When you launch your website through our platform, you'll be able to deploy your static website and make it accessible from anywhere in the world. Once you've connected your project to <strong>Suins</strong>, your site will be ready to go.
+            </p>
+            <p className="text-gray-300 mb-4">
+              Our service is <strong>not designed to store .env files or secret keys</strong>, due to strict security policies. Therefore, our platform is ideal for <strong>public-facing sites</strong> like landing pages, documentation, or DApps that use a blockchain backend such as Sui, Ethereum, or Solana.
+            </p>
+            <p className="text-gray-300 mb-4">
+              You’ll only be charged for <strong>deployment, updates, and time extensions</strong>—there are no additional fees regardless of how much <strong>bandwidth</strong> your site uses. This means we offer <strong>free bandwidth</strong> for your project.
+              If you're ready, simply click the <strong>Create Project</strong> button in the top tab.
+            </p>
 
           {/* Video Placeholder - Replaced with YouTube Embed */}
           <div className="h-120 rounded mb-6 relative flex justify-center">
@@ -66,21 +72,23 @@ function HowToUsePage() {
             ></iframe>
           </div>
 
-          {/* Lorem Ipsum Text */}
+          {/* Launch Info Text */}
           <div>
-            <h2 className="text-xl font-semibold mb-2">Lorem Ipsum</h2>
-            <p className="text-gray-300">
-              is simply dummy text of the printing and typesetting industry.
-              Lorem Ipsum has been the industry's standard dummy text ever since
-              the 1500s, when an unknown printer took a galley of type and
-              scrambled it to make a type specimen book.
+            
+          <h2 className="text-xl font-semibold mt-4 mb-2">Project Setup</h2>
+            <p className="text-gray-300 mb-4">
+              Once inside, the interface is split into two parts. On the <strong>left side</strong>, you can drop your static files or connect your GitHub account to choose a repository. On the <strong>right side</strong>, you’ll set your site name and configurations.
+              If you haven’t built the site yet, we can handle that for you too. Once everything is set, just hit <strong>Deploy</strong> to launch.
             </p>
-            <h2 className="text-xl font-semibold mt-4 mb-2">Lorem Ipsum</h2>
+            <h2 className="text-xl font-semibold mt-4 mb-2">Deployment Status</h2>
             <p className="text-gray-300">
-              is simply dummy text of the printing and typesetting industry.
-              Lorem Ipsum has been the industry's standard dummy text ever since
-              the 1500s, when an unknown printer took a galley of type and
-              scrambled it to make a type specimen book.
+              After clicking deploy, you’ll be redirected to your <strong>dashboard</strong>. There, you can monitor your deployment status:
+              <ul className="list-disc list-inside mt-2">
+                <li><strong>Yellow</strong>: Build in progress</li>
+                <li><strong>Green</strong>: Build successful – your site is live</li>
+                <li><strong>Red</strong>: Build failed</li>
+              </ul>
+              Once the status is green, your site is ready to connect to <strong>Suins</strong>, making it instantly accessible to your users.
             </p>
           </div>
 
@@ -99,7 +107,7 @@ function HowToUsePage() {
             </button>
           </div>
           <p className="text-gray-400 italic mb-6">
-            Secure your digital identity on the Sui blockchain with personalized domain names that connect 
+            Secure your digital identity on the Sui blockchain with personalized domain names that connect
             to your wallet addresses and digital assets.
           </p>
 
@@ -120,9 +128,9 @@ function HowToUsePage() {
           <div>
             <h2 className="text-xl font-semibold mb-2">What is Sui NS?</h2>
             <p className="text-gray-300 mb-4">
-              Sui Name Service (Sui NS) is a decentralized domain name system built on the Sui blockchain. 
-              It allows users to register human-readable domain names (like yourname.sui) and bind them to 
-              wallet addresses, making transactions more user-friendly by replacing complex wallet addresses 
+              Sui Name Service (Sui NS) is a decentralized domain name system built on the Sui blockchain.
+              It allows users to register human-readable domain names (like yourname.sui) and bind them to
+              wallet addresses, making transactions more user-friendly by replacing complex wallet addresses
               with simple domain names.
             </p>
 
@@ -139,11 +147,11 @@ function HowToUsePage() {
 
             <h2 className="text-xl font-semibold mt-6 mb-2">Step 1: Get a Sui Wallet</h2>
             <p className="text-gray-300 mb-4">
-              Before binding a Sui NS domain, ensure you have a Sui wallet set up. 
-              Popular options include Sui Wallet browser extension, Suiet Wallet, or Ethos Wallet. 
+              Before binding a Sui NS domain, ensure you have a Sui wallet set up.
+              Popular options include Sui Wallet browser extension, Suiet Wallet, or Ethos Wallet.
               Make sure your wallet has enough SUI tokens for domain registration and binding fees.
             </p>
-            
+
             <div className="grid grid-cols-3 gap-4 mb-6">
               <div className="bg-gray-900 p-3 rounded-lg text-center">
                 <div className="bg-gray-800 h-24 rounded flex items-center justify-center mb-2">
@@ -170,9 +178,9 @@ function HowToUsePage() {
 
             <h2 className="text-xl font-semibold mt-6 mb-2">Step 2: Register a Sui NS Domain</h2>
             <p className="text-gray-300 mb-4">
-              Visit the official Sui NS website or a supported marketplace. Search for your desired domain 
-              name (e.g., yourname.sui). If available, proceed with the registration process by connecting 
-              your wallet and completing the payment. Registration typically costs between 1-10 SUI depending 
+              Visit the official Sui NS website or a supported marketplace. Search for your desired domain
+              name (e.g., yourname.sui). If available, proceed with the registration process by connecting
+              your wallet and completing the payment. Registration typically costs between 1-10 SUI depending
               on the domain name length.
             </p>
 
@@ -193,17 +201,17 @@ function HowToUsePage() {
 
             <h2 className="text-xl font-semibold mt-6 mb-2">Step 3: Access Your Domain Management</h2>
             <p className="text-gray-300 mb-4">
-              After registration, access the Sui NS dashboard by connecting your wallet. Navigate to the 
-              "My Domains" section to view all domains you've registered. Select the domain you want to 
+              After registration, access the Sui NS dashboard by connecting your wallet. Navigate to the
+              "My Domains" section to view all domains you've registered. Select the domain you want to
               bind to access its management interface.
             </p>
 
             <h2 className="text-xl font-semibold mt-6 mb-2">Step 4: Binding Your Domain</h2>
             <p className="text-gray-300 mb-4">
-              Within your domain management interface, look for the "Bind Address" or "Resolver" section. 
+              Within your domain management interface, look for the "Bind Address" or "Resolver" section.
               Here you can bind different types of records to your domain:
             </p>
-            
+
             <div className="grid grid-cols-2 gap-4 mb-6">
               <div className="bg-gray-800 p-4 rounded-lg">
                 <h4 className="font-medium text-secondary-500 mb-2">Wallet Addresses</h4>
@@ -257,15 +265,15 @@ function HowToUsePage() {
 
             <h2 className="text-xl font-semibold mt-6 mb-2">Step 5: Confirm Binding Transaction</h2>
             <p className="text-gray-300 mb-4">
-              After entering the address or content you want to bind, click on "Confirm" or "Save." Your wallet 
-              will prompt you to sign a transaction. This transaction typically costs a small amount of SUI 
+              After entering the address or content you want to bind, click on "Confirm" or "Save." Your wallet
+              will prompt you to sign a transaction. This transaction typically costs a small amount of SUI
               (0.01-0.05 SUI) as a network fee. Confirm the transaction in your wallet.
             </p>
 
             <h2 className="text-xl font-semibold mt-6 mb-2">Step 6: Verify Your Binding</h2>
             <p className="text-gray-300 mb-4">
-              Once the transaction is confirmed, you can verify your binding by using the "Lookup" feature on 
-              the Sui NS website. Enter your domain name, and it should display all the records you've bound 
+              Once the transaction is confirmed, you can verify your binding by using the "Lookup" feature on
+              the Sui NS website. Enter your domain name, and it should display all the records you've bound
               to it. Additionally, your domain should now be usable across supported Sui applications and wallets.
             </p>
 
@@ -273,7 +281,7 @@ function HowToUsePage() {
               <h3 className="font-semibold mb-1">Using Your Domain</h3>
               <p className="text-gray-300 text-sm">
                 After binding, you can share your yourname.sui domain instead of your complex wallet address.
-                When someone sends SUI or other tokens to yourname.sui, it will automatically route to the wallet 
+                When someone sends SUI or other tokens to yourname.sui, it will automatically route to the wallet
                 address you've bound to that domain.
               </p>
             </div>
@@ -337,11 +345,10 @@ function HowToUsePage() {
             <li>
               <a
                 href="#how-to-launch-website-with-us"
-                className={`hover:underline ${
-                  activeSection === 'how-to-launch-website-with-us'
+                className={`hover:underline ${activeSection === 'how-to-launch-website-with-us'
                     ? 'text-white font-bold'
                     : 'text-gray-400'
-                }`}
+                  }`}
               >
                 How to launch website with us
               </a>
@@ -349,11 +356,10 @@ function HowToUsePage() {
             <li>
               <a
                 href="#how-to-bind-sui-ns"
-                className={`hover:underline ${
-                  activeSection === 'how-to-bind-sui-ns'
+                className={`hover:underline ${activeSection === 'how-to-bind-sui-ns'
                     ? 'text-white font-bold'
                     : 'text-gray-400'
-                }`}
+                  }`}
               >
                 How to bind Sui NS
               </a>
