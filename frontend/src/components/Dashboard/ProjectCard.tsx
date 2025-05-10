@@ -1,4 +1,4 @@
-import { memo, useState } from 'react'
+import { memo, useState, useEffect } from 'react'
 import {
   MoreHorizontal,
   Users,
@@ -9,6 +9,7 @@ import {
   Copy,
   Check,
   Link,
+  Timer,
 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import {
@@ -84,6 +85,34 @@ const ProjectCard = memo(
     const [remainingOpen, setRemainingOpen] = useState(false)
     const [copied, setCopied] = useState(false)
     const [suinsValue, setSuinsValue] = useState('')
+    const [buildTime, setBuildTime] = useState<number>(0)
+
+    useEffect(() => {
+      if (project.status === 0) {
+        const startTime = new Date(project.startDate).getTime()
+        const timer = setInterval(() => {
+          const currentTime = new Date().getTime()
+          const elapsedTime = Math.floor((currentTime - startTime) / 1000)
+          setBuildTime(elapsedTime)
+        }, 1000)
+
+        return () => clearInterval(timer)
+      }
+    }, [project.status, project.startDate])
+
+    const formatBuildTime = (seconds: number) => {
+      const hours = Math.floor(seconds / 3600)
+      const minutes = Math.floor((seconds % 3600) / 60)
+      const remainingSeconds = seconds % 60
+
+      if (hours > 0) {
+        return `${hours}h ${minutes}m ${remainingSeconds}s`
+      } else if (minutes > 0) {
+        return `${minutes}m ${remainingSeconds}s`
+      } else {
+        return `${remainingSeconds}s`
+      }
+    }
 
     const getStatusColor = (status?: number) => {
       switch (status) {
@@ -428,6 +457,19 @@ const ProjectCard = memo(
                     </PopoverContent>
                   </Popover>
                 </div>
+                {project.status === 0 && (
+                  <div className="flex-1 min-w-0 flex flex-col justify-center border-l border-white/10 pl-2 sm:pl-3">
+                    <div className="text-[10px] text-white/50 font-medium truncate">
+                      Build Time
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <Timer className="h-3.5 w-3.5 text-yellow-400" />
+                      <span className="text-sm text-yellow-300 font-medium">
+                        {formatBuildTime(buildTime)}
+                      </span>
+                    </div>
+                  </div>
+                )}
                 <div className="flex-1 min-w-0 flex flex-col justify-center border-l border-white/10 pl-2 sm:pl-3">
                   <div className="text-[10px] text-white/50 font-medium truncate">
                     Remaining

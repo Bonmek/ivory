@@ -161,7 +161,6 @@ export default function Dashboard() {
 
   const deployingProjects = sortedProjects.filter((p) => p.status === 0)
   const otherProjects = sortedProjects.filter((p) => p.status !== 0)
-  console.log('ck', deployingProjects)
 
   return (
     <>
@@ -192,15 +191,15 @@ export default function Dashboard() {
           ) : (
             <>
               {/* Section: Deploying */}
-              {deployingProjects.length > 0 && (
-                <section className="mb-10">
+              {otherProjects.length > 0 && (
+                <section className="my-10">
                   <div className="flex items-center gap-2 mb-3">
                     <RefreshCw className="animate-spin h-4 w-4 text-yellow-400" />
                     <span className="text-xs font-semibold text-yellow-300 uppercase tracking-widest">
                       Deploying Projects
                     </span>
                   </div>
-                  <div className="bg-yellow-100/5 rounded-xl p-4">
+                  <div className="rounded-xl">
                     <AnimatePresence mode="wait">
                       <motion.div
                         key={currentPage}
@@ -210,7 +209,7 @@ export default function Dashboard() {
                         transition={{ duration: 0.3 }}
                         className="grid grid-cols-1 gap-4 md:grid-cols-2  items-stretch"
                       >
-                        {paginatedProjects.map((project, index) => (
+                        {deployingProjects.map((project, index) => (
                           <motion.div
                             key={project.id}
                             initial={{ opacity: 0, y: 20 }}
@@ -239,7 +238,7 @@ export default function Dashboard() {
                       Other Projects
                     </span>
                   </div>
-                  <div className="bg-white/5 rounded-xl p-4">
+                  <div className="rounded-xl">
                     <AnimatePresence mode="wait">
                       <motion.div
                         key={currentPage}
@@ -249,7 +248,7 @@ export default function Dashboard() {
                         transition={{ duration: 0.3 }}
                         className="grid grid-cols-1 gap-4 md:grid-cols-2  items-stretch"
                       >
-                        {paginatedProjects.map((project, index) => (
+                        {otherProjects.map((project, index) => (
                           <motion.div
                             key={project.id}
                             initial={{ opacity: 0, y: 20 }}
