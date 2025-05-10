@@ -37,6 +37,8 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { Toaster } from '@/components/ui/sonner'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useSuiData } from "@/hooks/useSuiData"
 
 interface ProjectCardProps {
   project: {
@@ -54,6 +56,7 @@ interface ProjectCardProps {
   index: number
   onHoverStart: (id: number) => void
   onHoverEnd: () => void
+  userAddress: string
 }
 
 const formatDate = (date: Date) => {
@@ -79,7 +82,7 @@ const calculateDaysBetween = (date1: Date, date2: Date) => {
 }
 
 const ProjectCard = memo(
-  ({ project, index, onHoverStart, onHoverEnd }: ProjectCardProps) => {
+  ({ project, index, onHoverStart, onHoverEnd, userAddress }: ProjectCardProps) => {
     const remainingDays = calculateDaysBetween(new Date(), project.expiredDate)
     const [startDateOpen, setStartDateOpen] = useState(false)
     const [expiredDateOpen, setExpiredDateOpen] = useState(false)
@@ -95,6 +98,10 @@ const ProjectCard = memo(
       return 0
     })
     const [dots, setDots] = useState('.')
+    const [selectedSuins, setSelectedSuins] = useState<string>("")
+    const [otherSuins, setOtherSuins] = useState<string>("")
+    const { suins, isLoadingSuins, refetchSuiNS } = useSuiData(userAddress)
+    const [isRefreshing, setIsRefreshing] = useState(false)
 
     useEffect(() => {
       if (project.status === 0) {
@@ -212,8 +219,9 @@ const ProjectCard = memo(
     }
 
     const handleLinkSuins = () => {
-      if (!suinsValue) {
-        toast.error('Please enter SUINS name', {
+      const finalSuins = selectedSuins === "other" ? otherSuins : selectedSuins
+      if (!finalSuins) {
+        toast.error('Please select a SUINS domain', {
           className: 'bg-red-900 border-red-500/20 text-white',
           style: {
             background: 'var(--red-900)',
@@ -232,6 +240,15 @@ const ProjectCard = memo(
           color: 'white',
         },
       })
+    }
+
+    const handleRefreshSuins = async () => {
+      setIsRefreshing(true)
+      try {
+        await refetchSuiNS()
+      } finally {
+        setIsRefreshing(false)
+      }
     }
 
     return (
@@ -266,24 +283,77 @@ const ProjectCard = memo(
                         Link SUINS
                       </DialogTitle>
                       <DialogDescription className="text-white/60">
-                        Enter your SUINS name to link it with this project
+                        Select your SUINS name to link it with this project
                       </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                       <div className="grid gap-2">
-                        <Input
-                          placeholder="Enter SUINS name"
-                          value={suinsValue}
-                          onChange={(e) => setSuinsValue(e.target.value)}
-                          className="bg-primary-800 border-secondary-500/20 text-white"
-                        />
+                        {isLoadingSuins ? (
+                          <div className="flex items-center justify-center py-4">
+                            <Loader2 className="h-6 w-6 animate-spin text-secondary-400" />
+                          </div>
+                        ) : (
+                          <>
+                            <div className="flex gap-2 items-center">
+                              <Select
+                                value={selectedSuins}
+                                onValueChange={setSelectedSuins}
+                              >
+                                <SelectTrigger className="bg-primary-800 border-secondary-500/20 text-white w-full flex-1">
+                                  <SelectValue placeholder="Select SUINS domain" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-primary-800 border-secondary-500/20 text-white">
+                                  {suins.map((sui) => (
+                                    <SelectItem 
+                                      key={sui.data?.objectId} 
+                                      value={sui.data?.content?.fields?.domain_name}
+                                      className="hover:bg-primary-700"
+                                    >
+                                      {sui.data?.content?.fields?.domain_name}
+                                    </SelectItem>
+                                  ))}
+                                  <SelectItem value="other" className="hover:bg-primary-700">
+                                    Other
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <Button
+                                onClick={handleRefreshSuins}
+                                variant="outline"
+                                className="border-secondary-500/20 text-white hover:bg-primary-800"
+                                disabled={isLoadingSuins || isRefreshing}
+                              >
+                                {isRefreshing ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <RefreshCw className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </div>
+                            
+                            {selectedSuins === "other" && (
+                              <Input
+                                placeholder="Enter custom SUINS name"
+                                value={otherSuins}
+                                onChange={(e) => setOtherSuins(e.target.value)}
+                                className="bg-primary-800 border-secondary-500/20 text-white mt-2"
+                              />
+                            )}
+                          </>
+                        )}
                       </div>
-                      <Button
-                        onClick={handleLinkSuins}
-                        className="bg-secondary-500 hover:bg-secondary-600 text-white"
-                      >
-                        Link SUINS
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={handleLinkSuins}
+                          className="bg-secondary-500 hover:bg-secondary-600 text-white flex-1"
+                          disabled={isLoadingSuins || (!selectedSuins || (selectedSuins === "other" && !otherSuins))}
+                        >
+                          {isLoadingSuins ? (
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          ) : null}
+                          Link SUINS
+                        </Button>
+                      </div>
                     </div>
                   </DialogContent>
                 </Dialog>

@@ -224,6 +224,7 @@ export default function Dashboard() {
                               index={index}
                               onHoverStart={handleHoverStart}
                               onHoverEnd={handleHoverEnd}
+                              userAddress={address || ''}
                             />
                           </motion.div>
                         ))}
@@ -263,6 +264,7 @@ export default function Dashboard() {
                               index={index}
                               onHoverStart={handleHoverStart}
                               onHoverEnd={handleHoverEnd}
+                              userAddress={address || ''}
                             />
                           </motion.div>
                         ))}
@@ -297,6 +299,7 @@ export default function Dashboard() {
                               index={index}
                               onHoverStart={handleHoverStart}
                               onHoverEnd={handleHoverEnd}
+                              userAddress={address || ''}
                             />
                           </motion.div>
                         ))}

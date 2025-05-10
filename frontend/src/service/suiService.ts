@@ -10,7 +10,7 @@ class SuiService {
     this.client = new SuiClient({ url: getFullnodeUrl(SUI_NETWORK as 'mainnet' | 'testnet' | 'devnet' | 'localnet') })
   }
 
-  async getBlobs(address: string) {
+  async getBlobs(address: string, filter?: { StructType: string }) {
     try {
       let allData: any[] = []
       let cursor: string | null = null
@@ -19,7 +19,7 @@ class SuiService {
       while (hasNextPage) {
         const { data, hasNextPage: nextPage, nextCursor } = await this.client.getOwnedObjects({
           owner: address,
-          filter: { StructType: BLOB_TYPE as string },
+          filter: filter || { StructType: BLOB_TYPE as string },
           options: { showContent: true },
           cursor: cursor
         })
