@@ -616,8 +616,8 @@ export default function CreateWebsitePage() {
                   <Separator className="mb-4" />
                   <section className="pt-4 flex justify-end">
                     <Button
-                      onClick={async () => {
-                        if (!validateName(name) && !validateFile()) return
+                      onClick={() => {
+                        if (!validateName(name) || !validateFile()) return
                         setShowPreview(true)
                       }}
                       className="bg-secondary-500 hover:bg-secondary-700 text-black p-6 rounded-md text-base transform transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-secondary-500/20"
