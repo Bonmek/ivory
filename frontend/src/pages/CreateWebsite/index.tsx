@@ -249,7 +249,6 @@ export default function CreateWebsitePage() {
 
   const handleSelectRepository = (id: number | null) => {
     setSelectedRepo(id)
-    setSelectedFramework(null)
   }
 
   const handleSelectFramework = async (frameworkId: string) => {
@@ -639,6 +638,7 @@ export default function CreateWebsitePage() {
               setOpen={setOpen}
               setShowPreview={setShowPreview}
               selectedRepoFile={selectedRepoFile}
+              showBuildOutputSettings={showBuildOutputSettings}
             />
           </motion.div>
         )}

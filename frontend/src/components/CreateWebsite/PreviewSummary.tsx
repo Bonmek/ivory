@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { buildOutputSettingsType, advancedOptionsType } from "@/types/CreateWebstie/types";
+import { UploadMethod } from "@/types/CreateWebstie/enums";
 import { frameworks } from "@/constants/frameworks";
 import { Check, AlertCircle, Info, Sparkles, File } from "lucide-react";
 import { Button } from "../ui/button";
@@ -15,6 +16,7 @@ interface PreviewSummaryProps {
   setOpen: (open: boolean) => void;
   setShowPreview: (showPreview: boolean) => void;
   selectedRepoFile?: File | null;
+  showBuildOutputSettings: boolean;
 }
 
 const sectionVariants = {
@@ -53,6 +55,7 @@ export function PreviewSummary({
   setOpen,
   setShowPreview,
   selectedRepoFile,
+  showBuildOutputSettings,
 }: PreviewSummaryProps) {
   const framework = selectedFramework
     ? frameworks.find((f) => f.id === selectedFramework)
@@ -87,7 +90,6 @@ export function PreviewSummary({
       <Card className="w-full border-2 border-muted/30 bg-primary-800 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 mb-4">
         <CardContent className="space-y-12 pb-2 px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/** Animated Section Block */}
             {[...Array(3)].map((_, i) => (
               <motion.div
                 key={i}
@@ -95,7 +97,7 @@ export function PreviewSummary({
                 initial="hidden"
                 animate="visible"
                 custom={i}
-                className={`space-y-6 ${i === 2 ? "md:col-span-2" : ""}`}
+                className={`space-y-6 ${(!showBuildOutputSettings && i === 0) || i === 2 ? "md:col-span-2" : ""}`}
               >
                 {i === 0 && (
                   <>
@@ -120,47 +122,42 @@ export function PreviewSummary({
                           initial="hidden"
                           animate="visible"
                           custom={idx}
-                          className="flex items-center justify-between py-2 px-3 bg-gray-800 rounded-lg hover:bg-gray-900 transition-colors"
+                          className="flex flex-col gap-2 py-2 px-3 bg-gray-800 rounded-lg hover:bg-gray-900 transition-colors"
                         >
                           <div className="flex items-center gap-2">
                             <span className="text-muted-foreground font-medium">{label}</span>
                           </div>
-                          <span className="text-right flex-1 font-semibold text-gray-100">{value}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-green-400">•</span>
+                            <span className="font-semibold text-gray-100 ml-1">{value}</span>
+                          </div>
                         </motion.div>
                       ))}
-                      {uploadMethod === "upload" && selectedFile && (
+                      {(uploadMethod === "upload" && selectedFile) && (
                         <motion.div
                           variants={itemVariants}
                           initial="hidden"
                           animate="visible"
                           custom={3}
-                          className="flex items-center justify-between py-2 px-3 bg-gray-800 rounded-lg hover:bg-gray-900 transition-colors"
+                          className="flex flex-col gap-2 py-2 px-3 bg-gray-800 rounded-lg hover:bg-gray-900 transition-colors"
                         >
                           <div className="flex items-center gap-2">
                             <span className="text-muted-foreground font-medium">Selected File</span>
                           </div>
-                          <span className="text-right flex-1 font-semibold text-gray-100">{selectedFile.name}</span>
-                        </motion.div>
-                      )}
-                      {(uploadMethod === "github" && selectedRepoFile) && (
-                        <motion.div
-                          variants={itemVariants}
-                          initial="hidden"
-                          animate="visible"
-                          custom={3}
-                          className="flex items-center justify-between py-2 px-3 bg-gray-800 rounded-lg hover:bg-gray-900 transition-colors"
-                        >
                           <div className="flex items-center gap-2">
-                            <span className="text-muted-foreground font-medium">Selected File</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-green-400">•</span>
+                              <span className="font-semibold text-gray-100 ml-1">{selectedFile.name}</span>
+                            </div>
                           </div>
-                          <span className="text-right flex-1 font-semibold text-gray-100">{selectedRepoFile.name}</span>
                         </motion.div>
                       )}
+
                     </div>
                   </>
                 )}
 
-                {i === 1 && (
+                {i === 1 && showBuildOutputSettings && (
                   <>
                     <div className="flex items-center gap-2 border-l-4 border-orange-500 pl-3">
                       <AlertCircle className="h-5 w-5 text-orange-500 hover:scale-110 transition-transform" />
@@ -169,25 +166,46 @@ export function PreviewSummary({
                       </h3>
                     </div>
                     <div className="space-y-3 text-sm">
-                      {[
-                        { label: "Build Command", value: buildOutputSettings.buildCommand },
-                        { label: "Install Command", value: buildOutputSettings.installCommand },
-                        { label: "Output Directory", value: buildOutputSettings.outputDirectory },
-                      ].map(({ label, value }, idx) => (
+                      {Object.values(buildOutputSettings).every(v => !v) ? (
                         <motion.div
-                          key={idx}
                           variants={itemVariants}
                           initial="hidden"
                           animate="visible"
-                          custom={idx}
-                          className="flex items-center justify-between py-2 px-3 bg-gray-800 rounded-lg hover:bg-gray-900 transition-colors"
+                          custom={0}
+                          className="flex flex-col gap-2 py-2 px-3 bg-gray-800 rounded-lg hover:bg-gray-900 transition-colors"
                         >
                           <div className="flex items-center gap-2">
-                            <span className="text-muted-foreground font-medium">{label}</span>
+                            <span className="text-muted-foreground font-medium">Status</span>
                           </div>
-                          <span className="text-right flex-1 font-semibold text-gray-100">{value || "Not set"}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-red-400">•</span>
+                            <span className="font-semibold text-gray-100 ml-1">Not built</span>
+                          </div>
                         </motion.div>
-                      ))}
+                      ) : (
+                        [
+                          { label: "Build Command", value: buildOutputSettings.buildCommand },
+                          { label: "Install Command", value: buildOutputSettings.installCommand },
+                          { label: "Output Directory", value: buildOutputSettings.outputDirectory },
+                        ].map(({ label, value }, idx) => (
+                          <motion.div
+                            key={idx}
+                            variants={itemVariants}
+                            initial="hidden"
+                            animate="visible"
+                            custom={idx}
+                            className="flex flex-col gap-2 py-2 px-3 bg-gray-800 rounded-lg hover:bg-gray-900 transition-colors"
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="text-muted-foreground font-medium">{label}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-green-400">•</span>
+                              <span className="font-semibold text-gray-100 ml-1">{value || "Not set"}</span>
+                            </div>
+                          </motion.div>
+                        ))
+                      )}
                     </div>
                   </>
                 )}
@@ -202,7 +220,7 @@ export function PreviewSummary({
                     </div>
                     <div className="space-y-3 text-sm">
                       {[
-                        { label: "Cache Control", value: advancedOptions.cacheControl },
+                        { label: "Cache Control", value: `${advancedOptions.cacheControl} day(s)` },
                         { label: "Default Path", value: advancedOptions.defaultPath },
                         { label: "Root Directory", value: advancedOptions.rootDirectory },
                       ].map(({ label, value }, idx) => (
@@ -212,12 +230,15 @@ export function PreviewSummary({
                           initial="hidden"
                           animate="visible"
                           custom={idx}
-                          className="flex items-center justify-between py-2 px-3 bg-gray-800 rounded-lg hover:bg-gray-900 transition-colors"
+                          className="flex flex-col gap-2 py-2 px-3 bg-gray-800 rounded-lg hover:bg-gray-900 transition-colors"
                         >
                           <div className="flex items-center gap-2">
                             <span className="text-muted-foreground font-medium">{label}</span>
                           </div>
-                          <span className="text-right flex-1 font-semibold text-gray-100">{value || "Not set"}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-green-400">•</span>
+                            <span className="font-semibold text-gray-100 ml-1">{value || "Not set"}</span>
+                          </div>
                         </motion.div>
                       ))}
                     </div>
