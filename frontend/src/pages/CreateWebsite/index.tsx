@@ -136,8 +136,6 @@ export default function CreateWebsitePage() {
     if (file && file.name.endsWith('.zip')) {
       setSelectedFile(file)
       setFileErrors([])
-    } else {
-      setFileErrors(['Please upload a ZIP file'])
     }
   }
 
@@ -146,8 +144,6 @@ export default function CreateWebsitePage() {
     if (file && file.name.endsWith('.zip')) {
       setSelectedFile(file)
       setFileErrors([])
-    } else {
-      setFileErrors(['Please upload a ZIP file'])
     }
   }
 
