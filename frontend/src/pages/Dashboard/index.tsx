@@ -80,6 +80,9 @@ export default function Dashboard() {
 
         const matchesTab =
           activeTab === 'all' ||
+          (activeTab === 'building' && project.status === 0) ||
+          (activeTab === 'active' && project.status === 1) ||
+          (activeTab === 'failed' && project.status === 2) ||
           (activeTab === 'expiring' && remaining <= 30) ||
           (activeTab === 'recent' &&
             calculateDaysBetween(new Date(), project.startDate) <= 30)
@@ -191,12 +194,12 @@ export default function Dashboard() {
           ) : (
             <>
               {/* Section: Deploying */}
-              {otherProjects.length > 0 && (
+              {activeTab === 'all' && deployingProjects.length > 0 && (
                 <section className="my-10">
                   <div className="flex items-center gap-2 mb-3">
                     <RefreshCw className="animate-spin h-4 w-4 text-yellow-400" />
                     <span className="text-xs font-semibold text-yellow-300 uppercase tracking-widest">
-                      Deploying Projects
+                      Deploying
                     </span>
                   </div>
                   <div className="rounded-xl">
@@ -207,7 +210,7 @@ export default function Dashboard() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
                         transition={{ duration: 0.3 }}
-                        className="grid grid-cols-1 gap-4 md:grid-cols-2  items-stretch"
+                        className="grid grid-cols-1 gap-4 md:grid-cols-2 items-stretch"
                       >
                         {deployingProjects.map((project, index) => (
                           <motion.div
@@ -235,7 +238,7 @@ export default function Dashboard() {
                 <section>
                   <div className="flex items-center gap-2 mb-3">
                     <span className="text-xs font-semibold text-gray-300 uppercase tracking-widest">
-                      Other Projects
+                      Other
                     </span>
                   </div>
                   <div className="rounded-xl">
@@ -246,9 +249,43 @@ export default function Dashboard() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
                         transition={{ duration: 0.3 }}
-                        className="grid grid-cols-1 gap-4 md:grid-cols-2  items-stretch"
+                        className="grid grid-cols-1 gap-4 md:grid-cols-2 items-stretch"
                       >
                         {otherProjects.map((project, index) => (
+                          <motion.div
+                            key={project.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3, delay: index * 0.1 }}
+                          >
+                            <ProjectCard
+                              project={project}
+                              index={index}
+                              onHoverStart={handleHoverStart}
+                              onHoverEnd={handleHoverEnd}
+                            />
+                          </motion.div>
+                        ))}
+                      </motion.div>
+                    </AnimatePresence>
+                  </div>
+                </section>
+              )}
+
+              {/* Section: Filtered Projects (for other tabs) */}
+              {activeTab !== 'all' && filteredProjects.length > 0 && (
+                <section>
+                  <div className="rounded-xl">
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={currentPage}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.3 }}
+                        className="grid grid-cols-1 gap-4 md:grid-cols-2 items-stretch"
+                      >
+                        {filteredProjects.map((project, index) => (
                           <motion.div
                             key={project.id}
                             initial={{ opacity: 0, y: 20 }}

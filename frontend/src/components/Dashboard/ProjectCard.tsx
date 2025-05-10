@@ -10,6 +10,7 @@ import {
   Check,
   Link,
   Timer,
+  Loader2,
 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import {
@@ -85,20 +86,36 @@ const ProjectCard = memo(
     const [remainingOpen, setRemainingOpen] = useState(false)
     const [copied, setCopied] = useState(false)
     const [suinsValue, setSuinsValue] = useState('')
-    const [buildTime, setBuildTime] = useState<number>(0)
+    const [buildTime, setBuildTime] = useState<number>(() => {
+      if (project.status === 0) {
+        const startTime = new Date(project.startDate).getTime()
+        const now = Date.now()
+        return Math.floor((now - startTime) / 1000)
+      }
+      return 0
+    })
+    const [dots, setDots] = useState('.')
 
     useEffect(() => {
       if (project.status === 0) {
         const startTime = new Date(project.startDate).getTime()
+        setBuildTime(Math.floor((Date.now() - startTime) / 1000))
+
         const timer = setInterval(() => {
-          const currentTime = new Date().getTime()
-          const elapsedTime = Math.floor((currentTime - startTime) / 1000)
-          setBuildTime(elapsedTime)
+          setBuildTime(Math.floor((Date.now() - startTime) / 1000))
         }, 1000)
 
         return () => clearInterval(timer)
       }
     }, [project.status, project.startDate])
+
+    useEffect(() => {
+      if (project.status !== 0) return
+      const interval = setInterval(() => {
+        setDots((prev) => (prev.length < 3 ? prev + '.' : '.'))
+      }, 400)
+      return () => clearInterval(interval)
+    }, [project.status])
 
     const formatBuildTime = (seconds: number) => {
       const hours = Math.floor(seconds / 3600)
@@ -300,7 +317,7 @@ const ProjectCard = memo(
                   ) : project.status === 0 ? (
                     <>
                       <div className="px-4 py-2 text-yellow-400 flex items-center gap-2 text-sm">
-                        <RefreshCw className="animate-spin h-4 w-4" />
+                        <Loader2 className="ml-1 h-3 w-3 text-yellow-300 animate-spin" />
                         Deploying...
                       </div>
                       <DropdownMenuSeparator className="bg-secondary-500/20" />
@@ -337,7 +354,13 @@ const ProjectCard = memo(
             {/* Left: Project Image */}
             <div className="flex-shrink-0 opacity-80 group-hover:opacity-100 transition-opacity duration-200">
               <img
-                src="/images/walrus.png"
+                src={
+                  project.status === 0
+                    ? "/images/walrus_building.png"
+                    : project.status === 2
+                      ? "/images/walrus_fail.png"
+                      : "/images/walrus.png"
+                }
                 alt="project avatar"
                 className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border-2 ${colors.avatar} shadow transition-all duration-300 group-hover:scale-105`}
               />
@@ -353,7 +376,7 @@ const ProjectCard = memo(
                   {project.name}
                 </div>
                 <div
-                  className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${colors.badge}`}
+                  className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${colors.badge} flex items-center`}
                 >
                   {project.status === 1
                     ? 'Active'
@@ -362,6 +385,11 @@ const ProjectCard = memo(
                       : project.status === 2
                         ? 'Failed'
                         : 'Unknown'}
+                  {project.status === 0 && (
+                    <span className="ml-1">
+                      <span className="inline-block w-2 h-2 bg-yellow-300 rounded-full animate-pulse" />
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -462,11 +490,15 @@ const ProjectCard = memo(
                     <div className="text-[10px] text-white/50 font-medium truncate">
                       Build Time
                     </div>
-                    <div className="flex items-center gap-1.5 mt-0.5">
+                    <div className="flex items-center gap-1.5 mt-0.5 min-h-[20px]">
                       <Timer className="h-3.5 w-3.5 text-yellow-400" />
-                      <span className="text-sm text-yellow-300 font-medium">
-                        {formatBuildTime(buildTime)}
-                      </span>
+                      {buildTime === 0 ? (
+                        <span className="animate-pulse text-yellow-300 font-medium">Loading...</span>
+                      ) : (
+                        <span className="text-sm text-yellow-300 font-medium">
+                          {formatBuildTime(buildTime)}
+                        </span>
+                      )}
                     </div>
                   </div>
                 )}
