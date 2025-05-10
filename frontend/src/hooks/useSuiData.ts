@@ -12,7 +12,6 @@ export const useSuiData = (userAddress: string) => {
     queryFn: () => suiService.getBlobs(process.env.REACT_APP_OWNER_ADDRESS || ''),
     enabled: !!userAddress, // Only fetch if user is logged in
   })
-  console.log('Blobs:', blobs)
 
   // Fetch dynamic fields for each blob
   const { data: dynamicFields = [], isLoading: isLoadingFields } = useQuery({
@@ -28,7 +27,6 @@ export const useSuiData = (userAddress: string) => {
     },
     enabled: blobs.length > 0,
   })
-  console.log('Dynamic Fields:', dynamicFields)
 
   // Fetch metadata for each dynamic field
   const { data: metadata = [], isLoading: isLoadingMetadata } = useQuery({
@@ -44,23 +42,7 @@ export const useSuiData = (userAddress: string) => {
     },
     enabled: dynamicFields.length > 0,
   })
-  console.log('Raw Metadata:', metadata)
 
-  // Filter metadata by owner address
-  const filteredMetadata = metadata.filter((meta) => {
-    if (!meta?.content || meta.content.dataType !== 'moveObject') {
-      console.log('Invalid metadata:', meta)
-      return false
-    }
-
-    const fields = meta.content.fields as any
-    const metadataFields = fields?.value?.fields?.metadata?.fields?.contents || []
-    const ownerEntry = metadataFields.find((entry: any) => entry.fields?.key === 'owner')
-    const owner = ownerEntry?.fields?.value
-
-    return owner === userAddress
-  })
-  console.log('Filtered Metadata:', filteredMetadata)
 
   // Filter metadata by owner address
   const filteredMetadata = metadata.filter((meta) => {
