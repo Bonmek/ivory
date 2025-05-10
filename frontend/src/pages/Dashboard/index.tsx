@@ -13,6 +13,7 @@ import { useSuiData } from '@/hooks/useSuiData'
 import { transformMetadataToProject } from '@/utils/metadataUtils'
 import { useWalletKit } from '@mysten/wallet-kit'
 import { useAuth } from '@/context/AuthContext'
+import { RefreshCw } from 'lucide-react'
 
 const formatDate = (date: Date) => {
   return date.toLocaleDateString('en-GB', {
@@ -34,7 +35,11 @@ function getPageList(current: number, total: number) {
   } else {
     if (current > 2) pages.push(1)
     if (current > 3) pages.push('...')
-    for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) {
+    for (
+      let i = Math.max(2, current - 1);
+      i <= Math.min(total - 1, current + 1);
+      i++
+    ) {
       pages.push(i)
     }
     if (current < total - 2) pages.push('...')
@@ -59,7 +64,7 @@ export default function Dashboard() {
   // Transform metadata into project format
   const filteredProjects = useMemo(() => {
     if (!metadata || metadata.length === 0) return []
-    return metadata
+    let projects = metadata
       .map((meta, index) => transformMetadataToProject(meta, index))
       .filter((project) => {
         const matchesSearch =
@@ -81,6 +86,16 @@ export default function Dashboard() {
 
         return matchesSearch && matchesDate && matchesTab
       })
+
+    if (activeTab === 'building') {
+      projects = projects.filter((p) => p.status === 0)
+    } else if (activeTab === 'active') {
+      projects = projects.filter((p) => p.status === 1)
+    } else if (activeTab === 'failed') {
+      projects = projects.filter((p) => p.status === 2)
+    }
+
+    return projects
   }, [metadata, searchQuery, date, activeTab])
 
   const sortedProjects = useMemo(() => {
@@ -144,6 +159,9 @@ export default function Dashboard() {
     }
   }
 
+  const deployingProjects = sortedProjects.filter((p) => p.status === 0)
+  const otherProjects = sortedProjects.filter((p) => p.status !== 0)
+
   return (
     <>
       <Helmet>
@@ -172,32 +190,54 @@ export default function Dashboard() {
             </div>
           ) : (
             <>
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={currentPage}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
-                  className="grid grid-cols-1 gap-4 md:grid-cols-2  items-stretch"
-                >
-                  {paginatedProjects.map((project, index) => (
-                    <motion.div
-                      key={project.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: index * 0.1 }}
-                    >
-                      <ProjectCard
-                        project={project}
-                        index={index}
-                        onHoverStart={handleHoverStart}
-                        onHoverEnd={handleHoverEnd}
-                      />
-                    </motion.div>
-                  ))}
-                </motion.div>
-              </AnimatePresence>
+              {/* Section: Deploying */}
+              {deployingProjects.length > 0 && (
+                <section className="mb-10">
+                  <div className="flex items-center gap-2 mb-3">
+                    <RefreshCw className="animate-spin h-4 w-4 text-yellow-400" />
+                    <span className="text-xs font-semibold text-yellow-300 uppercase tracking-widest">
+                      Deploying Projects
+                    </span>
+                  </div>
+                  <div className="bg-yellow-100/5 rounded-xl p-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {deployingProjects.map((project, index) => (
+                        <ProjectCard
+                          key={project.id}
+                          project={project}
+                          index={index}
+                          onHoverStart={handleHoverStart}
+                          onHoverEnd={handleHoverEnd}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </section>
+              )}
+
+              {/* Section: All Sites */}
+              {activeTab === 'all' && otherProjects.length > 0 && (
+                <section>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-xs font-semibold text-gray-300 uppercase tracking-widest">
+                      All Sites
+                    </span>
+                  </div>
+                  <div className="bg-white/5 rounded-xl p-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {otherProjects.map((project, index) => (
+                        <ProjectCard
+                          key={project.id}
+                          project={project}
+                          index={index}
+                          onHoverStart={handleHoverStart}
+                          onHoverEnd={handleHoverEnd}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </section>
+              )}
 
               {totalPages > 1 && (
                 <motion.div
@@ -223,16 +263,19 @@ export default function Dashboard() {
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => handlePageChange(page)}
-                        className={`px-4 py-2 rounded-md ${currentPage === page
+                        className={`px-4 py-2 rounded-md ${
+                          currentPage === page
                             ? 'bg-secondary-500 text-black'
                             : 'bg-primary-700 text-white hover:bg-primary-600'
-                          }`}
+                        }`}
                       >
                         {page}
                       </motion.button>
                     ) : (
-                      <span key={`ellipsis-${idx}`} className="px-2 text-white">...</span>
-                    )
+                      <span key={`ellipsis-${idx}`} className="px-2 text-white">
+                        ...
+                      </span>
+                    ),
                   )}
 
                   <motion.button

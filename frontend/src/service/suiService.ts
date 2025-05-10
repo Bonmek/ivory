@@ -12,7 +12,6 @@ class SuiService {
 
   async getBlobs(address: string) {
     try {
-      console.log('Fetching blobs for address:', address)
       let allData: any[] = []
       let cursor: string | null = null
       let hasNextPage = true
@@ -29,7 +28,6 @@ class SuiService {
         cursor = nextCursor || null
       }
 
-      console.log('Fetched all blobs:', allData)
       return allData
     } catch (error) {
       console.error('Error fetching blobs:', error)

@@ -36,8 +36,6 @@ import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { Toaster } from '@/components/ui/sonner'
 
-
-
 interface ProjectCardProps {
   project: {
     id: number
@@ -211,7 +209,9 @@ const ProjectCard = memo(
                     >
                       <Link className="h-4 w-4 mr-1.5" />
                       <span className="text-sm">Link SUINS</span>
-                      <span className="text-[10px] opacity-60 ml-1">(initial setup)</span>
+                      <span className="text-[10px] opacity-60 ml-1">
+                        (initial setup)
+                      </span>
                     </button>
                   </DialogTrigger>
                   <DialogContent className="bg-primary-900 border-secondary-500/20 text-white">
@@ -246,6 +246,7 @@ const ProjectCard = memo(
                 <DropdownMenuTrigger asChild>
                   <button
                     className={`h-8 w-8 flex items-center justify-center rounded-full ${colors.dropdown} transition-all duration-200 hover:scale-110 active:scale-95`}
+                    disabled={project.status === 0}
                   >
                     <MoreHorizontal className="h-5 w-5" />
                     <span className="sr-only">Open menu</span>
@@ -253,25 +254,53 @@ const ProjectCard = memo(
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
                   align="end"
-                  className="w-48 bg-primary-900 border-secondary-500/20 text-white backdrop-blur-sm"
+                  className="w-56 bg-primary-900 border-secondary-500/20 text-white backdrop-blur-sm"
                 >
-                  <DropdownMenuItem className="focus:bg-primary-800">
-                    <Users className="mr-2 h-4 w-4" />
-                    <span>Transfer ownership</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="focus:bg-primary-800">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    <span>Extend site</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="focus:bg-primary-800">
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    <span>Update site</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator className="bg-secondary-500/20" />
-                  <DropdownMenuItem className="text-red-400 focus:text-red-400 focus:bg-primary-800">
-                    <Trash className="mr-2 h-4 w-4" />
-                    <span>Delete site</span>
-                  </DropdownMenuItem>
+                  {project.status === 2 ? (
+                    <>
+                      <DropdownMenuItem className="focus:bg-primary-800">
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        <span>Retry Deploy</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator className="bg-secondary-500/20" />
+                      <DropdownMenuItem className="text-red-400 focus:text-red-400 focus:bg-primary-800">
+                        <Trash className="mr-2 h-4 w-4" />
+                        <span>Delete site</span>
+                      </DropdownMenuItem>
+                    </>
+                  ) : project.status === 0 ? (
+                    <>
+                      <div className="px-4 py-2 text-yellow-400 flex items-center gap-2 text-sm">
+                        <RefreshCw className="animate-spin h-4 w-4" />
+                        Deploying...
+                      </div>
+                      <DropdownMenuSeparator className="bg-secondary-500/20" />
+                      <DropdownMenuItem className="text-red-400 focus:text-red-400 focus:bg-primary-800">
+                        <Trash className="mr-2 h-4 w-4" />
+                        <span>Delete site</span>
+                      </DropdownMenuItem>
+                    </>
+                  ) : (
+                    <>
+                      <DropdownMenuItem className="focus:bg-primary-800">
+                        <Users className="mr-2 h-4 w-4" />
+                        <span>Transfer ownership</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="focus:bg-primary-800">
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        <span>Extend site</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="focus:bg-primary-800">
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        <span>Update site</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator className="bg-secondary-500/20" />
+                      <DropdownMenuItem className="text-red-400 focus:text-red-400 focus:bg-primary-800">
+                        <Trash className="mr-2 h-4 w-4" />
+                        <span>Delete site</span>
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
