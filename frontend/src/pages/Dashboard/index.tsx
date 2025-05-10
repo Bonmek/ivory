@@ -161,6 +161,7 @@ export default function Dashboard() {
 
   const deployingProjects = sortedProjects.filter((p) => p.status === 0)
   const otherProjects = sortedProjects.filter((p) => p.status !== 0)
+  console.log('ck', deployingProjects)
 
   return (
     <>
@@ -200,41 +201,71 @@ export default function Dashboard() {
                     </span>
                   </div>
                   <div className="bg-yellow-100/5 rounded-xl p-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {deployingProjects.map((project, index) => (
-                        <ProjectCard
-                          key={project.id}
-                          project={project}
-                          index={index}
-                          onHoverStart={handleHoverStart}
-                          onHoverEnd={handleHoverEnd}
-                        />
-                      ))}
-                    </div>
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={currentPage}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.3 }}
+                        className="grid grid-cols-1 gap-4 md:grid-cols-2  items-stretch"
+                      >
+                        {paginatedProjects.map((project, index) => (
+                          <motion.div
+                            key={project.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3, delay: index * 0.1 }}
+                          >
+                            <ProjectCard
+                              project={project}
+                              index={index}
+                              onHoverStart={handleHoverStart}
+                              onHoverEnd={handleHoverEnd}
+                            />
+                          </motion.div>
+                        ))}
+                      </motion.div>
+                    </AnimatePresence>
                   </div>
                 </section>
               )}
 
-              {/* Section: All Sites */}
+              {/* Section: Other Projects */}
               {activeTab === 'all' && otherProjects.length > 0 && (
                 <section>
                   <div className="flex items-center gap-2 mb-3">
                     <span className="text-xs font-semibold text-gray-300 uppercase tracking-widest">
-                      All Sites
+                      Other Projects
                     </span>
                   </div>
                   <div className="bg-white/5 rounded-xl p-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {otherProjects.map((project, index) => (
-                        <ProjectCard
-                          key={project.id}
-                          project={project}
-                          index={index}
-                          onHoverStart={handleHoverStart}
-                          onHoverEnd={handleHoverEnd}
-                        />
-                      ))}
-                    </div>
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={currentPage}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.3 }}
+                        className="grid grid-cols-1 gap-4 md:grid-cols-2  items-stretch"
+                      >
+                        {paginatedProjects.map((project, index) => (
+                          <motion.div
+                            key={project.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3, delay: index * 0.1 }}
+                          >
+                            <ProjectCard
+                              project={project}
+                              index={index}
+                              onHoverStart={handleHoverStart}
+                              onHoverEnd={handleHoverEnd}
+                            />
+                          </motion.div>
+                        ))}
+                      </motion.div>
+                    </AnimatePresence>
                   </div>
                 </section>
               )}

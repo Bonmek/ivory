@@ -49,7 +49,7 @@ const DashboardTabs = ({ activeTab, setActiveTab }: DashboardTabsProps) => {
               transition={{ duration: 0.2 }}
               className={activeTab === 'all' ? 'text-black' : 'text-white'}
             >
-              All Sites
+              All
             </motion.span>
           </TabsTrigger>
           <TabsTrigger
@@ -69,7 +69,7 @@ const DashboardTabs = ({ activeTab, setActiveTab }: DashboardTabsProps) => {
               transition={{ duration: 0.2 }}
               className={activeTab === 'building' ? 'text-black' : 'text-white'}
             >
-              Building
+              Deploying
             </motion.span>
           </TabsTrigger>
           <TabsTrigger
