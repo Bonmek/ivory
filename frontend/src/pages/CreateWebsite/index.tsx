@@ -38,18 +38,10 @@ import CreateWebsiteDialog from '@/components/CreateWebsiteDialog'
 
 export default function CreateWebsitePage() {
   useTheme()
-  const previewRef = useRef<HTMLDivElement>(null)
   const { currentAccount } = useWalletKit()
 
   // State to control preview visibility
   const [showPreview, setShowPreview] = useState(false)
-
-  // Fixed useEffect for previewRef
-  useEffect(() => {
-    if (showPreview && previewRef.current) {
-      previewRef.current.scrollIntoView({ behavior: 'smooth' })
-    }
-  }, [showPreview])
 
   // State for project name
   const [name, setName] = useState('')
@@ -283,6 +275,10 @@ export default function CreateWebsitePage() {
         is_build: showBuildOutputSettings ? '0' : '1',
       }
 
+      console.log('Attributes:', attributes)
+      console.log('Selected File:', selectedFile)
+      console.log('Selected Repo File:', selectedRepoFile)
+
       const response = await writeBlobAndRunJob({
         file: uploadMethod === "upload" ? selectedFile! : selectedRepoFile!,
         attributes,
@@ -377,236 +373,236 @@ export default function CreateWebsitePage() {
       </Helmet>
       <main>
         <motion.main className="relative z-10 mx-auto">
-          <motion.h1
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="text-3xl font-semibold font-pixel mb-8 bg-gradient-to-r"
-          >
-            Create new project
-          </motion.h1>
-
-          <article className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
-            {/* Left Column */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
-              className="p-8 rounded-2xl bg-[#10151c]/80 border border-cyan-900/40 shadow-2xl backdrop-blur-xl self-start w-full"
-            >
-              <section className="mb-6 flex items-center">
-                <h2 className="text-lg font-semibold">Project files</h2>
-                <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
-              </section>
-
-              <Tabs
-                value={uploadMethod}
-                onValueChange={(value) =>
-                  setUploadMethod(value as UploadMethod)
-                }
-                className="mb-6 w-full"
+          {!showPreview && (
+            <>
+              <motion.h1
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="text-3xl font-semibold font-pixel mb-8 bg-gradient-to-r"
               >
-                <TabsList className="w-full mb-2 bg-primary-700">
-                  <TabsTrigger value={UploadMethod.Upload}>
-                    <Upload className="h-4 w-4 mr-2" />
-                    Upload
-                  </TabsTrigger>
-                  <TabsTrigger value={UploadMethod.GitHub}>
-                    <Github className="h-4 w-4 mr-2" />
-                    Github
-                  </TabsTrigger>
-                </TabsList>
-                <TabsContent value={UploadMethod.Upload}>
-                  <section
-                    className={cn(
-                      'relative flex flex-col items-center justify-center w-full min-h-[160px] backdrop-blur-xl transition-all duration-300 cursor-pointer overflow-hidden',
-                      isDragging && 'ring-4 ring-cyan-400/40',
-                    )}
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                    onDrop={handleDrop}
-                    onClick={handleBrowseClick}
-                    tabIndex={0}
-                    role="button"
+                Create new project
+              </motion.h1>
+
+              <article className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
+                {/* Left Column */}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="p-8 rounded-2xl bg-[#10151c]/80 border border-cyan-900/40 shadow-2xl backdrop-blur-xl self-start w-full"
+                >
+                  <section className="mb-6 flex items-center">
+                    <h2 className="text-lg font-semibold">Project files</h2>
+                    <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
+                  </section>
+
+                  <Tabs
+                    value={uploadMethod}
+                    onValueChange={(value) =>
+                      setUploadMethod(value as UploadMethod)
+                    }
+                    className="mb-6 w-full"
                   >
-                    {!selectedFile && (
-                      <svg
-                        className="absolute inset-0 w-full h-full pointer-events-none z-10"
-                        style={{
-                          borderRadius: '0.75rem',
-                          width: 'calc(100% - 8px)',
-                          height: 'calc(100% - 8px)',
-                          left: 4,
-                          top: 4,
-                        }}
+                    <TabsList className="w-full mb-2 bg-primary-700">
+                      <TabsTrigger value={UploadMethod.Upload}>
+                        <Upload className="h-4 w-4 mr-2" />
+                        Upload
+                      </TabsTrigger>
+                      <TabsTrigger value={UploadMethod.GitHub}>
+                        <Github className="h-4 w-4 mr-2" />
+                        Github
+                      </TabsTrigger>
+                    </TabsList>
+                    <TabsContent value={UploadMethod.Upload}>
+                      <section
+                        className={cn(
+                          'relative flex flex-col items-center justify-center w-full min-h-[160px] backdrop-blur-xl transition-all duration-300 cursor-pointer overflow-hidden',
+                          isDragging && 'ring-4 ring-cyan-400/40',
+                        )}
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                        onDrop={handleDrop}
+                        onClick={handleBrowseClick}
+                        tabIndex={0}
+                        role="button"
                       >
-                        <rect
-                          x="0"
-                          y="0"
-                          width="100%"
-                          height="100%"
-                          rx="12"
-                          ry="12"
-                          fill="none"
-                          stroke="#8c8c8c"
-                          strokeWidth="2.5"
-                          strokeDasharray="16,10"
-                          strokeDashoffset="0"
-                          vectorEffect="non-scaling-stroke"
-                        />
-                      </svg>
-                    )}
-                    <div className="relative z-20 w-full h-full flex flex-col items-center justify-center">
-                      <input
-                        type="file"
-                        accept=".zip"
-                        className="hidden"
-                        ref={fileInputRef}
-                        onChange={handleFileInput}
-                      />
-                      {selectedFile ? (
-                        <FileUploadPreview
-                          file={selectedFile}
-                          onRemove={handleRemoveFile}
-                        />
-                      ) : (
-                        <div className="flex flex-col items-center justify-center py-6 w-full relative z-10">
-                          <div className="w-full flex flex-col items-center">
-                            <div
-                              className="flex flex-col items-center justify-center w-full"
-                              style={{ pointerEvents: 'auto' }}
-                              onDragOver={handleDragOver}
-                              onDragLeave={handleDragLeave}
-                              onDrop={handleDrop}
-                              tabIndex={0}
-                              role="button"
-                            >
-                              <Upload className="w-14 h-14 mb-2 text-secondary-500 drop-shadow-lg" />
-                              <p className="text-base font-bold text-center">
-                                Drag & drop{' '}
-                                <span className="text-secondary-500">
-                                  ZIP file
-                                </span>{' '}
-                                here
+                        {!selectedFile && (
+                          <svg
+                            className="absolute inset-0 w-full h-full pointer-events-none z-10"
+                            style={{
+                              borderRadius: '0.75rem',
+                              width: 'calc(100% - 8px)',
+                              height: 'calc(100% - 8px)',
+                              left: 4,
+                              top: 4,
+                            }}
+                          >
+                            <rect
+                              x="0"
+                              y="0"
+                              width="100%"
+                              height="100%"
+                              rx="12"
+                              ry="12"
+                              fill="none"
+                              stroke="#8c8c8c"
+                              strokeWidth="2.5"
+                              strokeDasharray="16,10"
+                              strokeDashoffset="0"
+                              vectorEffect="non-scaling-stroke"
+                            />
+                          </svg>
+                        )}
+                        <div className="relative z-20 w-full h-full flex flex-col items-center justify-center">
+                          <input
+                            type="file"
+                            accept=".zip"
+                            className="hidden"
+                            ref={fileInputRef}
+                            onChange={handleFileInput}
+                          />
+                          {selectedFile ? (
+                            <FileUploadPreview
+                              file={selectedFile}
+                              onRemove={handleRemoveFile}
+                            />
+                          ) : (
+                            <div className="flex flex-col items-center justify-center py-6 w-full relative z-10">
+                              <div className="w-full flex flex-col items-center">
+                                <div
+                                  className="flex flex-col items-center justify-center w-full"
+                                  style={{ pointerEvents: 'auto' }}
+                                  onDragOver={handleDragOver}
+                                  onDragLeave={handleDragLeave}
+                                  onDrop={handleDrop}
+                                  tabIndex={0}
+                                  role="button"
+                                >
+                                  <Upload className="w-14 h-14 mb-2 text-secondary-500 drop-shadow-lg" />
+                                  <p className="text-base font-bold text-center">
+                                    Drag & drop{' '}
+                                    <span className="text-secondary-500">
+                                      ZIP file
+                                    </span>{' '}
+                                    here
+                                  </p>
+                                </div>
+                                <div className="flex items-center justify-center w-5/6 my-4">
+                                  <Separator className="flex-1" />
+                                  <span className="mx-4 text-sm text-gray-400 font-semibold select-none">
+                                    or
+                                  </span>
+                                  <Separator className="flex-1" />
+                                </div>
+                                <button
+                                  type="button"
+                                  className="px-6 py-2 rounded-md bg-secondary-500 text-black font-semibold shadow-md hover:bg-secondary-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all duration-200"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleBrowseClick()
+                                  }}
+                                >
+                                  Browse file
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </section>
+                      {fileErrors.length > 0 && (
+                        <div className="mt-4">
+                          <div className="bg-red-500/10 border border-red-500/20 rounded-md p-3">
+                            {fileErrors.map((error, index) => (
+                              <p key={index} className="text-red-400 text-sm">
+                                {error}
                               </p>
-                            </div>
-                            <div className="flex items-center justify-center w-5/6 my-4">
-                              <Separator className="flex-1" />
-                              <span className="mx-4 text-sm text-gray-400 font-semibold select-none">
-                                or
-                              </span>
-                              <Separator className="flex-1" />
-                            </div>
-                            <button
-                              type="button"
-                              className="px-6 py-2 rounded-md bg-secondary-500 text-black font-semibold shadow-md hover:bg-secondary-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all duration-200"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                handleBrowseClick()
-                              }}
-                            >
-                              Browse file
-                            </button>
+                            ))}
                           </div>
                         </div>
                       )}
-                    </div>
-                  </section>
-                  {fileErrors.length > 0 && (
-                    <div className="mt-4">
-                      <div className="bg-red-500/10 border border-red-500/20 rounded-md p-3">
-                        {fileErrors.map((error, index) => (
+                    </TabsContent>
+                    <TabsContent value={UploadMethod.GitHub}>
+                      <GithubRepoInput
+                        githubUrl={githubUrl}
+                        handleGithubUrlChange={handleGithubUrlChange}
+                        searchRepository={searchRepository}
+                        handleSearchRepository={handleSearchRepository}
+                        user={user}
+                        handleGithubSignIn={handleGithubSignIn}
+                        repositories={repositories}
+                        filteredRepositories={filteredRepositories}
+                        handleSelectRepository={handleSelectRepository}
+                        selectedRepo={selectedRepo}
+                        handleShowMore={handleShowMore}
+                        visibleRepos={visibleRepos}
+                        repoContents={repoContents}
+                        repoContentsLoading={repoContentsLoading}
+                        repoContentsError={repoContentsError}
+                        handleLogout={handleLogout}
+                        downloadRepositoryZip={downloadRepositoryZip}
+                        setSelectedRepoFile={setSelectedRepoFile}
+                      />
+                    </TabsContent>
+                  </Tabs>
+                </motion.div>
+
+                {/* Right Column */}
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="space-y-8 self-start w-full"
+                >
+                  <section>
+                    <Label
+                      htmlFor="name"
+                      className="text-lg font-semibold block mb-4 bg-gradient-to-r"
+                    >
+                      Name
+                    </Label>
+                    <Input
+                      id="name"
+                      className={cn(
+                        'bg-primary-500 border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500',
+                        nameErrors.length > 0 && 'border-red-500',
+                      )}
+                      onChange={handleNameChange}
+                      value={name}
+                    />
+                    {nameErrors.length > 0 && (
+                      <div className="mt-2">
+                        {nameErrors.map((error, index) => (
                           <p key={index} className="text-red-400 text-sm">
                             {error}
                           </p>
                         ))}
                       </div>
-                    </div>
-                  )}
-                </TabsContent>
-                <TabsContent value={UploadMethod.GitHub}>
-                  <GithubRepoInput
-                    githubUrl={githubUrl}
-                    handleGithubUrlChange={handleGithubUrlChange}
-                    searchRepository={searchRepository}
-                    handleSearchRepository={handleSearchRepository}
-                    user={user}
-                    handleGithubSignIn={handleGithubSignIn}
-                    repositories={repositories}
-                    filteredRepositories={filteredRepositories}
-                    handleSelectRepository={handleSelectRepository}
-                    selectedRepo={selectedRepo}
-                    handleShowMore={handleShowMore}
-                    visibleRepos={visibleRepos}
-                    repoContents={repoContents}
-                    repoContentsLoading={repoContentsLoading}
-                    repoContentsError={repoContentsError}
-                    handleLogout={handleLogout}
-                    downloadRepositoryZip={downloadRepositoryZip}
-                    setSelectedRepoFile={setSelectedRepoFile}
+                    )}
+                  </section>
+
+                  <FrameworkPresetSelector
+                    frameworks={frameworks}
+                    selectedFramework={selectedFramework}
+                    handleSelectFramework={handleSelectFramework}
+                    setShowBuildOutputSettings={setShowBuildOutputSettings}
+                    setBuildOutputSettings={setBuildOutputSettings}
                   />
-                </TabsContent>
-              </Tabs>
-            </motion.div>
 
-            {/* Right Column */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 }}
-              className="space-y-8 self-start w-full"
-            >
-              <section>
-                <Label
-                  htmlFor="name"
-                  className="text-lg font-semibold block mb-4 bg-gradient-to-r"
-                >
-                  Name
-                </Label>
-                <Input
-                  id="name"
-                  className={cn(
-                    'bg-primary-500 border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500',
-                    nameErrors.length > 0 && 'border-red-500',
-                  )}
-                  onChange={handleNameChange}
-                  value={name}
-                />
-                {nameErrors.length > 0 && (
-                  <div className="mt-2">
-                    {nameErrors.map((error, index) => (
-                      <p key={index} className="text-red-400 text-sm">
-                        {error}
-                      </p>
-                    ))}
-                  </div>
-                )}
-              </section>
+                  <article className="flex flex-col gap-4">
+                    <BuildOutputSetting
+                      showBuildOutputSettings={showBuildOutputSettings}
+                      setShowBuildOutputSettings={setShowBuildOutputSettings}
+                      buildOutputSettings={buildOutputSettings}
+                      setBuildOutputSettings={setBuildOutputSettings}
+                    />
 
-              <FrameworkPresetSelector
-                frameworks={frameworks}
-                selectedFramework={selectedFramework}
-                handleSelectFramework={handleSelectFramework}
-                setShowBuildOutputSettings={setShowBuildOutputSettings}
-                setBuildOutputSettings={setBuildOutputSettings}
-              />
+                    <AdvancedOptions
+                      advancedOptions={advancedOptions}
+                      setAdvancedOptions={setAdvancedOptions}
+                    />
+                  </article>
 
-              <article className="flex flex-col gap-4">
-                <BuildOutputSetting
-                  showBuildOutputSettings={showBuildOutputSettings}
-                  setShowBuildOutputSettings={setShowBuildOutputSettings}
-                  buildOutputSettings={buildOutputSettings}
-                  setBuildOutputSettings={setBuildOutputSettings}
-                />
-
-                <AdvancedOptions
-                  advancedOptions={advancedOptions}
-                  setAdvancedOptions={setAdvancedOptions}
-                />
-              </article>
-
-              {!showPreview &&
-                <>
                   <Separator className="mb-4" />
                   <section className="pt-4 flex justify-end">
                     <Button
@@ -620,20 +616,16 @@ export default function CreateWebsitePage() {
                       Create website
                     </Button>
                   </section>
-                </>}
-            </motion.div>
-          </article>
-          {showPreview && <Separator className="mb-4 mt-8" />}
+                </motion.div>
+              </article>
+            </>
+          )}
         </motion.main>
       </main>
       <AnimatePresence mode="wait">
         {showPreview && (
           <motion.div
-            ref={previewRef}
-            key="preview"
-            className="mt-8"
             initial={{ opacity: 0, y: 20 }}
-            exit={{ opacity: 0, y: -20, transition: { duration: 0.2, ease: [0.4, 0, 0.2, 1] } }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >

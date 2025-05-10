@@ -65,28 +65,26 @@ export function PreviewSummary({
       transition={{ duration: 0.5, ease: "easeOut" }}
       className="relative"
     >
-      {/* Subtle gradient overlay for depth */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-purple-50/50 rounded-2xl -z-10" />
-
-      <Card className="w-full border-2 border-muted/30 bg-primary-800 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl pt-8 transition-shadow duration-300 mb-4">
-        <CardHeader className="border-b border-muted/20 px-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Sparkles className="h-6 w-6 text-yellow-400 animate-pulse" />
-              <CardTitle className="text-3xl font-bold tracking-tight font-pixel ">
-                Project Preview
-              </CardTitle>
-            </div>
-            <span className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-green-500 to-teal-500 text-white text-sm font-medium shadow-md hover:shadow-lg transition-shadow">
-              <Check className="h-4 w-4" />
-              Ready to Deploy
-            </span>
+      {/* Title Section */}
+      <div className="flex flex-col gap-4 px-8 mb-8">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Sparkles className="h-6 w-6 text-yellow-400 animate-pulse" />
+            <h1 className="text-3xl font-bold tracking-tight font-pixel">
+              Project Preview
+            </h1>
           </div>
-          <p className="text-muted-foreground mt-2 text-sm tracking-wide">
-            Review your project configuration before deployment
-          </p>
-        </CardHeader>
+          <span className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-green-500 to-teal-500 text-white text-sm font-medium shadow-md hover:shadow-lg transition-shadow">
+            <Check className="h-4 w-4" />
+            Ready to Deploy
+          </span>
+        </div>
+        <p className="text-muted-foreground text-sm tracking-wide">
+          Review your project configuration before deployment
+        </p>
+      </div>
 
+      <Card className="w-full border-2 border-muted/30 bg-primary-800 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 mb-4">
         <CardContent className="space-y-12 pb-2 px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/** Animated Section Block */}
@@ -228,22 +226,24 @@ export function PreviewSummary({
               </motion.div>
             ))}
           </div>
-          <section className="flex justify-end gap-4">
-            <Button
-              className="bg-accent hover:bg-accentHover text-accentForeground p-6 rounded-md text-base font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-accent/20"
-              onClick={() => setShowPreview(false)}
-            >
-              Continue Editing
-            </Button>
-            <Button
-              className="bg-secondary-500 hover:bg-secondary-700 text-black p-6 rounded-md text-base transform transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-secondary-500/20"
-              onClick={() => setOpen(true)}
-            >
-              Deploy
-            </Button>
-          </section>
         </CardContent>
       </Card>
+
+      {/* Action Buttons */}
+      <div className="flex justify-end gap-4 mt-8">
+        <Button
+          className="bg-accent hover:bg-accentHover text-accentForeground p-6 rounded-md text-base font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-accent/20"
+          onClick={() => setShowPreview(false)}
+        >
+          Continue Editing
+        </Button>
+        <Button
+          className="bg-secondary-500 hover:bg-secondary-700 text-black p-6 rounded-md text-base transform transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-secondary-500/20"
+          onClick={() => setOpen(true)}
+        >
+          Deploy
+        </Button>
+      </div>
     </motion.div>
   )
 }
