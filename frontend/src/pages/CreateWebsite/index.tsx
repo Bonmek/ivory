@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Github, HelpCircle, Upload } from 'lucide-react'
+import { CircleAlert, CirclePlus, Cloud, Github, HelpCircle, Sparkles, Upload } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
@@ -89,11 +89,11 @@ export default function CreateWebsitePage() {
   // Validate file
   const validateFile = () => {
     const errors: string[] = []
-    if (!selectedFile && !selectedRepoFile) {
-      errors.push('Please select a ZIP file or Import GitHub repository')
+    if (!selectedFile && uploadMethod === UploadMethod.Upload) {
+      errors.push('Please select a ZIP file')
     }
-    if (selectedFile && !selectedFile.name.endsWith('.zip')) {
-      errors.push('Please upload a ZIP file')
+    if (!selectedRepoFile && uploadMethod === UploadMethod.GitHub) {
+      errors.push('Please select a repository')
     }
     setFileErrors(errors)
     return errors.length === 0
@@ -374,14 +374,17 @@ export default function CreateWebsitePage() {
         <motion.main className="relative z-10 mx-auto">
           {!showPreview && (
             <>
-              <motion.h1
+              <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.2 }}
-                className="text-3xl font-semibold font-pixel mb-8 bg-gradient-to-r"
+                className="flex items-center mb-8"
               >
-                Create new project
-              </motion.h1>
+                <CirclePlus className="h-6 w-6 text-sky-500 mr-4" />
+                <h1 className="text-3xl font-semibold font-pixel">
+                  Create new project
+                </h1>
+              </motion.div>
 
               <article className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
                 {/* Left Column */}
@@ -513,9 +516,12 @@ export default function CreateWebsitePage() {
                         <div className="mt-4">
                           <div className="bg-red-500/10 border border-red-500/20 rounded-md p-3">
                             {fileErrors.map((error, index) => (
-                              <p key={index} className="text-red-400 text-sm">
-                                {error}
-                              </p>
+                              <div key={index} className="flex items-center gap-2">
+                                <CircleAlert className="w-4 h-4 text-red-400" />
+                                <p className="text-red-400 text-sm">
+                                  {error}
+                                </p>
+                              </div>
                             ))}
                           </div>
                         </div>
@@ -541,6 +547,7 @@ export default function CreateWebsitePage() {
                         handleLogout={handleLogout}
                         downloadRepositoryZip={downloadRepositoryZip}
                         setSelectedRepoFile={setSelectedRepoFile}
+                        fileErrors={fileErrors}
                       />
                     </TabsContent>
                   </Tabs>
@@ -606,8 +613,7 @@ export default function CreateWebsitePage() {
                   <section className="pt-4 flex justify-end">
                     <Button
                       onClick={async () => {
-                        if (!validateName(name)) return
-                        if (!validateFile()) return
+                        if (!validateName(name) && !validateFile()) return
                         setShowPreview(true)
                       }}
                       className="bg-secondary-500 hover:bg-secondary-700 text-black p-6 rounded-md text-base transform transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-secondary-500/20"

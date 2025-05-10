@@ -1,9 +1,8 @@
 import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { buildOutputSettingsType, advancedOptionsType } from "@/types/CreateWebstie/types";
-import { UploadMethod } from "@/types/CreateWebstie/enums";
 import { frameworks } from "@/constants/frameworks";
-import { Check, AlertCircle, Info, Sparkles, File } from "lucide-react";
+import { Check, AlertCircle, Info, Sparkles } from "lucide-react";
 import { Button } from "../ui/button";
 
 interface PreviewSummaryProps {
@@ -69,7 +68,7 @@ export function PreviewSummary({
       className="relative"
     >
       {/* Title Section */}
-      <div className="flex flex-col gap-4 px-8 mb-8">
+      <div className="flex flex-col gap-4 mb-8">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Sparkles className="h-6 w-6 text-yellow-400 animate-pulse" />
@@ -77,10 +76,6 @@ export function PreviewSummary({
               Project Preview
             </h1>
           </div>
-          <span className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-green-500 to-teal-500 text-white text-sm font-medium shadow-md hover:shadow-lg transition-shadow">
-            <Check className="h-4 w-4" />
-            Ready to Deploy
-          </span>
         </div>
         <p className="text-muted-foreground text-sm tracking-wide">
           Review your project configuration before deployment
@@ -152,7 +147,25 @@ export function PreviewSummary({
                           </div>
                         </motion.div>
                       )}
-
+                      {(uploadMethod === "github" && selectedRepoFile) && (
+                        <motion.div
+                          variants={itemVariants}
+                          initial="hidden"
+                          animate="visible"
+                          custom={4}
+                          className="flex flex-col gap-2 py-2 px-3 bg-gray-800 rounded-lg hover:bg-gray-900 transition-colors"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-muted-foreground font-medium">Selected Repository</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-green-400">•</span>
+                              <span className="font-semibold text-gray-100 ml-1">{selectedRepoFile.name.replace(/\.zip$/, '')}</span>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
                     </div>
                   </>
                 )}

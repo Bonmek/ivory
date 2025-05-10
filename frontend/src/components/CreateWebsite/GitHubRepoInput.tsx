@@ -2,7 +2,7 @@ import { Separator } from "@/components/ui/separator";
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Github, Loader2, X } from "lucide-react";
+import { CircleAlert, Github, Loader2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ChevronDown, ChevronRight, Folder, File as FileIcon } from "lucide-react";
 import { useState, useRef, useLayoutEffect } from "react";
@@ -36,6 +36,7 @@ interface GithubRepoInputProps {
   handleLogout: () => void;
   setSelectedRepoFile: (file: File | null) => void;
   downloadRepositoryZip: (owner: string, repo: string) => Promise<void>;
+  fileErrors: string[];
 }
 
 function buildTree(items: any[]) {
@@ -120,6 +121,7 @@ export default function GithubRepoInput({
   handleShowMore,
   visibleRepos,
   repoContents,
+  fileErrors,
   downloadRepositoryZip,
   repoContentsLoading,
   repoContentsError,
@@ -383,6 +385,20 @@ export default function GithubRepoInput({
           <p className="text-sm text-gray-400 mt-2">
             Example: https://github.com/username/repository
           </p>
+        </section>
+      )}
+      {fileErrors.length > 0 && (
+        <section className="mt-4">
+          <div className="bg-red-500/10 border border-red-500/20 rounded-md p-3">
+            {fileErrors.map((error, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <CircleAlert className="w-4 h-4 text-red-400" />
+                <p className="text-red-400 text-sm">
+                  {error}
+                </p>
+              </div>
+            ))}
+          </div>
         </section>
       )}
       <Dialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
