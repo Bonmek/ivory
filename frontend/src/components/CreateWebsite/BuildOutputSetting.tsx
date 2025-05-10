@@ -1,9 +1,10 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { Input } from '@/components/ui/input'
+import { Input } from "@/components/ui/input"
 import { HelpCircle } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { buildOutputSettingsType } from '@/types/CreateWebstie/types'
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 
 
 interface BuildOutputSettingProps {
@@ -46,7 +47,14 @@ function BuildOutputSetting({ showBuildOutputSettings, setShowBuildOutputSetting
               <section className='px-2 mt-6'>
                 <div className="flex items-center mb-2">
                   <h3 className="text-sm text-gray-300 font-semibold">Install Command</h3>
-                  <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className='w-[260px]' side="right">
+                      The command used to install your project’s dependencies. For Node.js projects, this is usually npm install or yarn install.
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
                 <Input
                   value={buildOutputSettings.installCommand}
@@ -59,7 +67,14 @@ function BuildOutputSetting({ showBuildOutputSettings, setShowBuildOutputSetting
               <section className='px-2'>
                 <div className="flex items-center mb-2">
                   <h3 className="text-sm text-gray-300 font-semibold">Build Command</h3>
-                  <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className='w-[260px]' side="right">
+                      The command that builds your application for production. For example, npm run build compiles your source files into static assets.
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
                 <Input
                   value={buildOutputSettings.buildCommand}
@@ -72,7 +87,14 @@ function BuildOutputSetting({ showBuildOutputSettings, setShowBuildOutputSetting
               <section className='px-2 mb-4'>
                 <div className="flex items-center mb-2">
                   <h3 className="text-sm text-gray-300 font-semibold">Output Directory</h3>
-                  <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className='w-[260px]' side="right">
+                      The folder where your built files are output after running the build command. Common values include dist, build, or public.
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
                 <Input
                   value={buildOutputSettings.outputDirectory}
@@ -90,5 +112,3 @@ function BuildOutputSetting({ showBuildOutputSettings, setShowBuildOutputSetting
 }
 
 export default BuildOutputSetting
-
-

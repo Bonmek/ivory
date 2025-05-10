@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { advancedOptionsType } from '@/types/CreateWebstie/types'
 import { CacheControl } from '@/types/CreateWebstie/enums'
 import { useState } from 'react'
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 
 interface AdvancedOptionsProps {
   advancedOptions: advancedOptionsType
@@ -48,7 +49,14 @@ function AdvancedOptions({ advancedOptions, setAdvancedOptions }: AdvancedOption
               <section className='px-2 mt-4'>
                 <div className="flex items-center mt-4 mb-2">
                   <h3 className="text-sm text-gray-300 font-semibold">Root Directory</h3>
-                  <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className='w-[260px]' side="right">
+                      The base directory of your project where the source files are located. Leave as / if the root is the main folder.
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
                 <Input
                   value={advancedOptions.rootDirectory}
@@ -61,7 +69,14 @@ function AdvancedOptions({ advancedOptions, setAdvancedOptions }: AdvancedOption
               <section className='px-2 mt-4'>
                 <div className="flex items-center mt-4 mb-2">
                   <h3 className="text-sm text-gray-300 font-semibold">Default Path</h3>
-                  <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className='w-[260px]' side="right">
+                      The main entry point for your site, typically the homepage. This is usually /index.html.
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
                 <Input
                   value={advancedOptions.defaultPath}
@@ -74,7 +89,14 @@ function AdvancedOptions({ advancedOptions, setAdvancedOptions }: AdvancedOption
               <section className='px-2 mt-4 mb-4'>
                 <div className="flex items-center mt-4 mb-2">
                   <h3 className="text-sm text-gray-300  font-semibold">Cache Control</h3>
-                  <HelpCircleIcon className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <HelpCircleIcon className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className='w-[260px]' side="right">
+                      Set rules for how your files should be cached in browsers or CDNs. This helps improve load times and performance.
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
                 <Select value={advancedOptions.cacheControl} onValueChange={(value) => setAdvancedOptions({ ...advancedOptions, cacheControl: value as CacheControl })}>
                   <SelectTrigger className="bg-primary-500 border-gray-700 rounded-md h-12 transition-all duration-300 hover:border-secondary-500 w-full">

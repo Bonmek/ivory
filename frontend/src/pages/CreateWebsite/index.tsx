@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { useTheme } from '@/context/ThemeContext'
 import { toast } from 'sonner'
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 
 import GithubRepoInput from '@/components/CreateWebsite/GitHubRepoInput'
 import FileUploadPreview from '@/components/CreateWebsite/FileUploadPreview'
@@ -392,7 +393,14 @@ export default function CreateWebsitePage() {
                 >
                   <section className="mb-6 flex items-center">
                     <h2 className="text-lg font-semibold">Project files</h2>
-                    <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent className='w-[360px]' side="right">
+                        Upload or connect your GitHub repository to add your website files. You can drag and drop a ZIP file or browse for one.
+                      </TooltipContent>
+                    </Tooltip>
                   </section>
 
                   <Tabs

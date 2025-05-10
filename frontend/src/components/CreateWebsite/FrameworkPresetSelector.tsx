@@ -8,6 +8,8 @@ import {
 import React from "react";
 import { cn } from "@/lib/utils";
 import { buildOutputSettingsType } from "@/types/CreateWebstie/types";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { HelpCircle } from 'lucide-react';
 
 interface Framework {
   id: string;
@@ -65,7 +67,17 @@ const FrameworkPresetSelector: React.FC<FrameworkPresetSelectorProps> = ({ frame
 
   return (
     <>
-      <div className="text-sm text-gray-300 mb-2">Select a framework preset:</div>
+      <div className="flex items-center gap-2">
+        <div className="text-sm text-gray-300">Select a framework preset:</div>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <HelpCircle className="h-4 w-4 text-secondary-500 hover:text-secondary-700 transition-colors cursor-help" />
+          </TooltipTrigger>
+          <TooltipContent className='w-[260px]' side="right">
+            Choose a framework that best matches your project setup. This helps configure the correct build settings automatically.
+          </TooltipContent>
+        </Tooltip>
+      </div>
       <Select
         value={selectedFramework ?? 'none'}
         onValueChange={(frameworkId) => {
