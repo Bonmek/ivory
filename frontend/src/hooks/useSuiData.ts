@@ -18,9 +18,9 @@ export const useSuiData = (userAddress: string) => {
 
   // Fetch SUINS data
   const { data: suins = [], isLoading: isLoadingSuins } = useQuery({
-    queryKey: ['suins', process.env.REACT_APP_OWNER_ADDRESS || ''],
+    queryKey: ['suins', userAddress || ''],
     queryFn: () =>
-      suiService.getBlobs(process.env.REACT_APP_OWNER_ADDRESS || '', {
+      suiService.getBlobs(userAddress || '', {
         StructType: process.env.REACT_APP_SUINS_TYPE as string,
       }),
     enabled: !!userAddress, // Only fetch if user is logged in
