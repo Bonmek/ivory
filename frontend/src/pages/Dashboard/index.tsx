@@ -59,6 +59,11 @@ export default function Dashboard() {
   const itemsPerPage = 6 // 2 rows of 3 items
   const [isRefreshing, setIsRefreshing] = useState(false)
 
+  // State for separate paginations
+  const [deployingPage, setDeployingPage] = useState(1)
+  const [otherPage, setOtherPage] = useState(1)
+  const sectionItemsPerPage = 4
+
   const { metadata, isLoading, refetch } = useSuiData(address || '')
 
   // Transform metadata into project format
@@ -140,6 +145,12 @@ export default function Dashboard() {
     setCurrentPage(1)
   }, [searchQuery, date, activeTab])
 
+  // Reset section pages when filter changes
+  useEffect(() => {
+    setDeployingPage(1)
+    setOtherPage(1)
+  }, [searchQuery, date, activeTab])
+
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
   }
@@ -162,8 +173,21 @@ export default function Dashboard() {
     }
   }
 
+  // Deploying pagination
   const deployingProjects = sortedProjects.filter((p) => p.status === 0)
+  const deployingTotalPages = Math.ceil(deployingProjects.length / sectionItemsPerPage)
+  const paginatedDeployingProjects = deployingProjects.slice(
+    (deployingPage - 1) * sectionItemsPerPage,
+    deployingPage * sectionItemsPerPage
+  )
+
+  // Other pagination
   const otherProjects = sortedProjects.filter((p) => p.status !== 0)
+  const otherTotalPages = Math.ceil(otherProjects.length / sectionItemsPerPage)
+  const paginatedOtherProjects = otherProjects.slice(
+    (otherPage - 1) * sectionItemsPerPage,
+    otherPage * sectionItemsPerPage
+  )
 
   return (
     <>
@@ -196,23 +220,30 @@ export default function Dashboard() {
               {/* Section: Deploying */}
               {activeTab === 'all' && deployingProjects.length > 0 && (
                 <section className="my-10">
-                  <div className="flex items-center gap-2 mb-3">
-                    <RefreshCw className="animate-spin h-4 w-4 text-yellow-400" />
-                    <span className="text-xs font-semibold text-yellow-300 uppercase tracking-widest">
-                      Deploying
-                    </span>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary-800/50 border border-primary-700">
+                      <RefreshCw className="w-4 h-4 text-yellow-400 animate-spin" />
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold text-yellow-300 uppercase tracking-widest">
+                        Deploying Projects
+                      </span>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        {deployingProjects.length} {deployingProjects.length === 1 ? 'project' : 'projects'} in progress
+                      </p>
+                    </div>
                   </div>
                   <div className="rounded-xl">
                     <AnimatePresence mode="wait">
                       <motion.div
-                        key={currentPage}
+                        key={deployingPage}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
                         transition={{ duration: 0.3 }}
                         className="grid grid-cols-1 gap-4 md:grid-cols-2 items-stretch"
                       >
-                        {deployingProjects.map((project, index) => (
+                        {paginatedDeployingProjects.map((project, index) => (
                           <motion.div
                             key={project.id}
                             initial={{ opacity: 0, y: 20 }}
@@ -231,28 +262,76 @@ export default function Dashboard() {
                       </motion.div>
                     </AnimatePresence>
                   </div>
+                  {deployingTotalPages > 1 && (
+                    <div className="flex justify-center items-center gap-2 mt-4">
+                      <button
+                        onClick={() => setDeployingPage(deployingPage - 1)}
+                        disabled={deployingPage === 1}
+                        className="px-3 py-1 rounded bg-primary-700 text-white disabled:opacity-50"
+                      >
+                        Previous
+                      </button>
+                      {Array.from({ length: deployingTotalPages }, (_, i) => i + 1).map((page) => (
+                        <button
+                          key={page}
+                          onClick={() => setDeployingPage(page)}
+                          className={`px-3 py-1 rounded ${deployingPage === page ? 'bg-secondary-500 text-black' : 'bg-primary-700 text-white hover:bg-primary-600'}`}
+                        >
+                          {page}
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => setDeployingPage(deployingPage + 1)}
+                        disabled={deployingPage === deployingTotalPages}
+                        className="px-3 py-1 rounded bg-primary-700 text-white disabled:opacity-50"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  )}
                 </section>
               )}
 
               {/* Section: Other Projects */}
               {activeTab === 'all' && otherProjects.length > 0 && (
                 <section>
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="text-xs font-semibold text-gray-300 uppercase tracking-widest">
-                      Other
-                    </span>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary-800/50 border border-primary-700">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="w-4 h-4 text-primary-400"
+                      >
+                        <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                        <path d="M2 17l10 5 10-5" />
+                        <path d="M2 12l10 5 10-5" />
+                      </svg>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold text-gray-300 uppercase tracking-widest">
+                        Other Projects
+                      </span>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        {otherProjects.length} {otherProjects.length === 1 ? 'project' : 'projects'} available
+                      </p>
+                    </div>
                   </div>
                   <div className="rounded-xl">
                     <AnimatePresence mode="wait">
                       <motion.div
-                        key={currentPage}
+                        key={otherPage}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
                         transition={{ duration: 0.3 }}
                         className="grid grid-cols-1 gap-4 md:grid-cols-2 items-stretch"
                       >
-                        {otherProjects.map((project, index) => (
+                        {paginatedOtherProjects.map((project, index) => (
                           <motion.div
                             key={project.id}
                             initial={{ opacity: 0, y: 20 }}
@@ -271,6 +350,33 @@ export default function Dashboard() {
                       </motion.div>
                     </AnimatePresence>
                   </div>
+                  {otherTotalPages > 1 && (
+                    <div className="flex justify-center items-center gap-2 mt-4">
+                      <button
+                        onClick={() => setOtherPage(otherPage - 1)}
+                        disabled={otherPage === 1}
+                        className="px-3 py-1 rounded bg-primary-700 text-white disabled:opacity-50"
+                      >
+                        Previous
+                      </button>
+                      {Array.from({ length: otherTotalPages }, (_, i) => i + 1).map((page) => (
+                        <button
+                          key={page}
+                          onClick={() => setOtherPage(page)}
+                          className={`px-3 py-1 rounded ${otherPage === page ? 'bg-secondary-500 text-black' : 'bg-primary-700 text-white hover:bg-primary-600'}`}
+                        >
+                          {page}
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => setOtherPage(otherPage + 1)}
+                        disabled={otherPage === otherTotalPages}
+                        className="px-3 py-1 rounded bg-primary-700 text-white disabled:opacity-50"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  )}
                 </section>
               )}
 
@@ -309,56 +415,7 @@ export default function Dashboard() {
                 </section>
               )}
 
-              {totalPages > 1 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: 0.2 }}
-                  className="flex justify-center items-center gap-2 mt-8 flex-wrap"
-                >
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="px-4 py-2 rounded-md bg-primary-700 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary-600"
-                  >
-                    Previous
-                  </motion.button>
-
-                  {getPageList(currentPage, totalPages).map((page, idx) =>
-                    typeof page === 'number' ? (
-                      <motion.button
-                        key={page}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => handlePageChange(page)}
-                        className={`px-4 py-2 rounded-md ${
-                          currentPage === page
-                            ? 'bg-secondary-500 text-black'
-                            : 'bg-primary-700 text-white hover:bg-primary-600'
-                        }`}
-                      >
-                        {page}
-                      </motion.button>
-                    ) : (
-                      <span key={`ellipsis-${idx}`} className="px-2 text-white">
-                        ...
-                      </span>
-                    ),
-                  )}
-
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    className="px-4 py-2 rounded-md bg-primary-700 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary-600"
-                  >
-                    Next
-                  </motion.button>
-                </motion.div>
-              )}
+            
             </>
           )}
 
