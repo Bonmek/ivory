@@ -1,3 +1,4 @@
+import 'flag-icons/css/flag-icons.css'
 import { useLanguage } from '@/context/LanguageContext'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState } from 'react'
@@ -5,14 +6,14 @@ import { useState } from 'react'
 const languages = [
   {
     code: 'en-US',
-    flag: '🇺🇸',
+    flag: 'us',
     name: 'English'
   },
   {
     code: 'zh-CN',
-    flag: '🇨🇳',
+    flag: 'cn',
     name: '中文'
-  },
+  }
 ]
 
 export const LanguageSelector = () => {
@@ -25,13 +26,12 @@ export const LanguageSelector = () => {
     <div className="relative">
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-center w-10 h-10 rounded-full bg-primary-800/50 hover:bg-primary-700/50 transition-all duration-200"
-        whileHover={{ scale: 1.1 }}
+        className="flex items-center gap-1.5 px-3 py-2 bg-primary-800/80 hover:bg-primary-700/80 rounded-lg shadow-md transition-all duration-200"
+        whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >
-        <span className="text-2xl transform hover:scale-110 transition-transform duration-200">
-          {currentLang.flag}
-        </span>
+        <span className={`fi fi-${currentLang.flag} text-xl`}></span>
+        <span className="text-[10px] font-medium text-gray-200">{currentLang.flag.toUpperCase()}</span>
       </motion.button>
 
       <AnimatePresence>
@@ -48,7 +48,7 @@ export const LanguageSelector = () => {
 
             {/* Dropdown */}
             <motion.div
-              className="absolute right-0 mt-2 w-16 rounded-2xl bg-primary-800/95 border border-secondary-500/20 shadow-lg overflow-hidden z-50"
+              className="absolute right-0 mt-2 w-24 rounded-lg bg-primary-800/95 shadow-lg overflow-hidden z-50"
             >
               {languages.map((lang) => (
                 <motion.button
@@ -57,24 +57,24 @@ export const LanguageSelector = () => {
                     setLanguage(lang.code)
                     setIsOpen(false)
                   }}
-                  className={`w-full flex items-center justify-center py-3 hover:bg-primary-700/50 transition-all duration-200 ${
+                  className={`w-full flex items-center justify-center py-2.5 hover:bg-primary-700/50 transition-all duration-200 ${
                     language === lang.code ? 'bg-primary-700/50' : ''
                   }`}
                   whileHover={{ 
-                    scale: 1.2,
-                    rotate: 5,
+                    scale: 1.05,
                     transition: { type: "spring", stiffness: 300 }
                   }}
                 >
-                  <motion.span 
-                    className="text-2xl"
-                    whileHover={{ 
-                      scale: 1.3,
-                      transition: { type: "spring", stiffness: 400 }
-                    }}
-                  >
-                    {lang.flag}
-                  </motion.span>
+                  <div className="flex items-center gap-1.5">
+                    <motion.span 
+                      className={`fi fi-${lang.flag} text-xl`}
+                      whileHover={{ 
+                        scale: 1.2,
+                        transition: { type: "spring", stiffness: 400 }
+                      }}
+                    ></motion.span>
+                    <span className="text-[10px] font-medium text-gray-200">{lang.flag.toUpperCase()}</span>
+                  </div>
                 </motion.button>
               ))}
             </motion.div>

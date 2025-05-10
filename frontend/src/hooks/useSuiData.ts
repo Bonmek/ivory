@@ -43,7 +43,6 @@ export const useSuiData = (userAddress: string) => {
     enabled: dynamicFields.length > 0,
   })
 
-
   // Filter metadata by owner address
   const filteredMetadata = metadata.filter((meta) => {
     if (!meta?.content || meta.content.dataType !== 'moveObject') {
