@@ -95,7 +95,7 @@ export const useSuiData = (userAddress: string) => {
     },
     refetchSuiNS: () => {
       return queryClient.invalidateQueries({
-        queryKey: ['suins', process.env.REACT_APP_OWNER_ADDRESS || ''],
+        queryKey: ['suins', userAddress || ''],
       })
     },
   }
