@@ -14,6 +14,7 @@ import { transformMetadataToProject } from '@/utils/metadataUtils'
 import { useWalletKit } from '@mysten/wallet-kit'
 import { useAuth } from '@/context/AuthContext'
 import { RefreshCw } from 'lucide-react'
+import { mockProjects } from '@/mocks/projectData'
 
 const formatDate = (date: Date) => {
   return date.toLocaleDateString('en-GB', {
@@ -61,16 +62,19 @@ export default function Dashboard() {
 
   // State for separate paginations
   const [deployingPage, setDeployingPage] = useState(1)
-  const [otherPage, setOtherPage] = useState(1)
+  const [failedPage, setFailedPage] = useState(1)
+  const [activePage, setActivePage] = useState(1)
   const sectionItemsPerPage = 4
 
   const { metadata, isLoading, refetch } = useSuiData(address || '')
 
   // Transform metadata into project format
   const filteredProjects = useMemo(() => {
-    if (!metadata || metadata.length === 0) return []
-    let projects = metadata
-      .map((meta, index) => transformMetadataToProject(meta, index))
+    // Transform metadata to project format
+    // const projects = metadata ? metadata.map((meta, index) => transformMetadataToProject(meta, index)) : []
+    const projects = mockProjects // Uncomment this line to use mock data
+    if (!projects || projects.length === 0) return []
+    let filtered = projects
       .filter((project) => {
         const matchesSearch =
           project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -96,15 +100,15 @@ export default function Dashboard() {
       })
 
     if (activeTab === 'building') {
-      projects = projects.filter((p) => p.status === 0)
+      filtered = filtered.filter((p) => p.status === 0)
     } else if (activeTab === 'active') {
-      projects = projects.filter((p) => p.status === 1)
+      filtered = filtered.filter((p) => p.status === 1)
     } else if (activeTab === 'failed') {
-      projects = projects.filter((p) => p.status === 2)
+      filtered = filtered.filter((p) => p.status === 2)
     }
 
-    return projects
-  }, [metadata, searchQuery, date, activeTab])
+    return filtered
+  }, [searchQuery, date, activeTab])
 
   const sortedProjects = useMemo(() => {
     return [...filteredProjects].sort((a, b) => {
@@ -148,7 +152,8 @@ export default function Dashboard() {
   // Reset section pages when filter changes
   useEffect(() => {
     setDeployingPage(1)
-    setOtherPage(1)
+    setFailedPage(1)
+    setActivePage(1)
   }, [searchQuery, date, activeTab])
 
   const handlePageChange = (page: number) => {
@@ -178,15 +183,23 @@ export default function Dashboard() {
   const deployingTotalPages = Math.ceil(deployingProjects.length / sectionItemsPerPage)
   const paginatedDeployingProjects = deployingProjects.slice(
     (deployingPage - 1) * sectionItemsPerPage,
-    deployingPage * sectionItemsPerPage
+    deployingPage * sectionItemsPerPage,
   )
 
-  // Other pagination
-  const otherProjects = sortedProjects.filter((p) => p.status !== 0)
-  const otherTotalPages = Math.ceil(otherProjects.length / sectionItemsPerPage)
-  const paginatedOtherProjects = otherProjects.slice(
-    (otherPage - 1) * sectionItemsPerPage,
-    otherPage * sectionItemsPerPage
+  // Failed pagination
+  const failedProjects = sortedProjects.filter((p) => p.status === 2)
+  const failedTotalPages = Math.ceil(failedProjects.length / sectionItemsPerPage)
+  const paginatedFailedProjects = failedProjects.slice(
+    (failedPage - 1) * sectionItemsPerPage,
+    failedPage * sectionItemsPerPage,
+  )
+
+  // Active pagination
+  const activeProjects = sortedProjects.filter((p) => p.status === 1)
+  const activeTotalPages = Math.ceil(activeProjects.length / sectionItemsPerPage)
+  const paginatedActiveProjects = activeProjects.slice(
+    (activePage - 1) * sectionItemsPerPage,
+    activePage * sectionItemsPerPage,
   )
 
   return (
@@ -229,7 +242,11 @@ export default function Dashboard() {
                         Deploying Projects
                       </span>
                       <p className="text-xs text-gray-400 mt-0.5">
-                        {deployingProjects.length} {deployingProjects.length === 1 ? 'project' : 'projects'} in progress
+                        {deployingProjects.length}{' '}
+                        {deployingProjects.length === 1
+                          ? 'project'
+                          : 'projects'}{' '}
+                        in progress
                       </p>
                     </div>
                   </div>
@@ -271,7 +288,10 @@ export default function Dashboard() {
                       >
                         Previous
                       </button>
-                      {Array.from({ length: deployingTotalPages }, (_, i) => i + 1).map((page) => (
+                      {Array.from(
+                        { length: deployingTotalPages },
+                        (_, i) => i + 1,
+                      ).map((page) => (
                         <button
                           key={page}
                           onClick={() => setDeployingPage(page)}
@@ -292,9 +312,9 @@ export default function Dashboard() {
                 </section>
               )}
 
-              {/* Section: Other Projects */}
-              {activeTab === 'all' && otherProjects.length > 0 && (
-                <section>
+              {/* Section: Failed Projects */}
+              {activeTab === 'all' && failedProjects.length > 0 && (
+                <section className="my-10">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary-800/50 border border-primary-700">
                       <svg
@@ -305,33 +325,35 @@ export default function Dashboard() {
                         strokeWidth="2"
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        className="w-4 h-4 text-primary-400"
+                        className="w-4 h-4 text-red-400"
                       >
-                        <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                        <path d="M2 17l10 5 10-5" />
-                        <path d="M2 12l10 5 10-5" />
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
                       </svg>
                     </div>
                     <div>
-                      <span className="text-xs font-semibold text-gray-300 uppercase tracking-widest">
-                        Other Projects
+                      <span className="text-xs font-semibold text-red-300 uppercase tracking-widest">
+                        Failed Deployments
                       </span>
                       <p className="text-xs text-gray-400 mt-0.5">
-                        {otherProjects.length} {otherProjects.length === 1 ? 'project' : 'projects'} available
+                        {failedProjects.length}{' '}
+                        {failedProjects.length === 1 ? 'project' : 'projects'}{' '}
+                        need attention
                       </p>
                     </div>
                   </div>
                   <div className="rounded-xl">
                     <AnimatePresence mode="wait">
                       <motion.div
-                        key={otherPage}
+                        key={failedPage}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
                         transition={{ duration: 0.3 }}
                         className="grid grid-cols-1 gap-4 md:grid-cols-2 items-stretch"
                       >
-                        {paginatedOtherProjects.map((project, index) => (
+                        {paginatedFailedProjects.map((project, index) => (
                           <motion.div
                             key={project.id}
                             initial={{ opacity: 0, y: 20 }}
@@ -350,27 +372,123 @@ export default function Dashboard() {
                       </motion.div>
                     </AnimatePresence>
                   </div>
-                  {otherTotalPages > 1 && (
+                  {failedTotalPages > 1 && (
                     <div className="flex justify-center items-center gap-2 mt-4">
                       <button
-                        onClick={() => setOtherPage(otherPage - 1)}
-                        disabled={otherPage === 1}
+                        onClick={() => setFailedPage(failedPage - 1)}
+                        disabled={failedPage === 1}
                         className="px-3 py-1 rounded bg-primary-700 text-white disabled:opacity-50"
                       >
                         Previous
                       </button>
-                      {Array.from({ length: otherTotalPages }, (_, i) => i + 1).map((page) => (
+                      {Array.from(
+                        { length: failedTotalPages },
+                        (_, i) => i + 1,
+                      ).map((page) => (
                         <button
                           key={page}
-                          onClick={() => setOtherPage(page)}
-                          className={`px-3 py-1 rounded ${otherPage === page ? 'bg-secondary-500 text-black' : 'bg-primary-700 text-white hover:bg-primary-600'}`}
+                          onClick={() => setFailedPage(page)}
+                          className={`px-3 py-1 rounded ${failedPage === page ? 'bg-secondary-500 text-black' : 'bg-primary-700 text-white hover:bg-primary-600'}`}
                         >
                           {page}
                         </button>
                       ))}
                       <button
-                        onClick={() => setOtherPage(otherPage + 1)}
-                        disabled={otherPage === otherTotalPages}
+                        onClick={() => setFailedPage(failedPage + 1)}
+                        disabled={failedPage === failedTotalPages}
+                        className="px-3 py-1 rounded bg-primary-700 text-white disabled:opacity-50"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  )}
+                </section>
+              )}
+
+              {/* Section: Active Projects */}
+              {activeTab === 'all' && activeProjects.length > 0 && (
+                <section className="my-10">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary-800/50 border border-primary-700">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="w-4 h-4 text-secondary-400"
+                      >
+                        <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                        <path d="M2 17l10 5 10-5" />
+                        <path d="M2 12l10 5 10-5" />
+                      </svg>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold text-secondary-300 uppercase tracking-widest">
+                        Active Projects
+                      </span>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        {activeProjects.length}{' '}
+                        {activeProjects.length === 1 ? 'project' : 'projects'}{' '}
+                        running
+                      </p>
+                    </div>
+                  </div>
+                  <div className="rounded-xl">
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={activePage}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.3 }}
+                        className="grid grid-cols-1 gap-4 md:grid-cols-2 items-stretch"
+                      >
+                        {paginatedActiveProjects.map((project, index) => (
+                          <motion.div
+                            key={project.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3, delay: index * 0.1 }}
+                          >
+                            <ProjectCard
+                              project={project}
+                              index={index}
+                              onHoverStart={handleHoverStart}
+                              onHoverEnd={handleHoverEnd}
+                              userAddress={address || ''}
+                            />
+                          </motion.div>
+                        ))}
+                      </motion.div>
+                    </AnimatePresence>
+                  </div>
+                  {activeTotalPages > 1 && (
+                    <div className="flex justify-center items-center gap-2 mt-4">
+                      <button
+                        onClick={() => setActivePage(activePage - 1)}
+                        disabled={activePage === 1}
+                        className="px-3 py-1 rounded bg-primary-700 text-white disabled:opacity-50"
+                      >
+                        Previous
+                      </button>
+                      {Array.from(
+                        { length: activeTotalPages },
+                        (_, i) => i + 1,
+                      ).map((page) => (
+                        <button
+                          key={page}
+                          onClick={() => setActivePage(page)}
+                          className={`px-3 py-1 rounded ${activePage === page ? 'bg-secondary-500 text-black' : 'bg-primary-700 text-white hover:bg-primary-600'}`}
+                        >
+                          {page}
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => setActivePage(activePage + 1)}
+                        disabled={activePage === activeTotalPages}
                         className="px-3 py-1 rounded bg-primary-700 text-white disabled:opacity-50"
                       >
                         Next
@@ -414,8 +532,6 @@ export default function Dashboard() {
                   </div>
                 </section>
               )}
-
-            
             </>
           )}
 

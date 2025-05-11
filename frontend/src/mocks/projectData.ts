@@ -1,0 +1,169 @@
+export const mockProjects = [
+  {
+    id: 1,
+    name: "My Awesome Project",
+    url: "https://example.com",
+    startDate: new Date('2024-03-15'),
+    expiredDate: new Date('2024-06-15'),
+    color: "#4F46E5",
+    urlImg: "/images/walrus.png",
+    status: 2,
+    client_error_description: "Fail to connect to database right now, please try again later."
+  },
+  {
+    id: 2,
+    name: "E-commerce Site",
+    url: "https://shop.example.com",
+    startDate: new Date('2024-03-10'),
+    expiredDate: new Date('2024-06-10'),
+    color: "#4F46E5",
+    urlImg: "/images/walrus.png",
+    status: 2,
+    client_error_description: "The zip file is corrupted. Please re-upload your project files."
+  },
+  {
+    id: 3,
+    name: "Blog Platform",
+    url: "https://blog.example.com",
+    startDate: new Date('2024-03-20'),
+    expiredDate: new Date('2024-06-20'),
+    color: "#4F46E5",
+    urlImg: "/images/walrus.png",
+    status: 2,
+    client_error_description: "Cannot find root directory specified in your project. Please check your project structure."
+  },
+  {
+    id: 4,
+    name: "Portfolio Site",
+    url: "https://portfolio.example.com",
+    startDate: new Date('2024-03-25'),
+    expiredDate: new Date('2024-06-25'),
+    color: "#4F46E5",
+    urlImg: "/images/walrus.png",
+    status: 2,
+    client_error_description: "Cannot install or build your project. Please check your package.json and root directory."
+  },
+  {
+    id: 5,
+    name: "Landing Page",
+    url: "https://landing.example.com",
+    startDate: new Date('2024-03-28'),
+    expiredDate: new Date('2024-06-28'),
+    color: "#4F46E5",
+    urlImg: "/images/walrus.png",
+    status: 2,
+    client_error_description: "Cannot find index.html file in your project. Please ensure it exists in the root directory."
+  },
+  {
+    id: 6,
+    name: "Company Website",
+    url: "https://company.example.com",
+    startDate: new Date('2024-03-30'),
+    expiredDate: new Date('2024-06-30'),
+    color: "#4F46E5",
+    urlImg: "/images/walrus.png",
+    status: 2,
+    client_error_description: "Site published but no site ID was returned. Please contact support."
+  },
+  {
+    id: 7,
+    name: "Personal Blog",
+    url: "https://blog.johndoe.com",
+    startDate: new Date('2024-03-01'),
+    expiredDate: new Date('2024-09-01'),
+    color: "#10B981",
+    urlImg: "/images/walrus.png",
+    status: 1,
+    suins: "johndoe",
+    siteId: "site_123456789"
+  },
+  {
+    id: 8,
+    name: "Tech Startup",
+    url: "https://techstartup.io",
+    startDate: new Date('2024-03-05'),
+    expiredDate: new Date('2024-09-05'),
+    color: "#6366F1",
+    urlImg: "/images/walrus.png",
+    status: 1,
+    suins: "techstartup",
+    siteId: "site_987654321"
+  },
+  {
+    id: 9,
+    name: "Online Store",
+    url: "https://store.example.com",
+    startDate: new Date('2024-03-12'),
+    expiredDate: new Date('2024-06-12'),
+    color: "#8B5CF6",
+    urlImg: "/images/walrus.png",
+    status: 0
+  },
+  {
+    id: 10,
+    name: "Marketing Site",
+    url: "https://marketing.example.com",
+    startDate: new Date('2024-03-18'),
+    expiredDate: new Date('2024-06-18'),
+    color: "#EC4899",
+    urlImg: "/images/walrus.png",
+    status: 0
+  },
+  {
+    id: 11,
+    name: "Documentation",
+    url: "https://docs.example.com",
+    startDate: new Date('2024-02-15'),
+    expiredDate: new Date('2024-05-15'),
+    color: "#F59E0B",
+    urlImg: "/images/walrus.png",
+    status: 1,
+    suins: "docs",
+    siteId: "site_456789123"
+  },
+  {
+    id: 12,
+    name: "API Gateway",
+    url: "https://api.example.com",
+    startDate: new Date('2024-02-20'),
+    expiredDate: new Date('2024-05-20'),
+    color: "#3B82F6",
+    urlImg: "/images/walrus.png",
+    status: 1,
+    suins: "api",
+    siteId: "site_789123456"
+  },
+  {
+    id: 13,
+    name: "Admin Dashboard",
+    url: "https://admin.example.com",
+    startDate: new Date('2024-03-22'),
+    expiredDate: new Date('2024-06-22'),
+    color: "#EF4444",
+    urlImg: "/images/walrus.png",
+    status: 2,
+    client_error_description: "Failed to initialize database connection. Please check your database configuration."
+  },
+  {
+    id: 14,
+    name: "Mobile App Backend",
+    url: "https://api.mobileapp.com",
+    startDate: new Date('2024-03-24'),
+    expiredDate: new Date('2024-06-24'),
+    color: "#14B8A6",
+    urlImg: "/images/walrus.png",
+    status: 0
+  },
+  {
+    id: 15,
+    name: "Analytics Platform",
+    url: "https://analytics.example.com",
+    startDate: new Date('2024-02-28'),
+    expiredDate: new Date('2024-05-28'),
+    color: "#8B5CF6",
+    urlImg: "/images/walrus.png",
+    status: 1,
+    suins: "analytics",
+    siteId: "site_321654987"
+  }
+] 

@@ -52,6 +52,7 @@ interface ProjectCardProps {
     suins?: string
     siteId?: string
     status?: number
+    client_error_description?: string
   }
   index: number
   onHoverStart: (id: number) => void
@@ -87,6 +88,8 @@ const ProjectCard = memo(
     const [startDateOpen, setStartDateOpen] = useState(false)
     const [expiredDateOpen, setExpiredDateOpen] = useState(false)
     const [remainingOpen, setRemainingOpen] = useState(false)
+    const [errorOpen, setErrorOpen] = useState(false)
+    const [statusOpen, setStatusOpen] = useState(false)
     const [copied, setCopied] = useState(false)
     const [suinsValue, setSuinsValue] = useState('')
     const [buildTime, setBuildTime] = useState<number>(() => {
@@ -102,6 +105,8 @@ const ProjectCard = memo(
     const [otherSuins, setOtherSuins] = useState<string>("")
     const { suins, isLoadingSuins, refetchSuiNS } = useSuiData(userAddress)
     const [isRefreshing, setIsRefreshing] = useState(false)
+
+    console.log('text',project)
 
     useEffect(() => {
       if (project.status === 0) {
@@ -445,22 +450,116 @@ const ProjectCard = memo(
                 >
                   {project.name}
                 </div>
-                <div
-                  className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${colors.badge} flex items-center`}
-                >
-                  {project.status === 1
-                    ? 'Active'
-                    : project.status === 0
-                      ? 'Building'
-                      : project.status === 2
-                        ? 'Failed'
-                        : 'Unknown'}
-                  {project.status === 0 && (
-                    <span className="ml-1">
-                      <span className="inline-block w-2 h-2 bg-yellow-300 rounded-full animate-pulse" />
-                    </span>
-                  )}
-                </div>
+                {project.status === 2 && project.client_error_description ? (
+                  <Popover open={errorOpen} onOpenChange={setErrorOpen}>
+                    <PopoverTrigger asChild>
+                      <div
+                        className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${colors.badge} flex items-center gap-1 cursor-pointer hover:bg-red-500/30 transition-colors duration-200`}
+                        onMouseEnter={() => setErrorOpen(true)}
+                        onMouseLeave={() => setErrorOpen(false)}
+                        title="Click to view error details"
+                      >
+                        Failed
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="w-3 h-3"
+                        >
+                          <circle cx="12" cy="12" r="10" />
+                          <line x1="12" y1="8" x2="12" y2="12" />
+                          <line x1="12" y1="16" x2="12.01" y2="16" />
+                        </svg>
+                      </div>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      className="w-72 p-3 bg-primary-900 border-red-500/20 text-white backdrop-blur-sm"
+                      onMouseEnter={() => setErrorOpen(true)}
+                      onMouseLeave={() => setErrorOpen(false)}
+                    >
+                      <div className="flex items-start gap-2">
+                        <div className="flex-shrink-0 mt-0.5">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="w-4 h-4 text-red-400"
+                          >
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="8" x2="12" y2="12" />
+                            <line x1="12" y1="16" x2="12.01" y2="16" />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-sm font-medium text-red-400 mb-1">Deployment Failed</div>
+                          <div className="text-xs text-white/80 leading-relaxed">
+                            {project.client_error_description}
+                          </div>
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                ) : project.status === 0 ? (
+                  <Popover open={statusOpen} onOpenChange={setStatusOpen}>
+                    <PopoverTrigger asChild>
+                      <div
+                        className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${colors.badge} flex items-center gap-1 cursor-help`}
+                        onMouseEnter={() => setStatusOpen(true)}
+                        onMouseLeave={() => setStatusOpen(false)}
+                      >
+                        Building
+                        <span className="ml-1">
+                          <span className="inline-block w-2 h-2 bg-yellow-300 rounded-full animate-pulse" />
+                        </span>
+                      </div>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      className="w-72 p-3 bg-primary-900 border-secondary-500/20 text-white backdrop-blur-sm"
+                      sideOffset={5}
+                      onMouseEnter={() => setStatusOpen(true)}
+                      onMouseLeave={() => setStatusOpen(false)}
+                    >
+                      <div className="flex items-start gap-2">
+                        <div className="flex-shrink-0 mt-0.5">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="w-4 h-4 text-yellow-400"
+                          >
+                            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-sm font-medium text-yellow-400 mb-1">
+                            Building in Progress
+                          </div>
+                          <div className="text-xs text-white/80 leading-relaxed">
+                            Your site is currently being built. This process may take a few minutes. You can check the build progress here.
+                          </div>
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                ) : (
+                  <div
+                    className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${colors.badge} flex items-center`}
+                  >
+                    Active
+                  </div>
+                )}
               </div>
 
               {/* Project Link */}
