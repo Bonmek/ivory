@@ -3,7 +3,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { buildOutputSettingsType, advancedOptionsType } from "@/types/CreateWebstie/types";
 import { frameworks } from "@/constants/frameworks";
 import { Check, AlertCircle, Info, Sparkles } from "lucide-react";
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
+import { FormattedMessage } from 'react-intl';
+import { useIntl } from 'react-intl';
 
 interface PreviewSummaryProps {
   name: string;
@@ -44,7 +46,7 @@ const itemVariants = {
   }),
 };
 
-export function PreviewSummary({
+export const PreviewSummary: React.FC<PreviewSummaryProps> = ({
   name,
   selectedFramework,
   buildOutputSettings,
@@ -55,7 +57,9 @@ export function PreviewSummary({
   setShowPreview,
   selectedRepoFile,
   showBuildOutputSettings,
-}: PreviewSummaryProps) {
+}) => {
+  const intl = useIntl();
+
   const framework = selectedFramework
     ? frameworks.find((f) => f.id === selectedFramework)
     : frameworks[0];
@@ -73,12 +77,12 @@ export function PreviewSummary({
           <div className="flex items-center gap-3">
             <Sparkles className="h-6 w-6 text-yellow-400 animate-pulse" />
             <h1 className="text-3xl font-bold tracking-tight font-pixel">
-              Project Preview
+              <FormattedMessage id="createWebsite.previewProjectName" />
             </h1>
           </div>
         </div>
         <p className="text-muted-foreground text-sm tracking-wide">
-          Review your project configuration before deployment
+          <FormattedMessage id="createWebsite.previewSummaryDescription" />
         </p>
       </div>
 
@@ -99,17 +103,17 @@ export function PreviewSummary({
                     <div className="flex items-center gap-2 border-l-4 border-blue-500 pl-3">
                       <Info className="h-5 w-5 text-blue-500 hover:scale-110 transition-transform" />
                       <h3 className="text-lg font-semibold text-foreground tracking-tight">
-                        Basic Information
+                        <FormattedMessage id="createWebsite.previewBasicInformation" />
                       </h3>
                     </div>
                     <div className="space-y-3 text-sm">
                       {[
-                        { label: "Project Name", value: name },
+                        { label: intl.formatMessage({ id: "createWebsite.previewProjectName" }), value: name },
                         {
-                          label: "Framework",
-                          value: framework?.name || "Not selected",
+                          label: intl.formatMessage({ id: "createWebsite.previewFramework" }),
+                          value: framework?.name || intl.formatMessage({ id: "createWebsite.previewNotSelected" }),
                         },
-                        { label: "Upload Method", value: uploadMethod },
+                        { label: intl.formatMessage({ id: "createWebsite.previewUploadMethod" }), value: uploadMethod },
                       ].map(({ label, value }, idx) => (
                         <motion.div
                           key={idx}
@@ -137,7 +141,9 @@ export function PreviewSummary({
                           className="flex flex-col gap-2 py-2 px-3 bg-gray-800 rounded-lg hover:bg-gray-900 transition-colors"
                         >
                           <div className="flex items-center gap-2">
-                            <span className="text-muted-foreground font-medium">Selected File</span>
+                            <span className="text-muted-foreground font-medium">
+                              <FormattedMessage id="createWebsite.previewSelectedFile" />
+                            </span>
                           </div>
                           <div className="flex items-center gap-2">
                             <div className="flex items-center gap-2">
@@ -156,7 +162,9 @@ export function PreviewSummary({
                           className="flex flex-col gap-2 py-2 px-3 bg-gray-800 rounded-lg hover:bg-gray-900 transition-colors"
                         >
                           <div className="flex items-center gap-2">
-                            <span className="text-muted-foreground font-medium">Selected Repository</span>
+                            <span className="text-muted-foreground font-medium">
+                              <FormattedMessage id="createWebsite.previewSelectedRepository" />
+                            </span>
                           </div>
                           <div className="flex items-center gap-2">
                             <div className="flex items-center gap-2">
@@ -175,7 +183,7 @@ export function PreviewSummary({
                     <div className="flex items-center gap-2 border-l-4 border-orange-500 pl-3">
                       <AlertCircle className="h-5 w-5 text-orange-500 hover:scale-110 transition-transform" />
                       <h3 className="text-lg font-semibold text-foreground tracking-tight">
-                        Build Settings
+                        <FormattedMessage id="createWebsite.previewBuildSettings" />
                       </h3>
                     </div>
                     <div className="space-y-3 text-sm">
@@ -188,18 +196,22 @@ export function PreviewSummary({
                           className="flex flex-col gap-2 py-2 px-3 bg-gray-800 rounded-lg hover:bg-gray-900 transition-colors"
                         >
                           <div className="flex items-center gap-2">
-                            <span className="text-muted-foreground font-medium">Status</span>
+                            <span className="text-muted-foreground font-medium">
+                              <FormattedMessage id="createWebsite.previewStatus" />
+                            </span>
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="text-red-400">•</span>
-                            <span className="font-semibold text-gray-100 ml-1">Not built</span>
+                            <span className="font-semibold text-gray-100 ml-1">
+                              <FormattedMessage id="createWebsite.previewNotBuilt" />
+                            </span>
                           </div>
                         </motion.div>
                       ) : (
                         [
-                          { label: "Build Command", value: buildOutputSettings.buildCommand },
-                          { label: "Install Command", value: buildOutputSettings.installCommand },
-                          { label: "Output Directory", value: buildOutputSettings.outputDirectory },
+                          { label: intl.formatMessage({ id: "createWebsite.previewBuildCommand" }), value: buildOutputSettings.buildCommand },
+                          { label: intl.formatMessage({ id: "createWebsite.previewInstallCommand" }), value: buildOutputSettings.installCommand },
+                          { label: intl.formatMessage({ id: "createWebsite.previewOutputDirectory" }), value: buildOutputSettings.outputDirectory },
                         ].map(({ label, value }, idx) => (
                           <motion.div
                             key={idx}
@@ -214,7 +226,7 @@ export function PreviewSummary({
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="text-green-400">•</span>
-                              <span className="font-semibold text-gray-100 ml-1">{value || "Not set"}</span>
+                              <span className="font-semibold text-gray-100 ml-1">{value || intl.formatMessage({ id: "createWebsite.previewNotSet" })}</span>
                             </div>
                           </motion.div>
                         ))
@@ -228,14 +240,14 @@ export function PreviewSummary({
                     <div className="flex items-center gap-2 border-l-4 border-purple-500 pl-3">
                       <Info className="h-5 w-5 text-purple-500 hover:scale-110 transition-transform -ml-0.5" />
                       <h3 className="text-lg font-semibold text-foreground tracking-tight">
-                        Advanced Settings
+                        <FormattedMessage id="createWebsite.previewAdvancedSettings" />
                       </h3>
                     </div>
                     <div className="space-y-3 text-sm">
                       {[
-                        { label: "Cache Control", value: `${advancedOptions.cacheControl} day(s)` },
-                        { label: "Default Path", value: advancedOptions.defaultPath },
-                        { label: "Root Directory", value: advancedOptions.rootDirectory },
+                        { label: intl.formatMessage({ id: "createWebsite.previewCacheControl" }), value: `${advancedOptions.cacheControl} day(s)` },
+                        { label: intl.formatMessage({ id: "createWebsite.previewDefaultPath" }), value: advancedOptions.defaultPath },
+                        { label: intl.formatMessage({ id: "createWebsite.previewRootDirectory" }), value: advancedOptions.rootDirectory },
                       ].map(({ label, value }, idx) => (
                         <motion.div
                           key={idx}
@@ -250,7 +262,7 @@ export function PreviewSummary({
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="text-green-400">•</span>
-                            <span className="font-semibold text-gray-100 ml-1">{value || "Not set"}</span>
+                            <span className="font-semibold text-gray-100 ml-1">{value || intl.formatMessage({ id: "createWebsite.previewNotSet" })}</span>
                           </div>
                         </motion.div>
                       ))}

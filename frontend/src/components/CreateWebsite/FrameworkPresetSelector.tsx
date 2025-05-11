@@ -10,6 +10,9 @@ import { cn } from "@/lib/utils";
 import { buildOutputSettingsType } from "@/types/CreateWebstie/types";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { HelpCircle } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { FormattedMessage } from 'react-intl';
+import { useIntl } from 'react-intl';
 
 interface Framework {
   id: string;
@@ -26,6 +29,7 @@ interface FrameworkPresetSelectorProps {
 }
 
 const FrameworkPresetSelector: React.FC<FrameworkPresetSelectorProps> = ({ frameworks, selectedFramework, handleSelectFramework, setShowBuildOutputSettings, setBuildOutputSettings }) => {
+  const intl = useIntl();
 
   const onSelectFramework = async (frameworkId: string) => {
     switch (frameworkId) {
@@ -68,13 +72,15 @@ const FrameworkPresetSelector: React.FC<FrameworkPresetSelectorProps> = ({ frame
   return (
     <>
       <div className="flex items-center gap-2">
-        <div className="text-sm text-gray-300">Select a framework preset:</div>
+        <div className="text-sm text-gray-300">
+          <FormattedMessage id="createWebsite.selectFrameworkPreset" />
+        </div>
         <Tooltip>
           <TooltipTrigger asChild>
             <HelpCircle className="h-4 w-4 text-secondary-500 hover:text-secondary-700 transition-colors cursor-help" />
           </TooltipTrigger>
           <TooltipContent className='w-[260px]' side="right">
-            Choose a framework that best matches your project setup. This helps configure the correct build settings automatically.
+            <FormattedMessage id="createWebsite.frameworkPresetTooltip" />
           </TooltipContent>
         </Tooltip>
       </div>

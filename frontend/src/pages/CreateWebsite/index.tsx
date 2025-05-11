@@ -36,10 +36,14 @@ import apiClient from '@/lib/axiosConfig'
 import { useQuery } from 'wagmi/query'
 import { PreviewSummary } from '@/components/CreateWebsite/PreviewSummary'
 import CreateWebsiteDialog from '@/components/CreateWebsiteDialog'
+import { FormattedMessage, useIntl } from 'react-intl'
+
 
 export default function CreateWebsitePage() {
   useTheme()
   const { currentAccount } = useWalletKit()
+
+  const intl = useIntl()
 
   // State to control preview visibility
   const [showPreview, setShowPreview] = useState(false)
@@ -81,7 +85,7 @@ export default function CreateWebsitePage() {
   const validateName = (value: string) => {
     const errors: string[] = []
     if (!value.trim()) {
-      errors.push('Project name is required')
+      errors.push(intl.formatMessage({ id: 'createWebsite.error.required' }))
     }
     setNameErrors(errors)
     return errors.length === 0
@@ -91,10 +95,10 @@ export default function CreateWebsitePage() {
   const validateFile = () => {
     const errors: string[] = []
     if (!selectedFile && uploadMethod === UploadMethod.Upload) {
-      errors.push('Please select a ZIP file')
+      errors.push(intl.formatMessage({ id: 'createWebsite.error.zipFile' }))
     }
     if (!selectedRepoFile && uploadMethod === UploadMethod.GitHub) {
-      errors.push('Please select a repository')
+      errors.push(intl.formatMessage({ id: 'createWebsite.error.githubRepo' }))
     }
     setFileErrors(errors)
     return errors.length === 0
@@ -364,7 +368,7 @@ export default function CreateWebsitePage() {
     <>
       <Helmet>
         <meta charSet="utf-8" />
-        <title>Create Website | Ivory</title>
+        <title>Create new project | Ivory</title>
         <link rel="canonical" href="http://mysite.com/example" />
       </Helmet>
       <main>
@@ -379,7 +383,7 @@ export default function CreateWebsitePage() {
               >
                 <CirclePlus className="h-6 w-6 text-sky-500 mr-4" />
                 <h1 className="text-3xl font-semibold font-pixel">
-                  Create new project
+                  <FormattedMessage id="createWebsite.title" />
                 </h1>
               </motion.div>
 
@@ -392,13 +396,20 @@ export default function CreateWebsitePage() {
                   className="p-8 rounded-2xl bg-[#10151c]/80 border border-cyan-900/40 shadow-2xl backdrop-blur-xl self-start w-full"
                 >
                   <section className="mb-6 flex items-center">
-                    <h2 className="text-lg font-semibold">Project files</h2>
+                    <h2 className="text-lg font-semibold">
+                      <FormattedMessage id="createWebsite.projectFiles" />
+                    </h2>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
                       </TooltipTrigger>
                       <TooltipContent className='w-[360px]' side="right">
-                        Upload or connect your GitHub repository to add your website files. You can drag and drop a ZIP file or browse for one.
+                        <FormattedMessage
+                          id="createWebsite.tooltip"
+                          values={{
+                            zip: <span className="text-secondary-500">ZIP file</span>
+                          }}
+                        />
                       </TooltipContent>
                     </Tooltip>
                   </section>
@@ -413,11 +424,11 @@ export default function CreateWebsitePage() {
                     <TabsList className="w-full mb-2 bg-primary-700">
                       <TabsTrigger value={UploadMethod.Upload}>
                         <Upload className="h-4 w-4 mr-2" />
-                        Upload
+                        <FormattedMessage id="createWebsite.upload" />
                       </TabsTrigger>
                       <TabsTrigger value={UploadMethod.GitHub}>
                         <Github className="h-4 w-4 mr-2" />
-                        Github
+                        <FormattedMessage id="createWebsite.github" />
                       </TabsTrigger>
                     </TabsList>
                     <TabsContent value={UploadMethod.Upload}>
@@ -487,17 +498,18 @@ export default function CreateWebsitePage() {
                                 >
                                   <Upload className="w-14 h-14 mb-2 text-secondary-500 drop-shadow-lg" />
                                   <p className="text-base font-bold text-center">
-                                    Drag & drop{' '}
-                                    <span className="text-secondary-500">
-                                      ZIP file
-                                    </span>{' '}
-                                    here
+                                    <FormattedMessage
+                                      id="createWebsite.dragDrop"
+                                      values={{
+                                        zip: <span className="text-secondary-500">ZIP file</span>
+                                      }}
+                                    />
                                   </p>
                                 </div>
                                 <div className="flex items-center justify-center w-5/6 my-4">
                                   <Separator className="flex-1" />
                                   <span className="mx-4 text-sm text-gray-400 font-semibold select-none">
-                                    or
+                                    <FormattedMessage id="createWebsite.or" />
                                   </span>
                                   <Separator className="flex-1" />
                                 </div>
@@ -509,7 +521,7 @@ export default function CreateWebsitePage() {
                                     handleBrowseClick()
                                   }}
                                 >
-                                  Browse file
+                                  <FormattedMessage id="createWebsite.browseFile" />
                                 </button>
                               </div>
                             </div>
@@ -569,7 +581,7 @@ export default function CreateWebsitePage() {
                       htmlFor="name"
                       className="text-lg font-semibold block mb-4 bg-gradient-to-r"
                     >
-                      Name
+                      <FormattedMessage id="createWebsite.name" />
                     </Label>
                     <Input
                       id="name"
@@ -622,7 +634,7 @@ export default function CreateWebsitePage() {
                       }}
                       className="bg-secondary-500 hover:bg-secondary-700 text-black p-6 rounded-md text-base transform transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-secondary-500/20"
                     >
-                      Create website
+                      <FormattedMessage id="createWebsite.createWebsite" />
                     </Button>
                   </section>
                 </motion.div>

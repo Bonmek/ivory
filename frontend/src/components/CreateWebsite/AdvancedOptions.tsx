@@ -7,6 +7,8 @@ import { advancedOptionsType } from '@/types/CreateWebstie/types'
 import { CacheControl } from '@/types/CreateWebstie/enums'
 import { useState } from 'react'
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
+import { FormattedMessage } from 'react-intl'
+import { useIntl } from 'react-intl'
 
 interface AdvancedOptionsProps {
   advancedOptions: advancedOptionsType
@@ -14,6 +16,7 @@ interface AdvancedOptionsProps {
 }
 
 function AdvancedOptions({ advancedOptions, setAdvancedOptions }: AdvancedOptionsProps) {
+  const intl = useIntl()
   const [isOpen, setIsOpen] = useState(false)
   return (
     <motion.div
@@ -24,7 +27,9 @@ function AdvancedOptions({ advancedOptions, setAdvancedOptions }: AdvancedOption
       <section className="w-full bg-primary-700/70  backdrop-blur-3xl shadow-lg p-2 px-4 rounded-xl">
         <div className="flex items-center justify-between px-2 cursor-pointer"
           onClick={() => setIsOpen((prev) => !prev)}>
-          <h2 className="font-semibold bg-gradient-to-r text-base text-white ">Advanced options</h2>
+          <h2 className="font-semibold bg-gradient-to-r text-base text-white ">
+            <FormattedMessage id="createWebsite.advancedOptions" />
+          </h2>
           <Button
             variant="link"
             size="sm"
@@ -47,14 +52,16 @@ function AdvancedOptions({ advancedOptions, setAdvancedOptions }: AdvancedOption
             >
 
               <section className='px-2 mt-4'>
-                <div className="flex items-center mt-4 mb-2">
-                  <h3 className="text-sm text-gray-300 font-semibold">Root Directory</h3>
+                <div className="flex items-center mb-2">
+                  <h3 className="text-sm text-gray-300 font-semibold">
+                    <FormattedMessage id="createWebsite.rootDirectory" />
+                  </h3>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
                     </TooltipTrigger>
                     <TooltipContent className='w-[260px]' side="right">
-                      The base directory of your project where the source files are located. Leave as / if the root is the main folder.
+                      <FormattedMessage id="createWebsite.rootDirectoryTooltip" /> <FormattedMessage id="createWebsite.rootDirectoryTooltipDescription" />
                     </TooltipContent>
                   </Tooltip>
                 </div>
@@ -67,14 +74,16 @@ function AdvancedOptions({ advancedOptions, setAdvancedOptions }: AdvancedOption
               </section>
 
               <section className='px-2 mt-4'>
-                <div className="flex items-center mt-4 mb-2">
-                  <h3 className="text-sm text-gray-300 font-semibold">Default Path</h3>
+                <div className="flex items-center mb-2">
+                  <h3 className="text-sm text-gray-300 font-semibold">
+                    <FormattedMessage id="createWebsite.defaultPath" />
+                  </h3>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
                     </TooltipTrigger>
                     <TooltipContent className='w-[260px]' side="right">
-                      The main entry point for your site, typically the homepage. This is usually /index.html.
+                      <FormattedMessage id="createWebsite.defaultPathTooltip" /> <FormattedMessage id="createWebsite.defaultPathTooltipDescription" />
                     </TooltipContent>
                   </Tooltip>
                 </div>
@@ -87,14 +96,16 @@ function AdvancedOptions({ advancedOptions, setAdvancedOptions }: AdvancedOption
               </section>
 
               <section className='px-2 mt-4 mb-4'>
-                <div className="flex items-center mt-4 mb-2">
-                  <h3 className="text-sm text-gray-300  font-semibold">Cache Control</h3>
+                <div className="flex items-center mb-2">
+                  <h3 className="text-sm text-gray-300 font-semibold">
+                    <FormattedMessage id="createWebsite.cacheControl" />
+                  </h3>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <HelpCircleIcon className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
                     </TooltipTrigger>
                     <TooltipContent className='w-[260px]' side="right">
-                      Set rules for how your files should be cached in browsers or CDNs. This helps improve load times and performance.
+                      <FormattedMessage id="createWebsite.cacheControlTooltip" /> <FormattedMessage id="createWebsite.cacheControlTooltipDescription" />
                     </TooltipContent>
                   </Tooltip>
                 </div>

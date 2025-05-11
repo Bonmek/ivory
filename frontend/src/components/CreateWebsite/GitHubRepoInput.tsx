@@ -1,21 +1,32 @@
 import { Separator } from "@/components/ui/separator";
 import { motion } from "framer-motion"
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { CircleAlert, Github, Loader2, X } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { ChevronDown, ChevronRight, Folder, File as FileIcon } from "lucide-react";
-import { useState, useRef, useLayoutEffect } from "react";
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Github, Loader2, X } from 'lucide-react'
+import { useEffect, useRef, useState, useLayoutEffect } from 'react'
+import { FormattedMessage } from 'react-intl'
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogFooter,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  CacheControl,
+  UploadMethod,
+} from '@/types/CreateWebstie/enums'
+import {
+  advancedOptionsType,
+  ApiError,
+  ApiResponse,
+  buildOutputSettingsType,
+  Repository,
+} from '@/types/CreateWebstie/types'
+import apiClient from '@/lib/axiosConfig'
+import { toast } from 'sonner'
+import { useQuery } from 'wagmi/query'
+import { useWalletKit } from '@mysten/wallet-kit'
+import { addDays } from 'date-fns'
+import { useTheme } from '@/context/ThemeContext'
+import { useIntl } from 'react-intl'
+import { CircleAlert, ChevronDown, ChevronRight, Folder, File as FileIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, } from "@/components/ui/dialog";
 import { AlertTriangle } from "lucide-react";
-
-
 
 interface GithubRepoInputProps {
   githubUrl: string;
@@ -132,6 +143,7 @@ export default function GithubRepoInput({
   const userBtnRef = useRef<HTMLButtonElement>(null);
   const [userBtnWidth, setUserBtnWidth] = useState<number | undefined>(undefined);
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+  const intl = useIntl();
 
   useLayoutEffect(() => {
     if (userBtnRef.current) {
@@ -156,7 +168,7 @@ export default function GithubRepoInput({
                 style={userBtnWidth ? { width: userBtnWidth } : undefined}
                 onClick={() => setLogoutDialogOpen(true)}
               >
-                Logout
+                <FormattedMessage id="createWebsite.githubLogout" />
               </Button>
             ) : (
               <Button
@@ -171,7 +183,7 @@ export default function GithubRepoInput({
           {!selectedRepo && (
             <div className="relative w-full">
               <Input
-                placeholder="Search repositories..."
+                placeholder={intl.formatMessage({ id: 'createWebsite.githubSearch' })}
                 value={searchRepository}
                 onChange={handleSearchRepository}
                 className="w-full bg-primary-500 border-gray-700 rounded-md h-10 pl-10 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500"
@@ -192,7 +204,7 @@ export default function GithubRepoInput({
           className="w-full bg-secondary-500 hover:bg-secondary-700 text-black border border-gray-700 rounded-md h-10 transition-all duration-300 flex items-center justify-center gap-2"
         >
           <Github className="h-5 w-5" />
-          Sign in with GitHub
+          <FormattedMessage id="createWebsite.githubSignIn" />
         </Button>
       )}
       {(!selectedRepo && repositories.length > 0) && (
@@ -286,7 +298,7 @@ export default function GithubRepoInput({
                             d="M5 13l4 4L19 7"
                           />
                         </svg>
-                        <span>Selected</span>
+                        <FormattedMessage id="createWebsite.githubSelected" />
                       </motion.span>
                     ) : (
                       <span className="flex items-center space-x-1">
@@ -304,14 +316,12 @@ export default function GithubRepoInput({
                             d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
                           />
                         </svg>
-                        <span>Import</span>
+                        <FormattedMessage id="createWebsite.githubImport" />
                       </span>
                     )}
                   </Button>
                 </motion.div>
               ))}
-
-
             </motion.div>
           ) : (
             <motion.div
@@ -320,7 +330,7 @@ export default function GithubRepoInput({
               transition={{ duration: 0.2 }}
               className="text-center py-4 text-gray-400"
             >
-              No repositories found matching "{searchRepository}"
+              <FormattedMessage id="createWebsite.githubNoResults" />
             </motion.div>
           )}
         </motion.div>
@@ -339,14 +349,14 @@ export default function GithubRepoInput({
               onClick={() => { handleSelectRepository(null); setSelectedRepoFile(null); }}
             >
               <X className="w-4 h-4 mr-1 inline-block" />
-              Cancel
+              <FormattedMessage id="createWebsite.githubCancel" />
             </Button>
           </div>
           <Separator className="my-2 bg-secondary-700" />
           {repoContentsLoading && (
             <div className="flex flex-row items-center justify-center gap-2 h-10 text-cyan-300 text-sm animate-pulse  bg-cyan-950/80 rounded-md px-4 py-2 my-2 w-full mx-auto">
               <Loader2 className="w-4 h-4 animate-spin" />
-              <p className="font-pixel">Loading repository contents...</p>
+              <FormattedMessage id="createWebsite.githubLoading" />
             </div>
           )}
           {repoContentsError && (
@@ -354,7 +364,7 @@ export default function GithubRepoInput({
               <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" />
               </svg>
-              <span>{repoContentsError}</span>
+              <FormattedMessage id="createWebsite.githubError" />
             </div>
           )}
           {repoContents && Array.isArray(repoContents) && repoContents.length > 0 && (
@@ -365,7 +375,9 @@ export default function GithubRepoInput({
             </div>
           )}
           {repoContents && Array.isArray(repoContents) && repoContents.length === 0 && !repoContentsLoading && !repoContentsError && (
-            <div className="text-cyan-200 text-xs">(Empty directory)</div>
+            <div className="text-cyan-200 text-xs">
+              <FormattedMessage id="createWebsite.githubEmpty" />
+            </div>
           )}
         </div>
       )}
@@ -373,17 +385,19 @@ export default function GithubRepoInput({
         <section >
           <div className="flex items-center gap-4 mb-4 mt-1">
             <Separator className="flex-1" />
-            <p className="text-center text-gray-400 px-4">or</p>
+            <p className="text-center text-gray-400 px-4">
+              <FormattedMessage id="createWebsite.or" />
+            </p>
             <Separator className="flex-1" />
           </div>
           <Input
-            placeholder="Enter GitHub repository URL"
+            placeholder={intl.formatMessage({ id: 'createWebsite.githubUrlPlaceholder' })}
             value={githubUrl}
             onChange={handleGithubUrlChange}
             className="bg-primary-500 border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500"
           />
           <p className="text-sm text-gray-400 mt-2">
-            Example: https://github.com/username/repository
+            <FormattedMessage id="createWebsite.githubUrlExample" />
           </p>
         </section>
       )}
