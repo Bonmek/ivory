@@ -23,7 +23,11 @@ class SuiService {
           options: { showContent: true },
           cursor: cursor
         })
-        allData = [...allData, ...data]
+        const blobsWithParent = data.map(blob => ({
+          ...blob,
+          parentId: blob.data?.objectId || ''
+        }))
+        allData = [...allData, ...blobsWithParent]
         hasNextPage = nextPage
         cursor = nextCursor || null
       }
@@ -47,7 +51,11 @@ class SuiService {
           cursor: cursor
         })
         
-        allData = [...allData, ...data]
+        const fieldsWithParent = data.map(field => ({
+          ...field,
+          parentId: blobId
+        }))
+        allData = [...allData, ...fieldsWithParent]
         hasNextPage = nextPage
         cursor = nextCursor || null
       }
@@ -59,13 +67,16 @@ class SuiService {
     }
   }
 
-  async getMetadata(objectId: string) {
+  async getMetadata(objectId: string, parentId?: string) {
     try {
       const { data } = await this.client.getObject({
         id: objectId,
         options: { showContent: true },
       })
-      return data
+      return {
+        ...data,
+        parentId: parentId || ''
+      }
     } catch (error) {
       console.error('Error fetching metadata:', error)
       throw error

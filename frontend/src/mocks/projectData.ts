@@ -8,7 +8,8 @@ export const mockProjects = [
     color: "#4F46E5",
     urlImg: "/images/walrus.png",
     status: 2,
-    client_error_description: "Fail to connect to database right now, please try again later."
+    client_error_description: "Fail to connect to database right now, please try again later.",
+    parentObjectId: "0x1234567890abcdef"
   },
   {
     id: 2,
@@ -19,7 +20,8 @@ export const mockProjects = [
     color: "#4F46E5",
     urlImg: "/images/walrus.png",
     status: 2,
-    client_error_description: "The zip file is corrupted. Please re-upload your project files."
+    client_error_description: "The zip file is corrupted. Please re-upload your project files.",
+    parentObjectId: "0x2345678901abcdef"
   },
   {
     id: 3,
@@ -30,7 +32,8 @@ export const mockProjects = [
     color: "#4F46E5",
     urlImg: "/images/walrus.png",
     status: 2,
-    client_error_description: "Cannot find root directory specified in your project. Please check your project structure."
+    client_error_description: "Cannot find root directory specified in your project. Please check your project structure.",
+    parentObjectId: "0x3456789012abcdef"
   },
   {
     id: 4,
@@ -41,7 +44,8 @@ export const mockProjects = [
     color: "#4F46E5",
     urlImg: "/images/walrus.png",
     status: 2,
-    client_error_description: "Cannot install or build your project. Please check your package.json and root directory."
+    client_error_description: "Cannot install or build your project. Please check your package.json and root directory.",
+    parentObjectId: "0x4567890123abcdef"
   },
   {
     id: 5,
@@ -52,7 +56,8 @@ export const mockProjects = [
     color: "#4F46E5",
     urlImg: "/images/walrus.png",
     status: 2,
-    client_error_description: "Cannot find index.html file in your project. Please ensure it exists in the root directory."
+    client_error_description: "Cannot find index.html file in your project. Please ensure it exists in the root directory.",
+    parentObjectId: "0x5678901234abcdef"
   },
   {
     id: 6,
@@ -63,7 +68,8 @@ export const mockProjects = [
     color: "#4F46E5",
     urlImg: "/images/walrus.png",
     status: 2,
-    client_error_description: "Site published but no site ID was returned. Please contact support."
+    client_error_description: "Site published but no site ID was returned. Please contact support.",
+    parentObjectId: "0x6789012345abcdef"
   },
   {
     id: 7,
@@ -75,7 +81,8 @@ export const mockProjects = [
     urlImg: "/images/walrus.png",
     status: 1,
     suins: "johndoe",
-    siteId: "site_123456789"
+    siteId: "site_123456789",
+    parentObjectId: "0x7890123456abcdef"
   },
   {
     id: 8,
@@ -87,7 +94,8 @@ export const mockProjects = [
     urlImg: "/images/walrus.png",
     status: 1,
     suins: "techstartup",
-    siteId: "site_987654321"
+    siteId: "site_987654321",
+    parentObjectId: "0x8901234567abcdef"
   },
   {
     id: 9,
@@ -97,7 +105,8 @@ export const mockProjects = [
     expiredDate: new Date('2024-06-12'),
     color: "#8B5CF6",
     urlImg: "/images/walrus.png",
-    status: 0
+    status: 0,
+    parentObjectId: "0x9012345678abcdef"
   },
   {
     id: 10,
@@ -107,7 +116,8 @@ export const mockProjects = [
     expiredDate: new Date('2024-06-18'),
     color: "#EC4899",
     urlImg: "/images/walrus.png",
-    status: 0
+    status: 0,
+    parentObjectId: "0xa0123456789bcdef"
   },
   {
     id: 11,
@@ -119,7 +129,8 @@ export const mockProjects = [
     urlImg: "/images/walrus.png",
     status: 1,
     suins: "docs",
-    siteId: "site_456789123"
+    siteId: "site_456789123",
+    parentObjectId: "0xb1234567890cdef"
   },
   {
     id: 12,
@@ -131,7 +142,8 @@ export const mockProjects = [
     urlImg: "/images/walrus.png",
     status: 1,
     suins: "api",
-    siteId: "site_789123456"
+    siteId: "site_789123456",
+    parentObjectId: "0xc2345678901def"
   },
   {
     id: 13,
@@ -142,7 +154,8 @@ export const mockProjects = [
     color: "#EF4444",
     urlImg: "/images/walrus.png",
     status: 2,
-    client_error_description: "Failed to initialize database connection. Please check your database configuration."
+    client_error_description: "Failed to initialize database connection. Please check your database configuration.",
+    parentObjectId: "0xd3456789012ef"
   },
   {
     id: 14,
@@ -152,7 +165,8 @@ export const mockProjects = [
     expiredDate: new Date('2024-06-24'),
     color: "#14B8A6",
     urlImg: "/images/walrus.png",
-    status: 0
+    status: 0,
+    parentObjectId: "0xe4567890123f"
   },
   {
     id: 15,
@@ -164,6 +178,7 @@ export const mockProjects = [
     urlImg: "/images/walrus.png",
     status: 1,
     suins: "analytics",
-    siteId: "site_321654987"
+    siteId: "site_321654987",
+    parentObjectId: "0xf5678901234"
   }
 ] 

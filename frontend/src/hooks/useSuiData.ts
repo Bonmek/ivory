@@ -48,10 +48,18 @@ export const useSuiData = (userAddress: string) => {
       dynamicFields.flatMap((fields) => fields.map((field) => field.objectId)),
     ],
     queryFn: async () => {
+      console.log('Dynamic fields for metadata:', dynamicFields)
       const metadataPromises = dynamicFields.flatMap((fields) =>
-        fields.map((field) => suiService.getMetadata(field.objectId)),
+        fields.map((field) => {
+          // Use parentId from dynamic field
+          const fieldWithParent = field as any
+          console.log('Field with parent:', fieldWithParent)
+          return suiService.getMetadata(field.objectId, fieldWithParent.parentId)
+        }),
       )
-      return Promise.all(metadataPromises)
+      const result = await Promise.all(metadataPromises)
+      console.log('Raw metadata result:', result)
+      return result
     },
     enabled: dynamicFields.length > 0,
   })
@@ -62,7 +70,6 @@ export const useSuiData = (userAddress: string) => {
       console.log('Invalid metadata:', meta)
       return false
     }
-
     const fields = meta.content.fields as any
     const metadataFields =
       fields?.value?.fields?.metadata?.fields?.contents || []
@@ -70,6 +77,7 @@ export const useSuiData = (userAddress: string) => {
       (entry: any) => entry.fields?.key === 'owner',
     )
     const owner = ownerEntry?.fields?.value
+    console.log('Checking owner:', { owner, userAddress })
 
     return owner === userAddress
   })

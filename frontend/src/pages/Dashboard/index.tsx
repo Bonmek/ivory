@@ -16,6 +16,29 @@ import { useAuth } from '@/context/AuthContext'
 import { RefreshCw } from 'lucide-react'
 import { mockProjects } from '@/mocks/projectData'
 
+interface Project {
+  id: number
+  name: string
+  url: string
+  startDate: Date
+  expiredDate: Date
+  color: string
+  urlImg: string
+  description?: string
+  status: number
+  siteId?: string
+  suins?: string
+  blobId?: string
+  installCommand?: string
+  buildCommand?: string
+  defaultRoute?: string
+  isBuild?: boolean
+  epochs?: number
+  ownership?: number
+  client_error_description?: string
+  parentId: string
+}
+
 const formatDate = (date: Date) => {
   return date.toLocaleDateString('en-GB', {
     year: 'numeric',
@@ -67,12 +90,11 @@ export default function Dashboard() {
   const sectionItemsPerPage = 4
 
   const { metadata, isLoading, refetch } = useSuiData(address || '')
-
   // Transform metadata into project format
   const filteredProjects = useMemo(() => {
     // Transform metadata to project format
-    // const projects = metadata ? metadata.map((meta, index) => transformMetadataToProject(meta, index)) : []
-    const projects = mockProjects // Uncomment this line to use mock data
+    const projects = metadata ? metadata.map((meta, index) => transformMetadataToProject(meta, index)) : []
+    // const projects = mockProjects // Uncomment this line to use mock data
     if (!projects || projects.length === 0) return []
     let filtered = projects
       .filter((project) => {
@@ -85,16 +107,11 @@ export default function Dashboard() {
           formatDate(project.startDate) === formatDate(date) ||
           formatDate(project.expiredDate) === formatDate(date)
 
-        const remaining = calculateDaysBetween(new Date(), project.expiredDate)
-
         const matchesTab =
           activeTab === 'all' ||
           (activeTab === 'building' && project.status === 0) ||
           (activeTab === 'active' && project.status === 1) ||
-          (activeTab === 'failed' && project.status === 2) ||
-          (activeTab === 'expiring' && remaining <= 30) ||
-          (activeTab === 'recent' &&
-            calculateDaysBetween(new Date(), project.startDate) <= 30)
+          (activeTab === 'failed' && project.status === 2)
 
         return matchesSearch && matchesDate && matchesTab
       })
@@ -108,7 +125,8 @@ export default function Dashboard() {
     }
 
     return filtered
-  }, [searchQuery, date, activeTab])
+  }, [searchQuery, date, activeTab, metadata])
+  
 
   const sortedProjects = useMemo(() => {
     return [...filteredProjects].sort((a, b) => {

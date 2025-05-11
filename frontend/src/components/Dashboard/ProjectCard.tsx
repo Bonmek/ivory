@@ -547,7 +547,7 @@ const ProjectCard = memo(
                             Building in Progress
                           </div>
                           <div className="text-xs text-white/80 leading-relaxed">
-                            Your site is currently being built. This process may take a few minutes. You can check the build progress here.
+                            Your site is currently being built. This process may take a few minutes.
                           </div>
                         </div>
                       </div>

@@ -16,6 +16,7 @@ export const extractMetadataMap = (metadataFields: any[]): MetadataMap => {
 
 export const transformMetadataToProject = (metadata: any, index: number) => {
   if (!metadata?.content || metadata.content.dataType !== 'moveObject') {
+    console.log('Invalid metadata format')
     return {
       id: index,
       name: `Project ${index}`,
@@ -24,15 +25,18 @@ export const transformMetadataToProject = (metadata: any, index: number) => {
       expiredDate: new Date(Date.now() + DEFAULT_EXPIRY_BUFFER),
       color: '#97f0e5',
       urlImg: '/walrus.png',
+      status: 0
     }
   }
 
   const fields = metadata.content.fields as any
   const metadataFields = fields.value.fields.metadata.fields.contents
   const metadataMap = extractMetadataMap(metadataFields)
+  console.log('Extracted metadata map:', metadataMap)
+  
   const status = parseInt(metadataMap['status'] || '0')
 
-  return {
+  const project = {
     id: index,
     name: metadataMap['site-name'] || `Project ${index}`,
     url: metadataMap['root'] || '',
@@ -53,5 +57,9 @@ export const transformMetadataToProject = (metadata: any, index: number) => {
     isBuild: metadataMap['is_build'] === '1',
     epochs: parseInt(metadataMap['epochs'] || '0'),
     ownership: parseInt(metadataMap['ownership'] || '0'),
+    parentObjectId: metadata.parentId || '',
+    parentId: metadata.parentId || '',
   }
+  console.log('Transformed project:', project)
+  return project
 } 
