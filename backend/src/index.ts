@@ -11,7 +11,12 @@ import "./github/githubAuth";
 import { githubRoutes } from "./github/routes";
 import axios from "axios";
 import { GoogleAuth } from "google-auth-library";
-import { inputScheme } from "./schemas/inputScheme";
+import {
+  inputWriteBlobScheme,
+  inputDeleteBlobScheme,
+  inputSetAttributesScheme,
+  inputUpdateWriteBlobScheme,
+} from "./schemas/inputScheme";
 
 dotenv.config();
 const auth = new GoogleAuth({
@@ -65,72 +70,72 @@ app.post("/write-blob-n-run-job", upload.single("file"), async (req, res) => {
       : req.body.attributes
     : {};
 
-  const result = inputScheme.safeParse(attributes);
+  const result = inputWriteBlobScheme.safeParse(attributes);
+
   if (!result.success) {
     res.status(400).json({
       statusCode: 0,
       errors: result.error.errors.map((err) => ({
-        error_field: err.path.join("."),
         error_message: err.message,
+        error_field: err.path.join("."),
       })),
     });
     return;
   }
 
-  let blobData;
+  let blob_data;
   try {
-    blobData = await walrusClient.writeBlob({
+    blob_data = await walrusClient.writeBlob({
       blob: zipFile,
-      deletable: false,
+      deletable: true,
       epochs: Number(result.data.epochs),
       signer: keypair,
-      attributes: attributes,
+      attributes: result.data,
     });
   } catch (error) {
-    res.status(500).json({
-      statusCode: 0,
-      error: { error_message: "Internal server error", error_details: error },
-    });
-    return;
-  }
-
-  if (blobData.blobObject.certified_epoch == null) {
-    res.status(400).json({
+    res.status(502).json({
       statusCode: 0,
       error: {
-        error_message: "Write blob data failed",
-        error_details: "Epoch not found, Blob not certified",
-      },
-    });
-    return;
-  }
-
-  const blobObjectId =
-    typeof blobData.blobObject.id === "string"
-      ? blobData.blobObject.id
-      : blobData.blobObject.id.id;
-
-  try {
-    await walrusClient.executeWriteBlobAttributesTransaction({
-      blobObjectId: blobObjectId,
-      signer: keypair,
-      attributes: { blobId: blobData.blobId },
-    });
-  } catch (error) {
-    res.status(400).json({
-      statusCode: 0,
-      error: {
-        error_message: "Error writing blob data attributes",
+        error_message: "Failed to write blob to Walrus",
         error_details: error,
       },
     });
     return;
   }
 
+  if (!blob_data) {
+    res.status(503).json({
+      statusCode: 0,
+      error: "WriteBlob success but data is undefined",
+    });
+    return;
+  }
+
+  const blobObjectId = blob_data.blobObject.id.id;
+
+  try {
+    await walrusClient.executeWriteBlobAttributesTransaction({
+      blobObjectId: blobObjectId,
+      signer: keypair,
+      attributes: { blobId: blob_data.blobId },
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(502).json({
+        statusCode: 0,
+        error: {
+          error_message:
+            "Failed to execute write blob attributes transaction to Walrus",
+          error_details: error,
+        },
+      });
+      return;
+    }
+  }
+
   const url = `https://run.googleapis.com/v2/projects/${process.env.PROJECT_ID}/locations/${process.env.REGION}/jobs/${process.env.CLOUD_RUN_JOB_NAME}:run`;
   const client = await auth.getClient();
   const token = await client.getAccessToken();
-
   let response;
   try {
     response = await axios.post(
@@ -155,17 +160,298 @@ app.post("/write-blob-n-run-job", upload.single("file"), async (req, res) => {
     res.status(500).json({
       statusCode: 0,
       error: {
-        error_message: "Error triggering Cloud Run job",
+        error_message:
+          "Failed to triggering Cloud Run job to publish walrus-site",
         error_details: error,
       },
     });
     return;
   }
-  if (response.status !== 200) {
+
+  if (response.status == 200) {
     res.status(200).json({
       statusCode: 1,
       details: response.data,
-      message: "Cloud Run job triggered successfully",
+    });
+  }
+});
+
+app.put("/set-attributes", async (req, res) => {
+  const object_id = req.query.object_id;
+  const sui_ns = req.query.sui_ns;
+
+  if (!object_id) {
+    res.status(400).json({
+      statusCode: 0,
+      error: "Object ID is required in query parameters",
+    });
+    return;
+  }
+
+  if (!sui_ns) {
+    res.status(400).json({
+      statusCode: 0,
+      error: "Sui Service name(SuiNS) is required in query parameters",
+    });
+    return;
+  }
+
+  const result = inputSetAttributesScheme.safeParse({ object_id, sui_ns });
+
+  if (!result.success) {
+    res.status(400).json({
+      statusCode: 0,
+      errors: result.error.errors.map((err) => ({
+        error_message: err.message,
+        error_field: err.path.join("."),
+      })),
+    });
+    return;
+  }
+
+  try {
+    await walrusClient.executeWriteBlobAttributesTransaction({
+      blobObjectId: result.data.object_id,
+      signer: keypair,
+      attributes: { sui_ns: result.data.sui_ns },
+    });
+  } catch (error) {
+    res.status(502).json({
+      statusCode: 0,
+      error: {
+        error_message: "Failed to add sui service name to blob attributes",
+        error_details: error,
+      },
+    });
+    return;
+  }
+  res.status(200).json({
+    statusCode: 1,
+    message: "Sui service name added to blob attributes successfully",
+  });
+});
+
+app.put("/update-blob-n-run-job", upload.single("file"), async (req, res) => {
+  if (!req.file) {
+    res.status(400).json({
+      statusCode: 0,
+      error: "No file uploaded",
+    });
+    return;
+  }
+  const zipFile = new Uint8Array(req.file.buffer);
+  const attributes = req.body.attributes
+    ? typeof req.body.attributes === "string"
+      ? JSON.parse(req.body.attributes)
+      : req.body.attributes
+    : {};
+
+  const result = inputUpdateWriteBlobScheme.safeParse(attributes);
+  if (!result.success) {
+    res.status(400).json({
+      statusCode: 0,
+      errors: result.error.errors.map((err) => ({
+        error_message: err.message,
+        error_field: err.path.join("."),
+      })),
+    });
+    return;
+  }
+
+  const { old_object_id, ...updated_data } = result.data;
+
+  const old_attributes = await walrusClient.readBlobAttributes({
+    blobObjectId: old_object_id,
+  });
+
+  if (!old_attributes) {
+    res.status(404).json({
+      statusCode: 0,
+      error: "blob data not found",
+    });
+    return;
+  }
+
+  const old_site_name = old_attributes["site-name"];
+  const old_site_id = old_attributes["site_id"];
+
+  try {
+    await walrusClient.executeDeleteBlobTransaction({
+      signer: keypair,
+      blobObjectId: old_object_id,
+    });
+  } catch (error) {
+    res.status(502).json({
+      statusCode: 0,
+      error: {
+        error_message:
+          "Failed to execute delete blob attributes transaction to Walrus",
+        error_details: error,
+      },
+    });
+    return;
+  }
+
+  let blob_data;
+  try {
+    blob_data = await walrusClient.writeBlob({
+      blob: zipFile,
+      deletable: true,
+      epochs: Number(result.data.epochs),
+      signer: keypair,
+      attributes: {
+        "site-name": old_site_name,
+        ...updated_data,
+        site_id: old_site_id,
+      },
+    });
+  } catch (error) {
+    res.status(502).json({
+      statusCode: 0,
+      error: {
+        error_message: "Failed to write blob to Walrus",
+        error_details: error,
+      },
+    });
+    return;
+  }
+
+  if (!blob_data) {
+    res.status(503).json({
+      statusCode: 0,
+      error: "WriteBlob success but data is undefined",
+    });
+    return;
+  }
+
+  const blobObjectId = blob_data.blobObject.id.id;
+
+  try {
+    await walrusClient.executeWriteBlobAttributesTransaction({
+      blobObjectId: blobObjectId,
+      signer: keypair,
+      attributes: { blobId: blob_data.blobId },
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(502).json({
+        statusCode: 0,
+        error: {
+          error_message:
+            "Failed to execute write blob attributes transaction to Walrus",
+          error_details: error,
+        },
+      });
+      return;
+    }
+  }
+
+  const url = `https://run.googleapis.com/v2/projects/${process.env.PROJECT_ID}/locations/${process.env.REGION}/jobs/${process.env.CLOUD_RUN_JOB_NAME}:run`;
+  const client = await auth.getClient();
+  const token = await client.getAccessToken();
+
+  let response;
+  try {
+    response = await axios.post(
+      url,
+      {
+        overrides: {
+          containerOverrides: [
+            {
+              args: ["update", blobObjectId],
+            },
+          ],
+        },
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token.token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+  } catch (error) {
+    res.status(500).json({
+      statusCode: 0,
+      error: {
+        error_message:
+          "Failed to triggering Cloud Run job to update walrus-site",
+        error_details: error,
+      },
+    });
+    return;
+  }
+
+  if (response.status == 200) {
+    res.status(200).json({
+      statusCode: 1,
+      details: response.data,
+    });
+  }
+});
+
+app.delete("/delete-site", async (req, res) => {
+  const object_id = req.query.object_id;
+
+  if (!object_id) {
+    res.status(400).json({
+      statusCode: 0,
+      error: "Object ID is required in query parameters",
+    });
+    return;
+  }
+
+  const result = inputDeleteBlobScheme.safeParse({ object_id });
+
+  if (!result.success) {
+    res.status(400).json({
+      statusCode: 0,
+      error: result.error.errors.map((err) => ({
+        error_message: err.message,
+        error_field: err.path.join("."),
+      })),
+    });
+    return;
+  }
+
+  const url = `https://run.googleapis.com/v2/projects/${process.env.PROJECT_ID}/locations/${process.env.REGION}/jobs/${process.env.CLOUD_RUN_JOB_NAME}:run`;
+  const client = await auth.getClient();
+  const token = await client.getAccessToken();
+  let response;
+  try {
+    response = await axios.post(
+      url,
+      {
+        overrides: {
+          containerOverrides: [
+            {
+              args: ["delete", result.data.object_id],
+            },
+          ],
+        },
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token.token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+  } catch (error) {
+    res.status(500).json({
+      statusCode: 0,
+      error: {
+        error_message:
+          "Failed to triggering Cloud Run job to delete walrus-site",
+        error_details: error,
+      },
+    });
+    return;
+  }
+  if (response.status == 200) {
+    res.status(200).json({
+      statusCode: 1,
+      details: response.data,
     });
   }
 });
