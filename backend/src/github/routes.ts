@@ -10,6 +10,17 @@ export interface AuthenticatedRequest extends Request {
 
 const router = Router();
 
+// Logout endpoint
+router.get("/auth/github/logout", (req: Request, res: Response) => {
+  req.logout((err) => {
+    if (err) {
+      console.error("Logout error:", err);
+      return res.status(500).json({ error: "Logout failed" });
+    }
+    res.redirect(`${process.env.FRONTEND_URL}`);
+  });
+});
+
 // Authentication routes
 router.get("/auth/github", passport.authenticate("github"));
 
@@ -17,7 +28,7 @@ router.get(
   "/auth/github/callback",
   passport.authenticate("github", { failureRedirect: "/" }),
   (req: Request, res: Response) => {
-    res.redirect(`${process.env.FRONTEND_URL}?success=true`);
+    res.redirect(`${process.env.FRONTEND_URL}/create-website?success=true`);
   }
 );
 

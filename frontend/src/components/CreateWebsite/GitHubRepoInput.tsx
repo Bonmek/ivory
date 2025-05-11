@@ -1,21 +1,32 @@
 import { Separator } from "@/components/ui/separator";
 import { motion } from "framer-motion"
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Github, Loader2, X } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { ChevronDown, ChevronRight, Folder, File as FileIcon } from "lucide-react";
-import { useState, useRef, useLayoutEffect } from "react";
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Github, Loader2, X } from 'lucide-react'
+import { useEffect, useRef, useState, useLayoutEffect } from 'react'
+import { FormattedMessage } from 'react-intl'
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogFooter,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  CacheControl,
+  UploadMethod,
+} from '@/types/CreateWebstie/enums'
+import {
+  advancedOptionsType,
+  ApiError,
+  ApiResponse,
+  buildOutputSettingsType,
+  Repository,
+} from '@/types/CreateWebstie/types'
+import apiClient from '@/lib/axiosConfig'
+import { toast } from 'sonner'
+import { useQuery } from 'wagmi/query'
+import { useWalletKit } from '@mysten/wallet-kit'
+import { addDays } from 'date-fns'
+import { useTheme } from '@/context/ThemeContext'
+import { useIntl } from 'react-intl'
+import { CircleAlert, ChevronDown, ChevronRight, Folder, File as FileIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, } from "@/components/ui/dialog";
 import { AlertTriangle } from "lucide-react";
-
-
 
 interface GithubRepoInputProps {
   githubUrl: string;
@@ -24,8 +35,8 @@ interface GithubRepoInputProps {
   handleSearchRepository: (e: React.ChangeEvent<HTMLInputElement>) => void;
   user: string | null;
   handleGithubSignIn: () => void;
-  repositories: Array<{ id: number; name: string }>;
-  filteredRepositories: Array<{ id: number; name: string }>;
+  repositories: Array<{ id: number; name: string; default_branch: string, visibility: string }>;
+  filteredRepositories: Array<{ id: number; name: string; default_branch: string, visibility: string }>;
   handleSelectRepository: (id: number | null) => void;
   selectedRepo: number | null;
   handleShowMore: () => void;
@@ -34,6 +45,9 @@ interface GithubRepoInputProps {
   repoContentsLoading: boolean;
   repoContentsError: string | null;
   handleLogout: () => void;
+  setSelectedRepoFile: (file: File | null) => void;
+  downloadRepositoryZip: (owner: string, repo: string) => Promise<void>;
+  fileErrors: string[];
 }
 
 function buildTree(items: any[]) {
@@ -118,15 +132,19 @@ export default function GithubRepoInput({
   handleShowMore,
   visibleRepos,
   repoContents,
+  fileErrors,
+  downloadRepositoryZip,
   repoContentsLoading,
   repoContentsError,
   handleLogout,
+  setSelectedRepoFile,
 }: GithubRepoInputProps) {
   const [userHover, setUserHover] = useState(false);
   const userBtnRef = useRef<HTMLButtonElement>(null);
   const [userBtnWidth, setUserBtnWidth] = useState<number | undefined>(undefined);
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
-  
+  const intl = useIntl();
+
   useLayoutEffect(() => {
     if (userBtnRef.current) {
       setUserBtnWidth(userBtnRef.current.offsetWidth);
@@ -150,7 +168,7 @@ export default function GithubRepoInput({
                 style={userBtnWidth ? { width: userBtnWidth } : undefined}
                 onClick={() => setLogoutDialogOpen(true)}
               >
-                Logout
+                <FormattedMessage id="createWebsite.githubLogout" />
               </Button>
             ) : (
               <Button
@@ -165,7 +183,7 @@ export default function GithubRepoInput({
           {!selectedRepo && (
             <div className="relative w-full">
               <Input
-                placeholder="Search repositories..."
+                placeholder={intl.formatMessage({ id: 'createWebsite.githubSearch' })}
                 value={searchRepository}
                 onChange={handleSearchRepository}
                 className="w-full bg-primary-500 border-gray-700 rounded-md h-10 pl-10 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500"
@@ -186,7 +204,7 @@ export default function GithubRepoInput({
           className="w-full bg-secondary-500 hover:bg-secondary-700 text-black border border-gray-700 rounded-md h-10 transition-all duration-300 flex items-center justify-center gap-2"
         >
           <Github className="h-5 w-5" />
-          Sign in with GitHub
+          <FormattedMessage id="createWebsite.githubSignIn" />
         </Button>
       )}
       {(!selectedRepo && repositories.length > 0) && (
@@ -194,11 +212,11 @@ export default function GithubRepoInput({
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className='flex flex-col gap-2 border border-gray-700 rounded-md p-2 bg-primary-900'
+          className='flex flex-col gap-2 border border-gray-700 rounded-sm p-2 bg-primary-900'
         >
           {repositories.filter(repo =>
-                repo.name.toLowerCase().includes(searchRepository.toLowerCase().trim())
-              ).length > 0 ? (
+            repo.name.toLowerCase().includes(searchRepository.toLowerCase().trim())
+          ).length > 0 ? (
             <motion.div
               layout
               className="flex flex-col gap-2 max-h-[400px] overflow-y-auto pr-2"
@@ -209,43 +227,101 @@ export default function GithubRepoInput({
                 <motion.div
                   layout
                   key={repository.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
                   transition={{
-                    duration: 0.15,
-                    delay: index * 0.03
+                    duration: 0.2,
+                    delay: index * 0.05,
+                    ease: "easeOut",
                   }}
                   className={cn(
-                    "p-1 px-4 rounded-md hover:bg-primary-700 transition-all flex items-center justify-between group",
-                    selectedRepo === repository.id ? "bg-primary-500 border border-secondary-500" : "border border-transparent"
+                    "p-2 px-4 rounded-lg bg-primary-900 hover:bg-primary-700/80 transition-all duration-300 flex items-center justify-between group shadow-sm hover:shadow-md",
+                    selectedRepo === repository.id
+                      ? "bg-primary-600/90 border border-secondary-400 ring-1 ring-secondary-300/50"
+                      : "border border-gray-700/50"
                   )}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      handleSelectRepository(repository.id);
+                      downloadRepositoryZip(user!, repository.name);
+                    }
+                  }}
+                  aria-label={`Select repository ${repository.name}`}
                 >
-                  <span className="truncate text-sm">{repository.name}</span>
+                  <div className="flex items-center space-x-3 truncate">
+                    <span className="text-sm font-medium text-gray-100 truncate">
+                      {repository.name}
+                    </span>
+                    <span className="text-xs text-gray-400 bg-gray-700/50 px-2 py-0.5 rounded-full">
+                      {repository.default_branch}
+                    </span>
+                    <span className="text-xs text-gray-400 italic">
+                      {repository.visibility}
+                    </span>
+                  </div>
                   <Button
-                    onClick={() => handleSelectRepository(repository.id)}
+                    onClick={() => {
+                      handleSelectRepository(repository.id);
+                      downloadRepositoryZip(user!, repository.name);
+                    }}
                     size="sm"
                     className={cn(
-                      "opacity-0 group-hover:opacity-100 text-sm transition-opacity",
-                      selectedRepo === repository.id ? "bg-secondary-500 hover:bg-secondary-700" : "bg-primary-500 text-white hover:bg-primary-600"
+                      "opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-sm font-semibold",
+                      selectedRepo === repository.id
+                        ? "bg-secondary-500 hover:bg-secondary-600 text-black"
+                        : "bg-primary-500 text-white hover:bg-primary-600"
                     )}
+                    aria-label={selectedRepo === repository.id ? "Selected repository" : "Import repository"}
                   >
                     {selectedRepo === repository.id ? (
                       <motion.span
-                        initial={{ opacity: 0, scale: 0.8 }}
+                        initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.8 }}
-                        transition={{ duration: 0.2 }}
-                        className="ml-2 px-2 py-0.5 rounded-full bg-secondary-500 text-black text-xs font-semibold align-middle"
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        transition={{ duration: 0.15, ease: "easeInOut" }}
+                        className="flex items-center space-x-1 px-2 py-0.5 rounded-full bg-secondary-400 text-black text-xs font-semibold"
                       >
-                        Selected
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                        <FormattedMessage id="createWebsite.githubSelected" />
                       </motion.span>
-                    ) : 'Import'}
+                    ) : (
+                      <span className="flex items-center space-x-1">
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                          />
+                        </svg>
+                        <FormattedMessage id="createWebsite.githubImport" />
+                      </span>
+                    )}
                   </Button>
                 </motion.div>
               ))}
-
-
             </motion.div>
           ) : (
             <motion.div
@@ -254,7 +330,7 @@ export default function GithubRepoInput({
               transition={{ duration: 0.2 }}
               className="text-center py-4 text-gray-400"
             >
-              No repositories found matching "{searchRepository}"
+              <FormattedMessage id="createWebsite.githubNoResults" />
             </motion.div>
           )}
         </motion.div>
@@ -270,17 +346,17 @@ export default function GithubRepoInput({
               size="sm"
               variant="outline"
               className="text-xs px-3 py-1 border-red-400 text-red-400 hover:bg-red-700 hover:text-white"
-              onClick={() => handleSelectRepository(null)}
+              onClick={() => { handleSelectRepository(null); setSelectedRepoFile(null); }}
             >
               <X className="w-4 h-4 mr-1 inline-block" />
-              Cancel
+              <FormattedMessage id="createWebsite.githubCancel" />
             </Button>
           </div>
           <Separator className="my-2 bg-secondary-700" />
           {repoContentsLoading && (
             <div className="flex flex-row items-center justify-center gap-2 h-10 text-cyan-300 text-sm animate-pulse  bg-cyan-950/80 rounded-md px-4 py-2 my-2 w-full mx-auto">
               <Loader2 className="w-4 h-4 animate-spin" />
-              <p className="font-pixel">Loading repository contents...</p>
+              <FormattedMessage id="createWebsite.githubLoading" />
             </div>
           )}
           {repoContentsError && (
@@ -288,7 +364,7 @@ export default function GithubRepoInput({
               <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" />
               </svg>
-              <span>{repoContentsError}</span>
+              <FormattedMessage id="createWebsite.githubError" />
             </div>
           )}
           {repoContents && Array.isArray(repoContents) && repoContents.length > 0 && (
@@ -299,7 +375,9 @@ export default function GithubRepoInput({
             </div>
           )}
           {repoContents && Array.isArray(repoContents) && repoContents.length === 0 && !repoContentsLoading && !repoContentsError && (
-            <div className="text-cyan-200 text-xs">(Empty directory)</div>
+            <div className="text-cyan-200 text-xs">
+              <FormattedMessage id="createWebsite.githubEmpty" />
+            </div>
           )}
         </div>
       )}
@@ -307,18 +385,34 @@ export default function GithubRepoInput({
         <section >
           <div className="flex items-center gap-4 mb-4 mt-1">
             <Separator className="flex-1" />
-            <p className="text-center text-gray-400 px-4">or</p>
+            <p className="text-center text-gray-400 px-4">
+              <FormattedMessage id="createWebsite.or" />
+            </p>
             <Separator className="flex-1" />
           </div>
           <Input
-            placeholder="Enter GitHub repository URL"
+            placeholder={intl.formatMessage({ id: 'createWebsite.githubUrlPlaceholder' })}
             value={githubUrl}
             onChange={handleGithubUrlChange}
             className="bg-primary-500 border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500"
           />
           <p className="text-sm text-gray-400 mt-2">
-            Example: https://github.com/username/repository
+            <FormattedMessage id="createWebsite.githubUrlExample" />
           </p>
+        </section>
+      )}
+      {fileErrors.length > 0 && (
+        <section className="mt-4">
+          <div className="bg-red-500/10 border border-red-500/20 rounded-md p-3">
+            {fileErrors.map((error, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <CircleAlert className="w-4 h-4 text-red-400" />
+                <p className="text-red-400 text-sm">
+                  {error}
+                </p>
+              </div>
+            ))}
+          </div>
         </section>
       )}
       <Dialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
