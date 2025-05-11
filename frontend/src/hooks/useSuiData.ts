@@ -77,10 +77,10 @@ export const useSuiData = (userAddress: string) => {
       (entry: any) => entry.fields?.key === 'owner',
     )
     const owner = ownerEntry?.fields?.value
-    console.log('Checking owner:', { owner, userAddress })
 
     return owner === userAddress
   })
+  console.log('Filtered metadata:', filteredMetadata)
 
   return {
     blobs,
