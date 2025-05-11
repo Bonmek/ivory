@@ -7,6 +7,8 @@ import { AuthProvider } from '@/context/AuthContext'
 import { RouterProvider } from 'react-router'
 import router from './router'
 import '@mysten/dapp-kit/dist/index.css'
+import { LanguageProvider } from '@/context/LanguageContext'
+import { IntlProvider } from '@/i18n/IntlProvider'
 
 import { SuiClientProvider, WalletProvider } from '@mysten/dapp-kit'
 import { getFullnodeUrl } from '@mysten/sui/client'
@@ -30,13 +32,17 @@ const queryClient = new QueryClient()
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
-      <SuiClientProvider networks={networks} defaultNetwork="testnet">
-        <WalletProvider>
-          <WagmiProvider config={wagmiConfig}>
-            <AuthProvider>{children}</AuthProvider>
-          </WagmiProvider>
-        </WalletProvider>
-      </SuiClientProvider>
+      <LanguageProvider>
+        <IntlProvider>
+          <SuiClientProvider networks={networks} defaultNetwork="testnet">
+            <WalletProvider>
+              <WagmiProvider config={wagmiConfig}>
+                <AuthProvider>{children}</AuthProvider>
+              </WagmiProvider>
+            </WalletProvider>
+          </SuiClientProvider>
+        </IntlProvider>
+      </LanguageProvider>
     </QueryClientProvider>
   )
 }

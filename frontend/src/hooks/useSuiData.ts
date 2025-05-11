@@ -12,7 +12,6 @@ export const useSuiData = (userAddress: string) => {
     queryFn: () => suiService.getBlobs(process.env.REACT_APP_OWNER_ADDRESS || ''),
     enabled: !!userAddress, // Only fetch if user is logged in
   })
-  console.log('Blobs:', blobs)
 
   // Fetch dynamic fields for each blob
   const { data: dynamicFields = [], isLoading: isLoadingFields } = useQuery({

@@ -18,6 +18,7 @@ import LogoCarousel from '@/components/HomePage/LogoCarousel'
 import { Helmet } from 'react-helmet'
 import { useNavigate } from 'react-router'
 import Loading from '@/components/Loading'
+import { FormattedMessage, useIntl } from 'react-intl'
 
 const floatingIconsVariants: Variants = {
   animate: {
@@ -119,10 +120,20 @@ export default function HomePage() {
   const heroRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const { scrollYProgress } = useScroll()
+  const intl = useIntl()
 
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
   const scale = useTransform(scrollYProgress, [0, 0.5], [1, 0.8])
   const y = useTransform(scrollYProgress, [0, 0.5], [0, -100])
+
+  const heroWords = [
+    intl.formatMessage({ id: 'homepage.hero.title1' }),
+    intl.formatMessage({ id: 'homepage.hero.title2' }),
+    intl.formatMessage({ id: 'homepage.hero.title3' }),
+    intl.formatMessage({ id: 'homepage.hero.title4' }),
+    intl.formatMessage({ id: 'homepage.hero.title5' }),
+  ]
+  const heroLast = intl.formatMessage({ id: 'homepage.hero.title6' })
 
   useEffect(() => {
     if (!canvasRef.current) return
@@ -367,33 +378,32 @@ export default function HomePage() {
                 lineHeight: '1.2',
               }}
             >
-              {['Deploy', 'Your', 'Site', 'In', 'Seconds'].map(
-                (word, wordIndex) => (
-                  <span key={wordIndex} className="inline-block">
-                    {word.split('').map((char, charIndex) => (
-                      <motion.span
-                        key={`${wordIndex}-${charIndex}`}
-                        className="inline-block cursor-pointer bg-clip-text text-transparent bg-gradient-to-r from-secondary-400 to-secondary-600"
-                        whileHover={{
-                          y: [0, -30, 0, -15, 0],
-                          scale: [1, 1.1, 1],
-                          transition: {
-                            duration: 0.6,
-                            times: [0, 0.2, 0.4, 0.6, 1],
-                            ease: 'easeInOut',
-                          },
-                        }}
-                      >
-                        {char}
-                      </motion.span>
-                    ))}
-                    {wordIndex < 4 && <span className="inline-block w-4" />}
-                  </span>
-                ),
-              )}
+              {heroWords.map((word, wordIndex) => (
+                <span key={wordIndex} className="inline-block">
+                  {word.split('').map((char, charIndex) => (
+                    <motion.span
+                      key={`${wordIndex}-${charIndex}`}
+                      className="inline-block cursor-pointer bg-clip-text text-transparent bg-gradient-to-r from-secondary-400 to-secondary-600"
+                      whileHover={{
+                        y: [0, -30, 0, -15, 0],
+                        scale: [1, 1.1, 1],
+                        transition: {
+                          duration: 0.6,
+                          times: [0, 0.2, 0.4, 0.6, 1],
+                          ease: 'easeInOut',
+                        },
+                      }}
+                      
+                    >
+                      {char}
+                    </motion.span>
+                  ))}
+                  {wordIndex < 4 && <span className="inline-block w-4" />}
+                </span>
+              ))}
               <span className="inline-block w-4" />
               <motion.span className="text-white inline-block">
-                {'everywhere'.split('').map((char, index) => (
+                {heroLast.split('').map((char, index) => (
                   <motion.span
                     key={index}
                     className="inline-block cursor-pointer relative"
@@ -427,10 +437,7 @@ export default function HomePage() {
                 letterSpacing: '0.02em',
               }}
             >
-              Ivory is a no-code, low-cost platform for deploying static
-              websites with Walrus. Enjoy high availability, censorship
-              resistance, data integrity, and full ownership — all with free
-              bandwidth and zero complexity.
+              <FormattedMessage id="homepage.hero.desc" />
             </motion.p>
 
             <motion.div
@@ -454,7 +461,9 @@ export default function HomePage() {
                 }}
                 onClick={() => navigate('/create-website')}
               >
-                <span className="text-black relative z-10">Deploy Now</span>
+                <span className="text-black relative z-10">
+                  <FormattedMessage id="homepage.hero.deploy" />
+                </span>
                 <motion.div
                   className="absolute inset-0 bg-gradient-to-r from-secondary-600 to-secondary-700"
                   animate={{
@@ -492,7 +501,7 @@ export default function HomePage() {
                   letterSpacing: '0.05em',
                 }}
               >
-                Explore Docs
+                <FormattedMessage id="homepage.hero.docs" />
               </motion.button>
             </motion.div>
           </div>
@@ -528,50 +537,40 @@ export default function HomePage() {
                 lineHeight: '1.2',
               }}
             >
-              The future of{' '}
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-secondary-400 to-secondary-600">
-                Web3
-              </span>{' '}
-              development
+              <FormattedMessage id="homepage.section.title" />
             </motion.h2>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[
                 {
                   icon: <Globe className="w-10 h-10 text-purple-400" />,
-                  title: 'Censorship-Resistant',
-                  description:
-                    "Stay online — always. Ivory sites are immune to takedown and centralized control thanks to Walrus's decentralized architecture.",
+                  title: <FormattedMessage id="homepage.feature.censorship" />,
+                  description: <FormattedMessage id="homepage.feature.censorship.desc" />,
                 },
                 {
                   icon: <Shield className="w-10 h-10 text-cyan-400" />,
-                  title: 'Secure & Ownable',
-                  description:
-                    'You control your data. Ivory guarantees full ownership and tamper-proof deployment with zero vendor lock-in.',
+                  title: <FormattedMessage id="homepage.feature.secure" />,
+                  description: <FormattedMessage id="homepage.feature.secure.desc" />,
                 },
                 {
                   icon: <Code className="w-10 h-10 text-pink-400" />,
-                  title: 'No-Code Deployment',
-                  description:
-                    'Publish your site in seconds. No coding, no setup — just click, deploy, and go live.',
+                  title: <FormattedMessage id="homepage.feature.nocode" />,
+                  description: <FormattedMessage id="homepage.feature.nocode.desc" />,
                 },
                 {
                   icon: <Server className="w-10 h-10 text-emerald-400" />,
-                  title: 'High Availability',
-                  description:
-                    'Your site is served from a global edge network, ensuring blazing-fast load times and near-100% uptime.',
+                  title: <FormattedMessage id="homepage.feature.availability" />,
+                  description: <FormattedMessage id="homepage.feature.availability.desc" />,
                 },
                 {
                   icon: <Lock className="w-10 h-10 text-yellow-400" />,
-                  title: 'Data Integrity',
-                  description:
-                    'All deployments are cryptographically verified to prevent tampering and ensure content fidelity.',
+                  title: <FormattedMessage id="homepage.feature.integrity" />,
+                  description: <FormattedMessage id="homepage.feature.integrity.desc" />,
                 },
                 {
                   icon: <Wifi className="w-10 h-10 text-indigo-400" />,
-                  title: 'Free Bandwidth',
-                  description:
-                    'Enjoy truly free hosting. Ivory serves your traffic at no cost — ideal for creators, devs, and indie projects.',
+                  title: <FormattedMessage id="homepage.feature.bandwidth" />,
+                  description: <FormattedMessage id="homepage.feature.bandwidth.desc" />,
                 },
               ].map((feature, index) => (
                 <motion.div
@@ -614,7 +613,9 @@ export default function HomePage() {
           </div>
         </section>
         <div className="w-full flex justify-center items-center py-6 opacity-80 z-20 relative">
-          <span className="mr-2 text-sm text-gray-400">Powered by</span>
+          <span className="mr-2 text-sm text-gray-400">
+            <FormattedMessage id="homepage.powered" />
+          </span>
           <img
             src="/images/logos/walrus_logo_white_RGB.png"
             alt="Powered by Logo"
