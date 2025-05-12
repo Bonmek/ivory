@@ -401,7 +401,7 @@ export default function CreateWebsitePage() {
                 transition={{ delay: 0.2 }}
                 className="flex items-center mb-8"
               >
-                <CirclePlus className="h-6 w-6 text-sky-500 mr-4" />
+                <CirclePlus className="h-6 w-6 lg:h-10 lg:w-10 text-sky-500 mr-4" />
                 <h1 className="text-3xl font-semibold font-pixel">
                   <FormattedMessage id="createWebsite.title" />
                 </h1>

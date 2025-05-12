@@ -29,11 +29,10 @@ function HelpCenter() {
               <h1 className="lg:text-2xl text-xl font-bold gradient-text font-pixel">
                 <FormattedMessage id="createWebsite.helpCenter" />
               </h1>
-              <p className="text-sm text-gray-400 font-pixel">
+              <p className="max-w-lg:hidden text-sm text-gray-400 font-pixel">
                 <FormattedMessage id="createWebsite.helpCenterDescription" />
               </p>
             </div>
-
           </div>
 
         </motion.div>
