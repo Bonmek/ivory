@@ -300,7 +300,7 @@ const ProjectCard = memo(
       }
       try {
         const response = await apiClient.delete(
-          `/delete-site?object_id=${project.parentId}`
+          `/delete-site?object_id=${project.parentId}`,
         )
         if (response.status === 200) {
           toast.success('Site deleted successfully', {
@@ -476,14 +476,6 @@ const ProjectCard = memo(
                         <Loader2 className="ml-1 h-3 w-3 text-yellow-300 animate-spin" />
                         Deploying...
                       </div>
-                      <DropdownMenuSeparator className="bg-secondary-500/20" />
-                      <DropdownMenuItem
-                        className="text-red-400 focus:text-red-400 focus:bg-primary-800"
-                        onClick={handleDeleteSite}
-                      >
-                        <Trash className="mr-2 h-4 w-4" />
-                        <span>Delete site</span>
-                      </DropdownMenuItem>
                     </>
                   ) : (
                     <>

@@ -47,7 +47,7 @@ export const transformMetadataToProject = (metadata: any, index: number) => {
     description: metadataMap['description'] || '',
     status,
     siteId: status === 1 ? metadataMap['site_id'] : '',
-    suins: metadataMap['suins'] || '',
+    suins: metadataMap['sui_ns'] || '',
     blobId: metadataMap['blobId'] || '',
     installCommand: metadataMap['install_command'] || '',
     buildCommand: metadataMap['build_command'] || '',

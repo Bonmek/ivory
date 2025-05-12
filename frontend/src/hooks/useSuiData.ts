@@ -47,7 +47,6 @@ export const useSuiData = (userAddress: string) => {
       dynamicFields.flatMap((fields) => fields.map((field) => field.objectId)),
     ],
     queryFn: async () => {
-      console.log('Dynamic fields for metadata:', dynamicFields)
       const metadataPromises = dynamicFields.flatMap((fields) =>
         fields.map((field) => {
           // Use parentId from dynamic field
@@ -88,6 +87,7 @@ export const useSuiData = (userAddress: string) => {
 
     return owner === userAddress
   })
+
 
   return {
     blobs,
