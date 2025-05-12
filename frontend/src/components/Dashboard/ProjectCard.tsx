@@ -384,12 +384,30 @@ const ProjectCard = memo(
                             </div>
 
                             {selectedSuins === 'other' && (
-                              <Input
-                                placeholder="Enter custom SUINS name"
-                                value={otherSuins}
-                                onChange={(e) => setOtherSuins(e.target.value)}
-                                className="bg-primary-800 border-secondary-500/20 text-white mt-2"
-                              />
+                              <div className="relative mt-2 group">
+                                <Input
+                                  placeholder="Enter your domain name"
+                                  value={otherSuins}
+                                  onChange={(e) => {
+                                    const value = e.target.value.replace(
+                                      '.wal.app',
+                                      '',
+                                    )
+                                    setOtherSuins(value)
+                                  }}
+                                  className="bg-primary-800 border-secondary-500/20 text-white pr-[85px] transition-all duration-200 
+                                    placeholder:text-white/30 focus:border-secondary-500/50 focus:ring-1 focus:ring-secondary-500/50
+                                    group-hover:border-secondary-500/30"
+                                />
+                                <div
+                                  className="absolute right-0 top-1/2 -translate-y-1/2 px-3 h-full flex items-center
+                                  border-l border-secondary-500/20 text-secondary-400/70 select-none bg-secondary-500/5
+                                  text-sm font-medium transition-colors duration-200 group-hover:text-secondary-400/90
+                                  group-hover:border-secondary-500/30 group-hover:bg-secondary-500/10"
+                                >
+                                  .wal.app
+                                </div>
+                              </div>
                             )}
                           </>
                         )}
