@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { AnimatePresence, motion } from 'framer-motion'
-import { CircleAlert, CirclePlus, Github, HelpCircle, Upload } from 'lucide-react'
+import { CircleAlert, CirclePlus, Github, HelpCircle, Upload, Archive, BadgeCheck, SlidersHorizontal, Package, Settings2 } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
@@ -40,6 +40,7 @@ import { PreviewSummary } from '@/components/CreateWebsite/PreviewSummary'
 import CreateWebsiteDialog from '@/components/CreateWebsiteDialog'
 import { FormattedMessage, useIntl } from 'react-intl'
 import { useEffect, useRef, useState } from 'react'
+import HelpCenter from '@/components/CreateWebsite/HelpCenter'
 
 
 export default function CreateWebsitePage() {
@@ -420,11 +421,19 @@ export default function CreateWebsitePage() {
                     </h2>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
+                        <HelpCircle
+                          className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help"
+                          onClick={() => {
+                            const helpCenter = document.getElementById('help-center')
+                            if (helpCenter) {
+                              helpCenter.scrollIntoView({ behavior: 'smooth' })
+                            }
+                          }}
+                        />
                       </TooltipTrigger>
                       <TooltipContent className='w-[360px]' side="right">
                         <FormattedMessage
-                          id="createWebsite.tooltip"
+                          id="createWebsite.projectFilesTooltip"
                           values={{
                             zip: <span className="text-secondary-500">ZIP file</span>
                           }}
@@ -647,7 +656,8 @@ export default function CreateWebsitePage() {
                     <Button
                       onClick={() => {
                         if (!validateName(name) || !validateFile()) return
-                        setShowPreview(true)
+                        setShowPreview(true);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
                       }}
                       className="bg-secondary-500 hover:bg-secondary-700 text-black p-6 rounded-md text-base transform transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-secondary-500/20"
                     >
@@ -656,32 +666,35 @@ export default function CreateWebsitePage() {
                   </section>
                 </motion.div>
               </article>
+              <HelpCenter />
             </>
           )}
         </motion.main>
       </main>
       <AnimatePresence mode="wait">
         {showPreview && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <PreviewSummary
-              name={name}
-              selectedFramework={selectedFramework}
-              buildOutputSettings={buildOutputSettings}
-              advancedOptions={advancedOptions}
-              uploadMethod={uploadMethod}
-              selectedFile={selectedFile}
-              setOpen={setOpen}
-              setShowPreview={setShowPreview}
-              selectedRepoFile={selectedRepoFile}
-              showBuildOutputSettings={showBuildOutputSettings}
-              deployingState={deployingState}
-              deployingResponse={deployingResponse}
-            />
-          </motion.div>
+          <>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <PreviewSummary
+                name={name}
+                selectedFramework={selectedFramework}
+                buildOutputSettings={buildOutputSettings}
+                advancedOptions={advancedOptions}
+                uploadMethod={uploadMethod}
+                selectedFile={selectedFile}
+                setOpen={setOpen}
+                setShowPreview={setShowPreview}
+                selectedRepoFile={selectedRepoFile}
+                showBuildOutputSettings={showBuildOutputSettings}
+                deployingState={deployingState}
+                deployingResponse={deployingResponse}
+              />
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
       <CreateWebsiteDialog

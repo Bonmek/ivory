@@ -405,7 +405,7 @@ export const PreviewSummary: React.FC<PreviewSummaryProps> = ({
         <div className="flex justify-end gap-4 mt-8">
           <Button
             className="bg-accent hover:bg-accentHover text-accentForeground p-6 rounded-md text-base font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-accent/20"
-            onClick={() => setShowPreview(false)}
+            onClick={() => { setShowPreview(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
           >
             <FormattedMessage
               id="createWebsite.continueEditing"

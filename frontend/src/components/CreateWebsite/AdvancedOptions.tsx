@@ -58,7 +58,14 @@ function AdvancedOptions({ advancedOptions, setAdvancedOptions }: AdvancedOption
                   </h3>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
+                      <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help"
+                        onClick={() => {
+                          const helpCenter = document.getElementById('advanced-options')
+                          if (helpCenter) {
+                            helpCenter.scrollIntoView({ behavior: 'smooth' })
+                          }
+                        }}
+                      />
                     </TooltipTrigger>
                     <TooltipContent className='w-[260px]' side="right">
                       <FormattedMessage id="createWebsite.rootDirectoryTooltip" /> <FormattedMessage id="createWebsite.rootDirectoryTooltipDescription" />
@@ -80,7 +87,14 @@ function AdvancedOptions({ advancedOptions, setAdvancedOptions }: AdvancedOption
                   </h3>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
+                      <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help"
+                        onClick={() => {
+                          const helpCenter = document.getElementById('advanced-options')
+                          if (helpCenter) {
+                            helpCenter.scrollIntoView({ behavior: 'smooth' })
+                          }
+                        }}
+                      />
                     </TooltipTrigger>
                     <TooltipContent className='w-[260px]' side="right">
                       <FormattedMessage id="createWebsite.defaultPathTooltip" /> <FormattedMessage id="createWebsite.defaultPathTooltipDescription" />
@@ -102,7 +116,14 @@ function AdvancedOptions({ advancedOptions, setAdvancedOptions }: AdvancedOption
                   </h3>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <HelpCircleIcon className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
+                      <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help"
+                        onClick={() => {
+                          const helpCenter = document.getElementById('advanced-options')
+                          if (helpCenter) {
+                            helpCenter.scrollIntoView({ behavior: 'smooth' })
+                          }
+                        }}
+                      />
                     </TooltipTrigger>
                     <TooltipContent className='w-[260px]' side="right">
                       <FormattedMessage id="createWebsite.cacheControlTooltip" /> <FormattedMessage id="createWebsite.cacheControlTooltipDescription" />

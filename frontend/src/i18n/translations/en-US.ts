@@ -31,6 +31,7 @@ export default {
   // Create Website
   'createWebsite.title': 'Create new project',
   'createWebsite.projectFiles': 'Project files',
+  'createWebsite.projectFilesTooltip': 'Upload your project files or connect to a GitHub repository.',
   'createWebsite.upload': 'Upload',
   'createWebsite.github': 'Github',
   'createWebsite.dragDrop': 'Drag & drop ZIP file here',
@@ -65,6 +66,7 @@ export default {
   'createWebsite.frameworkBuildSettings': 'Build Settings',
   'createWebsite.frameworkSelect': 'Select Framework',
   'createWebsite.selectFrameworkPreset': 'Select a framework preset:',
+  'createWebsite.frameworkPreset': 'Framework Preset',
   'createWebsite.frameworkPresetTooltip': 'Choose a framework that best matches your project setup. This helps configure the correct build settings automatically.',
   'createWebsite.buildOutput': 'Build Output',
   'createWebsite.outputDirectory': 'Output Directory',
@@ -121,6 +123,9 @@ export default {
   'createWebsite.deploy': 'Deploy',
   'createWebsite.failedToDeploy': 'Failed to deploy',
   'createWebsite.failedToDeployDescription': 'Please try again or contact support for assistance.',
+
+  'createWebsite.helpCenter': 'Help Center',
+  'createWebsite.helpCenterDescription': 'Get help with creating and deploying your website.',
 
   // Homepage
   'homepage.hero.title1': 'Deploy',

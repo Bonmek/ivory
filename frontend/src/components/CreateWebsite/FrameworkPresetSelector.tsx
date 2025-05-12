@@ -76,7 +76,14 @@ const FrameworkPresetSelector: React.FC<FrameworkPresetSelectorProps> = ({ frame
         </div>
         <Tooltip>
           <TooltipTrigger asChild>
-            <HelpCircle className="h-4 w-4 text-secondary-500 hover:text-secondary-700 transition-colors cursor-help" />
+            <HelpCircle className="h-4 w-4 text-secondary-500 hover:text-secondary-700 transition-colors cursor-help"
+              onClick={() => {
+                const helpCenter = document.getElementById('help-center')
+                if (helpCenter) {
+                  helpCenter.scrollIntoView({ behavior: 'smooth' })
+                }
+              }}
+            />
           </TooltipTrigger>
           <TooltipContent className='w-[260px]' side="right">
             <FormattedMessage id="createWebsite.frameworkPresetTooltip" />
