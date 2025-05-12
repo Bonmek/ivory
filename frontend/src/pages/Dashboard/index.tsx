@@ -15,29 +15,7 @@ import { useWalletKit } from '@mysten/wallet-kit'
 import { useAuth } from '@/context/AuthContext'
 import { RefreshCw } from 'lucide-react'
 import { mockProjects } from '@/mocks/projectData'
-
-interface Project {
-  id: number
-  name: string
-  url: string
-  startDate: Date
-  expiredDate: Date
-  color: string
-  urlImg: string
-  description?: string
-  status: number
-  siteId?: string
-  suins?: string
-  blobId?: string
-  installCommand?: string
-  buildCommand?: string
-  defaultRoute?: string
-  isBuild?: boolean
-  epochs?: number
-  ownership?: number
-  client_error_description?: string
-  parentId: string
-}
+import { Project } from '@/types/project'
 
 const formatDate = (date: Date) => {
   return date.toLocaleDateString('en-GB', {
@@ -154,13 +132,6 @@ export default function Dashboard() {
       return 0
     })
   }, [filteredProjects, sortType])
-
-  // Pagination
-  const totalPages = Math.ceil(filteredProjects.length / itemsPerPage)
-  const paginatedProjects = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage
-    return sortedProjects.slice(startIndex, startIndex + itemsPerPage)
-  }, [sortedProjects, currentPage])
 
   // Reset to first page when search changes
   useEffect(() => {
@@ -291,6 +262,9 @@ export default function Dashboard() {
                               onHoverStart={handleHoverStart}
                               onHoverEnd={handleHoverEnd}
                               userAddress={address || ''}
+                              onRefetch={async () => {
+                                await refetch();
+                              }}
                             />
                           </motion.div>
                         ))}
@@ -384,6 +358,9 @@ export default function Dashboard() {
                               onHoverStart={handleHoverStart}
                               onHoverEnd={handleHoverEnd}
                               userAddress={address || ''}
+                              onRefetch={async () => {
+                                await refetch();
+                              }}
                             />
                           </motion.div>
                         ))}
@@ -477,6 +454,9 @@ export default function Dashboard() {
                               onHoverStart={handleHoverStart}
                               onHoverEnd={handleHoverEnd}
                               userAddress={address || ''}
+                              onRefetch={async () => {
+                                await refetch();
+                              }}
                             />
                           </motion.div>
                         ))}
@@ -542,6 +522,9 @@ export default function Dashboard() {
                               onHoverStart={handleHoverStart}
                               onHoverEnd={handleHoverEnd}
                               userAddress={address || ''}
+                              onRefetch={async () => {
+                                await refetch();
+                              }}
                             />
                           </motion.div>
                         ))}

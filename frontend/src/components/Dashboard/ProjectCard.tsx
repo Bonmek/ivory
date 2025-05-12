@@ -47,27 +47,7 @@ import {
 import { useSuiData } from '@/hooks/useSuiData'
 import apiClient from '@/lib/axiosConfig'
 import axios from 'axios'
-
-interface ProjectCardProps {
-  project: {
-    id: number
-    name: string
-    url: string
-    startDate: Date
-    expiredDate: Date
-    color: string
-    urlImg: string
-    suins?: string
-    siteId?: string
-    status?: number
-    client_error_description?: string
-    parentId?: string
-  }
-  index: number
-  onHoverStart: (id: number) => void
-  onHoverEnd: () => void
-  userAddress: string
-}
+import { ProjectCardProps } from '@/types/project'
 
 const formatDate = (date: Date) => {
   return date.toLocaleDateString('en-GB', {
@@ -98,6 +78,7 @@ const ProjectCard = memo(
     onHoverStart,
     onHoverEnd,
     userAddress,
+    onRefetch,
   }: ProjectCardProps) => {
     const remainingDays = calculateDaysBetween(new Date(), project.expiredDate)
     const [startDateOpen, setStartDateOpen] = useState(false)
@@ -106,7 +87,6 @@ const ProjectCard = memo(
     const [errorOpen, setErrorOpen] = useState(false)
     const [statusOpen, setStatusOpen] = useState(false)
     const [copied, setCopied] = useState(false)
-    const [suinsValue, setSuinsValue] = useState('')
     const [buildTime, setBuildTime] = useState<number>(() => {
       if (project.status === 0) {
         const startTime = new Date(project.startDate).getTime()
@@ -120,6 +100,8 @@ const ProjectCard = memo(
     const [otherSuins, setOtherSuins] = useState<string>('')
     const { suins, isLoadingSuins, refetchSuiNS } = useSuiData(userAddress)
     const [isRefreshing, setIsRefreshing] = useState(false)
+    const [isLinking, setIsLinking] = useState(false)
+    const [open, setOpen] = useState(false)
 
     useEffect(() => {
       if (project.status === 0) {
@@ -251,6 +233,7 @@ const ProjectCard = memo(
       }
 
       try {
+        setIsLinking(true)
         const response = await apiClient.put(
           `/set-attributes?object_id=${project.parentId}&sui_ns=${finalSuins}`,
         )
@@ -262,7 +245,11 @@ const ProjectCard = memo(
               border: '1px solid var(--secondary-500)',
               color: 'white',
             },
+            description: 'Your SUINS domain has been linked to this project. It may take a few moments to update.',
+            duration: 5000,
           })
+          setOpen(false)
+          onRefetch()
         }
       } catch (error: any) {
         console.error('Error linking SUINS:', error)
@@ -273,7 +260,11 @@ const ProjectCard = memo(
             border: '1px solid var(--red-500)',
             color: 'white',
           },
+          description: 'Please try again or contact support if the problem persists.',
+          duration: 5000,
         })
+      } finally {
+        setIsLinking(false)
       }
     }
 
@@ -339,7 +330,7 @@ const ProjectCard = memo(
             {/* Dropdown Menu: Top Right */}
             <div className="absolute top-2 right-2 z-10 opacity-80 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-2">
               {!project.suins && (
-                <Dialog>
+                <Dialog open={open} onOpenChange={setOpen}>
                   <DialogTrigger asChild>
                     <button
                       className={`h-8 px-3 flex items-center justify-center rounded-full ${colors.dropdown} transition-all duration-200 hover:scale-110 active:scale-95`}
@@ -424,17 +415,20 @@ const ProjectCard = memo(
                       <div className="flex gap-2">
                         <Button
                           onClick={() => handleLinkSuins()}
-                          className="bg-secondary-500 hover:bg-secondary-600 text-white flex-1"
-                          disabled={
-                            isLoadingSuins ||
-                            !selectedSuins ||
-                            (selectedSuins === 'other' && !otherSuins)
-                          }
+                          className="bg-secondary-500 hover:bg-secondary-600 text-white flex-1 relative"
+                          disabled={isLinking || isLoadingSuins || !selectedSuins || (selectedSuins === 'other' && !otherSuins)}
                         >
-                          {isLoadingSuins ? (
-                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                          ) : null}
-                          Link SUINS
+                          {isLinking ? (
+                            <div className="flex items-center justify-center">
+                              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                              <span>Linking SUINS...</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-center">
+                              <Link className="h-4 w-4 mr-2" />
+                              <span>Link SUINS</span>
+                            </div>
+                          )}
                         </Button>
                       </div>
                     </div>
