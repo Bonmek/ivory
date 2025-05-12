@@ -238,47 +238,42 @@ const ProjectCard = memo(
 
     const handleLinkSuins = async () => {
       const finalSuins = selectedSuins === 'other' ? otherSuins : selectedSuins
-      // if (!finalSuins) {
-      //   toast.error('Please select a SUINS domain', {
-      //     className: 'bg-red-900 border-red-500/20 text-white',
-      //     style: {
-      //       background: 'var(--red-900)',
-      //       border: '1px solid var(--red-500)',
-      //       color: 'white',
-      //     },
-      //   })
-      //   return
-      // }
+      if (!finalSuins) {
+        toast.error('Please select a SUINS domain', {
+          className: 'bg-red-900 border-red-500/20 text-white',
+          style: {
+            background: 'var(--red-900)',
+            border: '1px solid var(--red-500)',
+            color: 'white',
+          },
+        })
+        return
+      }
 
       try {
-        const response = await apiClient.post(
+        const response = await apiClient.put(
           `/set-attributes?object_id=${project.parentId}&sui_ns=${finalSuins}`,
         )
-        // const response = await axios.post(
-        //   `http://localhost:5000/set-attributes?object_id=${project.parentId}&sui_ns=${finalSuins}`,
-        // )
-        console.log(response)
-
-        // if (response.status === 200) {
-        //   toast.success('SUINS linked successfully', {
-        //     className: 'bg-primary-900 border-secondary-500/20 text-white',
-        //     style: {
-        //       background: 'var(--primary-900)',
-        //       border: '1px solid var(--secondary-500)',
-        //       color: 'white',
-        //     },
-        //   })
-        // }
+        if (response.status === 200) {
+          toast.success('SUINS linked successfully', {
+            className: 'bg-primary-900 border-secondary-500/20 text-white',
+            style: {
+              background: 'var(--primary-900)',
+              border: '1px solid var(--secondary-500)',
+              color: 'white',
+            },
+          })
+        }
       } catch (error: any) {
         console.error('Error linking SUINS:', error)
-        // toast.error(error.response?.data?.message || 'Failed to link SUINS', {
-        //   className: 'bg-red-900 border-red-500/20 text-white',
-        //   style: {
-        //     background: 'var(--red-900)',
-        //     border: '1px solid var(--red-500)',
-        //     color: 'white',
-        //   },
-        // })
+        toast.error(error.response?.data?.message || 'Failed to link SUINS', {
+          className: 'bg-red-900 border-red-500/20 text-white',
+          style: {
+            background: 'var(--red-900)',
+            border: '1px solid var(--red-500)',
+            color: 'white',
+          },
+        })
       }
     }
 
@@ -316,7 +311,6 @@ const ProjectCard = memo(
               color: 'white',
             },
           })
-          // คุณอาจจะอยาก refetch ข้อมูลหลังลบสำเร็จ
         }
       } catch (error: any) {
         console.error('Error deleting site:', error)
