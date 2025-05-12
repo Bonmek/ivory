@@ -176,10 +176,7 @@ app.post("/write-blob-n-run-job", upload.single("file"), async (req, res) => {
   }
 });
 
-app.post("/set-attributes", async (req, res) => {
-  console.log("=== /set-attributes called ===");
-  console.log("query:", req.query);
-
+app.put("/set-attributes", async (req, res) => {
   const object_id = req.query.object_id;
   const sui_ns = req.query.sui_ns;
 
@@ -198,11 +195,8 @@ app.post("/set-attributes", async (req, res) => {
     });
     return;
   }
-  console.log("object_id:", object_id);
-  console.log("sui_ns:", sui_ns);
 
   const result = inputSetAttributesScheme.safeParse({ object_id, sui_ns });
-  console.log("result:", result);
 
   if (!result.success) {
     res.status(400).json({
@@ -216,16 +210,11 @@ app.post("/set-attributes", async (req, res) => {
   }
 
   try {
-    console.log("Executing transaction...");
-    console.log("result.data.object_id:", result.data.object_id);
-    console.log("result.data.sui_ns:", result.data.sui_ns);
-    const response = await walrusClient.executeWriteBlobAttributesTransaction({
+    await walrusClient.executeWriteBlobAttributesTransaction({
       blobObjectId: result.data.object_id,
       signer: keypair,
       attributes: { sui_ns: result.data.sui_ns },
     });
-    console.log("Transaction executed successfully");
-    console.log("response:", response);
   } catch (error) {
     res.status(502).json({
       statusCode: 0,
@@ -234,14 +223,12 @@ app.post("/set-attributes", async (req, res) => {
         error_details: error,
       },
     });
-    console.log("Transaction failed");
     return;
   }
   res.status(200).json({
     statusCode: 1,
     message: "Sui service name added to blob attributes successfully",
   });
-  console.log("Transaction executed successfully OKOKOK LALALALA");
 });
 
 app.put("/update-blob-n-run-job", upload.single("file"), async (req, res) => {
