@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { suiService } from '@/service/suiService'
 import { useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
 
 export const useSuiData = (userAddress: string) => {
   const queryClient = useQueryClient()
@@ -53,12 +52,13 @@ export const useSuiData = (userAddress: string) => {
         fields.map((field) => {
           // Use parentId from dynamic field
           const fieldWithParent = field as any
-          console.log('Field with parent:', fieldWithParent)
-          return suiService.getMetadata(field.objectId, fieldWithParent.parentId)
+          return suiService.getMetadata(
+            field.objectId,
+            fieldWithParent.parentId,
+          )
         }),
       )
       const result = await Promise.all(metadataPromises)
-      console.log('Raw metadata result:', result)
       return result
     },
     enabled: dynamicFields.length > 0,
@@ -78,9 +78,16 @@ export const useSuiData = (userAddress: string) => {
     )
     const owner = ownerEntry?.fields?.value
 
+    // Check for delete-attribute field
+    const deleteAttributeEntry = metadataFields.find(
+      (entry: any) => entry.fields?.key === 'delete-attribute',
+    )
+    if (deleteAttributeEntry) {
+      return false // Skip if delete-attribute exists
+    }
+
     return owner === userAddress
   })
-  console.log('Filtered metadata:', filteredMetadata)
 
   return {
     blobs,

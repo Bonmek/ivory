@@ -90,6 +90,7 @@ export default function Dashboard() {
   const sectionItemsPerPage = 4
 
   const { metadata, isLoading, refetch } = useSuiData(address || '')
+  console.log("metadata",metadata)
   // Transform metadata into project format
   const filteredProjects = useMemo(() => {
     // Transform metadata to project format

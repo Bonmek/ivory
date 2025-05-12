@@ -32,8 +32,6 @@ export const transformMetadataToProject = (metadata: any, index: number) => {
   const fields = metadata.content.fields as any
   const metadataFields = fields.value.fields.metadata.fields.contents
   const metadataMap = extractMetadataMap(metadataFields)
-  console.log('Extracted metadata map:', metadataMap)
-  
   const status = parseInt(metadataMap['status'] || '0')
 
   const project = {
@@ -57,9 +55,8 @@ export const transformMetadataToProject = (metadata: any, index: number) => {
     isBuild: metadataMap['is_build'] === '1',
     epochs: parseInt(metadataMap['epochs'] || '0'),
     ownership: parseInt(metadataMap['ownership'] || '0'),
-    parentObjectId: metadata.parentId || '',
     parentId: metadata.parentId || '',
+    client_error_description: metadataMap['client_error_description'] || '',
   }
-  console.log('Transformed project:', project)
   return project
 } 

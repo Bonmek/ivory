@@ -37,8 +37,16 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { Toaster } from '@/components/ui/sonner'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useSuiData } from "@/hooks/useSuiData"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { useSuiData } from '@/hooks/useSuiData'
+import apiClient from '@/lib/axiosConfig'
+import axios from 'axios'
 
 interface ProjectCardProps {
   project: {
@@ -53,6 +61,7 @@ interface ProjectCardProps {
     siteId?: string
     status?: number
     client_error_description?: string
+    parentId?: string
   }
   index: number
   onHoverStart: (id: number) => void
@@ -83,7 +92,13 @@ const calculateDaysBetween = (date1: Date, date2: Date) => {
 }
 
 const ProjectCard = memo(
-  ({ project, index, onHoverStart, onHoverEnd, userAddress }: ProjectCardProps) => {
+  ({
+    project,
+    index,
+    onHoverStart,
+    onHoverEnd,
+    userAddress,
+  }: ProjectCardProps) => {
     const remainingDays = calculateDaysBetween(new Date(), project.expiredDate)
     const [startDateOpen, setStartDateOpen] = useState(false)
     const [expiredDateOpen, setExpiredDateOpen] = useState(false)
@@ -101,12 +116,10 @@ const ProjectCard = memo(
       return 0
     })
     const [dots, setDots] = useState('.')
-    const [selectedSuins, setSelectedSuins] = useState<string>("")
-    const [otherSuins, setOtherSuins] = useState<string>("")
+    const [selectedSuins, setSelectedSuins] = useState<string>('')
+    const [otherSuins, setOtherSuins] = useState<string>('')
     const { suins, isLoadingSuins, refetchSuiNS } = useSuiData(userAddress)
     const [isRefreshing, setIsRefreshing] = useState(false)
-
-    console.log('text',project)
 
     useEffect(() => {
       if (project.status === 0) {
@@ -223,10 +236,64 @@ const ProjectCard = memo(
       }
     }
 
-    const handleLinkSuins = () => {
-      const finalSuins = selectedSuins === "other" ? otherSuins : selectedSuins
-      if (!finalSuins) {
-        toast.error('Please select a SUINS domain', {
+    const handleLinkSuins = async () => {
+      const finalSuins = selectedSuins === 'other' ? otherSuins : selectedSuins
+      // if (!finalSuins) {
+      //   toast.error('Please select a SUINS domain', {
+      //     className: 'bg-red-900 border-red-500/20 text-white',
+      //     style: {
+      //       background: 'var(--red-900)',
+      //       border: '1px solid var(--red-500)',
+      //       color: 'white',
+      //     },
+      //   })
+      //   return
+      // }
+
+      try {
+        const response = await apiClient.post(
+          `/set-attributes?object_id=${project.parentId}&sui_ns=${finalSuins}`,
+        )
+        // const response = await axios.post(
+        //   `http://localhost:5000/set-attributes?object_id=${project.parentId}&sui_ns=${finalSuins}`,
+        // )
+        console.log(response)
+
+        // if (response.status === 200) {
+        //   toast.success('SUINS linked successfully', {
+        //     className: 'bg-primary-900 border-secondary-500/20 text-white',
+        //     style: {
+        //       background: 'var(--primary-900)',
+        //       border: '1px solid var(--secondary-500)',
+        //       color: 'white',
+        //     },
+        //   })
+        // }
+      } catch (error: any) {
+        console.error('Error linking SUINS:', error)
+        // toast.error(error.response?.data?.message || 'Failed to link SUINS', {
+        //   className: 'bg-red-900 border-red-500/20 text-white',
+        //   style: {
+        //     background: 'var(--red-900)',
+        //     border: '1px solid var(--red-500)',
+        //     color: 'white',
+        //   },
+        // })
+      }
+    }
+
+    const handleRefreshSuins = async () => {
+      setIsRefreshing(true)
+      try {
+        await refetchSuiNS()
+      } finally {
+        setIsRefreshing(false)
+      }
+    }
+
+    const handleDeleteSite = async () => {
+      if (!project.parentId) {
+        toast.error('Project Parent ID is missing. Cannot delete site.', {
           className: 'bg-red-900 border-red-500/20 text-white',
           style: {
             background: 'var(--red-900)',
@@ -236,23 +303,31 @@ const ProjectCard = memo(
         })
         return
       }
-      // TODO: Implement SUINS linking logic
-      toast.success('SUINS linked successfully', {
-        className: 'bg-primary-900 border-secondary-500/20 text-white',
-        style: {
-          background: 'var(--primary-900)',
-          border: '1px solid var(--secondary-500)',
-          color: 'white',
-        },
-      })
-    }
-
-    const handleRefreshSuins = async () => {
-      setIsRefreshing(true)
       try {
-        await refetchSuiNS()
-      } finally {
-        setIsRefreshing(false)
+        const response = await apiClient.delete(
+          `/delete-site?object_id=${project.parentId}`
+        )
+        if (response.status === 200) {
+          toast.success('Site deleted successfully', {
+            className: 'bg-primary-900 border-secondary-500/20 text-white',
+            style: {
+              background: 'var(--primary-900)',
+              border: '1px solid var(--secondary-500)',
+              color: 'white',
+            },
+          })
+          // คุณอาจจะอยาก refetch ข้อมูลหลังลบสำเร็จ
+        }
+      } catch (error: any) {
+        console.error('Error deleting site:', error)
+        toast.error(error.response?.data?.message || 'Failed to delete site', {
+          className: 'bg-red-900 border-red-500/20 text-white',
+          style: {
+            background: 'var(--red-900)',
+            border: '1px solid var(--red-500)',
+            color: 'white',
+          },
+        })
       }
     }
 
@@ -309,15 +384,20 @@ const ProjectCard = memo(
                                 </SelectTrigger>
                                 <SelectContent className="bg-primary-800 border-secondary-500/20 text-white">
                                   {suins.map((sui) => (
-                                    <SelectItem 
-                                      key={sui.data?.objectId} 
-                                      value={sui.data?.content?.fields?.domain_name}
+                                    <SelectItem
+                                      key={sui.data?.objectId}
+                                      value={
+                                        sui.data?.content?.fields?.domain_name
+                                      }
                                       className="hover:bg-primary-700"
                                     >
                                       {sui.data?.content?.fields?.domain_name}
                                     </SelectItem>
                                   ))}
-                                  <SelectItem value="other" className="hover:bg-primary-700">
+                                  <SelectItem
+                                    value="other"
+                                    className="hover:bg-primary-700"
+                                  >
                                     Other
                                   </SelectItem>
                                 </SelectContent>
@@ -335,8 +415,8 @@ const ProjectCard = memo(
                                 )}
                               </Button>
                             </div>
-                            
-                            {selectedSuins === "other" && (
+
+                            {selectedSuins === 'other' && (
                               <Input
                                 placeholder="Enter custom SUINS name"
                                 value={otherSuins}
@@ -349,9 +429,13 @@ const ProjectCard = memo(
                       </div>
                       <div className="flex gap-2">
                         <Button
-                          onClick={handleLinkSuins}
+                          onClick={() => handleLinkSuins()}
                           className="bg-secondary-500 hover:bg-secondary-600 text-white flex-1"
-                          disabled={isLoadingSuins || (!selectedSuins || (selectedSuins === "other" && !otherSuins))}
+                          disabled={
+                            isLoadingSuins ||
+                            !selectedSuins ||
+                            (selectedSuins === 'other' && !otherSuins)
+                          }
                         >
                           {isLoadingSuins ? (
                             <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -381,10 +465,13 @@ const ProjectCard = memo(
                     <>
                       <DropdownMenuItem className="focus:bg-primary-800">
                         <RefreshCw className="mr-2 h-4 w-4" />
-                        <span>Retry Deploy</span>
+                        <span>Re-deploy</span>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator className="bg-secondary-500/20" />
-                      <DropdownMenuItem className="text-red-400 focus:text-red-400 focus:bg-primary-800">
+                      <DropdownMenuItem
+                        className="text-red-400 focus:text-red-400 focus:bg-primary-800"
+                        onClick={handleDeleteSite}
+                      >
                         <Trash className="mr-2 h-4 w-4" />
                         <span>Delete site</span>
                       </DropdownMenuItem>
@@ -396,7 +483,10 @@ const ProjectCard = memo(
                         Deploying...
                       </div>
                       <DropdownMenuSeparator className="bg-secondary-500/20" />
-                      <DropdownMenuItem className="text-red-400 focus:text-red-400 focus:bg-primary-800">
+                      <DropdownMenuItem
+                        className="text-red-400 focus:text-red-400 focus:bg-primary-800"
+                        onClick={handleDeleteSite}
+                      >
                         <Trash className="mr-2 h-4 w-4" />
                         <span>Delete site</span>
                       </DropdownMenuItem>
@@ -416,7 +506,10 @@ const ProjectCard = memo(
                         <span>Update site</span>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator className="bg-secondary-500/20" />
-                      <DropdownMenuItem className="text-red-400 focus:text-red-400 focus:bg-primary-800">
+                      <DropdownMenuItem
+                        className="text-red-400 focus:text-red-400 focus:bg-primary-800"
+                        onClick={handleDeleteSite}
+                      >
                         <Trash className="mr-2 h-4 w-4" />
                         <span>Delete site</span>
                       </DropdownMenuItem>
@@ -431,10 +524,10 @@ const ProjectCard = memo(
               <img
                 src={
                   project.status === 0
-                    ? "/images/walrus_building.png"
+                    ? '/images/walrus_building.png'
                     : project.status === 2
-                      ? "/images/walrus_fail.png"
-                      : "/images/walrus.png"
+                      ? '/images/walrus_fail.png'
+                      : '/images/walrus.png'
                 }
                 alt="project avatar"
                 className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border-2 ${colors.avatar} shadow transition-all duration-300 group-hover:scale-105`}
@@ -499,7 +592,9 @@ const ProjectCard = memo(
                           </svg>
                         </div>
                         <div className="flex-1">
-                          <div className="text-sm font-medium text-red-400 mb-1">Deployment Failed</div>
+                          <div className="text-sm font-medium text-red-400 mb-1">
+                            Deployment Failed
+                          </div>
                           <div className="text-xs text-white/80 leading-relaxed">
                             {project.client_error_description}
                           </div>
@@ -547,7 +642,8 @@ const ProjectCard = memo(
                             Building in Progress
                           </div>
                           <div className="text-xs text-white/80 leading-relaxed">
-                            Your site is currently being built. This process may take a few minutes.
+                            Your site is currently being built. This process may
+                            take a few minutes.
                           </div>
                         </div>
                       </div>
@@ -662,7 +758,9 @@ const ProjectCard = memo(
                     <div className="flex items-center gap-1.5 mt-0.5 min-h-[20px]">
                       <Timer className="h-3.5 w-3.5 text-yellow-400" />
                       {buildTime === 0 ? (
-                        <span className="animate-pulse text-yellow-300 font-medium">Loading...</span>
+                        <span className="animate-pulse text-yellow-300 font-medium">
+                          Loading...
+                        </span>
                       ) : (
                         <span className="text-sm text-yellow-300 font-medium">
                           {formatBuildTime(buildTime)}
