@@ -28,4 +28,4 @@ export interface ProjectCardProps {
   onHoverEnd: () => void
   userAddress: string
   onRefetch: () => Promise<void>
-} 
+}

@@ -102,6 +102,8 @@ const ProjectCard = memo(
     const [isRefreshing, setIsRefreshing] = useState(false)
     const [isLinking, setIsLinking] = useState(false)
     const [open, setOpen] = useState(false)
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+    const [isDeleting, setIsDeleting] = useState(false)
 
     useEffect(() => {
       if (project.status === 0) {
@@ -199,21 +201,11 @@ const ProjectCard = memo(
         setCopied(true)
         toast.success('Copied to clipboard', {
           className: 'bg-primary-900 border-secondary-500/20 text-white',
-          style: {
-            background: 'var(--primary-900)',
-            border: '1px solid var(--secondary-500)',
-            color: 'white',
-          },
         })
         setTimeout(() => setCopied(false), 2000)
       } catch (err) {
         toast.error('Failed to copy', {
           className: 'bg-red-900 border-red-500/20 text-white',
-          style: {
-            background: 'var(--red-900)',
-            border: '1px solid var(--red-500)',
-            color: 'white',
-          },
         })
       }
     }
@@ -223,11 +215,6 @@ const ProjectCard = memo(
       if (!finalSuins) {
         toast.error('Please select a SUINS domain', {
           className: 'bg-red-900 border-red-500/20 text-white',
-          style: {
-            background: 'var(--red-900)',
-            border: '1px solid var(--red-500)',
-            color: 'white',
-          },
         })
         return
       }
@@ -245,7 +232,8 @@ const ProjectCard = memo(
               border: '1px solid var(--secondary-500)',
               color: 'white',
             },
-            description: 'Your SUINS domain has been linked to this project. It may take a few moments to update.',
+            description:
+              'Your SUINS domain has been linked to this project. It may take a few moments to update.',
             duration: 5000,
           })
           setOpen(false)
@@ -260,7 +248,8 @@ const ProjectCard = memo(
             border: '1px solid var(--red-500)',
             color: 'white',
           },
-          description: 'Please try again or contact support if the problem persists.',
+          description:
+            'Please try again or contact support if the problem persists.',
           duration: 5000,
         })
       } finally {
@@ -281,38 +270,31 @@ const ProjectCard = memo(
       if (!project.parentId) {
         toast.error('Project Parent ID is missing. Cannot delete site.', {
           className: 'bg-red-900 border-red-500/20 text-white',
-          style: {
-            background: 'var(--red-900)',
-            border: '1px solid var(--red-500)',
-            color: 'white',
-          },
         })
         return
       }
       try {
+        setIsDeleting(true)
         const response = await apiClient.delete(
           `/delete-site?object_id=${project.parentId}`,
         )
         if (response.status === 200) {
           toast.success('Site deleted successfully', {
             className: 'bg-primary-900 border-secondary-500/20 text-white',
-            style: {
-              background: 'var(--primary-900)',
-              border: '1px solid var(--secondary-500)',
-              color: 'white',
-            },
+            description:
+              'The site deletion process may take 1-2 minutes to complete.',
+            duration: 5000,
           })
+          setDeleteDialogOpen(false)
+          onRefetch()
         }
       } catch (error: any) {
         console.error('Error deleting site:', error)
         toast.error(error.response?.data?.message || 'Failed to delete site', {
           className: 'bg-red-900 border-red-500/20 text-white',
-          style: {
-            background: 'var(--red-900)',
-            border: '1px solid var(--red-500)',
-            color: 'white',
-          },
         })
+      } finally {
+        setIsDeleting(false)
       }
     }
 
@@ -416,7 +398,12 @@ const ProjectCard = memo(
                         <Button
                           onClick={() => handleLinkSuins()}
                           className="bg-secondary-500 hover:bg-secondary-600 text-white flex-1 relative"
-                          disabled={isLinking || isLoadingSuins || !selectedSuins || (selectedSuins === 'other' && !otherSuins)}
+                          disabled={
+                            isLinking ||
+                            isLoadingSuins ||
+                            !selectedSuins ||
+                            (selectedSuins === 'other' && !otherSuins)
+                          }
                         >
                           {isLinking ? (
                             <div className="flex items-center justify-center">
@@ -458,7 +445,7 @@ const ProjectCard = memo(
                       <DropdownMenuSeparator className="bg-secondary-500/20" />
                       <DropdownMenuItem
                         className="text-red-400 focus:text-red-400 focus:bg-primary-800"
-                        onClick={handleDeleteSite}
+                        onClick={() => setDeleteDialogOpen(true)}
                       >
                         <Trash className="mr-2 h-4 w-4" />
                         <span>Delete site</span>
@@ -488,7 +475,7 @@ const ProjectCard = memo(
                       <DropdownMenuSeparator className="bg-secondary-500/20" />
                       <DropdownMenuItem
                         className="text-red-400 focus:text-red-400 focus:bg-primary-800"
-                        onClick={handleDeleteSite}
+                        onClick={() => setDeleteDialogOpen(true)}
                       >
                         <Trash className="mr-2 h-4 w-4" />
                         <span>Delete site</span>
@@ -647,7 +634,7 @@ const ProjectCard = memo(
                     rel="noopener noreferrer"
                     className={`flex items-center h-[28px] hover:underline truncate transition-colors duration-200 ${colors.link}`}
                   >
-                    {project.suins}.suins
+                    {project.suins}.wal.app
                     <span className="ml-1 group-hover:translate-x-0.5 transition-transform duration-200">
                       <ExternalLink className="h-4 w-4 flex-shrink-0" />
                     </span>
@@ -778,6 +765,46 @@ const ProjectCard = memo(
             </div>
           </Card>
         </div>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <DialogContent className="bg-primary-900 border-red-500/20 text-white">
+            <DialogHeader>
+              <DialogTitle className="text-red-400">Delete Site</DialogTitle>
+              <DialogDescription className="text-white/60">
+                Are you sure you want to delete this site? This action cannot be
+                undone.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end gap-3 mt-6">
+              <Button
+                variant="outline"
+                onClick={() => setDeleteDialogOpen(false)}
+                className="border-white/20 text-white hover:bg-white/10"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleDeleteSite}
+                className="bg-red-500 hover:bg-red-600 text-white"
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <div className="flex items-center">
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    <span>Deleting...</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center">
+                    <Trash className="h-4 w-4 mr-2" />
+                    <span>Delete Site</span>
+                  </div>
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         <Toaster />
       </>
     )
