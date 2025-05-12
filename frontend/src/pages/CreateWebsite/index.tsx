@@ -1,7 +1,6 @@
 import { Button } from '@/components/ui/button'
-import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { CircleAlert, CirclePlus, Cloud, Github, HelpCircle, Sparkles, Upload } from 'lucide-react'
+import { CircleAlert, CirclePlus, Github, HelpCircle, Upload } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
@@ -15,15 +14,18 @@ import FileUploadPreview from '@/components/CreateWebsite/FileUploadPreview'
 import FrameworkPresetSelector from '@/components/CreateWebsite/FrameworkPresetSelector'
 import {
   CacheControl,
+  DeployingState,
   UploadMethod,
 } from '@/types/CreateWebstie/enums'
 import BuildOutputSetting from '@/components/CreateWebsite/BuildOutputSetting'
 import AdvancedOptions from '@/components/CreateWebsite/AdvancedOptions'
 import {
   advancedOptionsType,
-  ApiError,
   ApiResponse,
+  ApiResponseError,
   buildOutputSettingsType,
+  GitHubApiError,
+  GitHubApiResponse,
   Repository,
 } from '@/types/CreateWebstie/types'
 import { frameworks } from '@/constants/frameworks'
@@ -37,9 +39,23 @@ import { useQuery } from 'wagmi/query'
 import { PreviewSummary } from '@/components/CreateWebsite/PreviewSummary'
 import CreateWebsiteDialog from '@/components/CreateWebsiteDialog'
 import { FormattedMessage, useIntl } from 'react-intl'
+import { useEffect, useRef, useState } from 'react'
 
 
 export default function CreateWebsitePage() {
+  // Warn user before leaving/refreshing page
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      // Chrome requires returnValue to be set
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
+
   useTheme()
   const { currentAccount } = useWalletKit()
 
@@ -69,6 +85,10 @@ export default function CreateWebsitePage() {
 
   // State for create website dialog
   const [open, setOpen] = useState(false)
+
+  // State for deploying
+  const [deployingState, setDeployingState] = useState<DeployingState>(DeployingState.None)
+  const [deployingResponse, setDeployingResponse] = useState<ApiResponse | null>(null)
 
   // State for file upload
   const [uploadMethod, setUploadMethod] = useState<UploadMethod>(
@@ -180,7 +200,7 @@ export default function CreateWebsitePage() {
 
   const fetchRepositories = async () => {
     try {
-      const res: ApiResponse<Repository[]> = await apiClient.get(
+      const res: GitHubApiResponse<Repository[]> = await apiClient.get(
         process.env.REACT_APP_API_REPOSITORIES || '',
       )
       if (res.status === 401) {
@@ -188,7 +208,7 @@ export default function CreateWebsitePage() {
       }
       return Array.isArray(res.data) ? res.data : []
     } catch (error) {
-      const apiError = error as ApiError
+      const apiError = error as GitHubApiError
       if (apiError.response?.status === 401) {
         setUser(null)
         throw new Error('Unauthorized')
@@ -228,11 +248,8 @@ export default function CreateWebsitePage() {
       .get(process.env.REACT_APP_API_USER || '')
       .then((res) => setUser(res.data.user))
       .catch(() => setUser(null))
+    setDeployingState(DeployingState.None)
   }, [])
-
-  const handleShowMore = () => {
-    setVisibleRepos((prev) => prev + maxRepoView)
-  }
 
   const { data } = useQuery({
     queryKey: ['repositories'],
@@ -257,6 +274,7 @@ export default function CreateWebsitePage() {
   }
 
   const handleClickDeploy = async () => {
+    setOpen(false)
     try {
       const attributes: WebsiteAttributes = {
         'site-name': name,
@@ -279,15 +297,21 @@ export default function CreateWebsitePage() {
       console.log('Selected File:', selectedFile)
       console.log('Selected Repo File:', selectedRepoFile)
 
+      setDeployingState(DeployingState.Deploying)
+
       const response = await writeBlobAndRunJob({
         file: uploadMethod === "upload" ? selectedFile! : selectedRepoFile!,
         attributes,
       })
 
       console.log('Response:', response)
+      setDeployingState(DeployingState.Deployed)
+      setDeployingResponse(response as unknown as ApiResponse)
       return response
     } catch (error) {
       console.error('Error:', error)
+      setDeployingState(DeployingState.Failed)
+      setDeployingResponse(error as ApiResponseError)
       throw error
     }
   }
@@ -299,7 +323,6 @@ export default function CreateWebsitePage() {
         throw new Error('Logout failed');
       }
 
-      // Clear local state
       setUser(null)
       setSelectedRepo(null)
       setGithubUrl('')
@@ -308,17 +331,13 @@ export default function CreateWebsitePage() {
       setRepoContentsError(null)
       setRepoContentsLoading(false)
 
-      // Show success toast
       toast.success('Successfully logged out');
 
-      // Redirect to home page
       window.location.href = '/create-website';
     } catch (error) {
       console.error('Logout error:', error);
-      // Show error toast
       toast.error('Failed to log out. Please try again.');
 
-      // Still clear local state even if backend logout fails
       setUser(null)
       setSelectedRepo(null)
       setGithubUrl('')
@@ -555,8 +574,6 @@ export default function CreateWebsitePage() {
                         filteredRepositories={filteredRepositories}
                         handleSelectRepository={handleSelectRepository}
                         selectedRepo={selectedRepo}
-                        handleShowMore={handleShowMore}
-                        visibleRepos={visibleRepos}
                         repoContents={repoContents}
                         repoContentsLoading={repoContentsLoading}
                         repoContentsError={repoContentsError}
@@ -661,6 +678,8 @@ export default function CreateWebsitePage() {
               setShowPreview={setShowPreview}
               selectedRepoFile={selectedRepoFile}
               showBuildOutputSettings={showBuildOutputSettings}
+              deployingState={deployingState}
+              deployingResponse={deployingResponse}
             />
           </motion.div>
         )}

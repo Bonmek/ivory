@@ -112,6 +112,15 @@ export default {
   'createWebsite.previewAdvancedSettings': '高级设置',
   'createWebsite.previewDeploy': '部署',
   'createWebsite.previewBack': '返回',
+  'createWebsite.createdSuccessfully': '创建成功！',
+  'createWebsite.deploying': '正在部署...',
+  'createWebsite.processingRequest': '正在处理您的请求...',
+  'createWebsite.processingTime': '这可能需要几分钟',
+  'createWebsite.continueEditing': '继续编辑',
+  'createWebsite.deploy': '部署',
+  'createWebsite.viewDashboard': '您现在可以在 {dashboardLink} 查看部署状态',
+  'createWebsite.failedToDeploy': '部署失败',
+  'createWebsite.failedToDeployDescription': '请重试或联系支持获取帮助。',
 
   // Homepage
   'homepage.hero.title1': '部署',

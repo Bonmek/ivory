@@ -10,7 +10,6 @@ import { cn } from "@/lib/utils";
 import { buildOutputSettingsType } from "@/types/CreateWebstie/types";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { HelpCircle } from 'lucide-react';
-import { Button } from "@/components/ui/button";
 import { FormattedMessage } from 'react-intl';
 import { useIntl } from 'react-intl';
 
@@ -67,10 +66,10 @@ const FrameworkPresetSelector: React.FC<FrameworkPresetSelectorProps> = ({ frame
       default:
         break;
     }
-  };  
+  };
 
   return (
-    <>
+    <article className="space-y-4">
       <div className="flex items-center gap-2">
         <div className="text-sm text-gray-300">
           <FormattedMessage id="createWebsite.selectFrameworkPreset" />
@@ -96,18 +95,18 @@ const FrameworkPresetSelector: React.FC<FrameworkPresetSelectorProps> = ({ frame
         <SelectContent className="bg-primary-900">
           {frameworks.map((framework) => (
             <SelectItem key={framework.id} value={framework.id}>
-            <span className="flex items-center gap-2">
-              <span className={cn(
-                "text-gray-400 transition-colors",
-                selectedFramework === framework.id && "text-secondary-500"
-              )}>{framework.icon}</span>
-              <span className="font-medium">{framework.name}</span>
-            </span>
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  </>
+              <span className="flex items-center gap-2">
+                <span className={cn(
+                  "text-gray-400 transition-colors",
+                  selectedFramework === framework.id && "text-secondary-500"
+                )}>{framework.icon}</span>
+                <span className="font-medium">{framework.name}</span>
+              </span>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </article >
   );
 }
 

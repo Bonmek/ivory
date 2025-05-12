@@ -90,7 +90,7 @@ export default {
   'createWebsite.cacheControlTooltipDescription': 'This helps improve load times and performance.',
   'createWebsite.previewSummary': 'Preview Summary',
   'createWebsite.previewSummaryDescription': 'Review your website settings before deployment.',
-  'createWebsite.previewProjectName': 'Project Name',
+  'createWebsite.previewProjectName': 'Preview Project',
   'createWebsite.previewUploadMethod': 'Upload Method',
   'createWebsite.previewFileUpload': 'File Upload',
   'createWebsite.previewGitHubRepo': 'GitHub Repository',
@@ -112,6 +112,15 @@ export default {
   'createWebsite.previewAdvancedSettings': 'Advanced Settings',
   'createWebsite.previewDeploy': 'Deploy',
   'createWebsite.previewBack': 'Back',
+
+  'createWebsite.createdSuccessfully': 'Created successfully!',
+  'createWebsite.deploying': 'Deploying...',
+  'createWebsite.processingRequest': 'Processing your request...',
+  'createWebsite.processingTime': 'This may take a few moments',
+  'createWebsite.continueEditing': 'Continue Editing',
+  'createWebsite.deploy': 'Deploy',
+  'createWebsite.failedToDeploy': 'Failed to deploy',
+  'createWebsite.failedToDeployDescription': 'Please try again or contact support for assistance.',
 
   // Homepage
   'homepage.hero.title1': 'Deploy',

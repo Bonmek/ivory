@@ -15,3 +15,10 @@ export enum CacheControl {
   OneMonth = '30',
   OneYear = '365'
 }
+
+export enum DeployingState {
+  None = 'none',
+  Deploying = 'deploying',
+  Deployed = 'deployed',
+  Failed = 'failed'
+}
