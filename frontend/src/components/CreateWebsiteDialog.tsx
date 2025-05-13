@@ -24,7 +24,7 @@ function CreateWebsiteDialog({
   handleClickDeploy: () => Promise<WriteBlobResponse>
 }) {
   const [openSuiLogin, setOpenSuiLogin] = useState(false)
-  const { currentAccount, disconnect } = useWalletKit()
+  const { currentAccount } = useWalletKit()
 
   return (
     <>
@@ -32,7 +32,7 @@ function CreateWebsiteDialog({
         <DialogContent className={`bg-primary-900`}>
           <div className="flex justify-center">
             <img
-              src="../../public/images/logos/Ivory.png"
+              src="/images/logos/Ivory.png"
               alt="Ivory Logo"
               className="w-24 h-24 object-contain"
             />

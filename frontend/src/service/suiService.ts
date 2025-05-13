@@ -10,7 +10,7 @@ class SuiService {
     this.client = new SuiClient({ url: getFullnodeUrl(SUI_NETWORK as 'mainnet' | 'testnet' | 'devnet' | 'localnet') })
   }
 
-  async getBlobs(address: string) {
+  async getBlobs(address: string, filter?: { StructType: string }) {
     try {
       let allData: any[] = []
       let cursor: string | null = null
@@ -19,11 +19,15 @@ class SuiService {
       while (hasNextPage) {
         const { data, hasNextPage: nextPage, nextCursor } = await this.client.getOwnedObjects({
           owner: address,
-          filter: { StructType: BLOB_TYPE as string },
+          filter: filter || { StructType: BLOB_TYPE as string },
           options: { showContent: true },
           cursor: cursor
         })
-        allData = [...allData, ...data]
+        const blobsWithParent = data.map(blob => ({
+          ...blob,
+          parentId: blob.data?.objectId || ''
+        }))
+        allData = [...allData, ...blobsWithParent]
         hasNextPage = nextPage
         cursor = nextCursor || null
       }
@@ -59,13 +63,16 @@ class SuiService {
     }
   }
 
-  async getMetadata(objectId: string) {
+  async getMetadata(objectId: string, parentId?: string) {
     try {
       const { data } = await this.client.getObject({
         id: objectId,
         options: { showContent: true },
       })
-      return data
+      return {
+        ...data,
+        parentId: parentId || ''
+      }
     } catch (error) {
       console.error('Error fetching metadata:', error)
       throw error

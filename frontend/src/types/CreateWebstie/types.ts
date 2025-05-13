@@ -26,12 +26,31 @@ export interface Repository {
   visibility: string
 }
 
-export interface ApiResponse<T> {
+export interface CloudRunJobDetails {
+  [key: string]: any;
+}
+
+export interface ApiResponseSuccess {
+  statusCode: 1;
+  details: CloudRunJobDetails;
+}
+
+export interface ApiResponseError {
+  statusCode: 0;
+  error: {
+    error_message: string;
+    error_details: Record<string, any>;
+  };
+}
+
+export type ApiResponse = ApiResponseSuccess | ApiResponseError;
+
+export interface GitHubApiResponse<T> {
   data: T;
   status: number;
 }
 
-export interface ApiError {
+export interface GitHubApiError {
   response?: {
     status: number;
   };
