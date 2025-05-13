@@ -63,6 +63,7 @@ app.post("/write-blob-n-run-job", upload.single("file"), async (req, res) => {
     });
     return;
   }
+
   const zipFile = new Uint8Array(req.file.buffer);
   const attributes = req.body.attributes
     ? typeof req.body.attributes === "string"
@@ -84,23 +85,73 @@ app.post("/write-blob-n-run-job", upload.single("file"), async (req, res) => {
   }
 
   let blob_data;
-  try {
-    blob_data = await walrusClient.writeBlob({
-      blob: zipFile,
-      deletable: true,
-      epochs: Number(result.data.epochs),
-      signer: keypair,
-      attributes: result.data,
-    });
-  } catch (error) {
-    res.status(502).json({
-      statusCode: 0,
-      error: {
-        error_message: "Failed to write blob to Walrus",
-        error_details: error,
-      },
-    });
-    return;
+  let write_blob_attempts = 0;
+  const delay = 1000;
+  const max_attempts_write_blob = 2;
+  const max_attempts_set_status = 5;
+
+  while (write_blob_attempts < max_attempts_write_blob) {
+    try {
+      blob_data = await walrusClient.writeBlob({
+        blob: zipFile,
+        deletable: true,
+        epochs: Number(result.data.epochs),
+        signer: keypair,
+        attributes: result.data,
+      });
+      if (
+        blob_data.blobObject.certified_epoch ||
+        blob_data.blobObject.certified_epoch !== null
+      ) {
+        break;
+      }
+      write_blob_attempts++;
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    } catch (error) {
+      res.status(502).json({
+        statusCode: 0,
+        error: {
+          error_message: "Failed to write blob to Walrus",
+          error_details: error,
+        },
+      });
+      return;
+    }
+
+    if (write_blob_attempts === max_attempts_write_blob) {
+      let set_status_attempts = 0;
+      while (set_status_attempts < max_attempts_set_status) {
+        try {
+          await walrusClient.executeWriteBlobAttributesTransaction({
+            blobObjectId: blob_data.blobObject.id.id,
+            signer: keypair,
+            attributes: { status: "2" },
+          });
+          break;
+        } catch (error) {
+          set_status_attempts++;
+          if (set_status_attempts === max_attempts_set_status) {
+            if (error instanceof Error) {
+              res.status(502).json({
+                statusCode: 0,
+                error: {
+                  error_message:
+                    "Failed to change status code to 2 in blob attributes",
+                  error_details: error,
+                },
+              });
+              return;
+            }
+          }
+          await new Promise((resolve) => setTimeout(resolve, delay));
+        }
+      }
+      res.status(504).json({
+        statusCode: 0,
+        error: "Certified epoch is null",
+      });
+      return;
+    }
   }
 
   if (!blob_data) {
@@ -131,6 +182,31 @@ app.post("/write-blob-n-run-job", upload.single("file"), async (req, res) => {
       });
       return;
     }
+  }
+
+  let check_blob_id;
+
+  try {
+    check_blob_id = await walrusClient.readBlobAttributes({
+      blobObjectId: blobObjectId,
+    });
+  } catch (error) {
+    res.status(502).json({
+      statusCode: 0,
+      error: {
+        error_message: "Failed to read blob attributes from Walrus",
+        error_details: error,
+      },
+    });
+    return;
+  }
+
+  if (!check_blob_id || !check_blob_id.blobId) {
+    res.status(502).json({
+      statusCode: 0,
+      error: "Failed to add blobId to attributes",
+    });
+    return;
   }
 
   const url = `https://run.googleapis.com/v2/projects/${process.env.PROJECT_ID}/locations/${process.env.REGION}/jobs/${process.env.CLOUD_RUN_JOB_NAME}:run`;
@@ -171,7 +247,7 @@ app.post("/write-blob-n-run-job", upload.single("file"), async (req, res) => {
   if (response.status == 200) {
     res.status(200).json({
       statusCode: 1,
-      details: response.data,
+      objectId: blobObjectId,
     });
   }
 });

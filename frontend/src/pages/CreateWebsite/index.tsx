@@ -43,11 +43,17 @@ import { useEffect, useRef, useState } from 'react'
 import HelpCenter from '@/components/CreateWebsite/HelpCenter'
 import { FileItem } from '@/components/CreateWebsite/FileUploadPreview'
 import JSZip from 'jszip'
+import { useSuiData } from '@/hooks/useSuiData'
+import { transformMetadataToProject } from '@/utils/metadataUtils'
 
 
 export default function CreateWebsitePage() {
   useTheme()
   const { currentAccount } = useWalletKit()
+  const { metadata, isLoading, refetch } = useSuiData(currentAccount?.address || '')
+
+  console.log(metadata.map((meta, index) => transformMetadataToProject(meta, index)));
+
 
   const intl = useIntl()
 
