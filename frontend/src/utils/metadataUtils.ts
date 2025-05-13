@@ -31,6 +31,7 @@ export const transformMetadataToProject = (metadata: any, index: number) => {
   const fields = metadata.content.fields as any
   const metadataFields = fields.value.fields.metadata.fields.contents
   const metadataMap = extractMetadataMap(metadataFields)
+
   const status = parseInt(metadataMap['status'] || '0')
 
   const project = {

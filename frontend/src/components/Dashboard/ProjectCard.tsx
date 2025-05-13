@@ -298,6 +298,15 @@ const ProjectCard = memo(
       }
     }
 
+    const handleRefreshSuins = async () => {
+      setIsRefreshing(true)
+      try {
+        await refetchSuiNS()
+      } finally {
+        setIsRefreshing(false)
+      }
+    }
+
     return (
       <>
         <div
