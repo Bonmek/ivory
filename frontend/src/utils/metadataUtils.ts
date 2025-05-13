@@ -16,7 +16,6 @@ export const extractMetadataMap = (metadataFields: any[]): MetadataMap => {
 
 export const transformMetadataToProject = (metadata: any, index: number) => {
   if (!metadata?.content || metadata.content.dataType !== 'moveObject') {
-    console.log('Invalid metadata format')
     return {
       id: index,
       name: `Project ${index}`,

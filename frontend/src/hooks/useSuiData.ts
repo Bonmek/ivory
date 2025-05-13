@@ -66,7 +66,6 @@ export const useSuiData = (userAddress: string) => {
   // Filter metadata by owner address
   const filteredMetadata = metadata.filter((meta) => {
     if (!meta?.content || meta.content.dataType !== 'moveObject') {
-      console.log('Invalid metadata:', meta)
       return false
     }
     const fields = meta.content.fields as any

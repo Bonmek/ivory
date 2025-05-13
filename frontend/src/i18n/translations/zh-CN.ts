@@ -31,6 +31,7 @@ export default {
   // Create Website
   'createWebsite.title': '创建新项目',
   'createWebsite.projectFiles': '项目文件',
+  'createWebsite.projectFilesTooltip': '上传您的项目文件或连接到 GitHub 仓库。',
   'createWebsite.upload': '上传',
   'createWebsite.github': 'Github',
   'createWebsite.dragDrop': '将 ZIP 文件拖放到此处',
@@ -66,6 +67,7 @@ export default {
   'createWebsite.frameworkSelect': '选择框架',
   'createWebsite.selectFrameworkPreset': '选择框架预设：',
   'createWebsite.frameworkPresetTooltip': '选择最适合您项目设置的框架。这将帮助自动配置正确的构建设置。',
+  'createWebsite.frameworkPreset': '框架预设',
   'createWebsite.buildOutput': '构建输出',
   'createWebsite.outputDirectory': '输出目录',
   'createWebsite.outputDirectoryTooltip': '运行构建命令后输出文件的文件夹。常见值包括 dist、build 或 public。',
@@ -112,6 +114,18 @@ export default {
   'createWebsite.previewAdvancedSettings': '高级设置',
   'createWebsite.previewDeploy': '部署',
   'createWebsite.previewBack': '返回',
+  'createWebsite.createdSuccessfully': '创建成功！',
+  'createWebsite.deploying': '正在部署...',
+  'createWebsite.processingRequest': '正在处理您的请求...',
+  'createWebsite.processingTime': '这可能需要几分钟',
+  'createWebsite.continueEditing': '继续编辑',
+  'createWebsite.deploy': '部署',
+  'createWebsite.viewDashboard': '您现在可以在 {dashboardLink} 查看部署状态',
+  'createWebsite.failedToDeploy': '部署失败',
+  'createWebsite.failedToDeployDescription': '请重试或联系支持获取帮助。',
+
+  'createWebsite.helpCenter': '帮助中心',
+  'createWebsite.helpCenterDescription': '获取创建和部署网站的帮助。',
 
   // Homepage
   'homepage.hero.title1': '部署',

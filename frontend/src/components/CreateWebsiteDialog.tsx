@@ -24,7 +24,7 @@ function CreateWebsiteDialog({
   handleClickDeploy: () => Promise<WriteBlobResponse>
 }) {
   const [openSuiLogin, setOpenSuiLogin] = useState(false)
-  const { currentAccount, disconnect } = useWalletKit()
+  const { currentAccount } = useWalletKit()
 
   return (
     <>

@@ -3,30 +3,15 @@ import { motion } from "framer-motion"
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Github, Loader2, X } from 'lucide-react'
-import { useEffect, useRef, useState, useLayoutEffect } from 'react'
+import { useRef, useState, useLayoutEffect } from 'react'
 import { FormattedMessage } from 'react-intl'
-import {
-  CacheControl,
-  UploadMethod,
-} from '@/types/CreateWebstie/enums'
-import {
-  advancedOptionsType,
-  ApiError,
-  ApiResponse,
-  buildOutputSettingsType,
-  Repository,
-} from '@/types/CreateWebstie/types'
-import apiClient from '@/lib/axiosConfig'
-import { toast } from 'sonner'
-import { useQuery } from 'wagmi/query'
-import { useWalletKit } from '@mysten/wallet-kit'
-import { addDays } from 'date-fns'
-import { useTheme } from '@/context/ThemeContext'
 import { useIntl } from 'react-intl'
 import { CircleAlert, ChevronDown, ChevronRight, Folder, File as FileIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, } from "@/components/ui/dialog";
 import { AlertTriangle } from "lucide-react";
+
+
 
 interface GithubRepoInputProps {
   githubUrl: string;
@@ -39,8 +24,6 @@ interface GithubRepoInputProps {
   filteredRepositories: Array<{ id: number; name: string; default_branch: string, visibility: string }>;
   handleSelectRepository: (id: number | null) => void;
   selectedRepo: number | null;
-  handleShowMore: () => void;
-  visibleRepos: number;
   repoContents: any[] | null;
   repoContentsLoading: boolean;
   repoContentsError: string | null;
@@ -126,11 +109,8 @@ export default function GithubRepoInput({
   user,
   handleGithubSignIn,
   repositories,
-  filteredRepositories,
   handleSelectRepository,
   selectedRepo,
-  handleShowMore,
-  visibleRepos,
   repoContents,
   fileErrors,
   downloadRepositoryZip,
@@ -367,14 +347,14 @@ export default function GithubRepoInput({
               <FormattedMessage id="createWebsite.githubError" />
             </div>
           )}
-          {repoContents && Array.isArray(repoContents) && repoContents.length > 0 && (
+          {repoContents && !repoContentsLoading && Array.isArray(repoContents) && repoContents.length > 0 && (
             <div className="text-cyan-100 text-xs max-h-64 overflow-auto bg-gray-900 rounded-lg p-2 py-4 repo-scrollbar">
               {Object.entries(buildTree(repoContents)).map(([name, node]) => (
                 <TreeNode key={name} name={name} node={node} />
               ))}
             </div>
           )}
-          {repoContents && Array.isArray(repoContents) && repoContents.length === 0 && !repoContentsLoading && !repoContentsError && (
+          {repoContents && !repoContentsLoading && Array.isArray(repoContents) && repoContents.length === 0 && !repoContentsError && (
             <div className="text-cyan-200 text-xs">
               <FormattedMessage id="createWebsite.githubEmpty" />
             </div>

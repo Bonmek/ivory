@@ -31,6 +31,7 @@ export default {
   // Create Website
   'createWebsite.title': 'Create new project',
   'createWebsite.projectFiles': 'Project files',
+  'createWebsite.projectFilesTooltip': 'Upload your project files or connect to a GitHub repository.',
   'createWebsite.upload': 'Upload',
   'createWebsite.github': 'Github',
   'createWebsite.dragDrop': 'Drag & drop ZIP file here',
@@ -65,6 +66,7 @@ export default {
   'createWebsite.frameworkBuildSettings': 'Build Settings',
   'createWebsite.frameworkSelect': 'Select Framework',
   'createWebsite.selectFrameworkPreset': 'Select a framework preset:',
+  'createWebsite.frameworkPreset': 'Framework Preset',
   'createWebsite.frameworkPresetTooltip': 'Choose a framework that best matches your project setup. This helps configure the correct build settings automatically.',
   'createWebsite.buildOutput': 'Build Output',
   'createWebsite.outputDirectory': 'Output Directory',
@@ -90,7 +92,7 @@ export default {
   'createWebsite.cacheControlTooltipDescription': 'This helps improve load times and performance.',
   'createWebsite.previewSummary': 'Preview Summary',
   'createWebsite.previewSummaryDescription': 'Review your website settings before deployment.',
-  'createWebsite.previewProjectName': 'Project Name',
+  'createWebsite.previewProjectName': 'Preview Project',
   'createWebsite.previewUploadMethod': 'Upload Method',
   'createWebsite.previewFileUpload': 'File Upload',
   'createWebsite.previewGitHubRepo': 'GitHub Repository',
@@ -112,6 +114,18 @@ export default {
   'createWebsite.previewAdvancedSettings': 'Advanced Settings',
   'createWebsite.previewDeploy': 'Deploy',
   'createWebsite.previewBack': 'Back',
+
+  'createWebsite.createdSuccessfully': 'Created successfully!',
+  'createWebsite.deploying': 'Deploying...',
+  'createWebsite.processingRequest': 'Processing your request...',
+  'createWebsite.processingTime': 'This may take a few moments',
+  'createWebsite.continueEditing': 'Continue Editing',
+  'createWebsite.deploy': 'Deploy',
+  'createWebsite.failedToDeploy': 'Failed to deploy',
+  'createWebsite.failedToDeployDescription': 'Please try again or contact support for assistance.',
+
+  'createWebsite.helpCenter': 'Help Center',
+  'createWebsite.helpCenterDescription': 'Get help with creating and deploying your website.',
 
   // Homepage
   'homepage.hero.title1': 'Deploy',
