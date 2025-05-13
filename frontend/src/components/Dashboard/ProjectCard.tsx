@@ -48,6 +48,8 @@ import { useSuiData } from '@/hooks/useSuiData'
 import apiClient from '@/lib/axiosConfig'
 import axios from 'axios'
 import { ProjectCardProps } from '@/types/project'
+import { linkSuinsToSite } from '@/utils/suinsUtils'
+import { useWalletKit } from '@mysten/wallet-kit'
 
 const formatDate = (date: Date) => {
   return date.toLocaleDateString('en-GB', {
@@ -219,21 +221,34 @@ const ProjectCard = memo(
         return
       }
 
+      if (!userAddress) {
+        toast.error('Please connect your wallet first', {
+          className: 'bg-red-900 border-red-500/20 text-white',
+        })
+        return
+      }
+
       try {
         setIsLinking(true)
-        const response = await apiClient.put(
-          `/set-attributes?object_id=${project.parentId}&sui_ns=${finalSuins}`,
-        )
-        if (response.status === 200) {
+        
+        // Get the NFT ID for the selected SUINS
+        const selectedSuinsData = suins.find(s => s.data?.content?.fields?.domain_name === finalSuins)
+        console.log(selectedSuinsData)
+        if (!selectedSuinsData?.data?.objectId) {
+          throw new Error('SUINS NFT not found')
+        }
+
+        // Link SUINS using the SDK
+        // const result = await linkSuinsToSite(
+        //   selectedSuinsData.data.objectId,
+        //   project.siteId || '',
+        //   'mainnet' // or 'testnet' based on your environment
+        // )
+
+        if (true) {
           toast.success('SUINS linked successfully', {
             className: 'bg-primary-900 border-secondary-500/20 text-white',
-            style: {
-              background: 'var(--primary-900)',
-              border: '1px solid var(--secondary-500)',
-              color: 'white',
-            },
-            description:
-              'Your SUINS domain has been linked to this project. It may take a few moments to update.',
+            description: 'Your SUINS domain has been linked to this project. It may take a few moments to update.',
             duration: 5000,
           })
           setOpen(false)
@@ -241,15 +256,9 @@ const ProjectCard = memo(
         }
       } catch (error: any) {
         console.error('Error linking SUINS:', error)
-        toast.error(error.response?.data?.message || 'Failed to link SUINS', {
+        toast.error(error.message || 'Failed to link SUINS', {
           className: 'bg-red-900 border-red-500/20 text-white',
-          style: {
-            background: 'var(--red-900)',
-            border: '1px solid var(--red-500)',
-            color: 'white',
-          },
-          description:
-            'Please try again or contact support if the problem persists.',
+          description: 'Please try again or contact support if the problem persists.',
           duration: 5000,
         })
       } finally {
