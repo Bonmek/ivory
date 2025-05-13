@@ -1,12 +1,16 @@
 import { useQuery } from '@tanstack/react-query'
-import { suiService } from '@/services/suiService'
+import { suiService } from '@/service/suiService'
+import { useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 
-export const useSuiData = (address: string) => {
-  // Fetch blobs
+export const useSuiData = (userAddress: string) => {
+  const queryClient = useQueryClient()
+
+  // Fetch blobs using website owner's address
   const { data: blobs = [], isLoading: isLoadingBlobs } = useQuery({
-    queryKey: ['blobs', address],
-    queryFn: () => suiService.getBlobs(address),
-    enabled: !!address,
+    queryKey: ['blobs', process.env.REACT_APP_OWNER_ADDRESS || ''],
+    queryFn: () => suiService.getBlobs(process.env.REACT_APP_OWNER_ADDRESS || ''),
+    enabled: !!userAddress, // Only fetch if user is logged in
   })
 
   // Fetch dynamic fields for each blob
@@ -39,10 +43,32 @@ export const useSuiData = (address: string) => {
     enabled: dynamicFields.length > 0,
   })
 
+  // Filter metadata by owner address
+  const filteredMetadata = metadata.filter((meta) => {
+    if (!meta?.content || meta.content.dataType !== 'moveObject') {
+      console.log('Invalid metadata:', meta)
+      return false
+    }
+    
+    const fields = meta.content.fields as any
+    const metadataFields = fields?.value?.fields?.metadata?.fields?.contents || []
+    const ownerEntry = metadataFields.find((entry: any) => entry.fields?.key === 'owner')
+    const owner = ownerEntry?.fields?.value
+    
+    return owner === userAddress
+  })
+
   return {
     blobs,
     dynamicFields,
-    metadata,
+    metadata: filteredMetadata,
     isLoading: isLoadingBlobs || isLoadingFields || isLoadingMetadata,
+    refetch: () => {
+      return Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['blobs', process.env.REACT_APP_OWNER_ADDRESS || ''] }),
+        queryClient.invalidateQueries({ queryKey: ['dynamicFields'] }),
+        queryClient.invalidateQueries({ queryKey: ['metadata'] })
+      ])
+    }
   }
 }

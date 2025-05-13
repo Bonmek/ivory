@@ -19,6 +19,7 @@ export default defineConfig({
       'REACT_APP_API_GITHUB_AUTH',
       'REACT_APP_SUI_NETWORK',
       'REACT_APP_BLOB_TYPE',
+      'REACT_APP_OWNER_ADDRESS',
     ]),
   ],
   publicDir: 'public',

@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { Search, Filter, ChevronDown } from 'lucide-react'
+import { Search, Filter, ChevronDown, RefreshCw } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import {
@@ -12,10 +12,12 @@ import {
 interface DashboardHeaderProps {
   searchQuery: string
   setSearchQuery: (query: string) => void
-  sortType: string
-  setSortType: (type: string) => void
   date: Date | undefined
   setDate: (date: Date | undefined) => void
+  sortType: string
+  setSortType: (type: string) => void
+  onRefresh: () => Promise<void>
+  isRefreshing: boolean
 }
 
 const sortTypeLabel = {
@@ -29,10 +31,12 @@ const sortTypeLabel = {
 const DashboardHeader = ({
   searchQuery,
   setSearchQuery,
-  sortType,
-  setSortType,
   date,
   setDate,
+  sortType,
+  setSortType,
+  onRefresh,
+  isRefreshing,
 }: DashboardHeaderProps) => {
   return (
     <motion.div
@@ -61,7 +65,7 @@ const DashboardHeader = ({
         Dashboard
       </motion.h1>
       <motion.div
-        className="flex flex-col space-y-4 md:flex-row md:space-x-4 md:space-y-0"
+        className="flex flex-col space-y-4 md:flex-row md:space-y-0 gap-2"
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{
@@ -79,7 +83,7 @@ const DashboardHeader = ({
         >
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-secondary-400 z-10 pointer-events-none" />
           <Input
-            type="search"
+            type="search" 
             placeholder="Search projects..."
             className="w-full pl-10 md:w-[250px] bg-primary-900/80 border-secondary-500/20 text-white placeholder:text-secondary-400 backdrop-blur-sm"
             value={searchQuery}
@@ -165,6 +169,16 @@ const DashboardHeader = ({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={onRefresh}
+          disabled={isRefreshing}
+          className="h-9 w-9 cursor-pointer"
+        >
+          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+        </Button>
 
         {(date || searchQuery) && (
           <motion.div
