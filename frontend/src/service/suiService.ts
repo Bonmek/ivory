@@ -7,7 +7,11 @@ class SuiService {
   private client: SuiClient
 
   constructor() {
-    this.client = new SuiClient({ url: getFullnodeUrl(SUI_NETWORK as 'mainnet' | 'testnet' | 'devnet' | 'localnet') })
+    this.client = new SuiClient({
+      url: getFullnodeUrl(
+        SUI_NETWORK as 'mainnet' | 'testnet' | 'devnet' | 'localnet',
+      ),
+    })
   }
 
   async getBlobs(address: string, filter?: { StructType: string }) {
@@ -17,15 +21,19 @@ class SuiService {
       let hasNextPage = true
 
       while (hasNextPage) {
-        const { data, hasNextPage: nextPage, nextCursor } = await this.client.getOwnedObjects({
+        const {
+          data,
+          hasNextPage: nextPage,
+          nextCursor,
+        } = await this.client.getOwnedObjects({
           owner: address,
           filter: filter || { StructType: BLOB_TYPE as string },
           options: { showContent: true },
-          cursor: cursor
+          cursor: cursor,
         })
-        const blobsWithParent = data.map(blob => ({
+        const blobsWithParent = data.map((blob) => ({
           ...blob,
-          parentId: blob.data?.objectId || ''
+          parentId: blob.data?.objectId || '',
         }))
         allData = [...allData, ...blobsWithParent]
         hasNextPage = nextPage
@@ -46,12 +54,20 @@ class SuiService {
       let hasNextPage = true
 
       while (hasNextPage) {
-        const { data, hasNextPage: nextPage, nextCursor } = await this.client.getDynamicFields({
+        const {
+          data,
+          hasNextPage: nextPage,
+          nextCursor,
+        } = await this.client.getDynamicFields({
           parentId: blobId,
-          cursor: cursor
+          cursor: cursor,
         })
 
-        allData = [...allData, ...data]
+        const fieldsWithParent = data.map((field) => ({
+          ...field,
+          parentId: blobId,
+        }))
+        allData = [...allData, ...fieldsWithParent]
         hasNextPage = nextPage
         cursor = nextCursor || null
       }
@@ -71,7 +87,7 @@ class SuiService {
       })
       return {
         ...data,
-        parentId: parentId || ''
+        parentId: parentId || '',
       }
     } catch (error) {
       console.error('Error fetching metadata:', error)
@@ -80,4 +96,4 @@ class SuiService {
   }
 }
 
-export const suiService = new SuiService() 
+export const suiService = new SuiService()
