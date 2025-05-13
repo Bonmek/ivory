@@ -16,7 +16,6 @@ export const extractMetadataMap = (metadataFields: any[]): MetadataMap => {
 
 export const transformMetadataToProject = (metadata: any, index: number) => {
   if (!metadata?.content || metadata.content.dataType !== 'moveObject') {
-    console.log('Invalid metadata format')
     return {
       id: index,
       name: `Project ${index}`,
@@ -32,8 +31,7 @@ export const transformMetadataToProject = (metadata: any, index: number) => {
   const fields = metadata.content.fields as any
   const metadataFields = fields.value.fields.metadata.fields.contents
   const metadataMap = extractMetadataMap(metadataFields)
-  console.log('Extracted metadata map:', metadataMap)
-  
+
   const status = parseInt(metadataMap['status'] || '0')
 
   const project = {
@@ -60,6 +58,5 @@ export const transformMetadataToProject = (metadata: any, index: number) => {
     parentObjectId: metadata.parentId || '',
     parentId: metadata.parentId || '',
   }
-  console.log('Transformed project:', project)
   return project
 } 

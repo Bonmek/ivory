@@ -106,8 +106,6 @@ const ProjectCard = memo(
     const { suins, isLoadingSuins, refetchSuiNS } = useSuiData(userAddress)
     const [isRefreshing, setIsRefreshing] = useState(false)
 
-    console.log('text',project)
-
     useEffect(() => {
       if (project.status === 0) {
         const startTime = new Date(project.startDate).getTime()
@@ -309,8 +307,8 @@ const ProjectCard = memo(
                                 </SelectTrigger>
                                 <SelectContent className="bg-primary-800 border-secondary-500/20 text-white">
                                   {suins.map((sui) => (
-                                    <SelectItem 
-                                      key={sui.data?.objectId} 
+                                    <SelectItem
+                                      key={sui.data?.objectId}
                                       value={sui.data?.content?.fields?.domain_name}
                                       className="hover:bg-primary-700"
                                     >
@@ -335,7 +333,7 @@ const ProjectCard = memo(
                                 )}
                               </Button>
                             </div>
-                            
+
                             {selectedSuins === "other" && (
                               <Input
                                 placeholder="Enter custom SUINS name"

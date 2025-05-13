@@ -46,16 +46,12 @@ class SuiService {
       let hasNextPage = true
 
       while (hasNextPage) {
-        const { data, hasNextPage: nextPage, nextCursor } = await this.client.getDynamicFields({ 
+        const { data, hasNextPage: nextPage, nextCursor } = await this.client.getDynamicFields({
           parentId: blobId,
           cursor: cursor
         })
-        
-        const fieldsWithParent = data.map(field => ({
-          ...field,
-          parentId: blobId
-        }))
-        allData = [...allData, ...fieldsWithParent]
+
+        allData = [...allData, ...data]
         hasNextPage = nextPage
         cursor = nextCursor || null
       }

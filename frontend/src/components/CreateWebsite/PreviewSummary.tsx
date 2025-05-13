@@ -84,7 +84,6 @@ export const PreviewSummary: React.FC<PreviewSummaryProps> = ({
     ? frameworks.find((f) => f.id === selectedFramework)
     : frameworks[0];
 
-  console.log(deployingResponse);
 
   return (
     <motion.div
