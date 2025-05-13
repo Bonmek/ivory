@@ -257,15 +257,6 @@ const ProjectCard = memo(
       }
     }
 
-    const handleRefreshSuins = async () => {
-      setIsRefreshing(true)
-      try {
-        await refetchSuiNS()
-      } finally {
-        setIsRefreshing(false)
-      }
-    }
-
     const handleDeleteSite = async () => {
       if (!project.parentId) {
         toast.error('Project Parent ID is missing. Cannot delete site.', {
