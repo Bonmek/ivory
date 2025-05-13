@@ -83,8 +83,18 @@ export const useSuiData = (userAddress: string) => {
       return false // Skip if delete-attribute exists
     }
 
+    // Check for delete-attribute field
+    const deleteAttributeEntry = metadataFields.find(
+      (entry: any) => entry.fields?.key === 'delete-attribute',
+    )
+    if (deleteAttributeEntry) {
+      return false // Skip if delete-attribute exists
+    }
+
     return owner === userAddress
   })
+
+
 
   return {
     blobs,
