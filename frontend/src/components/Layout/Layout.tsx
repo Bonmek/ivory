@@ -5,7 +5,7 @@ import { useLocation } from 'react-router'
 import styles from './Layout.module.css'
 import Footer from '../Footer'
 import { ThemeProvider } from '@/context/ThemeContext'
-import Navbar from '../Navbar'
+import Navbar from '../Navbar/Navbar'
 import clsx from 'clsx'
 import ThreeJSBackground from '../ThreeJsBackground'
 

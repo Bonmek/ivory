@@ -225,7 +225,6 @@ export default function CreateWebsitePage() {
       throw error
     }
   }
-
   const handleLogout = () => {
     // !TODO: Not working right now
     setUser(null);
@@ -249,7 +248,6 @@ export default function CreateWebsitePage() {
     if (!repo) return;
     setRepoContentsLoading(true);
     setRepoContentsError(null);
-
     apiClient
       .get(`${process.env.REACT_APP_API_REPOSITORIES}/${repo.owner}/${repo.name}/contents`)
       .then((res) => {
