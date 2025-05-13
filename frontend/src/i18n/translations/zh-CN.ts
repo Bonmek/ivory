@@ -22,6 +22,14 @@ export default {
   'wallet.address': '钱包地址',
   'wallet.copyAddress': '复制地址',
 
+  // Checklist steps
+  'checklist.confirm': '等待确认',
+  'checklist.deploy': '部署中',
+  'checklist.build': '构建中',
+  'checklist.done': '完成',
+  'checklist.failed': '失败',
+  'createWebsite.redeploy': '重新部署',
+
   // Messages
   'message.welcome': '欢迎使用 Ivory',
   'message.loading': '加载中...',
@@ -120,7 +128,7 @@ export default {
   'createWebsite.processingTime': '这可能需要几分钟',
   'createWebsite.continueEditing': '继续编辑',
   'createWebsite.deploy': '部署',
-  'createWebsite.viewDashboard': '您现在可以在 {dashboardLink} 查看部署状态',
+  'createWebsite.viewDashboard': '下一步，我们将为您构建项目。',
   'createWebsite.failedToDeploy': '部署失败',
   'createWebsite.failedToDeployDescription': '请重试或联系支持获取帮助。',
 
@@ -129,6 +137,15 @@ export default {
 
   'createWebsite.selectRootDirectory': '选择根目录',
   'createWebsite.selectRootDirectoryDescription': '选择您的项目根目录。',
+
+  'createWebsite.building': '正在构建...',
+  'createWebsite.buildingTime': '这可能需要几分钟',
+
+  'createWebsite.failedToBuild': '构建失败',
+  'createWebsite.failedToBuildDescription': '请重试或联系支持获取帮助。',
+
+  'createWebsite.built': '构建成功！',
+  'createWebsite.viewDashboardbuilt': '您现在可以在 {dashboardLink} 上查看您的部署网站',
 
   // Homepage
   'homepage.hero.title1': '部署',

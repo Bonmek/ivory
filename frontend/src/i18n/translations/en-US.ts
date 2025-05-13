@@ -22,6 +22,14 @@ export default {
   'wallet.address': 'Wallet Address',
   'wallet.copyAddress': 'Copy Address',
 
+  // Checklist steps
+  'checklist.confirm': 'Waiting for Confirmation',
+  'checklist.deploy': 'Deploying',
+  'checklist.build': 'Building',
+  'checklist.done': 'Done',
+  'checklist.failed': 'Failed',
+  'createWebsite.redeploy': 'Redeploy',
+
   // Messages
   'message.welcome': 'Welcome to Ivory',
   'message.loading': 'Loading...',
@@ -129,6 +137,16 @@ export default {
 
   'createWebsite.selectRootDirectory': 'Select root directory',
   'createWebsite.selectRootDirectoryDescription': 'Choose the base directory of your project.',
+
+  'createWebsite.viewDashboard': 'Next, we are building your project.',
+  'createWebsite.building': 'Building...',
+  'createWebsite.buildingTime': 'This may take a few moments',
+
+  'createWebsite.failedToBuild': 'Failed to build',
+  'createWebsite.failedToBuildDescription': 'Please try again or contact support for assistance.',
+
+  'createWebsite.built': 'Built successfully!',
+  'createWebsite.viewDashboardbuilt': 'You can now see your deployed website at {dashboardLink}',
 
   // Homepage
   'homepage.hero.title1': 'Deploy',
