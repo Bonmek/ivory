@@ -32,7 +32,7 @@ export interface CloudRunJobDetails {
 
 export interface ApiResponseSuccess {
   statusCode: 1;
-  object_id: string;
+  objectId: string;
   details: CloudRunJobDetails;
 }
 

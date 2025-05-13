@@ -24,9 +24,9 @@ export default {
 
   // Checklist steps
   'checklist.confirm': '等待确认',
-  'checklist.deploy': '部署中',
+  'checklist.deploy': '创建中',
   'checklist.build': '构建中',
-  'checklist.done': '完成',
+  'checklist.done': '部署完成',
   'checklist.failed': '失败',
   'createWebsite.redeploy': '重新部署',
 

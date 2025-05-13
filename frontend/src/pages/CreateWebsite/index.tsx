@@ -47,6 +47,7 @@ import { FileItem } from '@/components/CreateWebsite/FileUploadPreview'
 import JSZip from 'jszip'
 import { useSuiData } from '@/hooks/useSuiData'
 import { transformMetadataToProject } from '@/utils/metadataUtils'
+import { Project } from '@/types/project'
 
 
 export default function CreateWebsitePage() {
@@ -321,7 +322,7 @@ export default function CreateWebsitePage() {
       console.log('Response:', response)
       setDeployingState(DeployingState.Deployed)
       setDeployingResponse(response as unknown as ApiResponseSuccess)
-      setDeployedObjectId((response as unknown as ApiResponseSuccess).object_id)
+      setDeployedObjectId((response as unknown as ApiResponseSuccess).objectId)
       console.log('Deployed Object ID:', deployedObjectId)
       return response
     } catch (error) {
@@ -466,10 +467,11 @@ export default function CreateWebsitePage() {
     let interval: NodeJS.Timeout;
 
     const checkStatus = () => {
-      if (metadata && name) {
+      console.log('Deployed Object ID:', deployedObjectId);
+      if (metadata && deployedObjectId) {
         const filteredProjects = metadata
           .map((meta, index) => transformMetadataToProject(meta, index))
-          .filter((project) => project.name === name);
+          .filter((project: Project) => project.parentId === deployedObjectId);
 
         console.log('Filtered projects:', filteredProjects);
 

@@ -24,9 +24,9 @@ export default {
 
   // Checklist steps
   'checklist.confirm': 'Waiting for Confirmation',
-  'checklist.deploy': 'Deploying',
+  'checklist.deploy': 'Initializing',
   'checklist.build': 'Building',
-  'checklist.done': 'Done',
+  'checklist.done': 'Deployed',
   'checklist.failed': 'Failed',
   'createWebsite.redeploy': 'Redeploy',
 
