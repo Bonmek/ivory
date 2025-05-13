@@ -1,116 +1,121 @@
-// นำเข้าไลบรารีที่จำเป็นสำหรับการทำงานกับ Sui blockchain
+// Import libraries needed for working with Sui blockchain
 import { getFullnodeUrl, SuiClient } from '@mysten/sui/client';
-// นำเข้าไลบรารีสำหรับจัดการกับ SUINS domains
+// Import libraries for managing SUINS domains
 import { SuinsClient, SuinsTransaction, ALLOWED_METADATA } from '@mysten/suins';
-// นำเข้า class สำหรับสร้าง transaction
+// Import class for creating transactions
 import { Transaction } from '@mysten/sui/transactions';
-// นำเข้า hook สำหรับเซ็นและส่ง transaction
-import { useSignAndExecuteTransaction } from '@mysten/dapp-kit';
-import { useAuth } from '@/context/AuthContext';
+// Import necessary types
+import { SuiTransactionBlockResponse } from '@mysten/sui/client';
+
+// Define the type for signAndExecuteTransactionBlock function from wallet-kit
+// Use any to support both wallet-kit and dapp-kit
+type SignAndExecuteTransactionFunction = (input: any) => Promise<any>;
 
 /**
- * ฟังก์ชันสำหรับเชื่อมโยง SUINS domain กับ site ID
- * @param nftId - ID ของ NFT ที่ต้องการเชื่อมโยง
- * @param siteId - ID ของ site ที่ต้องการเชื่อมโยง
- * @param network - เลือก network (mainnet หรือ testnet)
- * @returns ข้อมูลผลลัพธ์การทำงาน
+ * Function for linking a SUINS domain with a site ID
+ * @param nftId - ID of the NFT to link
+ * @param siteId - ID of the site to link
+ * @param address - User's wallet address
+ * @param signAndExecuteTransaction - Function for signing and sending transactions
+ * @param network - Network selection (mainnet or testnet)
+ * @returns Operation result data
  */
-export const linkSuinsToSite = async (
+export const linkSuinsToSite = async (  
   nftId: string,
   siteId: string,
+  address: string,
+  signAndExecuteTransaction: SignAndExecuteTransactionFunction,
   network: 'mainnet' | 'testnet' = 'mainnet'
 ) => {
   try {
-    console.log('เริ่มการเชื่อมโยง SUINS:', { nftId, siteId, network });
-    
-    const { address } = useAuth();
-    console.log('Wallet address:', address);
-    
-    // เรียกใช้ hook สำหรับเซ็นและส่ง transaction
-    const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction();
-    console.log('Hook signAndExecuteTransaction ถูกเรียกใช้แล้ว');
-    
-    // ตรวจสอบว่ามีการเชื่อมต่อ wallet แล้วหรือไม่
+    // Check if wallet is connected
     if (!address) {
-      console.error('ไม่พบ wallet address');
       throw new Error('Please connect your wallet first');
     }
 
-    // สร้าง client สำหรับเชื่อมต่อกับ Sui blockchain
+    // Create client for connecting to Sui blockchain
     const client = new SuiClient({ url: getFullnodeUrl(network) });
-    console.log('Sui client ถูกสร้างแล้ว:', { network });
     
-    // สร้าง client สำหรับจัดการกับ SUINS domains
+    // Create client for managing SUINS domains
     const suinsClient = new SuinsClient({
       client,
       network,
     });
-    console.log('SUINS client ถูกสร้างแล้ว');
 
-    // ตรวจสอบความเป็นเจ้าของ NFT โดยดึงข้อมูลจาก blockchain
-    console.log('กำลังตรวจสอบ NFT:', nftId);
+    // Check NFT ownership by fetching data from blockchain
     const nftObject = await client.getObject({
       id: nftId,
       options: {
-        showContent: true, // แสดงข้อมูล content ของ NFT
-        showOwner: true, // แสดงข้อมูลเจ้าของ NFT
+        showContent: true, // Show NFT content
+        showOwner: true, // Show NFT owner
       },
     });
-    console.log('ข้อมูล NFT:', nftObject);
 
-    // ตรวจสอบว่า NFT มีอยู่จริงหรือไม่
+    // Check if NFT exists
     if (!nftObject.data) {
-      console.error('ไม่พบ NFT:', nftId);
       throw new Error(`NFT not found: ${nftId}`);
     }
 
-    // ดึงข้อมูลเจ้าของ NFT จาก response
+    // Get NFT owner from response
     const owner = nftObject.data?.owner;
-    // แปลงข้อมูลเจ้าของเป็น address
+    // Convert owner data to address
     const ownerAddress = owner && typeof owner === 'object' && 'AddressOwner' in owner ? owner.AddressOwner : null;
-    console.log('เจ้าของ NFT:', { ownerAddress, currentAddress: address });
     
-    // ตรวจสอบว่า wallet ที่เชื่อมต่อเป็นเจ้าของ NFT หรือไม่
+    // Check if connected wallet is the NFT owner
     if (ownerAddress && ownerAddress !== address) {
-      console.error('ไม่ใช่เจ้าของ NFT:', { ownerAddress, currentAddress: address });
       throw new Error(`You don't own this NFT! NFT owner: ${ownerAddress}, Your address: ${address}`);
     }
 
-    // สร้าง transaction ใหม่สำหรับการเชื่อมโยง
+    // Create new transaction for linking
     const tx = new Transaction();
-    console.log('Transaction ถูกสร้างแล้ว');
     
-    // สร้าง SUINS transaction โดยใช้ client ที่สร้างไว้
+    // Create SUINS transaction using the client
     const suinsTx = new SuinsTransaction(suinsClient, tx);
-    console.log('SUINS transaction ถูกสร้างแล้ว');
 
-    // กำหนดข้อมูลที่จะเชื่อมโยงใน transaction
-    console.log('กำลังกำหนดข้อมูล transaction:', { nftId, siteId });
+    // Set data to link in the transaction
     suinsTx.setUserData({
-      nft: nftId, // ID ของ NFT
-      key: ALLOWED_METADATA.walrusSiteId, // key สำหรับเก็บ site ID
-      value: siteId, // site ID ที่ต้องการเชื่อมโยง
-      isSubname: false, // ไม่ใช่ subname
+      nft: nftId, // NFT ID
+      key: ALLOWED_METADATA.walrusSiteId, // Key for storing site ID
+      value: siteId, // Site ID to link
+      isSubname: false, // Not a subname
     });
 
-    // เซ็นและส่ง transaction ไปยัง blockchain
-    console.log('กำลังเซ็นและส่ง transaction');
-    const result = await signAndExecuteTransaction({
-        transaction: tx
-    });
-    console.log('Transaction result:', result);
-
-    // ส่งผลลัพธ์การทำงานกลับไป
-    const response = {
-      success: true, // สถานะการทำงานสำเร็จ
-      digest: result.digest, // hash ของ transaction
-      status: 'success' // สถานะการทำงาน
-    };
-    console.log('ส่งผลลัพธ์กลับ:', response);
-    return response;
+    // Sign and send transaction to blockchain
+    try {
+      // Set transaction sender explicitly
+      tx.setSender(address);
+      
+      // Build transaction in a format ready to send
+      const txBytes = await tx.build({ client: suinsClient.client });
+      
+      // Sign and execute the transaction using wallet-kit's method
+      const result = await signAndExecuteTransaction({
+        transactionBlock: tx
+      });
+      
+      // Extract digest from result
+      // Support multiple result formats from SDK that may change
+      let transactionId: string = 'unknown';
+      if ('digest' in result && typeof result.digest === 'string') {
+        transactionId = result.digest;
+      } else if ('transaction' in result && result.transaction && typeof result.transaction === 'object' && 
+                 'digest' in result.transaction && typeof result.transaction.digest === 'string') {
+        transactionId = result.transaction.digest;
+      }
+      
+      // Return operation result
+      const response = {
+        success: true, // Operation status success
+        transactionId, // Transaction hash
+        status: 'success' // Operation status
+      };
+      return response;
+    } catch (error) {
+      // Handle errors
+      throw error; // Pass error to caller
+    }
   } catch (error) {
-    // จัดการกับ error ที่เกิดขึ้น
-    console.error('เกิดข้อผิดพลาดในการเชื่อมโยง SUINS:', error);
-    throw error; // ส่ง error ต่อไปให้ผู้เรียกใช้จัดการ
+    // Handle errors
+    throw error; // Pass error to caller
   }
 };

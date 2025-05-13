@@ -1,4 +1,7 @@
 import { memo, useState, useEffect } from 'react'
+import { useAuth } from '@/context/AuthContext'
+import { useSignAndExecuteTransaction } from '@mysten/dapp-kit'
+import { useWalletKit } from '@mysten/wallet-kit'
 import {
   MoreHorizontal,
   Users,
@@ -49,7 +52,6 @@ import apiClient from '@/lib/axiosConfig'
 import axios from 'axios'
 import { ProjectCardProps } from '@/types/project'
 import { linkSuinsToSite } from '@/utils/suinsUtils'
-import { useWalletKit } from '@mysten/wallet-kit'
 
 const formatDate = (date: Date) => {
   return date.toLocaleDateString('en-GB', {
@@ -195,6 +197,10 @@ const ProjectCard = memo(
       }
     }
 
+    // Get auth and transaction hooks at the component level
+    const { address } = useAuth()
+    const { signAndExecuteTransactionBlock } = useWalletKit()
+
     const colors = getStatusColor(project.status)
 
     const handleCopy = async (text: string) => {
@@ -214,8 +220,9 @@ const ProjectCard = memo(
 
     const handleLinkSuins = async () => {
       const finalSuins = selectedSuins === 'other' ? otherSuins : selectedSuins
+
       if (!finalSuins) {
-        toast.error('Please select a SUINS domain', {
+        toast.error('Please select or enter a SUINS domain', {
           className: 'bg-red-900 border-red-500/20 text-white',
         })
         return
@@ -224,42 +231,58 @@ const ProjectCard = memo(
       if (!userAddress) {
         toast.error('Please connect your wallet first', {
           className: 'bg-red-900 border-red-500/20 text-white',
+          description: 'Click the wallet button in the top right to connect',
         })
         return
       }
 
       try {
         setIsLinking(true)
-        
+
         // Get the NFT ID for the selected SUINS
-        const selectedSuinsData = suins.find(s => s.data?.content?.fields?.domain_name === finalSuins)
+        const selectedSuinsData = suins.find(
+          (s) => s.data?.content?.fields?.domain_name === finalSuins,
+        )
         if (!selectedSuinsData?.data?.objectId) {
           throw new Error('SUINS NFT not found')
         }
-        console.log('xx',project.siteId)
 
-        //Link SUINS using the SDK
+        if (!userAddress) {
+          throw new Error(
+            'Wallet address not found. Please connect your wallet.',
+          )
+        }
+
         const result = await linkSuinsToSite(
           selectedSuinsData.data.objectId,
           project.siteId || '',
-          process.env.REACT_APP_SUI_NETWORK as "mainnet" | "testnet"
+          userAddress,
+          signAndExecuteTransactionBlock,
+          process.env.REACT_APP_SUI_NETWORK as 'mainnet' | 'testnet',
         )
-        console.log('xx',result)
 
-        if (true) {
+        const response = await apiClient.put(
+          `/set-attributes?object_id=${project.parentId}&sui_ns=${finalSuins}`,
+        )
+
+        if (result.status === 'success') {
           toast.success('SUINS linked successfully', {
             className: 'bg-primary-900 border-secondary-500/20 text-white',
-            description: 'Your SUINS domain has been linked to this project. It may take a few moments to update.',
+            description:
+              'Your SUINS domain has been linked to this project. It may take a few moments to update.',
             duration: 5000,
           })
           setOpen(false)
-          onRefetch()
+          if (result.status === 'success' && response.status === 200) {
+            onRefetch()
+          }
         }
       } catch (error: any) {
         console.error('Error linking SUINS:', error)
         toast.error(error.message || 'Failed to link SUINS', {
           className: 'bg-red-900 border-red-500/20 text-white',
-          description: 'Please try again or contact support if the problem persists.',
+          description:
+            'Please try again or contact support if the problem persists.',
           duration: 5000,
         })
       } finally {
@@ -321,7 +344,7 @@ const ProjectCard = memo(
           >
             {/* Dropdown Menu: Top Right */}
             <div className="absolute top-2 right-2 z-10 opacity-80 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-2">
-              {!project.suins && (
+              {!project.suins && project.status === 1 && (
                 <Dialog open={open} onOpenChange={setOpen}>
                   <DialogTrigger asChild>
                     <button
@@ -360,17 +383,22 @@ const ProjectCard = memo(
                                   <SelectValue placeholder="Select SUINS domain" />
                                 </SelectTrigger>
                                 <SelectContent className="bg-primary-800 border-secondary-500/20 text-white">
-                                  {suins.map((sui) => (
-                                    <SelectItem
-                                      key={sui.data?.objectId}
-                                      value={
-                                        sui.data?.content?.fields?.domain_name
-                                      }
-                                      className="hover:bg-primary-700"
-                                    >
-                                      {sui.data?.content?.fields?.domain_name}
-                                    </SelectItem>
-                                  ))}
+                                  {suins.map((sui) => {
+                                    const domainName = sui.data?.content?.fields?.domain_name || '';
+                                    const displayName = domainName.endsWith('.sui') 
+                                      ? domainName.slice(0, -4) 
+                                      : domainName;
+                                    
+                                    return (
+                                      <SelectItem
+                                        key={sui.data?.objectId}
+                                        value={domainName}
+                                        className="hover:bg-primary-700"
+                                      >
+                                        {displayName}
+                                      </SelectItem>
+                                    );
+                                  })}
                                   <SelectItem
                                     value="other"
                                     className="hover:bg-primary-700"
@@ -422,30 +450,37 @@ const ProjectCard = memo(
                           </>
                         )}
                       </div>
-                      <div className="flex gap-2">
-                        <Button
-                          onClick={() => handleLinkSuins()}
-                          className="bg-secondary-500 hover:bg-secondary-600 text-white flex-1 relative"
-                          disabled={
-                            isLinking ||
-                            isLoadingSuins ||
-                            !selectedSuins ||
-                            (selectedSuins === 'other' && !otherSuins)
-                          }
-                        >
-                          {isLinking ? (
-                            <div className="flex items-center justify-center">
-                              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                              <span>Linking SUINS...</span>
-                            </div>
-                          ) : (
-                            <div className="flex items-center justify-center">
-                              <Link className="h-4 w-4 mr-2" />
-                              <span>Link SUINS</span>
-                            </div>
-                          )}
-                        </Button>
-                      </div>
+                      {project.status === 1 && (
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => handleLinkSuins()}
+                            className="bg-secondary-500 hover:bg-secondary-600 text-white flex-1 relative"
+                            disabled={
+                              isLinking ||
+                              isLoadingSuins ||
+                              !selectedSuins ||
+                              (selectedSuins === 'other' && !otherSuins)
+                            }
+                          >
+                            {isLinking ? (
+                              <div className="flex items-center justify-center">
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                <span>Linking SUINS...</span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center justify-center">
+                                <Link className="h-4 w-4 mr-2" />
+                                <span>Link SUINS</span>
+                              </div>
+                            )}
+                          </Button>
+                        </div>
+                      )}
+                      {project.status !== 1 && (
+                        <div className="text-sm text-white/60 italic">
+                          SUINS linking is only available for active projects
+                        </div>
+                      )}
                     </div>
                   </DialogContent>
                 </Dialog>
@@ -657,12 +692,12 @@ const ProjectCard = memo(
               <div className="flex items-center text-sm mb-1 group-hover:translate-x-0.5 transition-transform duration-200">
                 {project.suins ? (
                   <a
-                    href={`https://${project.suins}.wal.app`}
+                    href={`https://${project.suins?.endsWith('.sui') ? project.suins.slice(0, -4) : project.suins}.wal.app`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className={`flex items-center h-[28px] hover:underline truncate transition-colors duration-200 ${colors.link}`}
                   >
-                    {project.suins}.wal.app
+                    {project.suins?.endsWith('.sui') ? project.suins.slice(0, -4) : project.suins}.wal.app
                     <span className="ml-1 group-hover:translate-x-0.5 transition-transform duration-200">
                       <ExternalLink className="h-4 w-4 flex-shrink-0" />
                     </span>
