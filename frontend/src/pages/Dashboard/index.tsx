@@ -223,11 +223,10 @@ export default function Dashboard() {
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => handlePageChange(page)}
-                        className={`px-4 py-2 rounded-md ${
-                          currentPage === page
+                        className={`px-4 py-2 rounded-md ${currentPage === page
                             ? 'bg-secondary-500 text-black'
                             : 'bg-primary-700 text-white hover:bg-primary-600'
-                        }`}
+                          }`}
                       >
                         {page}
                       </motion.button>
