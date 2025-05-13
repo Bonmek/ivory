@@ -12,7 +12,6 @@ class SuiService {
 
   async getBlobs(address: string) {
     try {
-      console.log('Fetching blobs for address:', address)
       let allData: any[] = []
       let cursor: string | null = null
       let hasNextPage = true
@@ -29,7 +28,6 @@ class SuiService {
         cursor = nextCursor || null
       }
 
-      console.log('Fetched all blobs:', allData)
       return allData
     } catch (error) {
       console.error('Error fetching blobs:', error)
@@ -44,11 +42,11 @@ class SuiService {
       let hasNextPage = true
 
       while (hasNextPage) {
-        const { data, hasNextPage: nextPage, nextCursor } = await this.client.getDynamicFields({ 
+        const { data, hasNextPage: nextPage, nextCursor } = await this.client.getDynamicFields({
           parentId: blobId,
           cursor: cursor
         })
-        
+
         allData = [...allData, ...data]
         hasNextPage = nextPage
         cursor = nextCursor || null

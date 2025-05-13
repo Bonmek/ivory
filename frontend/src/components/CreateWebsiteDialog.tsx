@@ -12,13 +12,16 @@ import {
 import { Button } from '@/components/ui/button'
 import { Separator } from './ui/separator'
 import { ConnectModal, useWalletKit } from '@mysten/wallet-kit'
+import { WriteBlobResponse } from '@/api/createWebsiteApi'
 
 function CreateWebsiteDialog({
   open,
   setOpen,
+  handleClickDeploy,
 }: {
   open: boolean
   setOpen: (open: boolean) => void
+  handleClickDeploy: () => Promise<WriteBlobResponse>
 }) {
   const [openSuiLogin, setOpenSuiLogin] = useState(false)
   const { currentAccount, disconnect } = useWalletKit()
@@ -117,10 +120,10 @@ function CreateWebsiteDialog({
                     variant="secondary"
                     className="h-12 bg-primary-700 hover:bg-primary-600 text-white cursor-pointer"
                     onClick={() => {
-                      setOpen(false)
+                      handleClickDeploy()
                     }}
                   >
-                    I understand
+                    Deploy Now
                   </Button>
                 </div>
               </div>
