@@ -233,17 +233,18 @@ const ProjectCard = memo(
         
         // Get the NFT ID for the selected SUINS
         const selectedSuinsData = suins.find(s => s.data?.content?.fields?.domain_name === finalSuins)
-        console.log(selectedSuinsData)
         if (!selectedSuinsData?.data?.objectId) {
           throw new Error('SUINS NFT not found')
         }
+        console.log('xx',project.siteId)
 
-        // Link SUINS using the SDK
-        // const result = await linkSuinsToSite(
-        //   selectedSuinsData.data.objectId,
-        //   project.siteId || '',
-        //   'mainnet' // or 'testnet' based on your environment
-        // )
+        //Link SUINS using the SDK
+        const result = await linkSuinsToSite(
+          selectedSuinsData.data.objectId,
+          project.siteId || '',
+          process.env.REACT_APP_SUI_NETWORK as "mainnet" | "testnet"
+        )
+        console.log('xx',result)
 
         if (true) {
           toast.success('SUINS linked successfully', {
