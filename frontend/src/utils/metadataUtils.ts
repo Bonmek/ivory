@@ -47,7 +47,7 @@ export const transformMetadataToProject = (metadata: any, index: number) => {
     description: metadataMap['description'] || '',
     status,
     siteId: status === 1 ? metadataMap['site_id'] : '',
-    suins: metadataMap['suins'] || '',
+    suins: metadataMap['sui_ns'] || '',
     blobId: metadataMap['blobId'] || '',
     installCommand: metadataMap['install_command'] || '',
     buildCommand: metadataMap['build_command'] || '',
@@ -55,8 +55,8 @@ export const transformMetadataToProject = (metadata: any, index: number) => {
     isBuild: metadataMap['is_build'] === '1',
     epochs: parseInt(metadataMap['epochs'] || '0'),
     ownership: parseInt(metadataMap['ownership'] || '0'),
-    parentObjectId: metadata.parentId || '',
     parentId: metadata.parentId || '',
+    client_error_description: metadataMap['client_error_description'] || '',
   }
   return project
 } 
