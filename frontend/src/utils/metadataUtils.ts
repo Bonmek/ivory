@@ -24,15 +24,17 @@ export const transformMetadataToProject = (metadata: any, index: number) => {
       expiredDate: new Date(Date.now() + DEFAULT_EXPIRY_BUFFER),
       color: '#97f0e5',
       urlImg: '/walrus.png',
+      status: 0
     }
   }
 
   const fields = metadata.content.fields as any
   const metadataFields = fields.value.fields.metadata.fields.contents
   const metadataMap = extractMetadataMap(metadataFields)
+
   const status = parseInt(metadataMap['status'] || '0')
 
-  return {
+  const project = {
     id: index,
     name: metadataMap['site-name'] || `Project ${index}`,
     url: metadataMap['root'] || '',
@@ -53,5 +55,8 @@ export const transformMetadataToProject = (metadata: any, index: number) => {
     isBuild: metadataMap['is_build'] === '1',
     epochs: parseInt(metadataMap['epochs'] || '0'),
     ownership: parseInt(metadataMap['ownership'] || '0'),
+    parentObjectId: metadata.parentId || '',
+    parentId: metadata.parentId || '',
   }
+  return project
 } 

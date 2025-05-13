@@ -31,10 +31,10 @@ const DashboardTabs = ({ activeTab, setActiveTab }: DashboardTabsProps) => {
         onValueChange={setActiveTab}
         className="w-full"
       >
-        <TabsList className="grid w-full grid-cols-3 md:w-[400px] bg-primary-900/80 backdrop-blur-sm relative">
+        <TabsList className="grid w-full grid-cols-4 md:w-[500px] bg-primary-900/80 backdrop-blur-sm relative">
           <TabsTrigger
             value="all"
-            className="relative z-10 data-[state=active]:text-black"
+            className="relative z-10 data-[state=active]:text-black flex items-center justify-center gap-1"
           >
             {activeTab === 'all' && (
               <motion.div
@@ -49,14 +49,14 @@ const DashboardTabs = ({ activeTab, setActiveTab }: DashboardTabsProps) => {
               transition={{ duration: 0.2 }}
               className={activeTab === 'all' ? 'text-black' : 'text-white'}
             >
-              All Sites
+              All
             </motion.span>
           </TabsTrigger>
           <TabsTrigger
-            value="recent"
-            className="relative z-10 data-[state=active]:text-black"
+            value="building"
+            className="relative z-10 data-[state=active]:text-black flex items-center justify-center gap-1"
           >
-            {activeTab === 'recent' && (
+            {activeTab === 'building' && (
               <motion.div
                 className="absolute inset-0 bg-secondary-500 rounded-md -z-10"
                 layoutId="tab-background"
@@ -65,18 +65,18 @@ const DashboardTabs = ({ activeTab, setActiveTab }: DashboardTabsProps) => {
             )}
             <motion.span
               variants={tabVariants}
-              animate={activeTab === 'recent' ? 'active' : 'inactive'}
+              animate={activeTab === 'building' ? 'active' : 'inactive'}
               transition={{ duration: 0.2 }}
-              className={activeTab === 'recent' ? 'text-black' : 'text-white'}
+              className={activeTab === 'building' ? 'text-black' : 'text-white'}
             >
-              Recently Added
+              Deploying
             </motion.span>
           </TabsTrigger>
           <TabsTrigger
-            value="expiring"
-            className="relative z-10 data-[state=active]:text-black"
+            value="active"
+            className="relative z-10 data-[state=active]:text-black flex items-center justify-center gap-1"
           >
-            {activeTab === 'expiring' && (
+            {activeTab === 'active' && (
               <motion.div
                 className="absolute inset-0 bg-secondary-500 rounded-md -z-10"
                 layoutId="tab-background"
@@ -85,11 +85,31 @@ const DashboardTabs = ({ activeTab, setActiveTab }: DashboardTabsProps) => {
             )}
             <motion.span
               variants={tabVariants}
-              animate={activeTab === 'expiring' ? 'active' : 'inactive'}
+              animate={activeTab === 'active' ? 'active' : 'inactive'}
               transition={{ duration: 0.2 }}
-              className={activeTab === 'expiring' ? 'text-black' : 'text-white'}
+              className={activeTab === 'active' ? 'text-black' : 'text-white'}
             >
-              Expiring Soon
+              Active
+            </motion.span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="failed"
+            className="relative z-10 data-[state=active]:text-black flex items-center justify-center gap-1"
+          >
+            {activeTab === 'failed' && (
+              <motion.div
+                className="absolute inset-0 bg-secondary-500 rounded-md -z-10"
+                layoutId="tab-background"
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              />
+            )}
+            <motion.span
+              variants={tabVariants}
+              animate={activeTab === 'failed' ? 'active' : 'inactive'}
+              transition={{ duration: 0.2 }}
+              className={activeTab === 'failed' ? 'text-black' : 'text-white'}
+            >
+              Failed
             </motion.span>
           </TabsTrigger>
         </TabsList>

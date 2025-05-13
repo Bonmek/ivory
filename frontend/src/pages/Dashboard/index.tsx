@@ -3,7 +3,6 @@
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import ThreeJSBackground from '@/components/ThreeJsBackground'
-import ProjectCard from '@/components/Dashboard/ProjectCard'
 import DashboardHeader from '@/components/Dashboard/DashboardHeader'
 import DashboardTabs from '@/components/Dashboard/DashboardTabs'
 import EmptyState from '@/components/Dashboard/EmptyState'
@@ -13,6 +12,7 @@ import { useSuiData } from '@/hooks/useSuiData'
 import { transformMetadataToProject } from '@/utils/metadataUtils'
 import { useWalletKit } from '@mysten/wallet-kit'
 import { useAuth } from '@/context/AuthContext'
+import ProjectCard from '@/components/Dashboard/ProjectCard'
 
 const formatDate = (date: Date) => {
   return date.toLocaleDateString('en-GB', {
@@ -224,8 +224,8 @@ export default function Dashboard() {
                         whileTap={{ scale: 0.95 }}
                         onClick={() => handlePageChange(page)}
                         className={`px-4 py-2 rounded-md ${currentPage === page
-                            ? 'bg-secondary-500 text-black'
-                            : 'bg-primary-700 text-white hover:bg-primary-600'
+                          ? 'bg-secondary-500 text-black'
+                          : 'bg-primary-700 text-white hover:bg-primary-600'
                           }`}
                       >
                         {page}

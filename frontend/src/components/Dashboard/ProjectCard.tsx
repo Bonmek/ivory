@@ -1,4 +1,4 @@
-import { memo, useState } from 'react'
+import { memo, useState, useEffect } from 'react'
 import {
   MoreHorizontal,
   Users,
@@ -9,6 +9,8 @@ import {
   Copy,
   Check,
   Link,
+  Timer,
+  Loader2,
 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import {
@@ -35,8 +37,8 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { Toaster } from '@/components/ui/sonner'
-
-
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useSuiData } from "@/hooks/useSuiData"
 
 interface ProjectCardProps {
   project: {
@@ -50,10 +52,12 @@ interface ProjectCardProps {
     suins?: string
     siteId?: string
     status?: number
+    client_error_description?: string
   }
   index: number
   onHoverStart: (id: number) => void
   onHoverEnd: () => void
+  userAddress: string
 }
 
 const formatDate = (date: Date) => {
@@ -79,13 +83,63 @@ const calculateDaysBetween = (date1: Date, date2: Date) => {
 }
 
 const ProjectCard = memo(
-  ({ project, index, onHoverStart, onHoverEnd }: ProjectCardProps) => {
+  ({ project, index, onHoverStart, onHoverEnd, userAddress }: ProjectCardProps) => {
     const remainingDays = calculateDaysBetween(new Date(), project.expiredDate)
     const [startDateOpen, setStartDateOpen] = useState(false)
     const [expiredDateOpen, setExpiredDateOpen] = useState(false)
     const [remainingOpen, setRemainingOpen] = useState(false)
+    const [errorOpen, setErrorOpen] = useState(false)
+    const [statusOpen, setStatusOpen] = useState(false)
     const [copied, setCopied] = useState(false)
     const [suinsValue, setSuinsValue] = useState('')
+    const [buildTime, setBuildTime] = useState<number>(() => {
+      if (project.status === 0) {
+        const startTime = new Date(project.startDate).getTime()
+        const now = Date.now()
+        return Math.floor((now - startTime) / 1000)
+      }
+      return 0
+    })
+    const [dots, setDots] = useState('.')
+    const [selectedSuins, setSelectedSuins] = useState<string>("")
+    const [otherSuins, setOtherSuins] = useState<string>("")
+    const { suins, isLoadingSuins, refetchSuiNS } = useSuiData(userAddress)
+    const [isRefreshing, setIsRefreshing] = useState(false)
+
+    useEffect(() => {
+      if (project.status === 0) {
+        const startTime = new Date(project.startDate).getTime()
+        setBuildTime(Math.floor((Date.now() - startTime) / 1000))
+
+        const timer = setInterval(() => {
+          setBuildTime(Math.floor((Date.now() - startTime) / 1000))
+        }, 1000)
+
+        return () => clearInterval(timer)
+      }
+    }, [project.status, project.startDate])
+
+    useEffect(() => {
+      if (project.status !== 0) return
+      const interval = setInterval(() => {
+        setDots((prev) => (prev.length < 3 ? prev + '.' : '.'))
+      }, 400)
+      return () => clearInterval(interval)
+    }, [project.status])
+
+    const formatBuildTime = (seconds: number) => {
+      const hours = Math.floor(seconds / 3600)
+      const minutes = Math.floor((seconds % 3600) / 60)
+      const remainingSeconds = seconds % 60
+
+      if (hours > 0) {
+        return `${hours}h ${minutes}m ${remainingSeconds}s`
+      } else if (minutes > 0) {
+        return `${minutes}m ${remainingSeconds}s`
+      } else {
+        return `${remainingSeconds}s`
+      }
+    }
 
     const getStatusColor = (status?: number) => {
       switch (status) {
@@ -168,8 +222,9 @@ const ProjectCard = memo(
     }
 
     const handleLinkSuins = () => {
-      if (!suinsValue) {
-        toast.error('Please enter SUINS name', {
+      const finalSuins = selectedSuins === "other" ? otherSuins : selectedSuins
+      if (!finalSuins) {
+        toast.error('Please select a SUINS domain', {
           className: 'bg-red-900 border-red-500/20 text-white',
           style: {
             background: 'var(--red-900)',
@@ -188,6 +243,15 @@ const ProjectCard = memo(
           color: 'white',
         },
       })
+    }
+
+    const handleRefreshSuins = async () => {
+      setIsRefreshing(true)
+      try {
+        await refetchSuiNS()
+      } finally {
+        setIsRefreshing(false)
+      }
     }
 
     return (
@@ -211,7 +275,9 @@ const ProjectCard = memo(
                     >
                       <Link className="h-4 w-4 mr-1.5" />
                       <span className="text-sm">Link SUINS</span>
-                      <span className="text-[10px] opacity-60 ml-1">(initial setup)</span>
+                      <span className="text-[10px] opacity-60 ml-1">
+                        (initial setup)
+                      </span>
                     </button>
                   </DialogTrigger>
                   <DialogContent className="bg-primary-900 border-secondary-500/20 text-white">
@@ -220,24 +286,77 @@ const ProjectCard = memo(
                         Link SUINS
                       </DialogTitle>
                       <DialogDescription className="text-white/60">
-                        Enter your SUINS name to link it with this project
+                        Select your SUINS name to link it with this project
                       </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                       <div className="grid gap-2">
-                        <Input
-                          placeholder="Enter SUINS name"
-                          value={suinsValue}
-                          onChange={(e) => setSuinsValue(e.target.value)}
-                          className="bg-primary-800 border-secondary-500/20 text-white"
-                        />
+                        {isLoadingSuins ? (
+                          <div className="flex items-center justify-center py-4">
+                            <Loader2 className="h-6 w-6 animate-spin text-secondary-400" />
+                          </div>
+                        ) : (
+                          <>
+                            <div className="flex gap-2 items-center">
+                              <Select
+                                value={selectedSuins}
+                                onValueChange={setSelectedSuins}
+                              >
+                                <SelectTrigger className="bg-primary-800 border-secondary-500/20 text-white w-full flex-1">
+                                  <SelectValue placeholder="Select SUINS domain" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-primary-800 border-secondary-500/20 text-white">
+                                  {suins.map((sui) => (
+                                    <SelectItem
+                                      key={sui.data?.objectId}
+                                      value={sui.data?.content?.fields?.domain_name}
+                                      className="hover:bg-primary-700"
+                                    >
+                                      {sui.data?.content?.fields?.domain_name}
+                                    </SelectItem>
+                                  ))}
+                                  <SelectItem value="other" className="hover:bg-primary-700">
+                                    Other
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <Button
+                                onClick={handleRefreshSuins}
+                                variant="outline"
+                                className="border-secondary-500/20 text-white hover:bg-primary-800"
+                                disabled={isLoadingSuins || isRefreshing}
+                              >
+                                {isRefreshing ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <RefreshCw className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </div>
+
+                            {selectedSuins === "other" && (
+                              <Input
+                                placeholder="Enter custom SUINS name"
+                                value={otherSuins}
+                                onChange={(e) => setOtherSuins(e.target.value)}
+                                className="bg-primary-800 border-secondary-500/20 text-white mt-2"
+                              />
+                            )}
+                          </>
+                        )}
                       </div>
-                      <Button
-                        onClick={handleLinkSuins}
-                        className="bg-secondary-500 hover:bg-secondary-600 text-white"
-                      >
-                        Link SUINS
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={handleLinkSuins}
+                          className="bg-secondary-500 hover:bg-secondary-600 text-white flex-1"
+                          disabled={isLoadingSuins || (!selectedSuins || (selectedSuins === "other" && !otherSuins))}
+                        >
+                          {isLoadingSuins ? (
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          ) : null}
+                          Link SUINS
+                        </Button>
+                      </div>
                     </div>
                   </DialogContent>
                 </Dialog>
@@ -246,6 +365,7 @@ const ProjectCard = memo(
                 <DropdownMenuTrigger asChild>
                   <button
                     className={`h-8 w-8 flex items-center justify-center rounded-full ${colors.dropdown} transition-all duration-200 hover:scale-110 active:scale-95`}
+                    disabled={project.status === 0}
                   >
                     <MoreHorizontal className="h-5 w-5" />
                     <span className="sr-only">Open menu</span>
@@ -253,25 +373,53 @@ const ProjectCard = memo(
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
                   align="end"
-                  className="w-48 bg-primary-900 border-secondary-500/20 text-white backdrop-blur-sm"
+                  className="w-56 bg-primary-900 border-secondary-500/20 text-white backdrop-blur-sm"
                 >
-                  <DropdownMenuItem className="focus:bg-primary-800">
-                    <Users className="mr-2 h-4 w-4" />
-                    <span>Transfer ownership</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="focus:bg-primary-800">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    <span>Extend site</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="focus:bg-primary-800">
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    <span>Update site</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator className="bg-secondary-500/20" />
-                  <DropdownMenuItem className="text-red-400 focus:text-red-400 focus:bg-primary-800">
-                    <Trash className="mr-2 h-4 w-4" />
-                    <span>Delete site</span>
-                  </DropdownMenuItem>
+                  {project.status === 2 ? (
+                    <>
+                      <DropdownMenuItem className="focus:bg-primary-800">
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        <span>Retry Deploy</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator className="bg-secondary-500/20" />
+                      <DropdownMenuItem className="text-red-400 focus:text-red-400 focus:bg-primary-800">
+                        <Trash className="mr-2 h-4 w-4" />
+                        <span>Delete site</span>
+                      </DropdownMenuItem>
+                    </>
+                  ) : project.status === 0 ? (
+                    <>
+                      <div className="px-4 py-2 text-yellow-400 flex items-center gap-2 text-sm">
+                        <Loader2 className="ml-1 h-3 w-3 text-yellow-300 animate-spin" />
+                        Deploying...
+                      </div>
+                      <DropdownMenuSeparator className="bg-secondary-500/20" />
+                      <DropdownMenuItem className="text-red-400 focus:text-red-400 focus:bg-primary-800">
+                        <Trash className="mr-2 h-4 w-4" />
+                        <span>Delete site</span>
+                      </DropdownMenuItem>
+                    </>
+                  ) : (
+                    <>
+                      <DropdownMenuItem className="focus:bg-primary-800">
+                        <Users className="mr-2 h-4 w-4" />
+                        <span>Transfer ownership</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="focus:bg-primary-800">
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        <span>Extend site</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="focus:bg-primary-800">
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        <span>Update site</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator className="bg-secondary-500/20" />
+                      <DropdownMenuItem className="text-red-400 focus:text-red-400 focus:bg-primary-800">
+                        <Trash className="mr-2 h-4 w-4" />
+                        <span>Delete site</span>
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -279,7 +427,13 @@ const ProjectCard = memo(
             {/* Left: Project Image */}
             <div className="flex-shrink-0 opacity-80 group-hover:opacity-100 transition-opacity duration-200">
               <img
-                src="/images/walrus.png"
+                src={
+                  project.status === 0
+                    ? "/images/walrus_building.png"
+                    : project.status === 2
+                      ? "/images/walrus_fail.png"
+                      : "/images/walrus.png"
+                }
                 alt="project avatar"
                 className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border-2 ${colors.avatar} shadow transition-all duration-300 group-hover:scale-105`}
               />
@@ -294,17 +448,116 @@ const ProjectCard = memo(
                 >
                   {project.name}
                 </div>
-                <div
-                  className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${colors.badge}`}
-                >
-                  {project.status === 1
-                    ? 'Active'
-                    : project.status === 0
-                      ? 'Building'
-                      : project.status === 2
-                        ? 'Failed'
-                        : 'Unknown'}
-                </div>
+                {project.status === 2 && project.client_error_description ? (
+                  <Popover open={errorOpen} onOpenChange={setErrorOpen}>
+                    <PopoverTrigger asChild>
+                      <div
+                        className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${colors.badge} flex items-center gap-1 cursor-pointer hover:bg-red-500/30 transition-colors duration-200`}
+                        onMouseEnter={() => setErrorOpen(true)}
+                        onMouseLeave={() => setErrorOpen(false)}
+                        title="Click to view error details"
+                      >
+                        Failed
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="w-3 h-3"
+                        >
+                          <circle cx="12" cy="12" r="10" />
+                          <line x1="12" y1="8" x2="12" y2="12" />
+                          <line x1="12" y1="16" x2="12.01" y2="16" />
+                        </svg>
+                      </div>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      className="w-72 p-3 bg-primary-900 border-red-500/20 text-white backdrop-blur-sm"
+                      onMouseEnter={() => setErrorOpen(true)}
+                      onMouseLeave={() => setErrorOpen(false)}
+                    >
+                      <div className="flex items-start gap-2">
+                        <div className="flex-shrink-0 mt-0.5">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="w-4 h-4 text-red-400"
+                          >
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="8" x2="12" y2="12" />
+                            <line x1="12" y1="16" x2="12.01" y2="16" />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-sm font-medium text-red-400 mb-1">Deployment Failed</div>
+                          <div className="text-xs text-white/80 leading-relaxed">
+                            {project.client_error_description}
+                          </div>
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                ) : project.status === 0 ? (
+                  <Popover open={statusOpen} onOpenChange={setStatusOpen}>
+                    <PopoverTrigger asChild>
+                      <div
+                        className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${colors.badge} flex items-center gap-1 cursor-help`}
+                        onMouseEnter={() => setStatusOpen(true)}
+                        onMouseLeave={() => setStatusOpen(false)}
+                      >
+                        Building
+                        <span className="ml-1">
+                          <span className="inline-block w-2 h-2 bg-yellow-300 rounded-full animate-pulse" />
+                        </span>
+                      </div>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      className="w-72 p-3 bg-primary-900 border-secondary-500/20 text-white backdrop-blur-sm"
+                      sideOffset={5}
+                      onMouseEnter={() => setStatusOpen(true)}
+                      onMouseLeave={() => setStatusOpen(false)}
+                    >
+                      <div className="flex items-start gap-2">
+                        <div className="flex-shrink-0 mt-0.5">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="w-4 h-4 text-yellow-400"
+                          >
+                            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-sm font-medium text-yellow-400 mb-1">
+                            Building in Progress
+                          </div>
+                          <div className="text-xs text-white/80 leading-relaxed">
+                            Your site is currently being built. This process may take a few minutes.
+                          </div>
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                ) : (
+                  <div
+                    className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${colors.badge} flex items-center`}
+                  >
+                    Active
+                  </div>
+                )}
               </div>
 
               {/* Project Link */}
@@ -399,6 +652,23 @@ const ProjectCard = memo(
                     </PopoverContent>
                   </Popover>
                 </div>
+                {project.status === 0 && (
+                  <div className="flex-1 min-w-0 flex flex-col justify-center border-l border-white/10 pl-2 sm:pl-3">
+                    <div className="text-[10px] text-white/50 font-medium truncate">
+                      Build Time
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-0.5 min-h-[20px]">
+                      <Timer className="h-3.5 w-3.5 text-yellow-400" />
+                      {buildTime === 0 ? (
+                        <span className="animate-pulse text-yellow-300 font-medium">Loading...</span>
+                      ) : (
+                        <span className="text-sm text-yellow-300 font-medium">
+                          {formatBuildTime(buildTime)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
                 <div className="flex-1 min-w-0 flex flex-col justify-center border-l border-white/10 pl-2 sm:pl-3">
                   <div className="text-[10px] text-white/50 font-medium truncate">
                     Remaining
