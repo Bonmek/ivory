@@ -44,19 +44,6 @@ import HelpCenter from '@/components/CreateWebsite/HelpCenter'
 
 
 export default function CreateWebsitePage() {
-  // Warn user before leaving/refreshing page
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      e.preventDefault();
-      // Chrome requires returnValue to be set
-      e.returnValue = '';
-    };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, []);
-
   useTheme()
   const { currentAccount } = useWalletKit()
 
@@ -64,6 +51,19 @@ export default function CreateWebsitePage() {
 
   // State to control preview visibility
   const [showPreview, setShowPreview] = useState(false)
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (showPreview) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [showPreview]);
 
   // State for project name
   const [name, setName] = useState('')
