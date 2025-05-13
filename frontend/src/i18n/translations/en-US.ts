@@ -127,6 +127,9 @@ export default {
   'createWebsite.helpCenter': 'Help Center',
   'createWebsite.helpCenterDescription': 'Get help with creating and deploying your website.',
 
+  'createWebsite.selectRootDirectory': 'Select root directory',
+  'createWebsite.selectRootDirectoryDescription': 'Choose the base directory of your project.',
+
   // Homepage
   'homepage.hero.title1': 'Deploy',
   'homepage.hero.title2': 'Your',

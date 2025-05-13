@@ -22,7 +22,7 @@ interface GithubRepoInputProps {
   handleGithubSignIn: () => void;
   repositories: Array<{ id: number; name: string; default_branch: string, visibility: string }>;
   filteredRepositories: Array<{ id: number; name: string; default_branch: string, visibility: string }>;
-  handleSelectRepository: (id: number | null) => void;
+  handleSelectRepository: (id: number | null, name: string) => void;
   selectedRepo: number | null;
   repoContents: any[] | null;
   repoContentsLoading: boolean;
@@ -225,7 +225,7 @@ export default function GithubRepoInput({
                   tabIndex={0}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
-                      handleSelectRepository(repository.id);
+                      handleSelectRepository(repository.id, repository.name);
                       downloadRepositoryZip(user!, repository.name);
                     }
                   }}
@@ -244,7 +244,7 @@ export default function GithubRepoInput({
                   </div>
                   <Button
                     onClick={() => {
-                      handleSelectRepository(repository.id);
+                      handleSelectRepository(repository.id, repository.name);
                       downloadRepositoryZip(user!, repository.name);
                     }}
                     size="sm"
@@ -326,7 +326,7 @@ export default function GithubRepoInput({
               size="sm"
               variant="outline"
               className="text-xs px-3 py-1 border-red-400 text-red-400 hover:bg-red-700 hover:text-white"
-              onClick={() => { handleSelectRepository(null); setSelectedRepoFile(null); }}
+              onClick={() => { handleSelectRepository(null, ''); setSelectedRepoFile(null); }}
             >
               <X className="w-4 h-4 mr-1 inline-block" />
               <FormattedMessage id="createWebsite.githubCancel" />

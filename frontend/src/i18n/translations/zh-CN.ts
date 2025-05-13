@@ -127,6 +127,9 @@ export default {
   'createWebsite.helpCenter': '帮助中心',
   'createWebsite.helpCenterDescription': '获取创建和部署网站的帮助。',
 
+  'createWebsite.selectRootDirectory': '选择根目录',
+  'createWebsite.selectRootDirectoryDescription': '选择您的项目根目录。',
+
   // Homepage
   'homepage.hero.title1': '部署',
   'homepage.hero.title2': '您的',

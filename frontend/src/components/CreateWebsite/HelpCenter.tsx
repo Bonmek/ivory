@@ -6,7 +6,7 @@ function HelpCenter() {
   return (
     <motion.article
       id="help-center"
-      className="relative flex items-center bg-gradient-to-br from-[#10151c]/80 to-[#10151c]/60 mt-8 p-8 rounded-2xl shadow-2xl backdrop-blur-xl border border-primary-500/40 hover:border-primary-400/60 transition-all duration-500 glow-effect w-full"
+      className="relative flex items-center bg-gradient-to-br from-[#10151c]/50 to-[#10151c]/60 mt-8 p-8 rounded-2xl shadow-2xl backdrop-blur-xl border border-primary-500/40 hover:border-primary-400/60 transition-all duration-500 glow-effect w-full"
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.7, ease: 'easeOut' }}

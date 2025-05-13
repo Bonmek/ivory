@@ -6,9 +6,10 @@ import JSZip from "jszip";
 interface FileUploadPreviewProps {
   file: File;
   onRemove: () => void;
+  setName: (name: string) => void;
 }
 
-interface FileItem {
+export interface FileItem {
   name: string;
   isFolder: boolean;
   path: string;
@@ -116,7 +117,7 @@ const FileList: React.FC<{ files: string[] }> = ({ files }) => {
   );
 };
 
-const FileUploadPreview: React.FC<FileUploadPreviewProps> = ({ file, onRemove }) => {
+const FileUploadPreview: React.FC<FileUploadPreviewProps> = ({ file, onRemove, setName }) => {
   const [files, setFiles] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -147,6 +148,7 @@ const FileUploadPreview: React.FC<FileUploadPreviewProps> = ({ file, onRemove })
           console.error('Error processing ZIP:', e);
           setError('Error processing ZIP file');
         }
+        setName(file.name.replace('.zip', ''));
         setLoading(false);
       })
       .catch((e) => {
