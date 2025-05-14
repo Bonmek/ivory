@@ -112,6 +112,7 @@ export default function CreateWebsitePage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [user, setUser] = useState<string | null>(null)
   const [showBuildOutputSettings, setShowBuildOutputSettings] = useState(false)
+  const MAX_FILE_SIZE = 300 * 1024 * 1024 // 300MB in bytes
 
   // Validate name field
   const validateName = (value: string) => {
@@ -170,7 +171,18 @@ export default function CreateWebsitePage() {
     e.preventDefault()
     setIsDragging(false)
     const file = e.dataTransfer.files[0]
-    if (file && file.name.endsWith('.zip')) {
+
+    if (file) {
+      if (!file.name.endsWith('.zip')) {
+        setFileErrors([intl.formatMessage({ id: 'createWebsite.error.invalidFileType' })])
+        return
+      }
+
+      if (file.size > MAX_FILE_SIZE) {
+        setFileErrors([intl.formatMessage({ id: 'createWebsite.error.fileTooLarge' }, { maxSize: '300MB' })])
+        return
+      }
+
       setSelectedFile(file)
       setFileErrors([])
     }
@@ -178,7 +190,19 @@ export default function CreateWebsitePage() {
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file && file.name.endsWith('.zip')) {
+    const MAX_FILE_SIZE = 300 * 1024 * 1024 // 500MB in bytes
+
+    if (file) {
+      if (!file.name.endsWith('.zip')) {
+        setFileErrors([intl.formatMessage({ id: 'createWebsite.error.invalidFileType' })])
+        return
+      }
+
+      if (file.size > MAX_FILE_SIZE) {
+        setFileErrors([intl.formatMessage({ id: 'createWebsite.error.fileTooLarge' }, { maxSize: '300MB' })])
+        return
+      }
+
       setSelectedFile(file)
       setFileErrors([])
     }
@@ -576,7 +600,7 @@ export default function CreateWebsitePage() {
                     }
                     className="mb-6 w-full"
                   >
-                    <TabsList className="w-full mb-2 bg-primary-700">
+                    <TabsList className="w-full mb-2 bg-primary-700 h-10">
                       <TabsTrigger value={UploadMethod.Upload}>
                         <Upload className="h-4 w-4 mr-2" />
                         <FormattedMessage id="createWebsite.upload" />
@@ -589,15 +613,13 @@ export default function CreateWebsitePage() {
                     <TabsContent value={UploadMethod.Upload}>
                       <section
                         className={cn(
-                          'relative flex flex-col items-center justify-center w-full min-h-[160px] backdrop-blur-xl transition-all duration-300 cursor-pointer overflow-hidden',
+                          'relative flex flex-col items-center justify-center w-full min-h-[160px] backdrop-blur-xl transition-all duration-300 overflow-hidden',
                           isDragging && 'ring-4 ring-cyan-400/40',
                         )}
                         onDragOver={handleDragOver}
                         onDragLeave={handleDragLeave}
                         onDrop={handleDrop}
-                        onClick={handleBrowseClick}
                         tabIndex={0}
-                        role="button"
                       >
                         {!selectedFile && (
                           <svg
@@ -629,7 +651,8 @@ export default function CreateWebsitePage() {
                         <div className="relative z-20 w-full h-full flex flex-col items-center justify-center">
                           <input
                             type="file"
-                            accept=".zip"
+                            accept=".zip,application/zip,application/x-zip,application/x-zip-compressed"
+                            title="ZIP files only (max 500MB)"
                             className="hidden"
                             ref={fileInputRef}
                             onChange={handleFileInput}
@@ -641,7 +664,7 @@ export default function CreateWebsitePage() {
                               setName={setName}
                             />
                           ) : (
-                            <div className="flex flex-col items-center justify-center py-6 w-full relative z-10">
+                            <div className="flex flex-col items-center justify-center py-10 w-full relative z-10">
                               <div className="w-full flex flex-col items-center">
                                 <div
                                   className="flex flex-col items-center justify-center w-full"
@@ -652,14 +675,20 @@ export default function CreateWebsitePage() {
                                   tabIndex={0}
                                   role="button"
                                 >
-                                  <Upload className="w-14 h-14 mb-2 text-secondary-500 drop-shadow-lg" />
-                                  <p className="text-base font-bold text-center">
+                                  <div className="relative group">
+                                    <Upload className="w-16 h-16 mb-3 text-gray-900 drop-shadow-lg bg-secondary-500 p-3.5 rounded-full flex items-center justify-center" />
+                                  </div>
+                                  <p className="text-base font-semibold text-center text-gray-100">
                                     <FormattedMessage
                                       id="createWebsite.dragDrop"
                                       values={{
-                                        zip: <span className="text-secondary-500">ZIP file</span>
+                                        zip: <span className="font-bold text-secondary-500">ZIP file</span>
                                       }}
                                     />
+                                  </p>
+                                  <p className="text-sm text-gray-400 mt-1 flex items-center gap-1">
+                                    <Archive className="w-3 h-3" />
+                                    <FormattedMessage id="createWebsite.zipOnly" defaultMessage="ZIP files only • Max size: 10MB" />
                                   </p>
                                 </div>
                                 <div className="flex items-center justify-center w-5/6 my-4">
@@ -669,16 +698,15 @@ export default function CreateWebsitePage() {
                                   </span>
                                   <Separator className="flex-1" />
                                 </div>
-                                <button
-                                  type="button"
-                                  className="px-6 py-2 rounded-md bg-secondary-500 text-black font-semibold shadow-md hover:bg-secondary-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all duration-200"
+                                <Button
+                                  className="bg-secondary-500 hover:bg-secondary-700 text-black font-semibold py-2 px-6 rounded-lg shadow-md"
                                   onClick={(e) => {
                                     e.stopPropagation()
                                     handleBrowseClick()
                                   }}
                                 >
                                   <FormattedMessage id="createWebsite.browseFile" />
-                                </button>
+                                </Button>
                               </div>
                             </div>
                           )}

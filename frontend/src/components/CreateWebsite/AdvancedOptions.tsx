@@ -82,12 +82,17 @@ function AdvancedOptions({ advancedOptions, setAdvancedOptions, fileStructure = 
 
     return (
       <div key={item.path} className="space-y-1">
-        <div
-          className="flex items-center text-cyan-100 hover:bg-cyan-900/30 rounded px-2 py-1 cursor-pointer"
-          style={{ paddingLeft: `${level * 12}px` }}
+        <motion.div
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.2, delay: level * 0.05 }}
+          className="group flex items-center hover:bg-gray-800/50 rounded px-2 py-1.5 cursor-pointer transition-colors"
+          style={{ marginLeft: `${level * 8}px` }}
           onClick={() => {
-            setAdvancedOptions({ ...advancedOptions, rootDirectory: `/${item.path}` });
-            setShowFileSelector(false);
+            if (!hasSubdirectories) {
+              setAdvancedOptions({ ...advancedOptions, rootDirectory: `/${item.path}` });
+              setShowFileSelector(false);
+            }
           }}
         >
           {hasSubdirectories ? (
@@ -96,22 +101,34 @@ function AdvancedOptions({ advancedOptions, setAdvancedOptions, fileStructure = 
                 e.stopPropagation();
                 toggleFolder(item.path);
               }}
-              className="mr-1"
+              className="text-gray-400 hover:text-secondary-400 transition-colors mr-1"
             >
               {isExpanded ? (
-                <ChevronDown className="w-4 h-4 text-secondary-500" />
+                <ChevronDown className="w-4 h-4" />
               ) : (
-                <ChevronRight className="w-4 h-4 text-secondary-500" />
+                <ChevronRight className="w-4 h-4" />
               )}
             </button>
           ) : (
             <div className="w-4 h-4 mr-1" />
           )}
-          <Folder className="w-4 h-4 mr-2 text-secondary-500" />
-          <span className="text-sm">{item.name}</span>
-        </div>
+          <Folder className="w-4 h-4 mr-2 text-cyan-400/80 group-hover:text-cyan-300 transition-colors" />
+          <span className="text-sm text-gray-200 group-hover:text-white transition-colors">
+            {item.name}
+          </span>
+          <span
+            className="ml-auto text-xs text-gray-500 group-hover:text-cyan-300 transition-colors hidden sm:inline"
+            onClick={(e) => {
+              e.stopPropagation();
+              setAdvancedOptions({ ...advancedOptions, rootDirectory: `/${item.path}` });
+              setShowFileSelector(false);
+            }}
+          >
+            Select
+          </span>
+        </motion.div>
         {isExpanded && hasChildren && (
-          <div className="ml-4">
+          <div className="border-l border-gray-800/50 ml-2 pl-2">
             {Object.values(item.children).map(child =>
               renderGitHubTreeItem(child, level + 1)
             )}
@@ -136,44 +153,70 @@ function AdvancedOptions({ advancedOptions, setAdvancedOptions, fileStructure = 
     })
   }
 
-  const renderFileItem = (item: FileItem) => {
+  const renderFileItem = (item: FileItem, level = 0) => {
     if (item.isFolder) {
-      const isExpanded = expandedFolders.has(item.path)
+      const isExpanded = expandedFolders.has(item.path);
+      const hasSubFolders = item.children?.some(child => child.isFolder) || false;
+
       return (
         <div key={item.path} className="space-y-1">
-          <div
-            className="flex items-center text-cyan-100 hover:bg-cyan-900/30 rounded px-2 py-1 cursor-pointer"
+          <motion.div
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.2, delay: level * 0.05 }}
+            className="group flex items-center hover:bg-gray-800/50 rounded px-2 py-1.5 cursor-pointer transition-colors"
+            style={{ marginLeft: `${level * 8}px` }}
             onClick={(e) => {
-              e.stopPropagation()
-              toggleFolder(item.path)
+              e.stopPropagation();
+              if (hasSubFolders) {
+                toggleFolder(item.path);
+              } else {
+                setAdvancedOptions({ ...advancedOptions, rootDirectory: `/${item.path}` });
+                setShowFileSelector(false);
+              }
             }}
           >
-            {isExpanded ? (
-              <ChevronDown className="w-4 h-4 mr-2 text-secondary-500" />
+            {hasSubFolders ? (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleFolder(item.path);
+                }}
+                className="text-gray-400 hover:text-secondary-400 transition-colors mr-1"
+              >
+                {isExpanded ? (
+                  <ChevronDown className="w-4 h-4" />
+                ) : (
+                  <ChevronRight className="w-4 h-4" />
+                )}
+              </button>
             ) : (
-              <ChevronRight className="w-4 h-4 mr-2 text-secondary-500" />
+              <div className="w-4 h-4 mr-1" />
             )}
-            <Folder className="w-4 h-4 mr-2 text-secondary-500" />
-            <span
-              className="flex-1 truncate"
-              onClick={(e) => {
-                e.stopPropagation()
-                setAdvancedOptions({ ...advancedOptions, rootDirectory: `/${item.path}` })
-                setShowFileSelector(false)
-              }}
-            >
+            <Folder className="w-4 h-4 mr-2 text-cyan-400/80 group-hover:text-cyan-300 transition-colors" />
+            <span className="text-sm text-gray-200 group-hover:text-white transition-colors truncate">
               {item.name}
             </span>
-          </div>
+            <span
+              className="ml-auto text-xs text-gray-500 group-hover:text-cyan-300 transition-colors hidden sm:inline"
+              onClick={(e) => {
+                e.stopPropagation();
+                setAdvancedOptions({ ...advancedOptions, rootDirectory: `/${item.path}` });
+                setShowFileSelector(false);
+              }}
+            >
+              Select
+            </span>
+          </motion.div>
           {isExpanded && item.children && (
-            <div className="ml-4">
-              {item.children.map(child => renderFileItem(child))}
+            <div className="border-l border-gray-800/50 ml-2 pl-2">
+              {item.children.map(child => renderFileItem(child, level + 1))}
             </div>
           )}
         </div>
-      )
+      );
     }
-    return null // Only show folders in the selector
+    return null; // Only show folders in the selector
   }
   const intl = useIntl()
   const [isOpen, setIsOpen] = useState(false)
@@ -237,8 +280,9 @@ function AdvancedOptions({ advancedOptions, setAdvancedOptions, fileStructure = 
                       value={advancedOptions.rootDirectory || '/'}
                       onChange={(e) => setAdvancedOptions({ ...advancedOptions, rootDirectory: e.target.value })}
                       placeholder="/"
-                      className="w-full bg-primary-500/80 border-gray-600 rounded-md h-10 transition-all duration-300 focus:border-secondary-500 focus:ring-1 focus:ring-secondary-500/50 pr-10 backdrop-blur-sm group-hover:bg-primary-500/90 text-sm sm:text-base"
+                      className="w-full bg-primary-500/80 border-gray-600 rounded-md h-10 transition-all cursor-pointer duration-300 focus:border-secondary-500 focus:ring-1 focus:ring-secondary-500/50 pr-10 backdrop-blur-sm group-hover:bg-primary-500/90 text-sm sm:text-base"
                       readOnly={true}
+                      onClick={() => setShowFileSelector(true)}
                     />
                     <Button
                       type="button"
@@ -255,36 +299,43 @@ function AdvancedOptions({ advancedOptions, setAdvancedOptions, fileStructure = 
                 </div>
 
                 <Dialog open={showFileSelector} onOpenChange={setShowFileSelector}>
-                  <DialogContent className="w-[calc(100%-2rem)] sm:w-[90%] md:w-[80%] lg:w-[70%] max-w-[800px] max-h-[90vh] flex flex-col bg-gradient-to-br from-primary-700/90 via-primary-800/95 to-primary-900 border border-primary-600/50 shadow-2xl shadow-primary-900/50 backdrop-blur-sm">
-                    <DialogHeader className="px-1 sm:px-0">
-                      <div className="relative">
+                  <DialogContent className="w-[calc(100%-2rem)] sm:w-[90%] md:w-[80%] lg:w-[70%] max-w-[800px] max-h-[90vh] flex flex-col bg-gradient-to-br from-primary-900/95 via-primary-900/90 to-primary-900/95 shadow-2xl shadow-primary-900/30 backdrop-blur-sm overflow-hidden">
+                    <DialogHeader className="px-1 sm:px-0 relative z-10">
+                      <div className="relative inline-block">
                         <div className="absolute -left-2 -top-2 w-8 h-8 sm:w-10 sm:h-10 bg-secondary-500/20 rounded-full blur-md animate-pulse" />
-                        <DialogTitle className="relative text-white text-lg sm:text-xl font-semibold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                        <DialogTitle className="relative text-lg sm:text-xl font-semibold text-white">
                           <FormattedMessage id="createWebsite.selectRootDirectory" />
                         </DialogTitle>
                       </div>
-                      <DialogDescription className="text-gray-300/90 mt-1 sm:mt-2 text-xs sm:text-sm leading-relaxed">
+                      <DialogDescription className="text-gray-400/90 mt-1 sm:mt-2 text-xs sm:text-sm leading-relaxed">
                         <FormattedMessage id="createWebsite.selectRootDirectoryDescription" />
                       </DialogDescription>
                     </DialogHeader>
-                    <div className="flex-1 flex flex-col py-2">
-                      <div className="space-y-1.5 flex-1 flex flex-col">
-                        <div
-                          className="flex items-center text-cyan-50 hover:bg-gradient-to-r from-cyan-900/20 to-cyan-900/5 rounded-lg px-3 py-2.5 cursor-pointer transition-all duration-200 border border-transparent hover:border-cyan-500/20 group"
+                    <div className="flex-1 flex flex-col py-2 relative z-10">
+                      <div className="space-y-2 flex-1 flex flex-col">
+                        {/* Root directory option */}
+                        <motion.div
+                          whileHover={{ scale: 1.01 }}
+                          whileTap={{ scale: 0.99 }}
+                          className="flex items-center bg-primary-800/30 hover:bg-primary-700/40 rounded-lg px-3 py-2.5 cursor-pointer transition-all duration-200 border border-transparent hover:border-cyan-500/20 group"
                           onClick={() => {
-                            setAdvancedOptions({ ...advancedOptions, rootDirectory: '/' })
-                            setShowFileSelector(false)
+                            setAdvancedOptions({ ...advancedOptions, rootDirectory: '/' });
+                            setShowFileSelector(false);
                           }}
                         >
                           <div className="relative">
-                            <Folder className="w-5 h-5 mr-3 text-secondary-500 group-hover:scale-110 transition-transform duration-200" />
+                            <Folder className="w-5 h-5 text-secondary-400 group-hover:text-secondary-300 transition-colors duration-200" />
                             <div className="absolute inset-0 bg-secondary-500/20 rounded-full opacity-0 group-hover:opacity-100 blur-md transition-opacity duration-300" />
                           </div>
-                          <span className="text-sm font-medium text-white/90 group-hover:text-white transition-colors">/ (root)</span>
-                          <span className="ml-auto text-xs text-gray-400 group-hover:text-cyan-300 transition-colors hidden sm:inline">Select</span>
-                        </div>
+                          <span className="ml-3 text-sm font-medium text-gray-100 group-hover:text-white transition-colors">
+                            / (root)
+                          </span>
+                          <span className="ml-auto text-xs text-gray-500 group-hover:text-cyan-300 transition-colors hidden sm:inline">
+                            Select
+                          </span>
+                        </motion.div>
 
-                        <div className="max-h-[50vh] sm:max-h-[500px] lg:max-h-[600px] overflow-y-auto pr-1 sm:pr-2 -mr-2 custom-scrollbar flex-1">
+                        <div className="max-h-[50vh] sm:max-h-[500px] lg:max-h-[600px] overflow-y-auto pr-1 sm:pr-2 -mr-2 custom-scrollbar flex-1 bg-primary-900/30 rounded-lg p-2">
                           {fileStructure.length > 0 && (
                             <div className="space-y-1">
                               {fileStructure.map(item => renderFileItem(item))}
@@ -300,14 +351,24 @@ function AdvancedOptions({ advancedOptions, setAdvancedOptions, fileStructure = 
                           )}
 
                           {fileStructure.length === 0 && (!githubContents || githubContents.length === 0) && (
-                            <div className="flex flex-col items-center border border-gray-600 rounded-md justify-center py-4 sm:py-6 px-4 text-center">
-                              <FolderOpen className="w-8 h-8 sm:w-10 sm:h-10 text-gray-500/50 mb-2 sm:mb-3" />
-                              <p className="text-xs text-gray-500 mt-1 px-2">Upload files or connect a repository to see directories</p>
-                            </div>
+                            <motion.div
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="flex flex-col items-center justify-center p-6 text-center border-2 border-dashed border-gray-800 rounded-lg bg-gray-900/30"
+                            >
+                              <FolderOpen className="w-10 h-10 text-gray-500/60 mb-3" />
+                              <p className="text-sm text-gray-400">
+                                Upload files or connect a repository to see directories
+                              </p>
+                            </motion.div>
                           )}
                         </div>
                       </div>
                     </div>
+
+                    {/* Decorative elements */}
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 rounded-full -mr-16 -mt-16 blur-3xl pointer-events-none" />
+                    <div className="absolute bottom-0 left-0 w-40 h-40 bg-indigo-500/5 rounded-full -ml-20 -mb-20 blur-3xl pointer-events-none" />
                   </DialogContent>
                 </Dialog>
               </section>

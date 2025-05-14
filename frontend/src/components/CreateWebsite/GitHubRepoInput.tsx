@@ -2,16 +2,30 @@ import { Separator } from "@/components/ui/separator";
 import { motion } from "framer-motion"
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Github, Loader2, X } from 'lucide-react'
+// Basic file icons from lucide
+import {
+  FolderOpen,
+  Github,
+  Loader2,
+  X,
+} from 'lucide-react';
+import { getLanguageIcon } from './languageIcons';
 import { useRef, useState, useLayoutEffect } from 'react'
 import { FormattedMessage } from 'react-intl'
 import { useIntl } from 'react-intl'
-import { CircleAlert, ChevronDown, ChevronRight, Folder, File as FileIcon } from "lucide-react";
+import { CircleAlert, ChevronDown, ChevronRight, Folder } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from "@/components/ui/dialog";
 import { AlertTriangle } from "lucide-react";
 
-
+interface Repository {
+  id: number;
+  name: string;
+  default_branch: string;
+  visibility: string;
+  language?: string | null;
+  [key: string]: any;
+}
 
 interface GithubRepoInputProps {
   githubUrl: string;
@@ -20,8 +34,8 @@ interface GithubRepoInputProps {
   handleSearchRepository: (e: React.ChangeEvent<HTMLInputElement>) => void;
   user: string | null;
   handleGithubSignIn: () => void;
-  repositories: Array<{ id: number; name: string; default_branch: string, visibility: string }>;
-  filteredRepositories: Array<{ id: number; name: string; default_branch: string, visibility: string }>;
+  repositories: Repository[];
+  filteredRepositories: Repository[];
   handleSelectRepository: (id: number | null, name: string) => void;
   selectedRepo: number | null;
   repoContents: any[] | null;
@@ -52,9 +66,17 @@ function buildTree(items: any[]) {
   return root;
 }
 
-function TreeNode({ name, node }: { name: string; node: any }) {
+interface TreeNodeProps {
+  name: string;
+  node: any;
+  language?: string | null;
+}
+
+function TreeNode({ name, node, language }: TreeNodeProps) {
   const [open, setOpen] = useState(false);
   const isFolder = node.__info?.type === "tree" || node.__info?.type === "dir" || Object.keys(node.__children).length > 0;
+  const fileExtension = name.split('.').pop()?.toLowerCase();
+  const Icon = isFolder ? Folder : getLanguageIcon(language || fileExtension);
 
   if (isFolder) {
     return (
@@ -68,7 +90,7 @@ function TreeNode({ name, node }: { name: string; node: any }) {
           ) : (
             <ChevronRight className="w-4 h-4 mr-2 text-secondary-500" />
           )}
-          <Folder className="w-4 h-4 mr-2 text-secondary-500" />
+          <Icon className="w-4 h-4 mr-2 text-secondary-500" />
           <span className="truncate flex-1" title={name}>{name}</span>
           {node.__info?.sha && (
             <span className="ml-2 text-xs text-gray-500 bg-gray-800 rounded px-1 py-0.5 select-all">
@@ -79,7 +101,7 @@ function TreeNode({ name, node }: { name: string; node: any }) {
         {open && (
           <div className="ml-4">
             {Object.entries(node.__children).map(([childName, childNode]) => (
-              <TreeNode key={childName} name={childName} node={childNode} />
+              <TreeNode key={childName} name={childName} node={childNode} language={language} />
             ))}
           </div>
         )}
@@ -90,7 +112,7 @@ function TreeNode({ name, node }: { name: string; node: any }) {
   // File
   return (
     <div key={node.__info?.path || name} className="flex items-center text-cyan-100 hover:bg-cyan-900/30 rounded px-2 py-1 ml-4">
-      <FileIcon className="w-4 h-4 mr-2 text-cyan-200" />
+      <Icon className="w-4 h-4 mr-2 text-cyan-200" />
       <span className="truncate flex-1" title={name}>{name}</span>
       {node.__info?.sha && (
         <span className="ml-2 text-xs text-gray-500 bg-gray-800 rounded px-1 py-0.5 select-all">
@@ -125,6 +147,8 @@ export default function GithubRepoInput({
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const intl = useIntl();
 
+  console.log('repositories', repositories);
+
   useLayoutEffect(() => {
     if (userBtnRef.current) {
       setUserBtnWidth(userBtnRef.current.offsetWidth);
@@ -134,9 +158,9 @@ export default function GithubRepoInput({
   return (
     <div className="space-y-4 overflow-y-auto">
       {(user && !selectedRepo) && (
-        <div className='flex max-lg:flex-col items-center gap-2'>
+        <div className='flex max-lg:flex-col w-full items-center gap-2'>
           <div
-            className="relative"
+            className="relative w-full lg:w-auto"
             onMouseEnter={() => setUserHover(true)}
             onMouseLeave={() => setUserHover(false)}
           >
@@ -144,8 +168,8 @@ export default function GithubRepoInput({
               <Button
                 size="sm"
                 variant="destructive"
-                className="max-lg:w-full w-fit bg-red-500 text-red-400 border-red-400 hover:bg-red-700 hover:text-white h-10 px-4 py-1 text-xs shadow-lg"
-                style={userBtnWidth ? { width: userBtnWidth } : undefined}
+                className="w-full lg:w-auto bg-red-500 text-red-100 border-red-400 hover:bg-red-600 hover:text-white h-10 px-4 py-1 text-sm lg:text-xs shadow-lg transition-colors duration-200"
+                style={userBtnWidth ? { minWidth: userBtnWidth } : undefined}
                 onClick={() => setLogoutDialogOpen(true)}
               >
                 <FormattedMessage id="createWebsite.githubLogout" />
@@ -153,10 +177,11 @@ export default function GithubRepoInput({
             ) : (
               <Button
                 ref={userBtnRef}
-                className="max-lg:w-full w-fit bg-secondary-500 text-black hover:bg-secondary-700 border border-gray-700 rounded-md h-10 transition-all duration-300 flex items-center justify-center gap-2"
+                className="w-full lg:w-auto bg-secondary-500 text-black hover:bg-secondary-600 border border-gray-700 rounded-md h-10 px-4 transition-all duration-300 flex items-center justify-center gap-2 whitespace-nowrap overflow-hidden text-ellipsis"
+                title={user}
               >
-                <Github className="h-5 w-5" />
-                {user}
+                <Github className="h-5 w-5 flex-shrink-0" />
+                <span className="truncate max-w-[180px] lg:max-w-[200px] md:max-w-xs">{user}</span>
               </Button>
             )}
           </div>
@@ -179,27 +204,40 @@ export default function GithubRepoInput({
         </div>
       )}
       {(!user) && (
-        <Button
-          onClick={handleGithubSignIn}
-          className="w-full bg-secondary-500 hover:bg-secondary-700 text-black border border-gray-700 rounded-md h-10 transition-all duration-300 flex items-center justify-center gap-2"
+        <section
+          className="w-full bg-primary-900 hover:bg-primary-900 p-4 text-white border border-gray-700  rounded-md h-full transition-all duration-300 flex flex-col items-center justify-center gap-2"
         >
-          <Github className="h-5 w-5" />
-          <FormattedMessage id="createWebsite.githubSignIn" />
-        </Button>
+          <img src="/images/github-mark-white.png" alt="github" className="h-12 w-12" />
+          <p className="text-center text-gray-400 text-sm max-w-md mx-auto px-4 py-1">
+            <FormattedMessage id="createWebsite.githubDescription" />
+          </p>
+          <Button
+            onClick={handleGithubSignIn}
+            className="px-6 py-2 bg-secondary-500 m-1 text-black cursor-pointer hover:bg-secondary-300 border border-gray-700 rounded-md h-full transition-all duration-300 flex flex-col items-center justify-center gap-4 hover:shadow-[0_0_10px_3px_rgba(255,255,255,0.3)]"
+          >
+            <FormattedMessage id="createWebsite.githubSignIn" />
+          </Button>
+        </section>
       )}
       {(!selectedRepo && repositories.length > 0) && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className='flex flex-col gap-2 border border-gray-700 rounded-sm p-2 bg-primary-900'
+          className='flex flex-col border border-gray-700 rounded-lg overflow-hidden bg-primary-900 shadow-lg'
         >
+          <div className='p-3 border-b border-gray-800 bg-primary-950/30'>
+            <p className='text-sm text-gray-300 font-medium'>
+              <FormattedMessage id='createWebsite.selectRepository' defaultMessage='Select a repository' />
+            </p>
+          </div>
+
           {repositories.filter(repo =>
             repo.name.toLowerCase().includes(searchRepository.toLowerCase().trim())
           ).length > 0 ? (
             <motion.div
               layout
-              className="flex flex-col gap-2 max-h-[400px] overflow-y-auto pr-2"
+              className="flex flex-col divide-y divide-gray-800 max-h-[400px] overflow-y-auto custom-scrollbar"
             >
               {repositories.filter(repo =>
                 repo.name.toLowerCase().includes(searchRepository.toLowerCase().trim())
@@ -207,19 +245,19 @@ export default function GithubRepoInput({
                 <motion.div
                   layout
                   key={repository.id}
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 5 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
+                  exit={{ opacity: 0, y: -5 }}
                   transition={{
-                    duration: 0.2,
-                    delay: index * 0.05,
+                    duration: 0.15,
+                    delay: index * 0.03,
                     ease: "easeOut",
                   }}
                   className={cn(
-                    "p-2 px-4 rounded-lg bg-primary-900 hover:bg-primary-700/80 transition-all duration-300 flex items-center justify-between group shadow-sm hover:shadow-md",
+                    "group relative px-4 py-3 transition-colors duration-200",
                     selectedRepo === repository.id
-                      ? "bg-primary-600/90 border border-secondary-400 ring-1 ring-secondary-300/50"
-                      : "border border-gray-700/50"
+                      ? "bg-secondary-500/10 border-l-4 border-secondary-500"
+                      : "hover:bg-primary-800/50"
                   )}
                   role="button"
                   tabIndex={0}
@@ -231,75 +269,102 @@ export default function GithubRepoInput({
                   }}
                   aria-label={`Select repository ${repository.name}`}
                 >
-                  <div className="flex items-center space-x-3 truncate">
-                    <span className="text-sm font-medium text-gray-100 truncate">
-                      {repository.name}
-                    </span>
-                    <span className="text-xs text-gray-400 bg-gray-700/50 px-2 py-0.5 rounded-full">
-                      {repository.default_branch}
-                    </span>
-                    <span className="text-xs text-gray-400 italic">
-                      {repository.visibility}
-                    </span>
-                  </div>
-                  <Button
-                    onClick={() => {
-                      handleSelectRepository(repository.id, repository.name);
-                      downloadRepositoryZip(user!, repository.name);
-                    }}
-                    size="sm"
-                    className={cn(
-                      "opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-sm font-semibold",
-                      selectedRepo === repository.id
-                        ? "bg-secondary-500 hover:bg-secondary-600 text-black"
-                        : "bg-primary-500 text-white hover:bg-primary-600"
-                    )}
-                    aria-label={selectedRepo === repository.id ? "Selected repository" : "Import repository"}
-                  >
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center space-x-3 min-w-0">
+                      <div className="flex-shrink-0">
+                        <div className="h-8 w-8 rounded-full bg-primary-800 flex items-center justify-center">
+                          {(() => {
+                            const Icon = getLanguageIcon(repository.language);
+                            return <Icon className="h-4 w-4 text-gray-300" />;
+                          })()}
+                        </div>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-gray-100 truncate">
+                          {repository.name}
+                        </p>
+                        <div className="flex items-center space-x-2 mt-2">
+                          <span className="text-xs text-gray-400 bg-gray-800/60 px-2 py-0.5 rounded-full border border-gray-700">
+                            {repository.default_branch}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {repository.visibility}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
                     {selectedRepo === repository.id ? (
-                      <motion.span
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.9 }}
-                        transition={{ duration: 0.15, ease: "easeInOut" }}
-                        className="flex items-center space-x-1 px-2 py-0.5 rounded-full bg-secondary-400 text-black text-xs font-semibold"
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSelectRepository(repository.id, repository.name);
+                          downloadRepositoryZip(user!, repository.name);
+                        }}
+                        size="sm"
+                        className="bg-secondary-500 hover:bg-secondary-600 text-black transition-all duration-200"
+                        aria-label="Selected repository"
                       >
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                          xmlns="http://www.w3.org/2000/svg"
+                        <motion.span
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.9 }}
+                          transition={{ duration: 0.15, ease: "easeInOut" }}
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                        <FormattedMessage id="createWebsite.githubSelected" />
-                      </motion.span>
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
+                          <span className="text-sm">
+                            <FormattedMessage id="createWebsite.githubSelected" />
+                          </span>
+                        </motion.span>
+                      </Button>
                     ) : (
-                      <span className="flex items-center space-x-1">
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                          xmlns="http://www.w3.org/2000/svg"
+                      <div className="invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <Button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSelectRepository(repository.id, repository.name);
+                            downloadRepositoryZip(user!, repository.name);
+                          }}
+                          size="sm"
+                          className="bg-primary-600/50 text-white hover:bg-primary-500/70 transition-all duration-200"
+                          aria-label="Import repository"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                          />
-                        </svg>
-                        <FormattedMessage id="createWebsite.githubImport" />
-                      </span>
+                          <span className="flex items-center space-x-1.5 px-3 py-2">
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                              />
+                            </svg>
+                            <span className="text-sm">
+                              <FormattedMessage id="createWebsite.githubImport" />
+                            </span>
+                          </span>
+                        </Button>
+                      </div>
                     )}
-                  </Button>
+                  </div>
                 </motion.div>
               ))}
             </motion.div>
@@ -308,58 +373,123 @@ export default function GithubRepoInput({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.2 }}
-              className="text-center py-4 text-gray-400"
+              className="flex flex-col items-center justify-center py-8 px-4 text-center"
             >
-              <FormattedMessage id="createWebsite.githubNoResults" />
+              <div className="bg-primary-800/50 rounded-full p-3 mb-3">
+                <svg className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <p className="text-gray-400 font-medium">
+                <FormattedMessage id="createWebsite.githubNoResults" />
+              </p>
+              <p className="text-sm text-gray-500 mt-1">
+                <FormattedMessage id="createWebsite.tryDifferentSearch" defaultMessage="Try a different search term" />
+              </p>
             </motion.div>
           )}
         </motion.div>
       )}
       {selectedRepo && (
-        <div className=" p-2 bg-primary-900 rounded-xl">
-          <div className="flex items-center justify-between mb-2 rounded px-3 ">
-            <div className="flex items-center gap-2">
-              <Github className="w-5 h-5 text-secondary-500" />
-              <span className="font-semibold text-secondary-500 text-md">{repositories.find(repo => repo.id === selectedRepo)?.name}</span>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2 }}
+          className="bg-primary-900/80 backdrop-blur-sm border border-gray-800 rounded-xl shadow-lg overflow-hidden"
+        >
+          <div className="p-4 border-b border-gray-800/50 bg-gradient-to-r from-primary-900/80 to-primary-900/30">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-secondary-500/10 rounded-lg">
+                  <Github className="w-5 h-5 text-secondary-400" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-100 text-sm">
+                    {repositories.find(repo => repo.id === selectedRepo)?.name}
+                  </h3>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    <FormattedMessage id="createWebsite.selectedRepository" defaultMessage="Selected repository" />
+                  </p>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-xs px-3 py-1.5 text-red-400 hover:bg-red-900/30 hover:text-red-300 transition-colors"
+                onClick={() => {
+                  handleSelectRepository(null, '');
+                  setSelectedRepoFile(null);
+                }}
+              >
+                <X className="w-4 h-4 mr-1.5" />
+                <FormattedMessage id="createWebsite.githubCancel" />
+              </Button>
             </div>
-            <Button
-              size="sm"
-              variant="outline"
-              className="text-xs px-3 py-1 border-red-400 text-red-400 hover:bg-red-700 hover:text-white"
-              onClick={() => { handleSelectRepository(null, ''); setSelectedRepoFile(null); }}
-            >
-              <X className="w-4 h-4 mr-1 inline-block" />
-              <FormattedMessage id="createWebsite.githubCancel" />
-            </Button>
           </div>
-          <Separator className="my-2 bg-secondary-700" />
-          {repoContentsLoading && (
-            <div className="flex flex-row items-center justify-center gap-2 h-10 text-cyan-300 text-sm animate-pulse  bg-cyan-950/80 rounded-md px-4 py-2 my-2 w-full mx-auto">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <FormattedMessage id="createWebsite.githubLoading" />
-            </div>
-          )}
-          {repoContentsError && (
-            <div className="flex flex-col items-center justify-center text-center border border-red-500 bg-red-950/80 text-red-300 text-sm rounded-md px-4 py-3 my-2 gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" />
-              </svg>
-              <FormattedMessage id="createWebsite.githubError" />
-            </div>
-          )}
-          {repoContents && !repoContentsLoading && Array.isArray(repoContents) && repoContents.length > 0 && (
-            <div className="text-cyan-100 text-xs max-h-64 overflow-auto bg-gray-900 rounded-lg p-2 py-4 repo-scrollbar">
-              {Object.entries(buildTree(repoContents)).map(([name, node]) => (
-                <TreeNode key={name} name={name} node={node} />
-              ))}
-            </div>
-          )}
-          {repoContents && !repoContentsLoading && Array.isArray(repoContents) && repoContents.length === 0 && !repoContentsError && (
-            <div className="text-cyan-200 text-xs">
-              <FormattedMessage id="createWebsite.githubEmpty" />
-            </div>
-          )}
-        </div>
+
+          <div className="p-4 space-y-4">
+            {repoContentsLoading ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex items-center justify-center p-4 bg-cyan-950/20 rounded-lg border border-cyan-900/30"
+              >
+                <Loader2 className="w-5 h-5 mr-2 text-cyan-400 animate-spin" />
+                <span className="text-cyan-300 text-sm">
+                  <FormattedMessage id="createWebsite.githubLoading" />
+                </span>
+              </motion.div>
+            ) : repoContentsError ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex flex-col items-center p-4 text-center bg-red-900/10 border border-red-900/20 rounded-lg"
+              >
+                <AlertTriangle className="w-5 h-5 text-red-400 mb-2" />
+                <p className="text-red-300 text-sm">
+                  <FormattedMessage id="createWebsite.githubError" />
+                </p>
+                <p className="text-red-400/80 text-xs mt-1">
+                  <FormattedMessage id="createWebsite.tryAgainLater" defaultMessage="Please try again later" />
+                </p>
+              </motion.div>
+            ) : repoContents && Array.isArray(repoContents) ? (
+              repoContents.length > 0 ? (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  className="bg-gray-900/50 border border-gray-800 rounded-lg overflow-hidden"
+                >
+                  <div className="text-cyan-100 text-xs max-h-64 overflow-auto p-3 repo-scrollbar">
+                    {Object.entries(buildTree(repoContents)).map(([name, node]) => {
+                      const selectedRepoData = repositories.find(repo => repo.id === selectedRepo);
+                      return (
+                        <TreeNode
+                          key={name}
+                          name={name}
+                          node={node}
+                          language={selectedRepoData?.language}
+                        />
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex flex-col items-center justify-center p-6 text-center border-2 border-dashed border-gray-800 rounded-lg bg-gray-900/30"
+                >
+                  <FolderOpen className="w-8 h-8 text-gray-500 mb-2" />
+                  <p className="text-gray-400 text-sm">
+                    <FormattedMessage id="createWebsite.githubEmpty" />
+                  </p>
+                </motion.div>
+              )
+            ) : null}
+          </div>
+        </motion.div>
       )}
       {!selectedRepo && (
         <section >
