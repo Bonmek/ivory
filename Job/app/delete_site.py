@@ -19,25 +19,26 @@ def delete_walrus_site(object_id):
 
         print("✅ STEP 1 DONE: Attributes loaded.")
 
-        if attributes.get("status") != "1":
-            raise Exception("❌ STATUS is not '1' (already published).")
-
         site_id = attributes.get("site_id")
         if not site_id:
             raise Exception("❌ site_id not found in attributes.")
-
-        print(f"🔹 STEP 2: Destroying site with site_id: {site_id}...")
-        subprocess.run(
-            ["site-builder", "destroy", site_id],
-            check=True, capture_output=True, text=True
-        )
-        print("✅ STEP 2 DONE: Site destroyed.")
+        
+        if attributes.get("status") == "1":
+            print(f"🔹 STEP 2: Destroying site with site_id: {site_id}...")
+            subprocess.run(
+                ["site-builder", "destroy", site_id],
+                check=True, capture_output=True, text=True
+            )
+            print("✅ STEP 2 DONE: Site destroyed.")
 
         print("🔹 STEP 3: Deleting blob...")
-        subprocess.run(
-            ["walrus", "delete", "--blob-id", object_id],
+        result = subprocess.run(
+            ["walrus", "delete", "--object-ids", object_id, "--yes"],
             check=True, capture_output=True, text=True
         )
+
+        # พิมพ์ผลลัพธ์ที่ได้จากคำสั่ง walrus
+        print(result.stdout)
         print("✅ STEP 3 DONE: Blob deleted.")
         # ไม่ต้องตั้งค่า delete-attribute ถ้าทุกอย่างสำเร็จ
         return

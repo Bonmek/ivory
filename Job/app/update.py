@@ -7,6 +7,7 @@ import shlex
 def update_walrus_site(object_id):
     status = "2"  # เริ่มต้นด้วยสถานะล้มเหลว
     description = ""
+    client_error_description = ""
     site_object_id = ""
 
     try:
@@ -29,11 +30,13 @@ def update_walrus_site(object_id):
         try:
             subprocess.run(["walrus", "read", attributes["blobId"], "--out", "Site.zip"], check=True)
         except subprocess.CalledProcessError as e:
+            client_error_description = "Fail to connect to database right now, please try again later."
             raise Exception(f"❌ STEP 2 FAILED: walrus read failed. stderr: {e.stderr or e}")
 
         with zipfile.ZipFile("Site.zip", 'r') as zip_ref:
             bad_file = zip_ref.testzip()
             if bad_file:
+                client_error_description = "The zip file is corrupted."
                 raise Exception(f"❌ Corrupt zip file. First bad file: {bad_file}")
             zip_ref.extractall("Site")
 
@@ -45,6 +48,7 @@ def update_walrus_site(object_id):
         if attributes["root"] != "/":
             root_path = os.path.join("Site", attributes["root"].lstrip("/"))
             if not os.path.isdir(root_path):
+                client_error_description = "Cannot find root directory specified in your project."
                 raise FileNotFoundError(f"❌ STEP 3 FAILED: Root path '{root_path}' not found.")
         print(f"✅ STEP 3 DONE: Navigated to root folder: {root_path}")
 
@@ -81,6 +85,7 @@ def update_walrus_site(object_id):
 
                 print("✅ STEP 4 DONE: Build completed.")
             except subprocess.CalledProcessError as e:
+                client_error_description = "Cannot install or build your project. Please check your package.json and root directory."
                 print("❌ STEP 4 FAILED: Install or build command failed.")
                 print("STDOUT:\n", e.stdout)
                 print("STDERR:\n", e.stderr)
@@ -90,11 +95,8 @@ def update_walrus_site(object_id):
         print("🔹 STEP 5: Searching for index.html...")
         final_path = None
 
-        # สำหรับกรณี is_build == 0: ต้องหา path ที่ลึกสุดที่มี index.html
         if attributes.get("is_build") == "0":
             output_dir = attributes.get("output_dir")
-            final_path = None  # ต้องกำหนดไว้ก่อนเพื่อใช้เช็คด้านล่าง
-
             if output_dir:
                 candidate_path = os.path.join(root_path, output_dir)
                 index_path = os.path.join(candidate_path, "index.html")
@@ -102,8 +104,7 @@ def update_walrus_site(object_id):
                 if os.path.isfile(index_path):
                     final_path = candidate_path
                     print(f"✅ STEP 5 DONE: index.html found in output_dir path: {final_path}")
-            
-            # ถ้ายังไม่เจอจาก output_dir หรือไม่มี output_dir
+
             if not final_path:
                 max_depth = -1
                 for dirpath, _, filenames in os.walk(root_path):
@@ -115,16 +116,15 @@ def update_walrus_site(object_id):
                             final_path = dirpath
 
         else:
-            # ถ้าไม่ build ให้เอาอันแรกที่เจอ
             for dirpath, _, filenames in os.walk(root_path):
                 if "index.html" in filenames:
                     final_path = dirpath
                     break
 
         if not final_path:
+            client_error_description = "Cannot find index.html file in your project."
             raise FileNotFoundError("❌ STEP 5 FAILED: index.html not found.")
         print(f"✅ STEP 5 DONE: index.html found in {final_path}")
-
 
         # STEP 6: Create ws-resources.json
         print("🔹 STEP 6: Creating ws-resources.json...")
@@ -142,7 +142,7 @@ def update_walrus_site(object_id):
             "metadata": {
                 "link": "https://subdomain.wal.app",
                 "image_url": "https://www.walrus.xyz/walrus-site",
-                "description": "This is a walrus site. UwU",
+                "description": "This is a walrus site.",
                 "project_url": "https://github.com/MystenLabs/walrus-sites/",
                 "creator": "MystenLabs"
             }
@@ -172,27 +172,38 @@ def update_walrus_site(object_id):
                 break
 
         if not site_object_id:
+            client_error_description = "Site published but no site ID was returned. Please contact support."
             raise Exception("❌ STEP 8 FAILED: site_object_id not found in output.")
 
     except subprocess.CalledProcessError as e:
         description = f"Subprocess error: {e.stderr or str(e)}"
+        if not client_error_description:
+            client_error_description = "Internal system error. Please try again later."
         print("❌ Error:", description)
     except Exception as e:
         description = str(e)
+        if not client_error_description:
+            client_error_description = "Unexpected error occurred. Please try again later."
         print("❌ Error:", description)
     finally:
-        # STEP 10: Update blob attributes
+        # STEP 9: Update blob attributes
         print("🔹 STEP 9: Updating blob attributes...")
         attr_command = [
             "walrus", "set-blob-attribute", object_id,
             "--attr", "status", status,
-            "--attr", "description", description if description else "Success"
+            "--attr", "description", description if description else "Success",
+            "--attr", "client_error_description", client_error_description if client_error_description else "Success"
         ]
         if status == "1" and site_object_id:
             attr_command += ["--attr", "site_id", site_object_id]
 
-        try:
-            subprocess.run(attr_command, check=True)
-            print("✅ STEP 9 DONE: Blob attributes updated.")
-        except subprocess.CalledProcessError as e:
-            print("❌ STEP 9 FAILED: Cannot update blob attributes:", e.stderr or str(e))
+        max_attempts = 5
+        for attempt in range(1, max_attempts + 1):
+            try:
+                subprocess.run(attr_command, check=True)
+                print("✅ STEP 9 DONE: Blob attributes updated.")
+                break  # สำเร็จแล้ว ออกจากลูป
+            except subprocess.CalledProcessError as e:
+                print(f"❌ STEP 9 FAILED (Attempt {attempt}): Cannot update blob attributes:", e.stderr or str(e))
+                if attempt == max_attempts:
+                    print("🚫 STEP 9 ERROR: All attempts to update blob attributes failed.")
