@@ -197,8 +197,6 @@ const ProjectCard = memo(
       }
     }
 
-    // Get auth and transaction hooks at the component level
-    const { address } = useAuth()
     const { signAndExecuteTransactionBlock } = useWalletKit()
 
     const colors = getStatusColor(project.status)
@@ -260,11 +258,10 @@ const ProjectCard = memo(
           signAndExecuteTransactionBlock,
           process.env.REACT_APP_SUI_NETWORK as 'mainnet' | 'testnet',
         )
-
+        setOpen(false)
         const response = await apiClient.put(
           `/set-attributes?object_id=${project.parentId}&sui_ns=${finalSuins}`,
         )
-
         if (result.status === 'success') {
           toast.success('SUINS linked successfully', {
             className: 'bg-primary-900 border-secondary-500/20 text-white',
@@ -272,7 +269,6 @@ const ProjectCard = memo(
               'Your SUINS domain has been linked to this project. It may take a few moments to update.',
             duration: 5000,
           })
-          setOpen(false)
           if (result.status === 'success' && response.status === 200) {
             onRefetch()
           }
@@ -384,11 +380,15 @@ const ProjectCard = memo(
                                 </SelectTrigger>
                                 <SelectContent className="bg-primary-800 border-secondary-500/20 text-white">
                                   {suins.map((sui) => {
-                                    const domainName = sui.data?.content?.fields?.domain_name || '';
-                                    const displayName = domainName.endsWith('.sui') 
-                                      ? domainName.slice(0, -4) 
-                                      : domainName;
-                                    
+                                    const domainName =
+                                      sui.data?.content?.fields?.domain_name ||
+                                      ''
+                                    const displayName = domainName.endsWith(
+                                      '.sui',
+                                    )
+                                      ? domainName.slice(0, -4)
+                                      : domainName
+
                                     return (
                                       <SelectItem
                                         key={sui.data?.objectId}
@@ -397,7 +397,7 @@ const ProjectCard = memo(
                                       >
                                         {displayName}
                                       </SelectItem>
-                                    );
+                                    )
                                   })}
                                   <SelectItem
                                     value="other"
@@ -697,7 +697,10 @@ const ProjectCard = memo(
                     rel="noopener noreferrer"
                     className={`flex items-center h-[28px] hover:underline truncate transition-colors duration-200 ${colors.link}`}
                   >
-                    {project.suins?.endsWith('.sui') ? project.suins.slice(0, -4) : project.suins}.wal.app
+                    {project.suins?.endsWith('.sui')
+                      ? project.suins.slice(0, -4)
+                      : project.suins}
+                    .wal.app
                     <span className="ml-1 group-hover:translate-x-0.5 transition-transform duration-200">
                       <ExternalLink className="h-4 w-4 flex-shrink-0" />
                     </span>

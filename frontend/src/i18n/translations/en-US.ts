@@ -151,4 +151,23 @@ export default {
   'homepage.feature.bandwidth': 'Free Bandwidth',
   'homepage.feature.bandwidth.desc': 'Enjoy truly free hosting. Ivory serves your traffic at no cost — ideal for creators, devs, and indie projects.',
   'homepage.powered': 'Powered by',
+
+  // Dashboard
+  'dashboard.title': 'Dashboard',
+  'dashboard.search': 'Search projects...',
+  'dashboard.sort.latest': 'Latest',
+  'dashboard.sort.nameAZ': 'Name A-Z',
+  'dashboard.sort.nameZA': 'Name Z-A',
+  'dashboard.sort.remainingLow': 'Remaining Days: low to high',
+  'dashboard.sort.remainingHigh': 'Remaining Days: high to low',
+  'dashboard.tabs.all': 'All',
+  'dashboard.tabs.active': 'Active',
+  'dashboard.tabs.building': 'Building',
+  'dashboard.tabs.failed': 'Failed',
+  'dashboard.pagination.previous': 'Previous',
+  'dashboard.pagination.next': 'Next',
+  'dashboard.empty.title': 'No projects found',
+  'dashboard.empty.description': 'You don\'t have any projects yet. Create your first project to get started.',
+  'dashboard.empty.reset': 'Reset filters',
+  'dashboard.empty.create': 'Create new project',
 } as const;
