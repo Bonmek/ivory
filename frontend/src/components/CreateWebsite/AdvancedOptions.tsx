@@ -281,8 +281,8 @@ function AdvancedOptions({ advancedOptions, setAdvancedOptions, fileStructure = 
                       onChange={(e) => setAdvancedOptions({ ...advancedOptions, rootDirectory: e.target.value })}
                       placeholder="/"
                       className="w-full bg-primary-500/80 border-gray-600 rounded-md h-10 transition-all cursor-pointer duration-300 focus:border-secondary-500 focus:ring-1 focus:ring-secondary-500/50 pr-10 backdrop-blur-sm group-hover:bg-primary-500/90 text-sm sm:text-base"
-                      readOnly={true}
-                      onClick={() => setShowFileSelector(true)}
+                    // readOnly={true}
+                    // onClick={() => setShowFileSelector(true)}
                     />
                     <Button
                       type="button"
