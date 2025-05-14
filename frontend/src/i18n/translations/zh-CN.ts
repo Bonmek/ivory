@@ -175,4 +175,23 @@ export default {
   'homepage.feature.bandwidth': '免费带宽',
   'homepage.feature.bandwidth.desc': '享受真正免费的托管。Ivory 免费为您的流量提供服务——非常适合创作者、开发者和独立项目。',
   'homepage.powered': '技术支持',
+
+  // Dashboard
+  'dashboard.title': '仪表板',
+  'dashboard.search': '搜索项目...',
+  'dashboard.sort.latest': '最新',
+  'dashboard.sort.nameAZ': '名称 A-Z',
+  'dashboard.sort.nameZA': '名称 Z-A',
+  'dashboard.sort.remainingLow': '剩余天数：从低到高',
+  'dashboard.sort.remainingHigh': '剩余天数：从高到低',
+  'dashboard.tabs.all': '全部',
+  'dashboard.tabs.active': '活跃',
+  'dashboard.tabs.building': '构建中',
+  'dashboard.tabs.failed': '失败',
+  'dashboard.pagination.previous': '上一页',
+  'dashboard.pagination.next': '下一页',
+  'dashboard.empty.title': '未找到项目',
+  'dashboard.empty.description': '您还没有任何项目。创建您的第一个项目以开始使用。',
+  'dashboard.empty.reset': '重置筛选器',
+  'dashboard.empty.create': '创建新项目',
 } as const;
