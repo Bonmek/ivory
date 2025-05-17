@@ -75,7 +75,6 @@ export const useSuiData = (userAddress: string) => {
       (entry: any) => entry.fields?.key === 'owner',
     )
     const owner = ownerEntry?.fields?.value
-
     // Check for delete-attribute field
     const deleteAttributeEntry = metadataFields.find(
       (entry: any) => entry.fields?.key === 'delete-attribute',
@@ -83,7 +82,7 @@ export const useSuiData = (userAddress: string) => {
     if (deleteAttributeEntry) {
       return false // Skip if delete-attribute exists
     }
-
+    
     return owner === userAddress
   })
 
