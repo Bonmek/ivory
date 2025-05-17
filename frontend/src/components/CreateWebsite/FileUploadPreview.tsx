@@ -16,7 +16,7 @@ import JSZip from "jszip";
 interface FileUploadPreviewProps {
   file: File;
   onRemove: () => void;
-  setName: (name: string) => void;
+  setPlaceHolderName: (name: string) => void;
 }
 
 export interface FileItem {
@@ -26,7 +26,7 @@ export interface FileItem {
   children?: FileItem[];
 }
 
-const FileList: React.FC<{ files: string[] }> = ({ files }) => {
+const FileList: React.FC<{ files: string[] }> = ({ files, }) => {
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [fileStructure, setFileStructure] = useState<FileItem[]>([]);
 
@@ -127,7 +127,7 @@ const FileList: React.FC<{ files: string[] }> = ({ files }) => {
   );
 };
 
-const FileUploadPreview: React.FC<FileUploadPreviewProps> = ({ file, onRemove, setName }) => {
+const FileUploadPreview: React.FC<FileUploadPreviewProps> = ({ file, onRemove, setPlaceHolderName }) => {
   const [files, setFiles] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -158,7 +158,7 @@ const FileUploadPreview: React.FC<FileUploadPreviewProps> = ({ file, onRemove, s
           console.error('Error processing ZIP:', e);
           setError('Error processing ZIP file');
         }
-        setName(file.name.replace('.zip', ''));
+        setPlaceHolderName(file.name.replace('.zip', ''));
         setLoading(false);
       })
       .catch((e) => {

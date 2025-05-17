@@ -76,6 +76,7 @@ export default function CreateWebsitePage() {
   // State for project name
   const [name, setName] = useState('')
   const [nameErrors, setNameErrors] = useState<string[]>([])
+  const [placeHolderName, setPlaceHolderName] = useState('Enter Project Name')
 
   // State for build output settings
   const [buildOutputSettings, setBuildOutputSettings] =
@@ -156,6 +157,8 @@ export default function CreateWebsitePage() {
   const [repoContents, setRepoContents] = useState<any[] | null>(null)
   const [repoContentsLoading, setRepoContentsLoading] = useState(false)
   const [repoContentsError, setRepoContentsError] = useState<string | null>(null)
+  const [branches, setBranches] = useState<{ name: string; commit: string; protected: boolean }[]>([])
+  const [selectedBranch, setSelectedBranch] = useState<string | undefined>('main')
 
   // File handlers
   const handleDragOver = (e: React.DragEvent) => {
@@ -220,7 +223,6 @@ export default function CreateWebsitePage() {
 
   const handleRemoveFile = () => {
     setSelectedFile(null)
-    setName('')
     setAdvancedOptions({ ...advancedOptions, rootDirectory: '/' })
     setFileErrors([])
     if (fileInputRef.current) {
@@ -256,25 +258,34 @@ export default function CreateWebsitePage() {
     }
   }
 
-  // Function to download repository zip and set as selected file
-  const downloadRepositoryZip = async (owner: string, repo: string) => {
+  // Function to download repository zip, set as selected file, and download to local
+  const downloadRepositoryZip = async (owner: string, repo: string, branch?: string) => {
     try {
+      const branch = selectedBranch || 'main';
       const response = await apiClient.get(`/api/repositories/${owner}/${repo}/download`, {
         responseType: 'blob',
-        params: {
-          branch: 'main'
-        }
+        params: { branch }
       });
 
-      const file = new File([
-        response.data
-      ], `${repo}-main.zip`, {
-        type: 'application/zip'
-      });
+      const zipBlob = new Blob([response.data], { type: 'application/zip' });
+      const fileName = `${repo}-${branch}.zip`;
 
+      // Create a File object for internal app use
+      const file = new File([zipBlob], fileName, { type: 'application/zip' });
       setSelectedRepoFile(file);
       setFileErrors([]);
       setUploadMethod(UploadMethod.GitHub);
+
+      // Trigger download to local
+      const url = window.URL.createObjectURL(zipBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url); // Clean up
+
       toast.success('Repository downloaded successfully');
     } catch (error) {
       console.error('Error downloading repository:', error);
@@ -326,8 +337,20 @@ export default function CreateWebsitePage() {
 
   const handleSelectRepository = (id: number | null, name: string) => {
     setSelectedRepo(id)
-    setName(name)
+    setPlaceHolderName(name)
     setAdvancedOptions({ ...advancedOptions, rootDirectory: '/' })
+  }
+
+  const fetchBranches = async () => {
+    try {
+      const repo = repositories.find((r) => r.id === selectedRepo)
+      if (!repo) return
+      const response = await apiClient.get(`/api/repositories/${repo.owner}/${repo.name}/branches`)
+      const branches = response.data as { name: string; commit: string; protected: boolean }[]
+      setBranches(branches)
+    } catch (error) {
+      console.error('Error fetching branches:', error)
+    }
   }
 
   const handleSelectFramework = (frameworkId: string) => {
@@ -354,17 +377,12 @@ export default function CreateWebsitePage() {
         is_build: showBuildOutputSettings ? '0' : '1',
       }
 
-      console.log('Attributes:', attributes)
-      console.log('Selected File:', selectedFile)
-      console.log('Selected Repo File:', selectedRepoFile)
-
       setDeployingState(DeployingState.Deploying)
 
       const response = await writeBlobAndRunJob({
         file: uploadMethod === "upload" ? selectedFile! : selectedRepoFile!,
         attributes,
       })
-
       setDeployingState(DeployingState.Deployed)
       setDeployingResponse(response as unknown as ApiResponseSuccess)
       setDeployedObjectId((response as unknown as ApiResponseSuccess).objectId)
@@ -421,10 +439,17 @@ export default function CreateWebsitePage() {
     if (!repo) return
     setRepoContentsLoading(true)
     setRepoContentsError(null)
+    fetchBranches()
+    downloadRepositoryZip(repo.owner, repo.name, selectedBranch)
 
     apiClient
       .get(
         `${process.env.REACT_APP_API_REPOSITORIES}/${repo.owner}/${repo.name}/contents`,
+        {
+          params: {
+            branch: selectedBranch || 'main'
+          }
+        }
       )
       .then((res) => {
         setRepoContents(res.data)
@@ -442,7 +467,7 @@ export default function CreateWebsitePage() {
         }
         setRepoContentsLoading(false)
       })
-  }, [selectedRepo, repositories])
+  }, [selectedRepo, repositories, selectedBranch])
 
   useEffect(() => {
     if (selectedFile) {
@@ -515,8 +540,6 @@ export default function CreateWebsitePage() {
         const filteredProjects = metadata
           .map((meta, index) => transformMetadataToProject(meta, index) as Project)
           .filter((project: Project) => project.parentId === deployedObjectId);
-
-        console.log('Filtered projects:', filteredProjects);
 
         if (filteredProjects.length > 0) {
           const firstProject = filteredProjects[0];
@@ -686,7 +709,7 @@ export default function CreateWebsitePage() {
                             <FileUploadPreview
                               file={selectedFile}
                               onRemove={handleRemoveFile}
-                              setName={setName}
+                              setPlaceHolderName={setPlaceHolderName}
                             />
                           ) : (
                             <div className="flex flex-col items-center justify-center py-10 w-full relative z-10">
@@ -768,9 +791,11 @@ export default function CreateWebsitePage() {
                         repoContentsLoading={repoContentsLoading}
                         repoContentsError={repoContentsError}
                         handleLogout={handleLogout}
-                        downloadRepositoryZip={downloadRepositoryZip}
                         setSelectedRepoFile={setSelectedRepoFile}
                         fileErrors={fileErrors}
+                        branches={branches}
+                        selectedBranch={selectedBranch}
+                        setSelectedBranch={setSelectedBranch}
                       />
                     </TabsContent>
                   </Tabs>
@@ -796,6 +821,7 @@ export default function CreateWebsitePage() {
                         'bg-primary-500 border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500',
                         nameErrors.length > 0 && 'border-red-500',
                       )}
+                      placeholder={placeHolderName}
                       onChange={handleNameChange}
                       value={name}
                     />

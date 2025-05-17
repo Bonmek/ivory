@@ -2,10 +2,18 @@ import { Separator } from "@/components/ui/separator";
 import { motion } from "framer-motion"
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 // Basic file icons from lucide
 import {
   FolderOpen,
   Github,
+  GitBranch,
   Loader2,
   X,
 } from 'lucide-react';
@@ -43,8 +51,10 @@ interface GithubRepoInputProps {
   repoContentsError: string | null;
   handleLogout: () => void;
   setSelectedRepoFile: (file: File | null) => void;
-  downloadRepositoryZip: (owner: string, repo: string) => Promise<void>;
   fileErrors: string[];
+  branches: { name: string; commit: string; protected: boolean }[];
+  selectedBranch: string | undefined;
+  setSelectedBranch: (branch: string | undefined) => void;
 }
 
 function buildTree(items: any[]) {
@@ -129,15 +139,17 @@ export default function GithubRepoInput({
   searchRepository,
   handleSearchRepository,
   user,
+  selectedBranch,
+  setSelectedBranch,
   handleGithubSignIn,
   repositories,
   handleSelectRepository,
   selectedRepo,
   repoContents,
   fileErrors,
-  downloadRepositoryZip,
   repoContentsLoading,
   repoContentsError,
+  branches,
   handleLogout,
   setSelectedRepoFile,
 }: GithubRepoInputProps) {
@@ -147,7 +159,18 @@ export default function GithubRepoInput({
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const intl = useIntl();
 
-  console.log('repositories', repositories);
+  // Set default branch when branches change
+  useLayoutEffect(() => {
+    if (branches.length > 0 && !selectedBranch) {
+      const defaultBranch = branches.find(b => b.name === 'main') ||
+        branches.find(b => b.name === 'master') ||
+        branches[0];
+      if (defaultBranch) {
+        setSelectedBranch(defaultBranch.name);
+      }
+    }
+  }, [branches, selectedBranch]);
+
 
   useLayoutEffect(() => {
     if (userBtnRef.current) {
@@ -264,7 +287,6 @@ export default function GithubRepoInput({
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
                       handleSelectRepository(repository.id, repository.name);
-                      downloadRepositoryZip(user!, repository.name);
                     }
                   }}
                   aria-label={`Select repository ${repository.name}`}
@@ -299,7 +321,6 @@ export default function GithubRepoInput({
                         onClick={(e) => {
                           e.stopPropagation();
                           handleSelectRepository(repository.id, repository.name);
-                          downloadRepositoryZip(user!, repository.name);
                         }}
                         size="sm"
                         className="bg-secondary-500 hover:bg-secondary-600 text-black transition-all duration-200"
@@ -336,7 +357,6 @@ export default function GithubRepoInput({
                           onClick={(e) => {
                             e.stopPropagation();
                             handleSelectRepository(repository.id, repository.name);
-                            downloadRepositoryZip(user!, repository.name);
                           }}
                           size="sm"
                           className="bg-primary-600/50 text-white hover:bg-primary-500/70 transition-all duration-200"
@@ -405,10 +425,10 @@ export default function GithubRepoInput({
                   <Github className="w-5 h-5 text-secondary-400" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-100 text-sm">
+                  <h3 className="font-semibold text-gray-100 text-xs sm:text-sm">
                     {repositories.find(repo => repo.id === selectedRepo)?.name}
                   </h3>
-                  <p className="text-xs text-gray-400 mt-0.5">
+                  <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5">
                     <FormattedMessage id="createWebsite.selectedRepository" defaultMessage="Selected repository" />
                   </p>
                 </div>
@@ -416,10 +436,11 @@ export default function GithubRepoInput({
               <Button
                 size="sm"
                 variant="ghost"
-                className="text-xs px-3 py-1.5 text-red-400 hover:bg-red-900/30 hover:text-red-300 transition-colors"
+                className="text-[10px] sm:text-xs px-2 sm:px-3 py-1 sm:py-1.5 text-red-400 hover:bg-red-900/30 hover:text-red-300 transition-colors border border-red-900/30"
                 onClick={() => {
-                  handleSelectRepository(null, '');
+                  handleSelectRepository(null, 'Enter Project Name');
                   setSelectedRepoFile(null);
+                  setSelectedBranch(undefined)
                 }}
               >
                 <X className="w-4 h-4 mr-1.5" />
@@ -429,6 +450,42 @@ export default function GithubRepoInput({
           </div>
 
           <div className="p-4 space-y-4">
+            {branches.length > 0 && !repoContentsLoading && (
+              <div className="mb-4">
+                <label className="block text-xs font-medium text-gray-400 mb-1">
+                  <FormattedMessage id="createWebsite.selectBranch" />
+                </label>
+                <Select
+                  value={selectedBranch}
+                  onValueChange={(value) => setSelectedBranch(value)}
+                >
+                  <SelectTrigger className="w-full bg-primary-800 border-gray-700 hover:bg-primary-700/50 focus:ring-1 focus:ring-secondary-500 focus:ring-offset-1 focus:ring-offset-transparent">
+                    <div className="flex items-center">
+                      <GitBranch className="w-3.5 h-3.5 mr-2 text-secondary-400" />
+                      <SelectValue placeholder="Select a branch" />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent className="bg-primary-900 border border-gray-700 shadow-lg">
+                    {branches.map((branch) => (
+                      <SelectItem
+                        key={branch.name}
+                        value={branch.name}
+                        className="text-sm text-gray-200 hover:bg-primary-800 focus:bg-primary-800 focus:text-white"
+                      >
+                        <div className="flex items-center">
+                          <span className="truncate">{branch.name}</span>
+                          {branch.protected && (
+                            <span className="ml-2 text-xs bg-yellow-900/30 text-yellow-400 px-1.5 py-0.5 rounded">
+                              <FormattedMessage id="createWebsite.branchProtected" />
+                            </span>
+                          )}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             {repoContentsLoading ? (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -436,7 +493,7 @@ export default function GithubRepoInput({
                 className="flex items-center justify-center p-4 bg-cyan-950/20 rounded-lg border border-cyan-900/30"
               >
                 <Loader2 className="w-5 h-5 mr-2 text-cyan-400 animate-spin" />
-                <span className="text-cyan-300 text-sm">
+                <span className="text-cyan-300 text-xs sm:text-sm">
                   <FormattedMessage id="createWebsite.githubLoading" />
                 </span>
               </motion.div>
@@ -490,41 +547,46 @@ export default function GithubRepoInput({
             ) : null}
           </div>
         </motion.div>
-      )}
-      {!selectedRepo && (
-        <section >
-          <div className="flex items-center gap-4 mb-4 mt-1">
-            <Separator className="flex-1" />
-            <p className="text-center text-gray-400 px-4">
-              <FormattedMessage id="createWebsite.or" />
+      )
+      }
+      {
+        !selectedRepo && (
+          <section >
+            <div className="flex items-center gap-4 mb-4 mt-1">
+              <Separator className="flex-1" />
+              <p className="text-center text-gray-400 px-4">
+                <FormattedMessage id="createWebsite.or" />
+              </p>
+              <Separator className="flex-1" />
+            </div>
+            <Input
+              placeholder={intl.formatMessage({ id: 'createWebsite.githubUrlPlaceholder' })}
+              value={githubUrl}
+              onChange={handleGithubUrlChange}
+              className="bg-primary-500 border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500"
+            />
+            <p className="text-sm text-gray-400 mt-2">
+              <FormattedMessage id="createWebsite.githubUrlExample" />
             </p>
-            <Separator className="flex-1" />
-          </div>
-          <Input
-            placeholder={intl.formatMessage({ id: 'createWebsite.githubUrlPlaceholder' })}
-            value={githubUrl}
-            onChange={handleGithubUrlChange}
-            className="bg-primary-500 border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500"
-          />
-          <p className="text-sm text-gray-400 mt-2">
-            <FormattedMessage id="createWebsite.githubUrlExample" />
-          </p>
-        </section>
-      )}
-      {fileErrors.length > 0 && (
-        <section className="mt-4">
-          <div className="bg-red-500/10 border border-red-500/20 rounded-md p-3">
-            {fileErrors.map((error, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <CircleAlert className="w-4 h-4 text-red-400" />
-                <p className="text-red-400 text-sm">
-                  {error}
-                </p>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+          </section>
+        )
+      }
+      {
+        fileErrors.length > 0 && (
+          <section className="mt-4">
+            <div className="bg-red-500/10 border border-red-500/20 rounded-md p-3">
+              {fileErrors.map((error, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <CircleAlert className="w-4 h-4 text-red-400" />
+                  <p className="text-red-400 text-sm">
+                    {error}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )
+      }
       <Dialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
         <DialogContent className="bg-primary-900 border-secondary-700 shadow-xl">
           <DialogHeader className="items-center">
@@ -555,6 +617,6 @@ export default function GithubRepoInput({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </div >
   );
 }
