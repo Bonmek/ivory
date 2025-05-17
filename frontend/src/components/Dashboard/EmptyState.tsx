@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { Blocks } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { FormattedMessage } from 'react-intl'
 
 interface EmptyStateProps {
   onReset: () => void
@@ -42,17 +43,17 @@ const EmptyState = ({ onReset }: EmptyStateProps) => {
           ease: 'easeInOut',
         }}
       >
-        No projects found
+        <FormattedMessage id="dashboard.empty.title" />
       </motion.h3>
       <p className="mb-4 mt-1 text-sm text-secondary-300">
-        Try adjusting your search or filter criteria
+        <FormattedMessage id="dashboard.empty.description" />
       </p>
       <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
         <Button
           onClick={onReset}
           className="bg-secondary-500 hover:bg-secondary-600 text-primary-900"
         >
-          Reset Filters
+          <FormattedMessage id="dashboard.empty.reset" />
         </Button>
       </motion.div>
     </motion.div>

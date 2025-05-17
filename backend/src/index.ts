@@ -1,4 +1,10 @@
 import express from "express";
+import fs from "fs-extra";
+import path from "path";
+import unzipper from "unzipper";
+import { readFile } from "fs/promises";
+import { exec } from "child_process";
+import AdmZip from "adm-zip";
 import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
 import { WalrusClient } from "@mysten/walrus";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
@@ -22,17 +28,16 @@ dotenv.config();
 const auth = new GoogleAuth({
   scopes: ["https://www.googleapis.com/auth/cloud-platform"],
 });
-const upload = multer();
 const app = express();
 app.use(express.json());
-
-app.use(
-  cors({
-    origin: process.env.FRONTEND_URL,
-    credentials: true,
-    exposedHeaders: ["Content-Disposition", "Content-Length"],
-  })
-);
+app.use(cors());
+// app.use(
+//   cors({
+//     origin: process.env.FRONTEND_URL,
+//     credentials: true,
+//     exposedHeaders: ["Content-Disposition", "Content-Length"],
+//   })
+// );
 app.use(
   session({
     secret: "session-secret",
@@ -55,7 +60,54 @@ const walrusClient = new WalrusClient({
   suiClient,
 });
 
-app.post("/write-blob-n-run-job", upload.single("file"), async (req, res) => {
+const upload = multer({ dest: "uploads/" });
+
+const commonOutputDirs = ["build", "dist", "out", ".next"];
+
+const findPackageJsonPath = async (dir: string): Promise<string | null> => {
+  const files = await fs.readdir(dir);
+  for (const file of files) {
+    const fullPath = path.join(dir, file);
+    const stat = await fs.stat(fullPath);
+    if (stat.isDirectory()) {
+      const found = await findPackageJsonPath(fullPath);
+      if (found) return found;
+    } else if (file === "package.json") {
+      return dir;
+    }
+  }
+  return null;
+};
+
+const findIndexHtmlPath = async (dir: string): Promise<string | null> => {
+  const files = await fs.readdir(dir);
+  for (const file of files) {
+    const fullPath = path.join(dir, file);
+    const stat = await fs.stat(fullPath);
+    if (stat.isDirectory()) {
+      const found = await findIndexHtmlPath(fullPath);
+      if (found) return found;
+    } else if (file === "index.html") {
+      return path.dirname(fullPath);
+    }
+  }
+  return null;
+};
+
+const findIndexHtmlInKnownDirs = async (
+  baseDir: string
+): Promise<string | null> => {
+  for (const outDirName of commonOutputDirs) {
+    const candidateDir = path.join(baseDir, outDirName);
+    const indexPath = path.join(candidateDir, "index.html");
+    if (await fs.pathExists(indexPath)) {
+      return candidateDir;
+    }
+  }
+  return null;
+};
+
+app.post("/process-site", upload.single("file"), async (req, res) => {
   if (!req.file) {
     res.status(400).json({
       statusCode: 0,
@@ -64,19 +116,23 @@ app.post("/write-blob-n-run-job", upload.single("file"), async (req, res) => {
     return;
   }
 
-  const zipFile = new Uint8Array(req.file.buffer);
+  const zipFile = req.file;
+  const extractPath = path.join(__dirname, "temp", Date.now().toString());
+  await fs
+    .createReadStream(zipFile.path)
+    .pipe(unzipper.Extract({ path: extractPath }))
+    .promise();
+
   const attributes = req.body.attributes
     ? typeof req.body.attributes === "string"
       ? JSON.parse(req.body.attributes)
       : req.body.attributes
     : {};
-
-  const result = inputWriteBlobScheme.safeParse(attributes);
-
-  if (!result.success) {
+  const attributes_data = inputWriteBlobScheme.safeParse(attributes);
+  if (!attributes_data.success) {
     res.status(400).json({
       statusCode: 0,
-      errors: result.error.errors.map((err) => ({
+      errors: attributes_data.error.errors.map((err) => ({
         error_message: err.message,
         error_field: err.path.join("."),
       })),
@@ -84,24 +140,92 @@ app.post("/write-blob-n-run-job", upload.single("file"), async (req, res) => {
     return;
   }
 
-  let blob_data;
+  let indexDir: string | null;
+
+  if (attributes_data.data.is_build === "0") {
+    const buildDir = await findPackageJsonPath(extractPath);
+    if (!buildDir) throw new Error("package.json not found");
+    await new Promise((resolve, reject) => {
+      exec(attributes_data.data.install_command, { cwd: buildDir }, (err) => {
+        if (err) return reject(err);
+        exec(attributes_data.data.build_command, { cwd: buildDir }, (err2) => {
+          if (err2) return reject(err2);
+          resolve(true);
+        });
+      });
+    });
+    indexDir = await findIndexHtmlInKnownDirs(buildDir);
+    if (!indexDir) {
+      indexDir = await findIndexHtmlPath(extractPath);
+    }
+  } else {
+    indexDir = await findIndexHtmlPath(extractPath);
+  }
+
+  if (!indexDir) throw new Error("index.html not found");
+  const wsResources = {
+    headers: {},
+    routes: {},
+    metadata: {
+      link: "https://subdomain.wal.app/",
+      image_url: "https://www.walrus.xyz/walrus-site",
+      description: "This is a walrus site.",
+      project_url: "https://github.com/MystenLabs/walrus-sites/",
+      creator: "MystenLabs",
+    },
+    ignore: ["/private/", "/secret.txt", "/images/tmp/*"],
+  };
+
+  await fs.writeJson(path.join(indexDir, "ws-resources.json"), wsResources, {
+    spaces: 2,
+  });
+
+  const outputZipPath = path.join(
+    __dirname,
+    "outputs",
+    `${attributes_data.data["site-name"].replace(
+      /\s+/g,
+      "_"
+    )}_${Date.now()}.zip`
+  );
+  await fs.ensureDir(path.dirname(outputZipPath));
+  const zip = new AdmZip();
+
+  const addFilesToZip = async (dir: string, baseInZip = "") => {
+    const entries = await fs.readdir(dir);
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry);
+      const stat = await fs.stat(fullPath);
+      if (stat.isDirectory()) {
+        await addFilesToZip(fullPath, path.join(baseInZip, entry));
+      } else {
+        const fileContent = await fs.readFile(fullPath);
+        zip.addFile(path.join(baseInZip, entry), fileContent);
+      }
+    }
+  };
+
+  await addFilesToZip(indexDir);
+  zip.writeZip(outputZipPath);
+
+  let new_blob_data;
   let write_blob_attempts = 0;
   const delay = 1000;
   const max_attempts_write_blob = 2;
   const max_attempts_set_status = 5;
-
+  const zipBuffer = await readFile(outputZipPath);
   while (write_blob_attempts < max_attempts_write_blob) {
     try {
-      blob_data = await walrusClient.writeBlob({
-        blob: zipFile,
+      new_blob_data = await walrusClient.writeBlob({
+        blob: zipBuffer,
         deletable: true,
-        epochs: Number(result.data.epochs),
+        epochs: Number(attributes_data.data.epochs),
         signer: keypair,
-        attributes: result.data,
+        attributes: { ...attributes_data.data, forceId: Date.now().toString() },
       });
       if (
-        blob_data.blobObject.certified_epoch ||
-        blob_data.blobObject.certified_epoch !== null
+        new_blob_data.blobObject.certified_epoch ||
+        new_blob_data.blobObject.certified_epoch !== null
       ) {
         break;
       }
@@ -123,7 +247,7 @@ app.post("/write-blob-n-run-job", upload.single("file"), async (req, res) => {
       while (set_status_attempts < max_attempts_set_status) {
         try {
           await walrusClient.executeWriteBlobAttributesTransaction({
-            blobObjectId: blob_data.blobObject.id.id,
+            blobObjectId: new_blob_data.blobObject.id.id,
             signer: keypair,
             attributes: { status: "2" },
           });
@@ -154,7 +278,7 @@ app.post("/write-blob-n-run-job", upload.single("file"), async (req, res) => {
     }
   }
 
-  if (!blob_data) {
+  if (!new_blob_data) {
     res.status(503).json({
       statusCode: 0,
       error: "WriteBlob success but data is undefined",
@@ -162,13 +286,13 @@ app.post("/write-blob-n-run-job", upload.single("file"), async (req, res) => {
     return;
   }
 
-  const blobObjectId = blob_data.blobObject.id.id;
+  const blobObjectId = new_blob_data.blobObject.id.id;
 
   try {
     await walrusClient.executeWriteBlobAttributesTransaction({
       blobObjectId: blobObjectId,
       signer: keypair,
-      attributes: { blobId: blob_data.blobId },
+      attributes: { blobId: new_blob_data.blobId },
     });
   } catch (error) {
     if (error instanceof Error) {
@@ -252,6 +376,203 @@ app.post("/write-blob-n-run-job", upload.single("file"), async (req, res) => {
   }
 });
 
+// app.post("/write-blob-n-run-job", upload.single("file"), async (req, res) => {
+//   if (!req.file) {
+//     res.status(400).json({
+//       statusCode: 0,
+//       error: "No file uploaded",
+//     });
+//     return;
+//   }
+
+//   const zipFile = new Uint8Array(req.file.buffer);
+//   const attributes = req.body.attributes
+//     ? typeof req.body.attributes === "string"
+//       ? JSON.parse(req.body.attributes)
+//       : req.body.attributes
+//     : {};
+
+//   const attributes_data = inputWriteBlobScheme.safeParse(attributes);
+
+//   if (!attributes_data.success) {
+//     res.status(400).json({
+//       statusCode: 0,
+//       errors: attributes_data.error.errors.map((err) => ({
+//         error_message: err.message,
+//         error_field: err.path.join("."),
+//       })),
+//     });
+//     return;
+//   }
+
+//   let new_blob_data;
+//   let write_blob_attempts = 0;
+//   const delay = 1000;
+//   const max_attempts_write_blob = 2;
+//   const max_attempts_set_status = 5;
+
+//   while (write_blob_attempts < max_attempts_write_blob) {
+//     try {
+//       new_blob_data = await walrusClient.writeBlob({
+//         blob: zipFile,
+//         deletable: true,
+//         epochs: Number(attributes_data.data.epochs),
+//         signer: keypair,
+//         attributes: { ...attributes_data.data, forceId: Date.now().toString() },
+//       });
+//       if (
+//         new_blob_data.blobObject.certified_epoch ||
+//         new_blob_data.blobObject.certified_epoch !== null
+//       ) {
+//         break;
+//       }
+//       write_blob_attempts++;
+//       await new Promise((resolve) => setTimeout(resolve, delay));
+//     } catch (error) {
+//       res.status(502).json({
+//         statusCode: 0,
+//         error: {
+//           error_message: "Failed to write blob to Walrus",
+//           error_details: error,
+//         },
+//       });
+//       return;
+//     }
+
+//     if (write_blob_attempts === max_attempts_write_blob) {
+//       let set_status_attempts = 0;
+//       while (set_status_attempts < max_attempts_set_status) {
+//         try {
+//           await walrusClient.executeWriteBlobAttributesTransaction({
+//             blobObjectId: new_blob_data.blobObject.id.id,
+//             signer: keypair,
+//             attributes: { status: "2" },
+//           });
+//           break;
+//         } catch (error) {
+//           set_status_attempts++;
+//           if (set_status_attempts === max_attempts_set_status) {
+//             if (error instanceof Error) {
+//               res.status(502).json({
+//                 statusCode: 0,
+//                 error: {
+//                   error_message:
+//                     "Failed to change status code to 2 in blob attributes",
+//                   error_details: error,
+//                 },
+//               });
+//               return;
+//             }
+//           }
+//           await new Promise((resolve) => setTimeout(resolve, delay));
+//         }
+//       }
+//       res.status(504).json({
+//         statusCode: 0,
+//         error: "Certified epoch is null",
+//       });
+//       return;
+//     }
+//   }
+
+//   if (!new_blob_data) {
+//     res.status(503).json({
+//       statusCode: 0,
+//       error: "WriteBlob success but data is undefined",
+//     });
+//     return;
+//   }
+
+//   const blobObjectId = new_blob_data.blobObject.id.id;
+
+//   try {
+//     await walrusClient.executeWriteBlobAttributesTransaction({
+//       blobObjectId: blobObjectId,
+//       signer: keypair,
+//       attributes: { blobId: new_blob_data.blobId },
+//     });
+//   } catch (error) {
+//     if (error instanceof Error) {
+//       res.status(502).json({
+//         statusCode: 0,
+//         error: {
+//           error_message:
+//             "Failed to execute write blob attributes transaction to Walrus",
+//           error_details: error,
+//         },
+//       });
+//       return;
+//     }
+//   }
+
+//   let check_blob_id;
+
+//   try {
+//     check_blob_id = await walrusClient.readBlobAttributes({
+//       blobObjectId: blobObjectId,
+//     });
+//   } catch (error) {
+//     res.status(502).json({
+//       statusCode: 0,
+//       error: {
+//         error_message: "Failed to read blob attributes from Walrus",
+//         error_details: error,
+//       },
+//     });
+//     return;
+//   }
+
+//   if (!check_blob_id || !check_blob_id.blobId) {
+//     res.status(502).json({
+//       statusCode: 0,
+//       error: "Failed to add blobId to attributes",
+//     });
+//     return;
+//   }
+
+//   const url = `https://run.googleapis.com/v2/projects/${process.env.PROJECT_ID}/locations/${process.env.REGION}/jobs/${process.env.CLOUD_RUN_JOB_NAME}:run`;
+//   const client = await auth.getClient();
+//   const token = await client.getAccessToken();
+//   let response;
+//   try {
+//     response = await axios.post(
+//       url,
+//       {
+//         overrides: {
+//           containerOverrides: [
+//             {
+//               args: ["publish", blobObjectId],
+//             },
+//           ],
+//         },
+//       },
+//       {
+//         headers: {
+//           Authorization: `Bearer ${token.token}`,
+//           "Content-Type": "application/json",
+//         },
+//       }
+//     );
+//   } catch (error) {
+//     res.status(500).json({
+//       statusCode: 0,
+//       error: {
+//         error_message:
+//           "Failed to triggering Cloud Run job to publish walrus-site",
+//         error_details: error,
+//       },
+//     });
+//     return;
+//   }
+
+//   if (response.status == 200) {
+//     res.status(200).json({
+//       statusCode: 1,
+//       objectId: blobObjectId,
+//     });
+//   }
+// });
+
 app.put("/set-attributes", async (req, res) => {
   const object_id = req.query.object_id;
   const sui_ns = req.query.sui_ns;
@@ -272,12 +593,15 @@ app.put("/set-attributes", async (req, res) => {
     return;
   }
 
-  const result = inputSetAttributesScheme.safeParse({ object_id, sui_ns });
+  const attributes_data = inputSetAttributesScheme.safeParse({
+    object_id,
+    sui_ns,
+  });
 
-  if (!result.success) {
+  if (!attributes_data.success) {
     res.status(400).json({
       statusCode: 0,
-      errors: result.error.errors.map((err) => ({
+      errors: attributes_data.error.errors.map((err) => ({
         error_message: err.message,
         error_field: err.path.join("."),
       })),
@@ -287,9 +611,9 @@ app.put("/set-attributes", async (req, res) => {
 
   try {
     await walrusClient.executeWriteBlobAttributesTransaction({
-      blobObjectId: result.data.object_id,
+      blobObjectId: attributes_data.data.object_id,
       signer: keypair,
-      attributes: { sui_ns: result.data.sui_ns },
+      attributes: { sui_ns: attributes_data.data.sui_ns },
     });
   } catch (error) {
     res.status(502).json({
@@ -315,18 +639,24 @@ app.put("/update-blob-n-run-job", upload.single("file"), async (req, res) => {
     });
     return;
   }
-  const zipFile = new Uint8Array(req.file.buffer);
+
+  const zipFile = req.file;
+  const extractPath = path.join(__dirname, "temp", Date.now().toString());
+  await fs
+    .createReadStream(zipFile.path)
+    .pipe(unzipper.Extract({ path: extractPath }))
+    .promise();
+
   const attributes = req.body.attributes
     ? typeof req.body.attributes === "string"
       ? JSON.parse(req.body.attributes)
       : req.body.attributes
     : {};
-
-  const result = inputUpdateWriteBlobScheme.safeParse(attributes);
-  if (!result.success) {
+  const attributes_data = inputUpdateWriteBlobScheme.safeParse(attributes);
+  if (!attributes_data.success) {
     res.status(400).json({
       statusCode: 0,
-      errors: result.error.errors.map((err) => ({
+      errors: attributes_data.error.errors.map((err) => ({
         error_message: err.message,
         error_field: err.path.join("."),
       })),
@@ -334,22 +664,144 @@ app.put("/update-blob-n-run-job", upload.single("file"), async (req, res) => {
     return;
   }
 
-  const { old_object_id, ...updated_data } = result.data;
+  let indexDir: string | null;
 
-  const old_attributes = await walrusClient.readBlobAttributes({
-    blobObjectId: old_object_id,
-  });
-
-  if (!old_attributes) {
-    res.status(404).json({
-      statusCode: 0,
-      error: "blob data not found",
+  if (attributes_data.data.is_build === "0") {
+    const buildDir = await findPackageJsonPath(extractPath);
+    if (!buildDir) throw new Error("package.json not found");
+    await new Promise((resolve, reject) => {
+      exec(attributes_data.data.install_command, { cwd: buildDir }, (err) => {
+        if (err) return reject(err);
+        exec(attributes_data.data.build_command, { cwd: buildDir }, (err2) => {
+          if (err2) return reject(err2);
+          resolve(true);
+        });
+      });
     });
-    return;
+    indexDir = await findIndexHtmlInKnownDirs(buildDir);
+    if (!indexDir) {
+      indexDir = await findIndexHtmlPath(extractPath);
+    }
+  } else {
+    indexDir = await findIndexHtmlPath(extractPath);
   }
 
-  const old_site_name = old_attributes["site-name"];
-  const old_site_id = old_attributes["site_id"];
+  if (!indexDir) throw new Error("index.html not found");
+  const wsResources = {
+    headers: {},
+    routes: {},
+    metadata: {
+      link: "https://subdomain.wal.app/",
+      image_url: "https://www.walrus.xyz/walrus-site",
+      description: "This is a walrus site.",
+      project_url: "https://github.com/MystenLabs/walrus-sites/",
+      creator: "MystenLabs",
+    },
+    ignore: ["/private/", "/secret.txt", "/images/tmp/*"],
+  };
+
+  await fs.writeJson(path.join(indexDir, "ws-resources.json"), wsResources, {
+    spaces: 2,
+  });
+
+  const outputZipPath = path.join(
+    __dirname,
+    "outputs",
+    `${attributes_data.data["old_object_id"].replace(
+      /\s+/g,
+      "_"
+    )}_${Date.now()}.zip`
+  );
+  await fs.ensureDir(path.dirname(outputZipPath));
+  const zip = new AdmZip();
+
+  const addFilesToZip = async (dir: string, baseInZip = "") => {
+    const entries = await fs.readdir(dir);
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry);
+      const stat = await fs.stat(fullPath);
+      if (stat.isDirectory()) {
+        await addFilesToZip(fullPath, path.join(baseInZip, entry));
+      } else {
+        const fileContent = await fs.readFile(fullPath);
+        zip.addFile(path.join(baseInZip, entry), fileContent);
+      }
+    }
+  };
+
+  await addFilesToZip(indexDir);
+  zip.writeZip(outputZipPath);
+
+  let new_blob_data;
+  let write_blob_attempts = 0;
+  const delay = 1000;
+  const max_attempts_write_blob = 2;
+  const max_attempts_set_status = 5;
+  const zipBuffer = await readFile(outputZipPath);
+  const { old_object_id, ...updated_data } = attributes_data.data;
+  while (write_blob_attempts < max_attempts_write_blob) {
+    try {
+      new_blob_data = await walrusClient.writeBlob({
+        blob: zipBuffer,
+        deletable: true,
+        epochs: Number(attributes_data.data.epochs),
+        signer: keypair,
+        attributes: { ...updated_data },
+      });
+      if (
+        new_blob_data.blobObject.certified_epoch ||
+        new_blob_data.blobObject.certified_epoch !== null
+      ) {
+        break;
+      }
+      write_blob_attempts++;
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    } catch (error) {
+      res.status(502).json({
+        statusCode: 0,
+        error: {
+          error_message: "Failed to write blob to Walrus",
+          error_details: error,
+        },
+      });
+      return;
+    }
+
+    if (write_blob_attempts === max_attempts_write_blob) {
+      let set_status_attempts = 0;
+      while (set_status_attempts < max_attempts_set_status) {
+        try {
+          await walrusClient.executeWriteBlobAttributesTransaction({
+            blobObjectId: new_blob_data.blobObject.id.id,
+            signer: keypair,
+            attributes: { status: "2" },
+          });
+          break;
+        } catch (error) {
+          set_status_attempts++;
+          if (set_status_attempts === max_attempts_set_status) {
+            if (error instanceof Error) {
+              res.status(502).json({
+                statusCode: 0,
+                error: {
+                  error_message:
+                    "Failed to change status code to 2 in blob attributes",
+                  error_details: error,
+                },
+              });
+              return;
+            }
+          }
+          await new Promise((resolve) => setTimeout(resolve, delay));
+        }
+      }
+      res.status(504).json({
+        statusCode: 0,
+        error: "Certified epoch is null",
+      });
+      return;
+    }
+  }
 
   try {
     await walrusClient.executeDeleteBlobTransaction({
@@ -368,31 +820,7 @@ app.put("/update-blob-n-run-job", upload.single("file"), async (req, res) => {
     return;
   }
 
-  let blob_data;
-  try {
-    blob_data = await walrusClient.writeBlob({
-      blob: zipFile,
-      deletable: true,
-      epochs: Number(result.data.epochs),
-      signer: keypair,
-      attributes: {
-        "site-name": old_site_name,
-        ...updated_data,
-        site_id: old_site_id,
-      },
-    });
-  } catch (error) {
-    res.status(502).json({
-      statusCode: 0,
-      error: {
-        error_message: "Failed to write blob to Walrus",
-        error_details: error,
-      },
-    });
-    return;
-  }
-
-  if (!blob_data) {
+  if (!new_blob_data) {
     res.status(503).json({
       statusCode: 0,
       error: "WriteBlob success but data is undefined",
@@ -400,13 +828,52 @@ app.put("/update-blob-n-run-job", upload.single("file"), async (req, res) => {
     return;
   }
 
-  const blobObjectId = blob_data.blobObject.id.id;
+  const blobObjectId = new_blob_data.blobObject.id.id;
 
+  const old_attributes = await walrusClient.readBlobAttributes({
+    blobObjectId: old_object_id,
+  });
+
+  if (!old_attributes) {
+    res.status(404).json({
+      statusCode: 0,
+      error: "blob data not found",
+    });
+    return;
+  }
+
+  const old_site_name = old_attributes["site-name"];
+  const old_site_id = old_attributes["site_id"];
+  // const site_statuss = old_attributes["site_status"];
+  // let attributesUpdate;
+  // if (site_statuss && site_statuss !== null) {
+  //   attributesUpdate = {
+  //     site_status: "0",
+  //     status: "0",
+  //     blobId: new_blob_data.blobId,
+  //     site_name: old_site_name,
+  //     site_id: old_site_id,
+  //   };
+  // } else {
+  //   attributesUpdate = {
+  //     status: "0",
+  //     blobId: new_blob_data.blobId,
+  //     site_name: old_site_name,
+  //     site_id: old_site_id,
+  //   };
+  // }
   try {
     await walrusClient.executeWriteBlobAttributesTransaction({
       blobObjectId: blobObjectId,
       signer: keypair,
-      attributes: { blobId: blob_data.blobId },
+      attributes: {
+        ...updated_data,
+        site_status: "0",
+        status: "0",
+        blobId: new_blob_data.blobId,
+        site_name: old_site_name,
+        site_id: old_site_id,
+      },
     });
   } catch (error) {
     if (error instanceof Error) {
@@ -434,7 +901,7 @@ app.put("/update-blob-n-run-job", upload.single("file"), async (req, res) => {
         overrides: {
           containerOverrides: [
             {
-              args: ["update", blobObjectId],
+              args: ["publish", new_blob_data.blobObject.id.id],
             },
           ],
         },
@@ -477,12 +944,12 @@ app.delete("/delete-site", async (req, res) => {
     return;
   }
 
-  const result = inputDeleteBlobScheme.safeParse({ object_id });
+  const attributes_data = inputDeleteBlobScheme.safeParse({ object_id });
 
-  if (!result.success) {
+  if (!attributes_data.success) {
     res.status(400).json({
       statusCode: 0,
-      error: result.error.errors.map((err) => ({
+      error: attributes_data.error.errors.map((err) => ({
         error_message: err.message,
         error_field: err.path.join("."),
       })),
@@ -501,7 +968,93 @@ app.delete("/delete-site", async (req, res) => {
         overrides: {
           containerOverrides: [
             {
-              args: ["delete", result.data.object_id],
+              args: ["delete_site", attributes_data.data.object_id],
+            },
+          ],
+        },
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token.token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+  } catch (error) {
+    res.status(500).json({
+      statusCode: 0,
+      error: {
+        error_message:
+          "Failed to triggering Cloud Run job to delete walrus-site",
+        error_details: error,
+      },
+    });
+    return;
+  }
+  if (response.status == 200) {
+    res.status(200).json({
+      statusCode: 1,
+      details: response.data,
+    });
+  }
+});
+
+app.put("/add-site-id", async (req, res) => {
+  const object_id = req.query.object_id;
+
+  if (!object_id) {
+    res.status(400).json({
+      statusCode: 0,
+      error: "Object ID is required in query parameters",
+    });
+    return;
+  }
+
+  const attributes_data = inputDeleteBlobScheme.safeParse({ object_id });
+
+  if (!attributes_data.success) {
+    res.status(400).json({
+      statusCode: 0,
+      error: attributes_data.error.errors.map((err) => ({
+        error_message: err.message,
+        error_field: err.path.join("."),
+      })),
+    });
+    return;
+  }
+
+  try {
+    await walrusClient.executeWriteBlobAttributesTransaction({
+      blobObjectId: String(object_id),
+      signer: keypair,
+      attributes: { site_status: "0" },
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(502).json({
+        statusCode: 0,
+        error: {
+          error_message:
+            "Failed to execute write blob attributes transaction to Walrus",
+          error_details: error,
+        },
+      });
+      return;
+    }
+  }
+
+  const url = `https://run.googleapis.com/v2/projects/${process.env.PROJECT_ID}/locations/${process.env.REGION}/jobs/${process.env.CLOUD_RUN_JOB_NAME}:run`;
+  const client = await auth.getClient();
+  const token = await client.getAccessToken();
+  let response;
+  try {
+    response = await axios.post(
+      url,
+      {
+        overrides: {
+          containerOverrides: [
+            {
+              args: ["get_site_id", attributes_data.data.object_id],
             },
           ],
         },

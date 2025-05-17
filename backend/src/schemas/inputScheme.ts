@@ -61,7 +61,7 @@ export const inputWriteBlobScheme = z
     end_date: z.string().refine((val) => !isNaN(Date.parse(val)), {
       message: "Invalid end_date",
     }),
-    status: z.union([z.literal("0"), z.literal("1"), z.literal("2")]),
+    status: z.union([z.literal("0"), z.literal("1"), z.literal("2"), z.literal("3"), z.literal("4")]),
     cache: z.string().regex(/^\d+$/),
     root: z.string(),
     install_command: z.string().min(3),
@@ -70,7 +70,7 @@ export const inputWriteBlobScheme = z
     is_build: z.union([z.literal("0"), z.literal("1")]),
     sui_ns: z.string().regex(/^0x[a-fA-F0-9]{64}$/).optional(),
     output_dir: z.string().optional(),
-
+    site_status: z.union([z.literal("0"), z.literal("1"), z.literal("2")]).optional(),
   })
   .superRefine((data, ctx) => {
     const start = Date.parse(data.start_date);
