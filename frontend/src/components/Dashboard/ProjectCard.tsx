@@ -2,6 +2,7 @@ import { memo, useState, useEffect } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { useSignAndExecuteTransaction } from '@mysten/dapp-kit'
 import { useWalletKit } from '@mysten/wallet-kit'
+import { useIntl, FormattedMessage } from 'react-intl'
 import {
   MoreHorizontal,
   Users,
@@ -84,6 +85,7 @@ const ProjectCard = memo(
     userAddress,
     onRefetch,
   }: ProjectCardProps) => {
+    const intl = useIntl()
     const remainingDays = calculateDaysBetween(new Date(), project.expiredDate)
     const [startDateOpen, setStartDateOpen] = useState(false)
     const [expiredDateOpen, setExpiredDateOpen] = useState(false)
@@ -205,14 +207,13 @@ const ProjectCard = memo(
       try {
         await navigator.clipboard.writeText(text)
         setCopied(true)
-        toast.success('Copied to clipboard', {
-          className: 'bg-primary-900 border-secondary-500/20 text-white',
-        })
-        setTimeout(() => setCopied(false), 2000)
+        toast.success(<FormattedMessage id="projectCard.copyToClipboard" />)
+        setTimeout(() => {
+          setCopied(false)
+        }, 2000)
       } catch (err) {
-        toast.error('Failed to copy', {
-          className: 'bg-red-900 border-red-500/20 text-white',
-        })
+        console.error('Failed to copy text: ', err)
+        toast.error(<FormattedMessage id="projectCard.failedToCopy" />)
       }
     }
 
@@ -220,9 +221,17 @@ const ProjectCard = memo(
       const finalSuins = selectedSuins === 'other' ? otherSuins : selectedSuins
 
       if (!finalSuins) {
-        toast.error('Please select or enter a SUINS domain', {
-          className: 'bg-red-900 border-red-500/20 text-white',
-        })
+        toast.error(<FormattedMessage id="projectCard.pleaseSelect" />)
+        return
+      }
+
+      if (!userAddress) {
+        toast.error(
+          <FormattedMessage id="projectCard.connectWallet" />,
+          {
+            description: intl.formatMessage({ id: 'projectCard.connectWalletDesc' }),
+          }
+        )
         return
       }
 
@@ -263,24 +272,26 @@ const ProjectCard = memo(
           `/set-attributes?object_id=${project.parentId}&sui_ns=${finalSuins}`,
         )
         if (result.status === 'success') {
-          toast.success('SUINS linked successfully', {
-            className: 'bg-primary-900 border-secondary-500/20 text-white',
-            description:
-              'Your SUINS domain has been linked to this project. It may take a few moments to update.',
-            duration: 5000,
-          })
+          toast.success(
+            <FormattedMessage id="projectCard.suinsLinked" />,
+            {
+              description: intl.formatMessage({ id: 'projectCard.suinsLinkedDesc' }),
+              duration: 5000,
+            }
+          )
           if (result.status === 'success' && response.status === 200) {
             onRefetch()
           }
         }
       } catch (error: any) {
         console.error('Error linking SUINS:', error)
-        toast.error(error.message || 'Failed to link SUINS', {
-          className: 'bg-red-900 border-red-500/20 text-white',
-          description:
-            'Please try again or contact support if the problem persists.',
-          duration: 5000,
-        })
+        toast.error(
+          error.message || <FormattedMessage id="projectCard.failedToLink" />,
+          {
+            description: intl.formatMessage({ id: 'projectCard.failedToLinkDesc' }),
+            duration: 5000,
+          }
+        )
       } finally {
         setIsLinking(false)
       }
@@ -288,9 +299,7 @@ const ProjectCard = memo(
 
     const handleDeleteSite = async () => {
       if (!project.parentId) {
-        toast.error('Project Parent ID is missing. Cannot delete site.', {
-          className: 'bg-red-900 border-red-500/20 text-white',
-        })
+        toast.error('Project Parent ID is missing. Cannot delete site.')
         return
       }
       try {
@@ -299,20 +308,21 @@ const ProjectCard = memo(
           `/delete-site?object_id=${project.parentId}`,
         )
         if (response.status === 200) {
-          toast.success('Site deleted successfully', {
-            className: 'bg-primary-900 border-secondary-500/20 text-white',
-            description:
-              'The site deletion process may take 1-2 minutes to complete.',
-            duration: 5000,
-          })
+          toast.success(
+            <FormattedMessage id="projectCard.siteDeleted" />,
+            {
+              description: intl.formatMessage({ id: 'projectCard.siteDeletedDesc' }),
+              duration: 5000,
+            }
+          )
           setDeleteDialogOpen(false)
           onRefetch()
         }
       } catch (error: any) {
         console.error('Error deleting site:', error)
-        toast.error(error.response?.data?.message || 'Failed to delete site', {
-          className: 'bg-red-900 border-red-500/20 text-white',
-        })
+        toast.error(
+          error.response?.data?.message || <FormattedMessage id="projectCard.failedToDelete" />
+        )
       } finally {
         setIsDeleting(false)
       }
@@ -347,19 +357,19 @@ const ProjectCard = memo(
                       className={`h-8 px-3 flex items-center justify-center rounded-full ${colors.dropdown} transition-all duration-200 hover:scale-110 active:scale-95`}
                     >
                       <Link className="h-4 w-4 mr-1.5" />
-                      <span className="text-sm">Link SUINS</span>
+                      <span className="text-sm"><FormattedMessage id="projectCard.linkSuins" /></span>
                       <span className="text-[10px] opacity-60 ml-1">
-                        (initial setup)
+                        <FormattedMessage id="projectCard.initialSetup" />
                       </span>
                     </button>
                   </DialogTrigger>
                   <DialogContent className="bg-primary-900 border-secondary-500/20 text-white">
                     <DialogHeader>
                       <DialogTitle className="text-secondary-400">
-                        Link SUINS
+                        <FormattedMessage id="projectCard.dialogTitle" />
                       </DialogTitle>
                       <DialogDescription className="text-white/60">
-                        Select your SUINS name to link it with this project
+                        <FormattedMessage id="projectCard.dialogDescription" />
                       </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
@@ -376,7 +386,7 @@ const ProjectCard = memo(
                                 onValueChange={setSelectedSuins}
                               >
                                 <SelectTrigger className="bg-primary-800 border-secondary-500/20 text-white w-full flex-1">
-                                  <SelectValue placeholder="Select SUINS domain" />
+                                  <SelectValue placeholder={intl.formatMessage({ id: 'projectCard.selectDomain' })} />
                                 </SelectTrigger>
                                 <SelectContent className="bg-primary-800 border-secondary-500/20 text-white">
                                   {suins.map((sui) => {
