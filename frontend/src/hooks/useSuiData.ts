@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { suiService } from '@/service/suiService'
 import { useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
 
 export const useSuiData = (userAddress: string) => {
   const queryClient = useQueryClient()
@@ -9,7 +8,20 @@ export const useSuiData = (userAddress: string) => {
   // Fetch blobs using website owner's address
   const { data: blobs = [], isLoading: isLoadingBlobs } = useQuery({
     queryKey: ['blobs', process.env.REACT_APP_OWNER_ADDRESS || ''],
-    queryFn: () => suiService.getBlobs(process.env.REACT_APP_OWNER_ADDRESS || ''),
+    queryFn: () =>
+      suiService.getBlobs(process.env.REACT_APP_OWNER_ADDRESS || '', {
+        StructType: process.env.REACT_APP_BLOB_TYPE as string,
+      }),
+    enabled: !!userAddress, // Only fetch if user is logged in
+  })
+
+  // Fetch SUINS data
+  const { data: suins = [], isLoading: isLoadingSuins } = useQuery({
+    queryKey: ['suins', userAddress || ''],
+    queryFn: () =>
+      suiService.getBlobs(userAddress || '', {
+        StructType: process.env.REACT_APP_SUINS_TYPE as string,
+      }),
     enabled: !!userAddress, // Only fetch if user is logged in
   })
 
@@ -36,9 +48,17 @@ export const useSuiData = (userAddress: string) => {
     ],
     queryFn: async () => {
       const metadataPromises = dynamicFields.flatMap((fields) =>
-        fields.map((field) => suiService.getMetadata(field.objectId)),
+        fields.map((field) => {
+          // Use parentId from dynamic field
+          const fieldWithParent = field as any
+          return suiService.getMetadata(
+            field.objectId,
+            fieldWithParent.parentId,
+          )
+        }),
       )
-      return Promise.all(metadataPromises)
+      const result = await Promise.all(metadataPromises)
+      return result
     },
     enabled: dynamicFields.length > 0,
   })
@@ -46,29 +66,52 @@ export const useSuiData = (userAddress: string) => {
   // Filter metadata by owner address
   const filteredMetadata = metadata.filter((meta) => {
     if (!meta?.content || meta.content.dataType !== 'moveObject') {
-      console.log('Invalid metadata:', meta)
       return false
     }
-    
     const fields = meta.content.fields as any
-    const metadataFields = fields?.value?.fields?.metadata?.fields?.contents || []
-    const ownerEntry = metadataFields.find((entry: any) => entry.fields?.key === 'owner')
+    const metadataFields =
+      fields?.value?.fields?.metadata?.fields?.contents || []
+    const ownerEntry = metadataFields.find(
+      (entry: any) => entry.fields?.key === 'owner',
+    )
     const owner = ownerEntry?.fields?.value
-    
+
+    // Check for delete-attribute field
+    const deleteAttributeEntry = metadataFields.find(
+      (entry: any) => entry.fields?.key === 'delete-attribute',
+    )
+    if (deleteAttributeEntry) {
+      return false // Skip if delete-attribute exists
+    }
+
     return owner === userAddress
   })
 
+
+
   return {
     blobs,
+    suins,
     dynamicFields,
     metadata: filteredMetadata,
+    isLoadingBlobs,
+    isLoadingSuins,
+    isLoadingFields,
+    isLoadingMetadata,
     isLoading: isLoadingBlobs || isLoadingFields || isLoadingMetadata,
     refetch: () => {
       return Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['blobs', process.env.REACT_APP_OWNER_ADDRESS || ''] }),
+        queryClient.invalidateQueries({
+          queryKey: ['blobs', process.env.REACT_APP_OWNER_ADDRESS || ''],
+        }),
         queryClient.invalidateQueries({ queryKey: ['dynamicFields'] }),
-        queryClient.invalidateQueries({ queryKey: ['metadata'] })
+        queryClient.invalidateQueries({ queryKey: ['metadata'] }),
       ])
-    }
+    },
+    refetchSuiNS: () => {
+      return queryClient.invalidateQueries({
+        queryKey: ['suins', userAddress || ''],
+      })
+    },
   }
 }

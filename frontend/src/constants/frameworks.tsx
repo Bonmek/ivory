@@ -1,5 +1,14 @@
 export const frameworks = [
   {
+    id: 'none',
+    name: 'No Framework',
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-6 h-6">
+        <rect x="4" y="11" width="16" height="2" fill="currentColor" />
+      </svg>
+    )
+  },
+  {
     id: 'next',
     name: 'Next.js',
     icon: (

@@ -12,16 +12,19 @@ import {
 import { Button } from '@/components/ui/button'
 import { Separator } from './ui/separator'
 import { ConnectModal, useWalletKit } from '@mysten/wallet-kit'
+import { WriteBlobResponse } from '@/api/createWebsiteApi'
 
 function CreateWebsiteDialog({
   open,
   setOpen,
+  handleClickDeploy,
 }: {
   open: boolean
   setOpen: (open: boolean) => void
+  handleClickDeploy: () => Promise<WriteBlobResponse>
 }) {
   const [openSuiLogin, setOpenSuiLogin] = useState(false)
-  const { currentAccount, disconnect } = useWalletKit()
+  const { currentAccount } = useWalletKit()
 
   return (
     <>
@@ -29,7 +32,7 @@ function CreateWebsiteDialog({
         <DialogContent className={`bg-primary-900`}>
           <div className="flex justify-center">
             <img
-              src="../../public/images/logos/Ivory.png"
+              src="/images/logos/Ivory.png"
               alt="Ivory Logo"
               className="w-24 h-24 object-contain"
             />
@@ -117,10 +120,10 @@ function CreateWebsiteDialog({
                     variant="secondary"
                     className="h-12 bg-primary-700 hover:bg-primary-600 text-white cursor-pointer"
                     onClick={() => {
-                      setOpen(false)
+                      handleClickDeploy()
                     }}
                   >
-                    I understand
+                    Deploy Now
                   </Button>
                 </div>
               </div>

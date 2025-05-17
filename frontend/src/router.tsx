@@ -46,6 +46,16 @@ const router = createBrowserRouter([
     ),
   },
   {
+    path: '/edit-website/:id',
+    element: (
+      <Layout>
+        <ProtectedRoute>
+          <EditWebsitePage />
+        </ProtectedRoute>
+      </Layout>
+    ),
+  },
+  {
     path: '/dashboard',
     element: (
       <Layout>

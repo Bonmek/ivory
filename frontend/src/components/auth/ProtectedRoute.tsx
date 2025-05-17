@@ -7,13 +7,17 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { address } = useAuth()
+  const { address, isLoading } = useAuth()
   const location = useLocation()
 
-  if (!address) {
-    // Redirect to home page but save the attempted url
-    return <Navigate to="/" state={{ from: location }} replace />
+  if (isLoading) {
+    return null
   }
+
+  // if (!address) {
+  //   // Redirect to home page but save the attempted url
+  //   return <Navigate to="/" state={{ from: location }} replace />
+  // }
 
   return <>{children}</>
 } 

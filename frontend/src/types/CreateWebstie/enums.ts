@@ -9,7 +9,16 @@ export enum Ownership {
 }
 
 export enum CacheControl {
-  NoCache = 'no-cache',
-  Public = 'public',
-  Private = 'private',
+  NoCache = '0',
+  OneDay = '1',
+  OneWeek = '7',
+  OneMonth = '30',
+  OneYear = '365'
+}
+
+export enum DeployingState {
+  None = 'none',
+  Deploying = 'deploying',
+  Deployed = 'deployed',
+  Failed = 'failed'
 }

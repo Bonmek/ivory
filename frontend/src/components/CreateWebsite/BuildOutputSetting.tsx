@@ -1,9 +1,13 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { Input } from '@/components/ui/input'
+import { Button } from "@/components/ui/button";
+import { FormattedMessage } from 'react-intl';
+import { useIntl } from 'react-intl';
+import { Input } from "@/components/ui/input"
 import { HelpCircle } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { buildOutputSettingsType } from '@/types/CreateWebstie/types'
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 
 
 interface BuildOutputSettingProps {
@@ -13,7 +17,9 @@ interface BuildOutputSettingProps {
   setBuildOutputSettings: (settings: buildOutputSettingsType) => void
 }
 
-function BuildOutputSetting({ showBuildOutputSettings, setShowBuildOutputSettings, buildOutputSettings, setBuildOutputSettings }: BuildOutputSettingProps) {
+const BuildOutputSetting: React.FC<BuildOutputSettingProps> = ({ showBuildOutputSettings, setShowBuildOutputSettings, buildOutputSettings, setBuildOutputSettings }) => {
+  const intl = useIntl();
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -30,7 +36,7 @@ function BuildOutputSetting({ showBuildOutputSettings, setShowBuildOutputSetting
             className="mr-4 border-white/60 cursor-pointer"
           />
           <Label htmlFor="showBuildOutputSettings" className="font-semibold text-base text-white cursor-pointer select-none">
-            Build and Output settings
+            <FormattedMessage id="createWebsite.buildAndOutputSettings" />
           </Label>
         </div>
         <AnimatePresence initial={false}>
@@ -42,41 +48,90 @@ function BuildOutputSetting({ showBuildOutputSettings, setShowBuildOutputSetting
               transition={{ duration: 0.3, ease: "easeInOut" }}
               className='space-y-6'
             >
-              <section className='px-2 mt-4 border-t border-gray-800'>
-                <div className="flex items-center mt-4 mb-2">
-                  <h3 className="text-sm text-gray-300 font-semibold">Root Directory</h3>
-                  <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
+
+              <section className='px-2 mt-6'>
+                <div className="flex items-center mb-2">
+                  <h3 className="text-sm text-gray-300 font-semibold">
+                    <FormattedMessage id="createWebsite.installCommand" />
+                  </h3>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help"
+                        onClick={() => {
+                          const helpCenter = document.getElementById('build-output-setting')
+                          if (helpCenter) {
+                            helpCenter.scrollIntoView({ behavior: 'smooth' })
+                          }
+                        }}
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent className='w-[260px]' side="right">
+                      <FormattedMessage id="createWebsite.installCommandTooltip" />
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
                 <Input
-                  value={buildOutputSettings.rootDirectory}
-                  onChange={(e) => setBuildOutputSettings({ ...buildOutputSettings, rootDirectory: e.target.value })}
-                  placeholder="/"
+                  value={buildOutputSettings.installCommand}
+                  onChange={(e) => setBuildOutputSettings({ ...buildOutputSettings, installCommand: e.target.value })}
+                  placeholder={intl.formatMessage({ id: 'createWebsite.installCommandPlaceholder' })}
                   className="bg-primary-500 border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500"
                 />
               </section>
 
               <section className='px-2'>
                 <div className="flex items-center mb-2">
-                  <h3 className="text-sm text-gray-300 font-semibold">Build Command</h3>
-                  <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
+                  <h3 className="text-sm text-gray-300 font-semibold">
+                    <FormattedMessage id="createWebsite.buildCommand" />
+                  </h3>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help"
+                        onClick={() => {
+                          const helpCenter = document.getElementById('build-output-setting')
+                          if (helpCenter) {
+                            helpCenter.scrollIntoView({ behavior: 'smooth' })
+                          }
+                        }}
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent className='w-[260px]' side="right">
+                      <FormattedMessage id="createWebsite.buildCommandTooltip" />
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
                 <Input
                   value={buildOutputSettings.buildCommand}
                   onChange={(e) => setBuildOutputSettings({ ...buildOutputSettings, buildCommand: e.target.value })}
-                  placeholder="npm run build"
+                  placeholder={intl.formatMessage({ id: 'createWebsite.buildCommandPlaceholder' })}
                   className="bg-primary-500 border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500"
                 />
               </section>
 
               <section className='px-2 mb-4'>
                 <div className="flex items-center mb-2">
-                  <h3 className="text-sm text-gray-300 font-semibold">Output Directory</h3>
-                  <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
+                  <h3 className="text-sm text-gray-300 font-semibold">
+                    <FormattedMessage id="createWebsite.outputDirectory" />
+                  </h3>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help"
+                        onClick={() => {
+                          const helpCenter = document.getElementById('build-output-setting')
+                          if (helpCenter) {
+                            helpCenter.scrollIntoView({ behavior: 'smooth' })
+                          }
+                        }}
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent className='w-[260px]' side="right">
+                      <FormattedMessage id="createWebsite.outputDirectoryTooltip" />
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
                 <Input
                   value={buildOutputSettings.outputDirectory}
                   onChange={(e) => setBuildOutputSettings({ ...buildOutputSettings, outputDirectory: e.target.value })}
-                  placeholder="dist"
+                  placeholder={intl.formatMessage({ id: 'createWebsite.outputDirectoryPlaceholder' })}
                   className="bg-primary-500 border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500"
                 />
               </section>
@@ -89,5 +144,3 @@ function BuildOutputSetting({ showBuildOutputSettings, setShowBuildOutputSetting
 }
 
 export default BuildOutputSetting
-
-
