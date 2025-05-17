@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { Blocks } from 'lucide-react'
+import { Blocks, PlusCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { FormattedMessage } from 'react-intl'
 
@@ -48,14 +48,27 @@ const EmptyState = ({ onReset }: EmptyStateProps) => {
       <p className="mb-4 mt-1 text-sm text-secondary-300">
         <FormattedMessage id="dashboard.empty.description" />
       </p>
-      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-        <Button
-          onClick={onReset}
-          className="bg-secondary-500 hover:bg-secondary-600 text-primary-900"
-        >
-          <FormattedMessage id="dashboard.empty.reset" />
-        </Button>
-      </motion.div>
+      <div className="flex gap-3 mt-2">
+        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <Button
+            onClick={onReset}
+            variant="outline"
+            className="border-secondary-500/30 text-secondary-400 hover:bg-secondary-500/10"
+          >
+            <FormattedMessage id="dashboard.empty.reset" />
+          </Button>
+        </motion.div>
+        
+        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <Button
+            onClick={() => window.location.href = '/create-website'}
+            className="bg-secondary-500 hover:bg-secondary-600 text-black font-medium flex items-center gap-1.5"
+          >
+            <PlusCircle className="h-4 w-4" />
+            <FormattedMessage id="dashboard.createNew" defaultMessage="Deploy Site" />
+          </Button>
+        </motion.div>
+      </div>
     </motion.div>
   )
 }

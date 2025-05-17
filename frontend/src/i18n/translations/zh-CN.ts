@@ -198,6 +198,9 @@ export default {
   'dashboard.empty.description': '您还没有任何项目。创建您的第一个项目以开始使用。',
   'dashboard.empty.reset': '重置筛选器',
   'dashboard.empty.create': '创建新项目',
+  'dashboard.refresh': '刷新数据',
+  'dashboard.lastRefresh': '上次: {time}',
+  'dashboard.createNew': '部署站点',
 
   // ProjectCard
   'projectCard.linkSuins': '链接 SUINS',
@@ -245,5 +248,10 @@ export default {
   'projectCard.building': '构建中',
   'projectCard.buildingInProgress': '正在进行构建',
   'projectCard.buildingDesc': '您的网站正在构建中。此过程可能需要几分钟。',
-  'projectCard.active': '活跃'
+  'projectCard.active': '活跃',
+  'projectCard.generateSiteId': '生成站点 ID',
+  'projectCard.generateSiteIdDesc': '您想为此项目生成新的站点 ID 吗？',
+  'projectCard.generating': '正在生成',
+  'projectCard.generate': '生成',
+  'projectCard.comingSoon': '即将'
 } as const;

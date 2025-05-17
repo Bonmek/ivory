@@ -612,17 +612,6 @@ export default function HomePage() {
             </div>
           </div>
         </section>
-        <div className="w-full flex justify-center items-center py-6 opacity-80 z-20 relative">
-          <span className="mr-2 text-sm text-gray-400">
-            <FormattedMessage id="homepage.powered" />
-          </span>
-          <img
-            src="/images/logos/walrus_logo_white_RGB.png"
-            alt="Powered by Logo"
-            className="h-6"
-            style={{ filter: 'brightness(1.2)' }}
-          />
-        </div>
       </div>
     </>
   )

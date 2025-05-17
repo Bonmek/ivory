@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useCallback, useEffect } from 'react'
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import ThreeJSBackground from '@/components/ThreeJsBackground'
 import DashboardHeader from '@/components/Dashboard/DashboardHeader'
@@ -12,7 +12,8 @@ import { useSuiData } from '@/hooks/useSuiData'
 import { transformMetadataToProject } from '@/utils/metadataUtils'
 import { useWalletKit } from '@mysten/wallet-kit'
 import { useAuth } from '@/context/AuthContext'
-import { RefreshCw } from 'lucide-react'
+import { RefreshCw, PlusCircle } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { mockProjects } from '@/mocks/projectData'
 import { Project } from '@/types/project'
 import ProjectCard from '@/components/Dashboard/ProjectCard'
@@ -38,7 +39,11 @@ function getPageList(current: number, total: number) {
   } else {
     if (current > 2) pages.push(1)
     if (current > 3) pages.push('...')
-    for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) {
+    for (
+      let i = Math.max(2, current - 1);
+      i <= Math.min(total - 1, current + 1);
+      i++
+    ) {
       pages.push(i)
     }
     if (current < total - 2) pages.push('...')
@@ -58,6 +63,8 @@ export default function Dashboard() {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 6
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [lastRefreshTime, setLastRefreshTime] = useState<Date>(new Date())
+  const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   const { metadata, isLoading, refetch } = useSuiData(address || '')
 
@@ -68,7 +75,13 @@ export default function Dashboard() {
 
     console.log('Projects:', projects)
     if (!projects || projects.length === 0) return []
+
+    const currentDate = new Date()
     let filtered = projects.filter((project) => {
+      if (project.expiredDate < currentDate) {
+        return false
+      }
+
       const matchesSearch =
         project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         project.url.toLowerCase().includes(searchQuery.toLowerCase())
@@ -86,7 +99,6 @@ export default function Dashboard() {
 
       return matchesSearch && matchesDate && matchesTab
     })
-
 
     if (activeTab === 'building') {
       filtered = filtered.filter((p) => p.status === 0)
@@ -149,14 +161,15 @@ export default function Dashboard() {
     setHoveredCard(null)
   }, [])
 
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
     setIsRefreshing(true)
     try {
       await refetch()
+      setLastRefreshTime(new Date())
     } finally {
       setIsRefreshing(false)
     }
-  }
+  }, [refetch])
 
   // Calculate total pages
   const totalPages = Math.ceil(sortedProjects.length / itemsPerPage)
@@ -166,6 +179,29 @@ export default function Dashboard() {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage,
   )
+
+  // Auto-refresh every minute
+  useEffect(() => {
+    // Clear any existing interval when component mounts or address changes
+    if (refreshIntervalRef.current) {
+      clearInterval(refreshIntervalRef.current)
+    }
+
+    // Only set up auto-refresh if we have an address
+    if (address) {
+      refreshIntervalRef.current = setInterval(async () => {
+        await handleRefresh()
+      }, 60000) // 60000 ms = 1 minute
+    }
+
+    // Clean up interval on unmount
+    return () => {
+      if (refreshIntervalRef.current) {
+        clearInterval(refreshIntervalRef.current)
+        refreshIntervalRef.current = null
+      }
+    }
+  }, [address, handleRefresh])
 
   // Get page numbers to display
   const pageNumbers = getPageList(currentPage, totalPages)
@@ -188,6 +224,7 @@ export default function Dashboard() {
             setDate={setDate}
             onRefresh={handleRefresh}
             isRefreshing={isRefreshing}
+            lastRefreshTime={lastRefreshTime}
           />
 
           <DashboardTabs activeTab={activeTab} setActiveTab={setActiveTab} />
@@ -258,12 +295,13 @@ export default function Dashboard() {
                           onClick={() =>
                             typeof page === 'number' && handlePageChange(page)
                           }
-                          className={`px-3 py-1.5 rounded-lg transition-colors duration-200 ${page === currentPage
-                            ? 'bg-secondary-500 text-black'
-                            : page === '...'
-                              ? 'bg-transparent text-white cursor-default'
-                              : 'bg-primary-700 text-white hover:bg-primary-600'
-                            }`}
+                          className={`px-3 py-1.5 rounded-lg transition-colors duration-200 ${
+                            page === currentPage
+                              ? 'bg-secondary-500 text-black'
+                              : page === '...'
+                                ? 'bg-transparent text-white cursor-default'
+                                : 'bg-primary-700 text-white hover:bg-primary-600'
+                          }`}
                         >
                           {page}
                         </button>
@@ -286,6 +324,7 @@ export default function Dashboard() {
             <EmptyState onReset={() => setSearchQuery('')} />
           )}
         </div>
+
       </main>
     </>
   )

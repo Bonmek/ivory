@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { Search, Filter, ChevronDown, RefreshCw } from 'lucide-react'
+import { Search, Filter, ChevronDown, RefreshCw, PlusCircle } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import {
@@ -19,6 +19,7 @@ interface DashboardHeaderProps {
   setSortType: (type: string) => void
   onRefresh: () => Promise<void>
   isRefreshing: boolean
+  lastRefreshTime?: Date
 }
 
 const DashboardHeader = ({
@@ -30,6 +31,7 @@ const DashboardHeader = ({
   setSortType,
   onRefresh,
   isRefreshing,
+  lastRefreshTime,
 }: DashboardHeaderProps) => {
   const intl = useIntl();
   
@@ -67,7 +69,7 @@ const DashboardHeader = ({
         <FormattedMessage id="dashboard.title" />
       </motion.h1>
       <motion.div
-        className="flex flex-col space-y-4 md:flex-row md:space-y-0 gap-2"
+        className="flex flex-col space-y-4 md:flex-row md:space-y-0 gap-2 items-center"
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{
@@ -172,15 +174,44 @@ const DashboardHeader = ({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={onRefresh}
-          disabled={isRefreshing}
-          className="h-9 w-9 cursor-pointer"
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="mr-2"
         >
-          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-        </Button>
+          <Button
+            onClick={() => window.location.href = '/create-website'}
+            variant="outline"
+            className="bg-primary-800 hover:bg-primary-700 text-white font-medium flex items-center gap-1.5 border-secondary-500/40 hover:border-secondary-500/70"
+          >
+            <PlusCircle className="h-4 w-4 text-secondary-500" />
+            <FormattedMessage id="dashboard.createNew" defaultMessage="Deploy Site" />
+          </Button>
+        </motion.div>
+        
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={onRefresh}
+            disabled={isRefreshing}
+            className="h-9 w-9 cursor-pointer"
+            title={intl.formatMessage({ id: 'dashboard.refresh' }, { defaultMessage: 'Refresh data' })}
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          </Button>
+          {lastRefreshTime && (
+            <span className="text-xs text-secondary-400">
+              {intl.formatMessage(
+                { id: 'dashboard.lastRefresh' },
+                { 
+                  defaultMessage: 'Last: {time}',
+                  time: lastRefreshTime.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
+                }
+              )}
+            </span>
+          )}
+        </div>
 
         {(date || searchQuery) && (
           <motion.div

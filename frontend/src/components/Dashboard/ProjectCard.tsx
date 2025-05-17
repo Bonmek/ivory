@@ -270,10 +270,10 @@ const ProjectCard = memo(
           signAndExecuteTransactionBlock,
           process.env.REACT_APP_SUI_NETWORK as 'mainnet' | 'testnet',
         )
-        setOpen(false)
         const response = await apiClient.put(
           `/set-attributes?object_id=${project.parentId}&sui_ns=${finalSuins}`,
         )
+        setOpen(false)
         if (result.status === 'success') {
           toast.success(
             <FormattedMessage id="projectCard.suinsLinked" />,
@@ -537,7 +537,7 @@ const ProjectCard = memo(
                     <>
                       <DropdownMenuItem className="focus:bg-primary-800">
                         <RefreshCw className="mr-2 h-4 w-4" />
-                        <span>Re-deploy</span>
+                        <span><FormattedMessage id="projectCard.redeploy" /></span>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator className="bg-secondary-500/20" />
                       <DropdownMenuItem
@@ -552,14 +552,14 @@ const ProjectCard = memo(
                     <>
                       <div className="px-4 py-2 text-yellow-400 flex items-center gap-2 text-sm">
                         <Loader2 className="ml-1 h-3 w-3 text-yellow-300 animate-spin" />
-                        Deploying...
+                        <FormattedMessage id="projectCard.deploying" />
                       </div>
                     </>
                   ) : (
                     <>
                       <DropdownMenuItem className="focus:bg-primary-800">
                         <RefreshCw className="mr-2 h-4 w-4" />
-                        <span>Update site</span>
+                        <span><FormattedMessage id="projectCard.updateSite" /></span>
                       </DropdownMenuItem>
                       {!project.siteId && (
                         <DropdownMenuItem
@@ -568,19 +568,35 @@ const ProjectCard = memo(
                           disabled={project.site_status === 0}
                         >
                           <Key className="mr-2 h-4 w-4" />
-                          <span>Generate Site ID</span>
+                          <span><FormattedMessage id="projectCard.generateSiteId" /></span>
                           {isGenerating && (
                             <Loader2 className="ml-2 h-4 w-4 animate-spin text-secondary-400" />
                           )}
                         </DropdownMenuItem>
                       )}
-                      <DropdownMenuItem className="focus:bg-primary-800">
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        <span>Extend site</span>
+                      <DropdownMenuItem 
+                        className="focus:bg-primary-800 opacity-60 cursor-not-allowed flex items-center justify-between" 
+                        disabled
+                      >
+                        <div className="flex items-center">
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          <span><FormattedMessage id="projectCard.extendSite" /></span>
+                        </div>
+                        <div className="ml-1 text-[9px] px-1 py-0 leading-tight rounded-sm bg-secondary-500/10 text-secondary-400/80 whitespace-nowrap">
+                          <FormattedMessage id="projectCard.comingSoon" />
+                        </div>
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="focus:bg-primary-800">
-                        <Users className="mr-2 h-4 w-4" />
-                        <span>Transfer ownership</span>
+                      <DropdownMenuItem 
+                        className="focus:bg-primary-800 opacity-60 cursor-not-allowed flex items-center justify-between" 
+                        disabled
+                      >
+                        <div className="flex items-center">
+                          <Users className="mr-2 h-4 w-4" />
+                          <span><FormattedMessage id="projectCard.transferOwnership" /></span>
+                        </div>
+                        <div className="ml-1 text-[9px] px-1 py-0 leading-tight rounded-sm bg-secondary-500/10 text-secondary-400/80 whitespace-nowrap">
+                          <FormattedMessage id="projectCard.comingSoon" />
+                        </div>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator className="bg-secondary-500/20" />
                       <DropdownMenuItem
@@ -629,7 +645,7 @@ const ProjectCard = memo(
                         onMouseLeave={() => setErrorOpen(false)}
                         title="Click to view error details"
                       >
-                        Failed
+                        <FormattedMessage id="projectCard.failed" />
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           viewBox="0 0 24 24"
@@ -670,7 +686,7 @@ const ProjectCard = memo(
                         </div>
                         <div className="flex-1">
                           <div className="text-sm font-medium text-red-400 mb-1">
-                            Deployment Failed
+                            <FormattedMessage id="projectCard.deploymentFailed" />
                           </div>
                           <div className="text-xs text-white/80 leading-relaxed">
                             {project.client_error_description}
@@ -687,7 +703,7 @@ const ProjectCard = memo(
                         onMouseEnter={() => setStatusOpen(true)}
                         onMouseLeave={() => setStatusOpen(false)}
                       >
-                        Building
+                        <FormattedMessage id="projectCard.building" />
                         <span className="ml-1">
                           <span className="inline-block w-2 h-2 bg-yellow-300 rounded-full animate-pulse" />
                         </span>
@@ -716,11 +732,10 @@ const ProjectCard = memo(
                         </div>
                         <div className="flex-1">
                           <div className="text-sm font-medium text-yellow-400 mb-1">
-                            Building in Progress
+                            <FormattedMessage id="projectCard.buildingInProgress" />
                           </div>
                           <div className="text-xs text-white/80 leading-relaxed">
-                            Your site is currently being built. This process may
-                            take a few minutes.
+                            <FormattedMessage id="projectCard.buildingDesc" />
                           </div>
                         </div>
                       </div>
@@ -730,7 +745,7 @@ const ProjectCard = memo(
                   <div
                     className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${colors.badge} flex items-center`}
                   >
-                    Active
+                    <FormattedMessage id="projectCard.active" />
                   </div>
                 )}
               </div>
@@ -780,7 +795,7 @@ const ProjectCard = memo(
                       style={{ minHeight: 28 }}
                     >
                       <Loader2 className="h-4 w-4 animate-spin text-yellow-300" />
-                      <span>Generating Site ID...</span>
+                      <span><FormattedMessage id="projectCard.generatingSiteId" /></span>
                     </span>
                   ) : project.site_status === 2 ? (
                     <span
@@ -798,13 +813,16 @@ const ProjectCard = memo(
                         <line x1="15" y1="9" x2="9" y2="15" />
                         <line x1="9" y1="9" x2="15" y2="15" />
                       </svg>
-                      <span>Failed to generate Site ID</span>
+                      <span><FormattedMessage id="projectCard.failedToGenerateSiteId" /></span>
                     </span>
                   ) : project.siteId ? (
                     <>
                       <span className="truncate mr-2 text-white/80">
-                        Site ID: {project.siteId.slice(0, 6)}...
-                        {project.siteId.slice(-4)}
+                        <FormattedMessage 
+                          id="projectCard.siteId" 
+                          values={{ id: `${project.siteId.slice(0, 6)}...${project.siteId.slice(-4)}` }} 
+                          defaultMessage="Site ID: {id}" 
+                        />
                       </span>
                       <button
                         onClick={() => handleCopy(project.siteId!)}
@@ -825,7 +843,7 @@ const ProjectCard = memo(
               <div className="flex flex-row w-full gap-x-3 sm:gap-x-6 mt-auto min-h-[48px] opacity-80 group-hover:opacity-100 transition-opacity duration-200">
                 <div className="flex-1 min-w-0 flex flex-col justify-center">
                   <div className="text-[10px] text-white/50 font-medium truncate">
-                    Start date
+                    <FormattedMessage id="projectCard.startDate" />
                   </div>
                   <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
                     <PopoverTrigger asChild>
@@ -850,7 +868,7 @@ const ProjectCard = memo(
                 </div>
                 <div className="flex-1 min-w-0 flex flex-col justify-center border-l border-white/10 pl-2 sm:pl-3">
                   <div className="text-[10px] text-white/50 font-medium truncate">
-                    Expired date
+                    <FormattedMessage id="projectCard.expiredDate" />
                   </div>
                   <Popover
                     open={expiredDateOpen}
@@ -879,13 +897,13 @@ const ProjectCard = memo(
                 {project.status === 0 && (
                   <div className="flex-1 min-w-0 flex flex-col justify-center border-l border-white/10 pl-2 sm:pl-3">
                     <div className="text-[10px] text-white/50 font-medium truncate">
-                      Build Time
+                      <FormattedMessage id="projectCard.buildTime" />
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5 min-h-[20px]">
                       <Timer className="h-3.5 w-3.5 text-yellow-400" />
                       {buildTime === 0 ? (
                         <span className="animate-pulse text-yellow-300 font-medium">
-                          Loading...
+                          <FormattedMessage id="projectCard.loading" />
                         </span>
                       ) : (
                         <span className="text-sm text-yellow-300 font-medium">
@@ -897,7 +915,7 @@ const ProjectCard = memo(
                 )}
                 <div className="flex-1 min-w-0 flex flex-col justify-center border-l border-white/10 pl-2 sm:pl-3">
                   <div className="text-[10px] text-white/50 font-medium truncate">
-                    Remaining
+                    <FormattedMessage id="projectCard.remaining" />
                   </div>
                   <Popover open={remainingOpen} onOpenChange={setRemainingOpen}>
                     <PopoverTrigger asChild>
@@ -906,7 +924,7 @@ const ProjectCard = memo(
                         onMouseEnter={() => setRemainingOpen(true)}
                         onMouseLeave={() => setRemainingOpen(false)}
                       >
-                        {remainingDays} days
+                        {remainingDays} <FormattedMessage id="projectCard.days" />
                       </div>
                     </PopoverTrigger>
                     <PopoverContent
@@ -915,7 +933,11 @@ const ProjectCard = memo(
                       onMouseLeave={() => setRemainingOpen(false)}
                     >
                       <div className="text-sm">
-                        Expires on {formatDate(project.expiredDate)}
+                        <FormattedMessage 
+                          id="projectCard.expiresOn" 
+                          values={{ date: formatDate(project.expiredDate) }} 
+                          defaultMessage="Expires on {date}" 
+                        />
                       </div>
                     </PopoverContent>
                   </Popover>
@@ -969,10 +991,10 @@ const ProjectCard = memo(
           <DialogContent className="bg-primary-900 border-secondary-500/20 text-white">
             <DialogHeader>
               <DialogTitle className="text-secondary-400">
-                Generate Site ID
+                <FormattedMessage id="projectCard.generateSiteId" />
               </DialogTitle>
               <DialogDescription className="text-white/60">
-                Do you want to generate a new Site ID for this project?
+                <FormattedMessage id="projectCard.generateSiteIdDesc" />
               </DialogDescription>
             </DialogHeader>
             <div className="flex justify-end gap-3 mt-6">
@@ -990,9 +1012,13 @@ const ProjectCard = memo(
                 disabled={isGenerating}
               >
                 {isGenerating ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                ) : null}
-                Generate
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    <FormattedMessage id="projectCard.generating" />
+                  </>
+                ) : (
+                  <FormattedMessage id="projectCard.generate" />
+                )}
               </Button>
             </div>
           </DialogContent>
