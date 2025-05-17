@@ -151,6 +151,8 @@ export default {
   'createWebsite.built': '构建成功！',
   'createWebsite.viewDashboardbuilt': '您现在可以在 {dashboardLink} 上查看您的部署网站',
 
+  'createWebsite.selectBranch': '选择分支',
+
   // Homepage
   'homepage.hero.title1': '部署',
   'homepage.hero.title2': '您的',

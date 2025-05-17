@@ -152,6 +152,8 @@ export default {
   'createWebsite.built': 'Built successfully!',
   'createWebsite.viewDashboardbuilt': 'You can now see your deployed website at {dashboardLink}',
 
+  'createWebsite.selectBranch': 'Select branch',
+
   // Homepage
   'homepage.hero.title1': 'Deploy',
   'homepage.hero.title2': 'Your',

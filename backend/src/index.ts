@@ -31,13 +31,13 @@ const auth = new GoogleAuth({
 const app = express();
 app.use(express.json());
 app.use(cors());
-// app.use(
-//   cors({
-//     origin: process.env.FRONTEND_URL,
-//     credentials: true,
-//     exposedHeaders: ["Content-Disposition", "Content-Length"],
-//   })
-// );
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL,
+    credentials: true,
+    exposedHeaders: ["Content-Disposition", "Content-Length"],
+  })
+);
 app.use(
   session({
     secret: "session-secret",
@@ -668,7 +668,7 @@ app.put("/update-blob-n-run-job", upload.single("file"), async (req, res) => {
     }
   }
 
-    try {
+  try {
     await walrusClient.executeDeleteBlobTransaction({
       signer: keypair,
       blobObjectId: old_object_id,
