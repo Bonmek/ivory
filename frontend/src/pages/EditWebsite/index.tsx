@@ -9,11 +9,17 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Upload } from 'lucide-react'
+import { Upload, X } from 'lucide-react'
 import { useDropzone } from 'react-dropzone'
 import { useSuiData } from '@/hooks/useSuiData'
 import { useAuth } from '@/context/AuthContext'
 import { transformMetadataToProject } from '@/utils/metadataUtils'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 
 function App() {
   const [name, setName] = useState('')
@@ -23,15 +29,16 @@ function App() {
   const [outputDir, setOutputDir] = useState('dist')
   const [rootDir, setRootDir] = useState('/')
   const [cacheControl, setCacheControl] = useState('default')
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [previewUrl, setPreviewUrl] = useState('')
 
   const { address }: any = useAuth()
   const { metadata, isLoading, refetch } = useSuiData(
     '0x18a4c45a96c15d62b82b341f18738125bf875fee86057d88589a183700601a1c',
   )
 
-  // File upload handling with react-dropzone
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    accept: { 'application/zip': ['.zip'] },
+    accept: { 'application  application/zip': ['.zip'] },
     onDrop: (acceptedFiles) => {
       console.log('Uploaded files:', acceptedFiles)
       // Handle file upload logic here
@@ -70,7 +77,10 @@ function App() {
     return filtered
   }, [searchQuery, date, metadata])
 
-  console.log(filteredProjects, 'hi')
+  const handlePreview = (url: string) => {
+    setPreviewUrl(url)
+    setPreviewOpen(true)
+  }
 
   return (
     <div className="min-h-screen text-white flex items-center justify-center p-4">
@@ -114,13 +124,24 @@ function App() {
               {/* Project Name */}
               <Card className="bg-gray-700 border-gray-600">
                 <CardContent className="p-4">
-                  {filteredProjects.length > 0 ? (
+                  {isLoading ? (
+                    <div className="text-gray-400">Loading projects...</div>
+                  ) : filteredProjects.length > 0 ? (
                     filteredProjects.map((project, index) => (
                       <div
                         key={index}
-                        className="bg-gray-600 border-gray-500 text-white p-2 rounded mb-2"
+                        className="bg-gray-600 border-gray-500 text-white p-2 rounded mb-2 flex justify-between items-center"
                       >
-                        {project.name}
+                        <span>{project.name}</span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handlePreview(project.url)}
+                          disabled={!project.url}
+                          className="bg-teal-500 hover:bg-teal-600 text-white"
+                        >
+                          Preview
+                        </Button>
                       </div>
                     ))
                   ) : (
@@ -208,6 +229,33 @@ function App() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Preview Modal */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-5xl bg-gray-800 border-gray-700 text-white">
+          <DialogHeader>
+            <DialogTitle>Site Preview</DialogTitle>
+          </DialogHeader>
+          <div className="relative">
+            {previewUrl ? (
+              <iframe
+                src={previewUrl}
+                className="w-full h-[70vh] rounded-lg border border-gray-600"
+                title="Site Preview"
+                onError={() => (
+                  <div className="text-red-400 text-center py-4">
+                    Failed to load preview. Please check the URL.
+                  </div>
+                )}
+              />
+            ) : (
+              <div className="text-gray-400 text-center py-4">
+                No preview URL available
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
