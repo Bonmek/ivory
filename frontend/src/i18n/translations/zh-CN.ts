@@ -150,6 +150,8 @@ export default {
 
   'createWebsite.built': '构建成功！',
   'createWebsite.viewDashboardbuilt': '您现在可以在 {dashboardLink} 上查看您的部署网站',
+  'createWebsite.deployed': '部署成功！',
+  'createWebsite.showcaseUrl': '您的展示 URL 是 {showcaseUrl}',
 
   // Homepage
   'homepage.hero.title1': '部署',

@@ -65,6 +65,8 @@ export default function Dashboard() {
     const projects = metadata
       ? metadata.map((meta, index) => transformMetadataToProject(meta, index))
       : []
+
+    console.log('Projects:', projects)
     if (!projects || projects.length === 0) return []
     let filtered = projects.filter((project) => {
       const matchesSearch =
@@ -84,6 +86,7 @@ export default function Dashboard() {
 
       return matchesSearch && matchesDate && matchesTab
     })
+
 
     if (activeTab === 'building') {
       filtered = filtered.filter((p) => p.status === 0)
@@ -255,13 +258,12 @@ export default function Dashboard() {
                           onClick={() =>
                             typeof page === 'number' && handlePageChange(page)
                           }
-                          className={`px-3 py-1.5 rounded-lg transition-colors duration-200 ${
-                            page === currentPage
-                              ? 'bg-secondary-500 text-black'
-                              : page === '...'
-                                ? 'bg-transparent text-white cursor-default'
-                                : 'bg-primary-700 text-white hover:bg-primary-600'
-                          }`}
+                          className={`px-3 py-1.5 rounded-lg transition-colors duration-200 ${page === currentPage
+                            ? 'bg-secondary-500 text-black'
+                            : page === '...'
+                              ? 'bg-transparent text-white cursor-default'
+                              : 'bg-primary-700 text-white hover:bg-primary-600'
+                            }`}
                         >
                           {page}
                         </button>

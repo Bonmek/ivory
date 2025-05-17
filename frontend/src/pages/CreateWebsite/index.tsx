@@ -100,6 +100,7 @@ export default function CreateWebsitePage() {
   const [deployingResponse, setDeployingResponse] = useState<ApiResponse | null>(null)
   const [buildingState, setBuildingState] = useState<BuildingState>(BuildingState.None)
   const [deployedObjectId, setDeployedObjectId] = useState<string | null>(null)
+  const [projectShowcaseUrl, setProjectShowcaseUrl] = useState<string | null>(null)
 
   // State for file upload
   const [uploadMethod, setUploadMethod] = useState<UploadMethod>(
@@ -282,11 +283,32 @@ export default function CreateWebsitePage() {
   };
 
   useEffect(() => {
+    console.log('User effect running');
+    console.log('REACT_APP_SERVER_URL:', process.env.REACT_APP_SERVER_URL);
+
+    if (!process.env.REACT_APP_SERVER_URL) {
+      console.error('REACT_APP_SERVER_URL environment variable is not set');
+      setUser(null);
+      setDeployingState(DeployingState.None);
+      return;
+    }
+
+    const userEndpoint = `${process.env.REACT_APP_SERVER_URL}/api/user`;
+    console.log('User endpoint:', userEndpoint);
+
     apiClient
-      .get(process.env.REACT_APP_API_USER || '')
-      .then((res) => setUser(res.data.user))
-      .catch(() => setUser(null))
-    setDeployingState(DeployingState.None)
+      .get(userEndpoint)
+      .then((res) => {
+        console.log('User data received:', res.data);
+        setUser(res.data.user);
+        setDeployingState(DeployingState.None);
+      })
+      .catch((error) => {
+        console.error('Error fetching user data:', error);
+        setUser(null);
+        setDeployingState(DeployingState.None);
+        toast.error('Failed to fetch user data. Please try again.');
+      });
   }, [])
 
   const { data } = useQuery({
@@ -343,11 +365,9 @@ export default function CreateWebsitePage() {
         attributes,
       })
 
-      console.log('Response:', response)
       setDeployingState(DeployingState.Deployed)
       setDeployingResponse(response as unknown as ApiResponseSuccess)
       setDeployedObjectId((response as unknown as ApiResponseSuccess).objectId)
-      console.log('Deployed Object ID:', deployedObjectId)
       return response
     } catch (error) {
       console.error('Error:', error)
@@ -491,23 +511,28 @@ export default function CreateWebsitePage() {
     let interval: NodeJS.Timeout;
 
     const checkStatus = () => {
-      console.log('Deployed Object ID:', deployedObjectId);
       if (metadata && deployedObjectId) {
         const filteredProjects = metadata
-          .map((meta, index) => transformMetadataToProject(meta, index))
+          .map((meta, index) => transformMetadataToProject(meta, index) as Project)
           .filter((project: Project) => project.parentId === deployedObjectId);
 
         console.log('Filtered projects:', filteredProjects);
 
         if (filteredProjects.length > 0) {
-          if (filteredProjects[0].status === 1) {
-            setBuildingState(BuildingState.Built);
-            return true;
-          } else if (filteredProjects[0].status === 2) {
+          const firstProject = filteredProjects[0];
+          if (firstProject.status === 1) {
+            const project = firstProject as Project;
+            if (project.showcase_url) {
+              setBuildingState(BuildingState.Built);
+              setProjectShowcaseUrl(project.showcase_url);
+              return true;
+            }
+          } else if (firstProject.status === 2) {
             setBuildingState(BuildingState.Failed);
             return true;
           }
         }
+        return false;
       }
       return false;
     };
@@ -851,6 +876,7 @@ export default function CreateWebsitePage() {
                 deployingState={deployingState}
                 deployingResponse={deployingResponse}
                 buildingState={buildingState}
+                projectShowcaseUrl={projectShowcaseUrl}
               />
             </motion.div>
           </>

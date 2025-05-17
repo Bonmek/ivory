@@ -151,6 +151,8 @@ export default {
 
   'createWebsite.built': 'Built successfully!',
   'createWebsite.viewDashboardbuilt': 'You can now see your deployed website at {dashboardLink}',
+  'createWebsite.deployed': 'Deployed successfully!',
+  'createWebsite.showcaseUrl': 'Your showcase URL is {showcaseUrl}',
 
   // Homepage
   'homepage.hero.title1': 'Deploy',

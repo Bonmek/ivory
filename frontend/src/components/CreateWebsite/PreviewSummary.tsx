@@ -110,6 +110,7 @@ interface PreviewSummaryProps {
   deployingState: DeployingState;
   deployingResponse: ApiResponse | null;
   buildingState: BuildingState;
+  projectShowcaseUrl: string | null;
 }
 
 const sectionVariants = {
@@ -264,6 +265,7 @@ export const PreviewSummary: React.FC<PreviewSummaryProps> = ({
   advancedOptions,
   uploadMethod,
   selectedFile,
+  projectShowcaseUrl,
   deployingState,
   setOpen,
   setShowPreview,
@@ -280,21 +282,21 @@ export const PreviewSummary: React.FC<PreviewSummaryProps> = ({
   const [countdown, setCountdown] = useState(10);
   const showCountdown = deployingState === DeployingState.Deployed && buildingState === BuildingState.Built;
 
-  useEffect(() => {
-    if (showCountdown) {
-      setCountdown(10);
-    }
-  }, [showCountdown]);
+  // useEffect(() => {
+  //   if (showCountdown) {
+  //     setCountdown(10);
+  //   }
+  // }, [showCountdown]);
 
-  useEffect(() => {
-    if (!showCountdown) return;
-    if (countdown <= 0) {
-      navigate('/dashboard');
-      return;
-    }
-    const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
-    return () => clearTimeout(timer);
-  }, [countdown, showCountdown, navigate]);
+  // useEffect(() => {
+  //   if (!showCountdown) return;
+  //   if (countdown <= 0) {
+  //     navigate('/dashboard');
+  //     return;
+  //   }
+  //   const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
+  //   return () => clearTimeout(timer);
+  // }, [countdown, showCountdown, navigate]);
 
   useEffect(() => {
     if (deployingState === DeployingState.Deploying && deployStatusRef.current) {
@@ -350,6 +352,30 @@ export const PreviewSummary: React.FC<PreviewSummaryProps> = ({
                   ariaLive="polite"
                 />
               );
+              const ShowcaseCard = (
+                <StatusMotionCard
+                  ref={deployStatusRef}
+                  key="built"
+                  icon={<Check className="w-6 h-6 text-green-400" />}
+                  color="green"
+                  title={<FormattedMessage id="createWebsite.deployed" defaultMessage="Deployed successfully!" />}
+                  description={<FormattedMessage
+                    id="createWebsite.showcaseUrl"
+                    defaultMessage="Showcase URL: {showcaseUrl}"
+                    values={{
+                      showcaseUrl: (
+                        <Link
+                          to={`https://kursui.wal.app/${projectShowcaseUrl}/index.html`}
+                          className="font-medium underline underline-offset-2 hover:text-green-600 transition-colors duration-300"
+                        >
+                          Click here to view
+                        </Link>
+                      )
+                    }}
+                  />}
+                  ariaLive="polite"
+                />
+              )
               const countdownCard = (countdown < 10) ? (
                 <StatusMotionCard
                   key="built-countdown"
@@ -372,7 +398,7 @@ export const PreviewSummary: React.FC<PreviewSummaryProps> = ({
                   </Button>
                 </StatusMotionCard>
               ) : null;
-              return <>{successCard}{countdownCard}</>;
+              return <>{successCard}{ShowcaseCard}</>;
             }
             if (deployingState === DeployingState.Deploying) {
               return (
