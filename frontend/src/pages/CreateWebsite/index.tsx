@@ -276,16 +276,6 @@ export default function CreateWebsitePage() {
       setFileErrors([]);
       setUploadMethod(UploadMethod.GitHub);
 
-      // Trigger download to local
-      const url = window.URL.createObjectURL(zipBlob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url); // Clean up
-
       toast.success('Repository downloaded successfully');
     } catch (error) {
       console.error('Error downloading repository:', error);
