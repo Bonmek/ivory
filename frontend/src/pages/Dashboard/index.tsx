@@ -16,6 +16,7 @@ import { RefreshCw } from 'lucide-react'
 import { mockProjects } from '@/mocks/projectData'
 import { Project } from '@/types/project'
 import ProjectCard from '@/components/Dashboard/ProjectCard'
+import { FormattedMessage, useIntl } from 'react-intl'
 
 const formatDate = (date: Date) => {
   return date.toLocaleDateString('en-GB', {
@@ -49,6 +50,7 @@ function getPageList(current: number, total: number) {
 export default function Dashboard() {
   const { address } = useAuth()
   const [searchQuery, setSearchQuery] = useState('')
+  const intl = useIntl()
   const [date, setDate] = useState<Date | undefined>(undefined)
   const [activeTab, setActiveTab] = useState('all')
   const [hoveredCard, setHoveredCard] = useState<number | null>(null)
@@ -169,7 +171,7 @@ export default function Dashboard() {
     <>
       <Helmet>
         <meta charSet="utf-8" />
-        <title>Dashboard | Ivory</title>
+        <title>{intl.formatMessage({ id: 'dashboard.title' })} | Ivory</title>
         <link rel="canonical" href="http://mysite.com/example" />
       </Helmet>
       <main className="min-h-screen pb-24 relative">
@@ -245,7 +247,7 @@ export default function Dashboard() {
                         disabled={currentPage === 1}
                         className="px-3 py-1.5 rounded-lg bg-primary-700 text-white disabled:opacity-50 hover:bg-primary-600 transition-colors duration-200"
                       >
-                        Previous
+                        <FormattedMessage id="dashboard.pagination.previous" />
                       </button>
                       {pageNumbers.map((page, index) => (
                         <button
@@ -269,7 +271,7 @@ export default function Dashboard() {
                         disabled={currentPage === totalPages}
                         className="px-3 py-1.5 rounded-lg bg-primary-700 text-white disabled:opacity-50 hover:bg-primary-600 transition-colors duration-200"
                       >
-                        Next
+                        <FormattedMessage id="dashboard.pagination.next" />
                       </button>
                     </div>
                   )}

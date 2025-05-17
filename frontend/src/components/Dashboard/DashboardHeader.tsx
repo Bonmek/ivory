@@ -8,6 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { FormattedMessage, useIntl } from 'react-intl'
 
 interface DashboardHeaderProps {
   searchQuery: string
@@ -20,14 +21,6 @@ interface DashboardHeaderProps {
   isRefreshing: boolean
 }
 
-const sortTypeLabel = {
-  latest: 'Latest',
-  'name-az': 'Name A-Z',
-  'name-za': 'Name Z-A',
-  'remaining-low': 'Remaining Days: low to high',
-  'remaining-high': 'Remaining Days: high to low',
-}
-
 const DashboardHeader = ({
   searchQuery,
   setSearchQuery,
@@ -38,6 +31,15 @@ const DashboardHeader = ({
   onRefresh,
   isRefreshing,
 }: DashboardHeaderProps) => {
+  const intl = useIntl();
+  
+  const sortTypeLabel = {
+    latest: intl.formatMessage({ id: 'dashboard.sort.latest' }),
+    'name-az': intl.formatMessage({ id: 'dashboard.sort.nameAZ' }),
+    'name-za': intl.formatMessage({ id: 'dashboard.sort.nameZA' }),
+    'remaining-low': intl.formatMessage({ id: 'dashboard.sort.remainingLow' }),
+    'remaining-high': intl.formatMessage({ id: 'dashboard.sort.remainingHigh' }),
+  }
   return (
     <motion.div
       initial={{ opacity: 0, y: -20 }}
@@ -62,7 +64,7 @@ const DashboardHeader = ({
           damping: 15,
         }}
       >
-        Dashboard
+        <FormattedMessage id="dashboard.title" />
       </motion.h1>
       <motion.div
         className="flex flex-col space-y-4 md:flex-row md:space-y-0 gap-2"
@@ -84,7 +86,7 @@ const DashboardHeader = ({
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-secondary-400 z-10 pointer-events-none" />
           <Input
             type="search" 
-            placeholder="Search projects..."
+            placeholder={intl.formatMessage({ id: 'dashboard.search' })}
             className="w-full pl-10 md:w-[250px] bg-primary-900/80 border-secondary-500/20 text-white placeholder:text-secondary-400 backdrop-blur-sm"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -125,7 +127,7 @@ const DashboardHeader = ({
                   : ''
               }
             >
-              Latest
+              <FormattedMessage id="dashboard.sort.latest" />
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => setSortType('name-az')}
@@ -135,7 +137,7 @@ const DashboardHeader = ({
                   : ''
               }
             >
-              Name A-Z
+              <FormattedMessage id="dashboard.sort.nameAZ" />
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => setSortType('name-za')}
@@ -145,7 +147,7 @@ const DashboardHeader = ({
                   : ''
               }
             >
-              Name Z-A
+              <FormattedMessage id="dashboard.sort.nameZA" />
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => setSortType('remaining-low')}
@@ -155,7 +157,7 @@ const DashboardHeader = ({
                   : ''
               }
             >
-              Remaining Days: low to high
+              <FormattedMessage id="dashboard.sort.remainingLow" />
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => setSortType('remaining-high')}
@@ -165,7 +167,7 @@ const DashboardHeader = ({
                   : ''
               }
             >
-              Remaining Days: high to low
+              <FormattedMessage id="dashboard.sort.remainingHigh" />
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

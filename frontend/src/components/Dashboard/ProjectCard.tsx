@@ -1,4 +1,8 @@
 import { memo, useState, useEffect } from 'react'
+import { useAuth } from '@/context/AuthContext'
+import { useSignAndExecuteTransaction } from '@mysten/dapp-kit'
+import { useWalletKit } from '@mysten/wallet-kit'
+import { useIntl, FormattedMessage } from 'react-intl'
 import {
   MoreHorizontal,
   Users,
@@ -48,6 +52,7 @@ import { useSuiData } from '@/hooks/useSuiData'
 import apiClient from '@/lib/axiosConfig'
 import axios from 'axios'
 import { ProjectCardProps } from '@/types/project'
+import { linkSuinsToSite } from '@/utils/suinsUtils'
 
 const formatDate = (date: Date) => {
   return date.toLocaleDateString('en-GB', {
@@ -80,6 +85,7 @@ const ProjectCard = memo(
     userAddress,
     onRefetch,
   }: ProjectCardProps) => {
+    const intl = useIntl()
     const remainingDays = calculateDaysBetween(new Date(), project.expiredDate)
     const [startDateOpen, setStartDateOpen] = useState(false)
     const [expiredDateOpen, setExpiredDateOpen] = useState(false)
@@ -193,65 +199,91 @@ const ProjectCard = memo(
       }
     }
 
+    const { signAndExecuteTransactionBlock } = useWalletKit()
+
     const colors = getStatusColor(project.status)
 
     const handleCopy = async (text: string) => {
       try {
         await navigator.clipboard.writeText(text)
         setCopied(true)
-        toast.success('Copied to clipboard', {
-          className: 'bg-primary-900 border-secondary-500/20 text-white',
-        })
-        setTimeout(() => setCopied(false), 2000)
+        toast.success(<FormattedMessage id="projectCard.copyToClipboard" />)
+        setTimeout(() => {
+          setCopied(false)
+        }, 2000)
       } catch (err) {
-        toast.error('Failed to copy', {
-          className: 'bg-red-900 border-red-500/20 text-white',
-        })
+        console.error('Failed to copy text: ', err)
+        toast.error(<FormattedMessage id="projectCard.failedToCopy" />)
       }
     }
 
     const handleLinkSuins = async () => {
       const finalSuins = selectedSuins === 'other' ? otherSuins : selectedSuins
+
       if (!finalSuins) {
-        toast.error('Please select a SUINS domain', {
-          className: 'bg-red-900 border-red-500/20 text-white',
-        })
+        toast.error(<FormattedMessage id="projectCard.pleaseSelect" />)
+        return
+      }
+
+      if (!userAddress) {
+        toast.error(
+          <FormattedMessage id="projectCard.connectWallet" />, 
+          {
+            description: intl.formatMessage({ id: 'projectCard.connectWalletDesc' }),
+          }
+        )
         return
       }
 
       try {
         setIsLinking(true)
+
+        // Get the NFT ID for the selected SUINS
+        const selectedSuinsData = suins.find(
+          (s) => s.data?.content?.fields?.domain_name === finalSuins,
+        )
+        if (!selectedSuinsData?.data?.objectId) {
+          throw new Error('SUINS NFT not found')
+        }
+
+        if (!userAddress) {
+          throw new Error(
+            'Wallet address not found. Please connect your wallet.',
+          )
+        }
+
+        const result = await linkSuinsToSite(
+          selectedSuinsData.data.objectId,
+          project.siteId || '',
+          userAddress,
+          signAndExecuteTransactionBlock,
+          process.env.REACT_APP_SUI_NETWORK as 'mainnet' | 'testnet',
+        )
+        setOpen(false)
         const response = await apiClient.put(
           `/set-attributes?object_id=${project.parentId}&sui_ns=${finalSuins}`,
         )
-        if (response.status === 200) {
-          toast.success('SUINS linked successfully', {
-            className: 'bg-primary-900 border-secondary-500/20 text-white',
-            style: {
-              background: 'var(--primary-900)',
-              border: '1px solid var(--secondary-500)',
-              color: 'white',
-            },
-            description:
-              'Your SUINS domain has been linked to this project. It may take a few moments to update.',
-            duration: 5000,
-          })
-          setOpen(false)
-          onRefetch()
+        if (result.status === 'success') {
+          toast.success(
+            <FormattedMessage id="projectCard.suinsLinked" />, 
+            {
+              description: intl.formatMessage({ id: 'projectCard.suinsLinkedDesc' }),
+              duration: 5000,
+            }
+          )
+          if (result.status === 'success' && response.status === 200) {
+            onRefetch()
+          }
         }
       } catch (error: any) {
         console.error('Error linking SUINS:', error)
-        toast.error(error.response?.data?.message || 'Failed to link SUINS', {
-          className: 'bg-red-900 border-red-500/20 text-white',
-          style: {
-            background: 'var(--red-900)',
-            border: '1px solid var(--red-500)',
-            color: 'white',
-          },
-          description:
-            'Please try again or contact support if the problem persists.',
-          duration: 5000,
-        })
+        toast.error(
+          error.message || <FormattedMessage id="projectCard.failedToLink" />, 
+          {
+            description: intl.formatMessage({ id: 'projectCard.failedToLinkDesc' }),
+            duration: 5000,
+          }
+        )
       } finally {
         setIsLinking(false)
       }
@@ -259,9 +291,7 @@ const ProjectCard = memo(
 
     const handleDeleteSite = async () => {
       if (!project.parentId) {
-        toast.error('Project Parent ID is missing. Cannot delete site.', {
-          className: 'bg-red-900 border-red-500/20 text-white',
-        })
+        toast.error('Project Parent ID is missing. Cannot delete site.')
         return
       }
       try {
@@ -270,20 +300,21 @@ const ProjectCard = memo(
           `/delete-site?object_id=${project.parentId}`,
         )
         if (response.status === 200) {
-          toast.success('Site deleted successfully', {
-            className: 'bg-primary-900 border-secondary-500/20 text-white',
-            description:
-              'The site deletion process may take 1-2 minutes to complete.',
-            duration: 5000,
-          })
+          toast.success(
+            <FormattedMessage id="projectCard.siteDeleted" />,
+            {
+              description: intl.formatMessage({ id: 'projectCard.siteDeletedDesc' }),
+              duration: 5000,
+            }
+          )
           setDeleteDialogOpen(false)
           onRefetch()
         }
       } catch (error: any) {
         console.error('Error deleting site:', error)
-        toast.error(error.response?.data?.message || 'Failed to delete site', {
-          className: 'bg-red-900 border-red-500/20 text-white',
-        })
+        toast.error(
+          error.response?.data?.message || <FormattedMessage id="projectCard.failedToDelete" />
+        )
       } finally {
         setIsDeleting(false)
       }
@@ -311,26 +342,26 @@ const ProjectCard = memo(
           >
             {/* Dropdown Menu: Top Right */}
             <div className="absolute top-2 right-2 z-10 opacity-80 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-2">
-              {!project.suins && (
+              {!project.suins && project.status === 1 && (
                 <Dialog open={open} onOpenChange={setOpen}>
                   <DialogTrigger asChild>
                     <button
                       className={`h-8 px-3 flex items-center justify-center rounded-full ${colors.dropdown} transition-all duration-200 hover:scale-110 active:scale-95`}
                     >
                       <Link className="h-4 w-4 mr-1.5" />
-                      <span className="text-sm">Link SUINS</span>
+                      <span className="text-sm"><FormattedMessage id="projectCard.linkSuins" /></span>
                       <span className="text-[10px] opacity-60 ml-1">
-                        (initial setup)
+                        <FormattedMessage id="projectCard.initialSetup" />
                       </span>
                     </button>
                   </DialogTrigger>
                   <DialogContent className="bg-primary-900 border-secondary-500/20 text-white">
                     <DialogHeader>
                       <DialogTitle className="text-secondary-400">
-                        Link SUINS
+                        <FormattedMessage id="projectCard.dialogTitle" />
                       </DialogTitle>
                       <DialogDescription className="text-white/60">
-                        Select your SUINS name to link it with this project
+                        <FormattedMessage id="projectCard.dialogDescription" />
                       </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
@@ -347,20 +378,29 @@ const ProjectCard = memo(
                                 onValueChange={setSelectedSuins}
                               >
                                 <SelectTrigger className="bg-primary-800 border-secondary-500/20 text-white w-full flex-1">
-                                  <SelectValue placeholder="Select SUINS domain" />
+                                  <SelectValue placeholder={intl.formatMessage({ id: 'projectCard.selectDomain' })} />
                                 </SelectTrigger>
                                 <SelectContent className="bg-primary-800 border-secondary-500/20 text-white">
-                                  {suins.map((sui) => (
-                                    <SelectItem
-                                      key={sui.data?.objectId}
-                                      value={
-                                        sui.data?.content?.fields?.domain_name
-                                      }
-                                      className="hover:bg-primary-700"
-                                    >
-                                      {sui.data?.content?.fields?.domain_name}
-                                    </SelectItem>
-                                  ))}
+                                  {suins.map((sui) => {
+                                    const domainName =
+                                      sui.data?.content?.fields?.domain_name ||
+                                      ''
+                                    const displayName = domainName.endsWith(
+                                      '.sui',
+                                    )
+                                      ? domainName.slice(0, -4)
+                                      : domainName
+
+                                    return (
+                                      <SelectItem
+                                        key={sui.data?.objectId}
+                                        value={domainName}
+                                        className="hover:bg-primary-700"
+                                      >
+                                        {displayName}
+                                      </SelectItem>
+                                    )
+                                  })}
                                   <SelectItem
                                     value="other"
                                     className="hover:bg-primary-700"
@@ -412,30 +452,37 @@ const ProjectCard = memo(
                           </>
                         )}
                       </div>
-                      <div className="flex gap-2">
-                        <Button
-                          onClick={() => handleLinkSuins()}
-                          className="bg-secondary-500 hover:bg-secondary-600 text-white flex-1 relative"
-                          disabled={
-                            isLinking ||
-                            isLoadingSuins ||
-                            !selectedSuins ||
-                            (selectedSuins === 'other' && !otherSuins)
-                          }
-                        >
-                          {isLinking ? (
-                            <div className="flex items-center justify-center">
-                              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                              <span>Linking SUINS...</span>
-                            </div>
-                          ) : (
-                            <div className="flex items-center justify-center">
-                              <Link className="h-4 w-4 mr-2" />
-                              <span>Link SUINS</span>
-                            </div>
-                          )}
-                        </Button>
-                      </div>
+                      {project.status === 1 && (
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => handleLinkSuins()}
+                            className="bg-secondary-500 hover:bg-secondary-600 text-white flex-1 relative"
+                            disabled={
+                              isLinking ||
+                              isLoadingSuins ||
+                              !selectedSuins ||
+                              (selectedSuins === 'other' && !otherSuins)
+                            }
+                          >
+                            {isLinking ? (
+                              <div className="flex items-center justify-center">
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                <span>Linking SUINS...</span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center justify-center">
+                                <Link className="h-4 w-4 mr-2" />
+                                <span>Link SUINS</span>
+                              </div>
+                            )}
+                          </Button>
+                        </div>
+                      )}
+                      {project.status !== 1 && (
+                        <div className="text-sm text-white/60 italic">
+                          SUINS linking is only available for active projects
+                        </div>
+                      )}
                     </div>
                   </DialogContent>
                 </Dialog>
@@ -647,12 +694,15 @@ const ProjectCard = memo(
               <div className="flex items-center text-sm mb-1 group-hover:translate-x-0.5 transition-transform duration-200">
                 {project.suins ? (
                   <a
-                    href={`https://${project.suins}.wal.app`}
+                    href={`https://${project.suins?.endsWith('.sui') ? project.suins.slice(0, -4) : project.suins}.wal.app`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className={`flex items-center h-[28px] hover:underline truncate transition-colors duration-200 ${colors.link}`}
                   >
-                    {project.suins}.wal.app
+                    {project.suins?.endsWith('.sui')
+                      ? project.suins.slice(0, -4)
+                      : project.suins}
+                    .wal.app
                     <span className="ml-1 group-hover:translate-x-0.5 transition-transform duration-200">
                       <ExternalLink className="h-4 w-4 flex-shrink-0" />
                     </span>
