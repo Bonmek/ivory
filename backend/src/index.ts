@@ -28,23 +28,21 @@ dotenv.config();
 const auth = new GoogleAuth({
   scopes: ["https://www.googleapis.com/auth/cloud-platform"],
 });
+
 const app = express();
 app.use(express.json());
-app.use(cors());
-app.use(
-  cors({
-    origin: process.env.FRONTEND_URL,
-    credentials: true,
-    exposedHeaders: ["Content-Disposition", "Content-Length"],
-  })
-);
-app.use(
-  session({
-    secret: "session-secret",
-    resave: false,
-    saveUninitialized: false,
-  })
-);
+
+app.use(cors({
+  origin: process.env.FRONTEND_URL,
+  credentials: true,
+  exposedHeaders: ["Content-Disposition", "Content-Length"],
+}));
+
+app.use(session({
+  secret: "session-secret",
+  resave: false,
+  saveUninitialized: false,
+}));
 
 app.use(passport.initialize());
 app.use(passport.session());
