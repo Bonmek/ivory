@@ -753,6 +753,26 @@ app.delete("/delete-site", async (req, res) => {
     return;
   }
 
+  try {
+    await walrusClient.executeWriteBlobAttributesTransaction({
+      blobObjectId: String(object_id),
+      signer: keypair,
+      attributes: { staus: "3" },
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(502).json({
+        statusCode: 0,
+        error: {
+          error_message:
+            "Failed to execute write blob attributes transaction to Walrus",
+          error_details: error,
+        },
+      });
+      return;
+    }
+  }
+
   const url = `https://run.googleapis.com/v2/projects/${process.env.PROJECT_ID}/locations/${process.env.REGION}/jobs/${process.env.CLOUD_RUN_JOB_NAME}:run`;
   const client = await auth.getClient();
   const token = await client.getAccessToken();
