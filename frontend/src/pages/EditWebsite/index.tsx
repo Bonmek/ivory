@@ -1,118 +1,141 @@
-import { useMemo, useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { useMemo, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Upload, X } from 'lucide-react'
-import { useDropzone } from 'react-dropzone'
-import { useSuiData } from '@/hooks/useSuiData'
-import { useAuth } from '@/context/AuthContext'
-import { transformMetadataToProject } from '@/utils/metadataUtils'
+} from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Upload, X } from 'lucide-react';
+import { useDropzone } from 'react-dropzone';
+import { useSuiData } from '@/hooks/useSuiData';
+import { useAuth } from '@/context/AuthContext';
+import { transformMetadataToProject } from '@/utils/metadataUtils';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
+} from '@/components/ui/dialog';
 
 function App() {
-  const [name, setName] = useState('')
-  const [framework, setFramework] = useState('React')
-  const [installCmd, setInstallCmd] = useState('pnpm install')
-  const [buildCmd, setBuildCmd] = useState('pnpm build')
-  const [outputDir, setOutputDir] = useState('dist')
-  const [rootDir, setRootDir] = useState('/')
-  const [cacheControl, setCacheControl] = useState('default')
-  const [previewOpen, setPreviewOpen] = useState(false)
-  const [previewUrl, setPreviewUrl] = useState('')
+  const [name, setName] = useState('');
+  const [framework, setFramework] = useState('React');
+  const [installCmd, setInstallCmd] = useState('pnpm install');
+  const [buildCmd, setBuildCmd] = useState('pnpm build');
+  const [outputDir, setOutputDir] = useState('dist');
+  const [rootDir, setRootDir] = useState('/');
+  const [cacheControl, setCacheControl] = useState('default');
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState('');
 
-  const { address }: any = useAuth()
+  const { address }: any = useAuth();
   const { metadata, isLoading, refetch } = useSuiData(
     '0x18a4c45a96c15d62b82b341f18738125bf875fee86057d88589a183700601a1c',
-  )
+  );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    accept: { 'application  application/zip': ['.zip'] },
+    accept: { 'application/zip': ['.zip'] }, // Fixed typo in accept
     onDrop: (acceptedFiles) => {
-      console.log('Uploaded files:', acceptedFiles)
+      console.log('Uploaded files:', acceptedFiles);
       // Handle file upload logic here
     },
-  })
+  });
 
-  const [searchQuery, setSearchQuery] = useState('')
-  const [date, setDate] = useState<Date | undefined>(undefined)
+  const [searchQuery, setSearchQuery] = useState('');
+  const [date, setDate] = useState<Date | undefined>(undefined);
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-GB', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
-    })
-  }
+    });
+  };
 
   const filteredProjects = useMemo(() => {
     const projects = metadata
       ? metadata.map((meta, index) => transformMetadataToProject(meta, index))
-      : []
-    if (!projects || projects.length === 0) return []
+      : [];
+    if (!projects || projects.length === 0) return [];
     let filtered = projects.filter((project) => {
       const matchesSearch =
         project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        project.url.toLowerCase().includes(searchQuery.toLowerCase())
+        project.url.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesDate =
         !date ||
         formatDate(project.startDate) === formatDate(date) ||
-        formatDate(project.expiredDate) === formatDate(date)
+        formatDate(project.expiredDate) === formatDate(date);
 
-      return matchesSearch && matchesDate
-    })
-    console.log(filtered, 'hello')
+      return matchesSearch && matchesDate;
+    });
+    console.log(filtered, 'hello');
 
-    return filtered
-  }, [searchQuery, date, metadata])
+    return filtered;
+  }, [searchQuery, date, metadata]);
 
   const handlePreview = (url: string) => {
-    setPreviewUrl(url)
-    setPreviewOpen(true)
-  }
+    setPreviewUrl(url);
+    setPreviewOpen(true);
+  };
 
   return (
-    <div className="min-h-screen text-white flex items-center justify-center p-4">
-      <Card className="w-full max-w-4xl bg-gray-800 border-gray-700">
-        <CardHeader>
-          <CardTitle className="text-2xl font-pixel font-bold">
-            Edit Project
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+    <div className="p-6 min-h-screen ">
+      <CardHeader>
+        <CardTitle className="text-3xl font-bold text-cyan-300 font-pixel">
+          Edit Project
+        </CardTitle>
+      </CardHeader>
+      <Card className="bg-gray-800/80 backdrop-blur-sm border-cyan-600/50 shadow-lg shadow-cyan-500/20 animate-fade">
+        <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Project Files Section */}
-            <Card className="bg-gray-700 border-gray-600">
+            {/* Site Preview Section */}
+            <Card className="bg-gray-700/50 border-cyan-600/50 transition-all duration-300 hover:shadow-cyan-500/30 md:col-span-2">
               <CardHeader>
-                <CardTitle className="text-lg">Project Files</CardTitle>
+                <CardTitle className="text-lg text-cyan-200 font-semibold">
+                  Site Preview
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex justify-center">
+                  <img
+                    src="https://via.placeholder.com/800x600/1F2A44/67E8F9?text=Website+Preview"
+                    alt="Site Preview"
+                    className="max-w-full h-auto rounded-lg border border-cyan-600/50 transition-all duration-300 hover:scale-105"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Project Files Section */}
+            <Card className="bg-gray-700/50 border-cyan-600/50 transition-all duration-300 hover:shadow-cyan-500/30">
+              <CardHeader>
+                <CardTitle className="text-lg text-cyan-200 font-semibold">
+                  Project Files
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div
                   {...getRootProps()}
-                  className={`border-2 border-dashed border-gray-500 p-6 text-center rounded-lg transition-colors ${
-                    isDragActive ? 'bg-gray-600' : 'bg-gray-700'
-                  }`}
+                  className={`border-2 border-dashed border-cyan-500 p-6 text-center rounded-xl transition-all duration-300 ${
+                    isDragActive ? 'bg-teal-600/20' : 'bg-gray-700/30'
+                  } hover:bg-teal-600/10`}
                 >
                   <input {...getInputProps()} />
-                  <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                  <p className="mt-2">
+                  <Upload className="mx-auto h-12 w-12 text-cyan-400" />
+                  <p className="mt-2 text-cyan-100">
                     {isDragActive
                       ? 'Drop the ZIP file here'
                       : 'Drag & drop ZIP file here'}
                   </p>
-                  <p className="text-gray-400">or</p>
-                  <Button variant="outline" className="mt-4">
+                  <p className="text-cyan-300/70">or</p>
+                  <Button
+                    variant="outline"
+                    className="mt-4 border-cyan-500 text-cyan-100 hover:bg-cyan-500 hover:text-white transition-colors duration-200"
+                  >
                     Browse File
                   </Button>
                 </div>
@@ -122,15 +145,15 @@ function App() {
             {/* Project Settings Section */}
             <div className="space-y-6">
               {/* Project Name */}
-              <Card className="bg-gray-700 border-gray-600">
+              <Card className="bg-gray-700/50 border-cyan-600/50 transition-all duration-300 hover:shadow-cyan-500/30">
                 <CardContent className="p-4">
                   {isLoading ? (
-                    <div className="text-gray-400">Loading projects...</div>
+                    <div className="text-cyan-300/70">Loading projects...</div>
                   ) : filteredProjects.length > 0 ? (
                     filteredProjects.map((project, index) => (
                       <div
                         key={index}
-                        className="bg-gray-600 border-gray-500 text-white p-2 rounded mb-2 flex justify-between items-center"
+                        className="bg-gray-600/30 border-cyan-600/50 text-cyan-100 p-3 rounded-lg mb-2 flex justify-between items-center transition-all duration-200 hover:bg-teal-600/20"
                       >
                         <span>{project.name}</span>
                         <Button
@@ -138,82 +161,87 @@ function App() {
                           size="sm"
                           onClick={() => handlePreview(project.url)}
                           disabled={!project.url}
-                          className="bg-teal-500 hover:bg-teal-600 text-white"
+                          className="bg-cyan-500 hover:bg-teal-600 text-white border-none transition-colors duration-200"
                         >
                           Preview
                         </Button>
                       </div>
                     ))
                   ) : (
-                    <div className="bg-gray-600 border-gray-500 text-white p-2 rounded">
+                    <div className="bg-gray-600/30 border-cyan-600/50 text-cyan-100 p-3 rounded-lg">
                       No projects available
                     </div>
                   )}
                 </CardContent>
               </Card>
 
-              {/* Framework Selection */}
-              <Card className="bg-gray-700 border-gray-600">
-                <CardContent className="p-4">
-                  <Select value={framework} onValueChange={setFramework}>
-                    <SelectTrigger className="bg-gray-600 border-gray-500 text-white">
-                      <SelectValue placeholder="Select Framework" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-gray-700 border-gray-600 text-white">
-                      <SelectItem value="React">React</SelectItem>
-                      <SelectItem value="Vue">Vue</SelectItem>
-                      <SelectItem value="Node">Node</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </CardContent>
-              </Card>
+              {/* Framework and Build Settings Row */}
+              <div className="flex flex-row gap-6 sm:flex-col">
+                {/* Framework Selection */}
+                <Card className="bg-gray-700/50 border-cyan-600/50 transition-all duration-300 hover:shadow-cyan-500/30 flex-1">
+                  <CardContent className="p-4">
+                    <Select value={framework} onValueChange={setFramework}>
+                      <SelectTrigger className="bg-gray-600/30 border-cyan-600/50 text-cyan-100 focus:ring-cyan-500">
+                        <SelectValue placeholder="Select Framework" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-gray-700 border-cyan-600/50 text-cyan-100">
+                        <SelectItem value="React">React</SelectItem>
+                        <SelectItem value="Vue">Vue</SelectItem>
+                        <SelectItem value="Node">Node</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </CardContent>
+                </Card>
 
-              {/* Build and Output Settings */}
-              <Card className="bg-gray-700 border-gray-600">
-                <CardHeader>
-                  <CardTitle className="text-lg">
-                    Build and Output Settings
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <Input
-                    placeholder="Install Command"
-                    value={installCmd}
-                    onChange={(e) => setInstallCmd(e.target.value)}
-                    className="bg-gray-600 border-gray-500 text-white"
-                  />
-                  <Input
-                    placeholder="Build Command"
-                    value={buildCmd}
-                    onChange={(e) => setBuildCmd(e.target.value)}
-                    className="bg-gray-600 border-gray-500 text-white"
-                  />
-                  <Input
-                    placeholder="Output Directory"
-                    value={outputDir}
-                    onChange={(e) => setOutputDir(e.target.value)}
-                    className="bg-gray-600 border-gray-500 text-white"
-                  />
-                </CardContent>
-              </Card>
+                {/* Build and Output Settings */}
+                <Card className="bg-gray-700/50 border-cyan-600/50 transition-all duration-300 hover:shadow-cyan-500/30 flex-1">
+                  <CardHeader>
+                    <CardTitle className="text-lg text-cyan-200 font-semibold">
+                      Build and Output Settings
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <Input
+                      placeholder="Install Command"
+                      value={installCmd}
+                      onChange={(e) => setInstallCmd(e.target.value)}
+                      className="bg-gray-600/30 border-cyan-600/50 text-cyan-100 placeholder-cyan-300/50 focus:ring-cyan-500"
+                    />
+                    <Input
+                      placeholder="Build Command"
+                      value={buildCmd}
+                      onChange={(e) => setBuildCmd(e.target.value)}
+                      className="bg-gray-600/30 border-cyan-600/50 text-cyan-100 placeholder-cyan-300/50 focus:ring-cyan-500"
+                    />
+                    <Input
+                      placeholder="Output Directory"
+                      value={outputDir}
+                      onChange={(e) => setOutputDir(e.target.value)}
+                      className="bg-gray-600/30 border-cyan-600/50 text-cyan-100 placeholder-cyan-300/50 focus:ring-cyan-500"
+                    />
+                  </CardContent>
+                </Card>
+              </div>
 
               {/* Advanced Options */}
-              <Card className="bg-gray-700 border-gray-600">
+              <Card className="bg-gray-700/50 border-cyan-600/50 transition-all duration-300 hover:shadow-cyan-500/30">
                 <CardHeader>
-                  <CardTitle className="text-lg">Advanced Options</CardTitle>
+                  <CardTitle className="text-lg text-cyan-200 font-semibold">
+                    Advanced Options
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <Input
                     placeholder="Root Directory"
                     value={rootDir}
                     onChange={(e) => setRootDir(e.target.value)}
-                    className="bg-gray-600 border-gray-500 text-white"
+                    className="bg-gray-600/30 border-cyan-600/50 text-cyan-100 placeholder-cyan-300/50 focus:ring-cyan-500"
                   />
                   <Select value={cacheControl} onValueChange={setCacheControl}>
-                    <SelectTrigger className="bg-gray-600 border-gray-500 text-white">
+                    <SelectTrigger className="bg-gray-600/30 border-cyan-600/50 text-cyan-100 focus:ring-cyan-500">
                       <SelectValue placeholder="Select Cache Control" />
                     </SelectTrigger>
-                    <SelectContent className="bg-gray-700 border-gray-600 text-white">
+                    <SelectContent className="bg-gray-700 border-cyan-600/50 text-cyan-100">
                       <SelectItem value="default">Default</SelectItem>
                       <SelectItem value="no-cache">No Cache</SelectItem>
                     </SelectContent>
@@ -221,10 +249,7 @@ function App() {
                 </CardContent>
               </Card>
 
-              {/* Deploy Button */}
-              <Button className="w-full bg-teal-500 hover:bg-teal-600 text-white">
-                Deploy Project
-              </Button>
+
             </div>
           </div>
         </CardContent>
@@ -232,15 +257,15 @@ function App() {
 
       {/* Preview Modal */}
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="max-w-5xl bg-gray-800 border-gray-700 text-white">
+        <DialogContent className="max-w-5xl bg-gray-800/90 backdrop-blur-sm border-cyan-600/50 text-cyan-100">
           <DialogHeader>
-            <DialogTitle>Site Preview</DialogTitle>
+            <DialogTitle className="text-cyan-200">Site Preview</DialogTitle>
           </DialogHeader>
           <div className="relative">
             {previewUrl ? (
               <iframe
                 src={previewUrl}
-                className="w-full h-[70vh] rounded-lg border border-gray-600"
+                className="w-full h-[70vh] rounded-lg border border-cyan-600/50"
                 title="Site Preview"
                 onError={() => (
                   <div className="text-red-400 text-center py-4">
@@ -249,7 +274,7 @@ function App() {
                 )}
               />
             ) : (
-              <div className="text-gray-400 text-center py-4">
+              <div className="text-cyan-300/70 text-center py-4">
                 No preview URL available
               </div>
             )}
@@ -257,7 +282,7 @@ function App() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

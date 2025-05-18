@@ -28,7 +28,7 @@
   "dependencies": {
     "@mysten/dapp-kit": "^0.16.2",
     "@mysten/sui": "^1.29.1",
-    "@mysten/sui.js": "^0.54.1",
+    "@mysten/suins": "^0.7.15",
     "@mysten/wallet-kit": "^0.8.6",
     "@mysten/zklogin": "^0.8.1",
     "@radix-ui/react-accordion": "^1.2.10",
