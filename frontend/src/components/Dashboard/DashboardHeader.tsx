@@ -231,7 +231,7 @@ const DashboardHeader = ({
               <Button
                 variant="outline"
                 className="bg-primary-900/80 border-secondary-500/20 text-white hover:bg-secondary-500/10 hover:text-secondary-500 h-9 w-9"
-                title={intl.formatMessage({ id: 'dashboard.actions' }, { defaultMessage: 'Actions' })}
+                title="Actions"
               >
                 <SlidersHorizontal className="h-4 w-4" />
               </Button>
