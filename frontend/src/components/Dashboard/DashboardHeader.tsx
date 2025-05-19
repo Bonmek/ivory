@@ -20,6 +20,7 @@ interface DashboardHeaderProps {
   onRefresh: () => Promise<void>
   isRefreshing: boolean
   lastRefreshTime?: Date
+  hasProjects?: boolean
 }
 
 const DashboardHeader = ({
@@ -32,6 +33,7 @@ const DashboardHeader = ({
   onRefresh,
   isRefreshing,
   lastRefreshTime,
+  hasProjects = false,
 }: DashboardHeaderProps) => {
   const intl = useIntl();
   
@@ -175,14 +177,16 @@ const DashboardHeader = ({
         </DropdownMenu>
 
         <motion.div
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={!hasProjects ? { scale: 1.05 } : {}}
+          whileTap={!hasProjects ? { scale: 0.95 } : {}}
           className="mr-2"
         >
           <Button
-            onClick={() => window.location.href = '/create-website'}
+            onClick={() => !hasProjects && (window.location.href = '/create-website')}
             variant="outline"
-            className="bg-primary-800 hover:bg-primary-700 text-white font-medium flex items-center gap-1.5 border-secondary-500/40 hover:border-secondary-500/70"
+            disabled={hasProjects}
+            className={`bg-primary-800 text-white font-medium flex items-center gap-1.5 border-secondary-500/40 ${!hasProjects ? 'hover:bg-primary-700 hover:border-secondary-500/70' : 'opacity-50 cursor-not-allowed'}`}
+            title={hasProjects ? intl.formatMessage({ id: 'dashboard.limitReached' }, { defaultMessage: 'You can only have one project at a time' }) : ''}
           >
             <PlusCircle className="h-4 w-4 text-secondary-500" />
             <FormattedMessage id="dashboard.createNew" defaultMessage="Deploy Site" />

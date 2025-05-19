@@ -72,8 +72,6 @@ export default function Dashboard() {
     const projects = metadata
       ? metadata.map((meta, index) => transformMetadataToProject(meta, index))
       : []
-
-    console.log('Projects:', projects)
     if (!projects || projects.length === 0) return []
 
     const currentDate = new Date()
@@ -225,6 +223,7 @@ export default function Dashboard() {
             onRefresh={handleRefresh}
             isRefreshing={isRefreshing}
             lastRefreshTime={lastRefreshTime}
+            hasProjects={sortedProjects.length > 0}
           />
 
           <DashboardTabs activeTab={activeTab} setActiveTab={setActiveTab} />

@@ -186,6 +186,17 @@ const ProjectCard = memo(
             avatar: 'border-red-500/50',
             shadow: 'shadow-red-500/5',
           }
+        case 3:
+          return {
+            card: 'bg-primary-900/90 hover:bg-primary-900 border-purple-500/10 hover:border-purple-500/30',
+            text: 'text-purple-400',
+            badge: 'bg-purple-500/20 text-purple-300',
+            link: 'text-purple-300 hover:text-purple-400',
+            date: 'text-purple-300',
+            dropdown: 'text-purple-300 hover:text-white hover:bg-purple-500/20',
+            avatar: 'border-purple-500/50',
+            shadow: 'shadow-purple-500/5',
+          }
         default:
           return {
             card: 'bg-primary-900/90 hover:bg-primary-900 border-secondary-500/10 hover:border-secondary-500/30',
@@ -523,7 +534,7 @@ const ProjectCard = memo(
                 <DropdownMenuTrigger asChild>
                   <button
                     className={`h-8 w-8 flex items-center justify-center rounded-full ${colors.dropdown} transition-all duration-200 hover:scale-110 active:scale-95`}
-                    disabled={project.status === 0}
+                    disabled={project.status === 0 || project.status === 3}
                   >
                     <MoreHorizontal className="h-5 w-5" />
                     <span className="sr-only">Open menu</span>
@@ -553,6 +564,13 @@ const ProjectCard = memo(
                       <div className="px-4 py-2 text-yellow-400 flex items-center gap-2 text-sm">
                         <Loader2 className="ml-1 h-3 w-3 text-yellow-300 animate-spin" />
                         <FormattedMessage id="projectCard.deploying" />
+                      </div>
+                    </>
+                  ) : project.status === 3 ? (
+                    <>
+                      <div className="px-4 py-2 text-purple-400 flex items-center gap-2 text-sm">
+                        <Loader2 className="ml-1 h-3 w-3 text-purple-300 animate-spin" />
+                        <FormattedMessage id="projectCard.deleting" defaultMessage="Deleting project..." />
                       </div>
                     </>
                   ) : (
@@ -620,7 +638,9 @@ const ProjectCard = memo(
                     ? '/images/walrus_building.png'
                     : project.status === 2
                       ? '/images/walrus_fail.png'
-                      : '/images/walrus.png'
+                      : project.status === 3
+                        ? '/images/walrus_fail.png'
+                        : '/images/walrus.png'
                 }
                 alt="project avatar"
                 className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border-2 ${colors.avatar} shadow transition-all duration-300 group-hover:scale-105`}
@@ -636,7 +656,16 @@ const ProjectCard = memo(
                 >
                   {project.name}
                 </div>
-                {project.status === 2 && project.client_error_description ? (
+                {project.status === 3 ? (
+                  <div
+                    className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${colors.badge} flex items-center gap-1`}
+                  >
+                    <FormattedMessage id="projectCard.deleting" defaultMessage="Deleting" />
+                    <span className="ml-1">
+                      <span className="inline-block w-2 h-2 bg-purple-300 rounded-full animate-pulse" />
+                    </span>
+                  </div>
+                ) : project.status === 2 && project.client_error_description ? (
                   <Popover open={errorOpen} onOpenChange={setErrorOpen}>
                     <PopoverTrigger asChild>
                       <div
@@ -902,11 +931,11 @@ const ProjectCard = memo(
                     <div className="flex items-center gap-1.5 mt-0.5 min-h-[20px]">
                       <Timer className="h-3.5 w-3.5 text-yellow-400" />
                       {buildTime === 0 ? (
-                        <span className="animate-pulse text-yellow-300 font-medium">
+                        <span className="animate-pulse font-medium text-yellow-300">
                           <FormattedMessage id="projectCard.loading" />
                         </span>
                       ) : (
-                        <span className="text-sm text-yellow-300 font-medium">
+                        <span className="text-sm font-medium text-yellow-300">
                           {formatBuildTime(buildTime)}
                         </span>
                       )}
