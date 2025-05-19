@@ -128,10 +128,6 @@ export default function HomePage() {
 
   const heroWords = [
     intl.formatMessage({ id: 'homepage.hero.title1' }),
-    intl.formatMessage({ id: 'homepage.hero.title2' }),
-    intl.formatMessage({ id: 'homepage.hero.title3' }),
-    intl.formatMessage({ id: 'homepage.hero.title4' }),
-    intl.formatMessage({ id: 'homepage.hero.title5' }),
   ]
   const heroLast = intl.formatMessage({ id: 'homepage.hero.title6' })
 
@@ -366,13 +362,37 @@ export default function HomePage() {
             </motion.div>
           ))}
 
-          <div className="max-w-5xl mx-auto text-center z-10 relative">
-            <motion.h1
-              className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 tracking-tight"
+          <div className="max-w-5xl mx-auto text-center z-10 relative px-4 overflow-hidden">
+            {/* Mobile-only text version (hidden on md screens and up) */}
+            <motion.h1 
+              className="md:hidden text-3xl sm:text-4xl font-bold mb-6 tracking-tight"
               variants={itemVariants}
               style={{
-                textShadow:
-                  '0 0 20px var(--tw-color-secondary-500, #97f0e5, 0.5)',
+                textShadow: '0 0 20px var(--tw-color-secondary-500, #97f0e5, 0.5)',
+                fontFamily: "'Pixelify Sans', sans-serif",
+                letterSpacing: '-0.02em',
+                lineHeight: '1.2',
+              }}
+            >
+              <div className="flex flex-wrap justify-center">
+                {intl.formatMessage({ id: 'homepage.hero.title1' }).split(' ').map((word, i) => (
+                  <span key={i} className="inline-block mx-1 bg-clip-text text-transparent bg-gradient-to-r from-secondary-400 to-secondary-600">
+                    {word}
+                  </span>
+                ))}
+              </div>
+              <div className="w-full"></div>
+              <motion.span className="text-white inline-block mt-2">
+                {heroLast}
+              </motion.span>
+            </motion.h1>
+            
+            {/* Desktop version (hidden on smaller screens) */}
+            <motion.h1
+              className="hidden md:block text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold mb-6 tracking-tight whitespace-nowrap"
+              variants={itemVariants}
+              style={{
+                textShadow: '0 0 20px var(--tw-color-secondary-500, #97f0e5, 0.5)',
                 fontFamily: "'Pixelify Sans', sans-serif",
                 letterSpacing: '-0.02em',
                 lineHeight: '1.2',
@@ -393,16 +413,15 @@ export default function HomePage() {
                           ease: 'easeInOut',
                         },
                       }}
-                      
                     >
-                      {char}
+                      {char === ' ' ? <div className="inline-block w-3"></div> : char}
                     </motion.span>
                   ))}
-                  {wordIndex < 4 && <span className="inline-block w-4" />}
+                  <span className="inline-block w-2" />
                 </span>
               ))}
-              <span className="inline-block w-4" />
-              <motion.span className="text-white inline-block">
+              <div className="w-full"></div>
+              <motion.span className="text-white inline-block mt-2">
                 {heroLast.split('').map((char, index) => (
                   <motion.span
                     key={index}
@@ -428,7 +447,7 @@ export default function HomePage() {
             </motion.h1>
 
             <motion.p
-              className="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto"
+              className="text-lg sm:text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto px-2"
               variants={itemVariants}
               style={{
                 fontFamily: "'Pixelify Sans', sans-serif",
@@ -441,11 +460,11 @@ export default function HomePage() {
             </motion.p>
 
             <motion.div
-              className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 justify-center"
+              className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 justify-center w-full px-4 sm:px-0"
               variants={itemVariants}
             >
               <motion.button
-                className="font-pixel bg-gradient-to-r from-secondary-500 to-secondary-600 px-8 py-4 rounded-full text-lg font-medium relative overflow-hidden group"
+                className="font-pixel bg-gradient-to-r from-secondary-500 to-secondary-600 px-6 sm:px-8 py-3 sm:py-4 rounded-full text-base sm:text-lg font-medium relative overflow-hidden group w-full sm:w-auto"
                 whileHover={{
                   scale: 1.05,
                   textShadow: '0 0 8px rgb(255,255,255)',
@@ -490,7 +509,7 @@ export default function HomePage() {
               </motion.button>
 
               <motion.button
-                className="font-pixel bg-white/10 backdrop-blur-sm border border-white/20 px-8 py-4 rounded-full text-lg font-medium"
+                className="font-pixel bg-white/10 backdrop-blur-sm border border-white/20 px-6 sm:px-8 py-3 sm:py-4 rounded-full text-base sm:text-lg font-medium w-full sm:w-auto"
                 whileHover={{
                   scale: 1.05,
                   textShadow: '0 0 8px rgb(255,255,255)',
@@ -612,17 +631,6 @@ export default function HomePage() {
             </div>
           </div>
         </section>
-        <div className="w-full flex justify-center items-center py-6 opacity-80 z-20 relative">
-          <span className="mr-2 text-sm text-gray-400">
-            <FormattedMessage id="homepage.powered" />
-          </span>
-          <img
-            src="/images/logos/walrus_logo_white_RGB.png"
-            alt="Powered by Logo"
-            className="h-6"
-            style={{ filter: 'brightness(1.2)' }}
-          />
-        </div>
       </div>
     </>
   )

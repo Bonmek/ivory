@@ -12,6 +12,7 @@ export interface WebsiteAttributes {
   status: '0' | '1';
   cache: string;
   root: string;
+  output_dir: string;
   install_command: string;
   build_command: string;
   default_route: string;
