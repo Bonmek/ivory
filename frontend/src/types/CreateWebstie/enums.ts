@@ -22,3 +22,10 @@ export enum DeployingState {
   Deployed = 'deployed',
   Failed = 'failed'
 }
+
+export enum BuildingState {
+  None = 'none',
+  Building = 'building',
+  Built = 'built',
+  Failed = 'failed'
+}

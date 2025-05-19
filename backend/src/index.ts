@@ -216,7 +216,6 @@ app.post("/process-site", upload.single("file"), async (req, res) => {
   const max_attempts_write_blob = 2;
   const max_attempts_set_status = 5;
   const zipBuffer = await readFile(outputZipPath);
-  console.log("got zipfile");
   while (write_blob_attempts < max_attempts_write_blob) {
     try {
       new_blob_data = await walrusClient.writeBlob({
@@ -933,7 +932,7 @@ app.put("/update-blob-n-run-job", upload.single("file"), async (req, res) => {
     await walrusClient.executeWriteBlobAttributesTransaction({
       blobObjectId: blobObjectId,
       signer: keypair,
-      attributes: attributesUpdate,
+      attributes: attributesUpdate
     });
   } catch (error) {
     if (error instanceof Error) {

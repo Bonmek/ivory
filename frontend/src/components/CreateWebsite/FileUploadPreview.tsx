@@ -1,21 +1,32 @@
 import { Button } from "@/components/ui/button";
-import { X, Folder, File as FileIcon, ChevronDown, ChevronRight } from "lucide-react";
+import {
+  X,
+  Folder,
+  File as FileIcon,
+  ChevronDown,
+  ChevronRight,
+  Loader2,
+  AlertTriangle,
+  PackageOpen
+} from "lucide-react";
+import { motion } from "framer-motion";
 import React, { useEffect, useState } from "react";
 import JSZip from "jszip";
 
 interface FileUploadPreviewProps {
   file: File;
   onRemove: () => void;
+  setPlaceHolderName: (name: string) => void;
 }
 
-interface FileItem {
+export interface FileItem {
   name: string;
   isFolder: boolean;
   path: string;
   children?: FileItem[];
 }
 
-const FileList: React.FC<{ files: string[] }> = ({ files }) => {
+const FileList: React.FC<{ files: string[] }> = ({ files, }) => {
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [fileStructure, setFileStructure] = useState<FileItem[]>([]);
 
@@ -116,7 +127,7 @@ const FileList: React.FC<{ files: string[] }> = ({ files }) => {
   );
 };
 
-const FileUploadPreview: React.FC<FileUploadPreviewProps> = ({ file, onRemove }) => {
+const FileUploadPreview: React.FC<FileUploadPreviewProps> = ({ file, onRemove, setPlaceHolderName }) => {
   const [files, setFiles] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -147,6 +158,7 @@ const FileUploadPreview: React.FC<FileUploadPreviewProps> = ({ file, onRemove })
           console.error('Error processing ZIP:', e);
           setError('Error processing ZIP file');
         }
+        setPlaceHolderName(file.name.replace('.zip', ''));
         setLoading(false);
       })
       .catch((e) => {
@@ -161,55 +173,90 @@ const FileUploadPreview: React.FC<FileUploadPreviewProps> = ({ file, onRemove })
   }, [file]);
 
   return (
-    <div className="flex flex-col items-center w-full">
-      <div className="w-full max-w-full bg-primary-900 backdrop-blur-md rounded-xl shadow-md p-4">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-2">
-            <Folder className="w-5 h-5 text-secondary-500" />
-            <span className="text-cyan-100 font-semibold truncate max-w-[200px]">{file.name}</span>
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.2 }}
+      className="w-full max-w-full"
+    >
+      <div className="bg-primary-900/80 backdrop-blur-sm border border-gray-800 rounded-xl shadow-lg overflow-hidden">
+        <div className="p-4 border-b border-gray-800/50 bg-gradient-to-r from-primary-900/80 to-primary-900/30">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-secondary-500/10 rounded-lg">
+                <Folder className="w-5 h-5 text-secondary-400" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-100 text-sm truncate max-w-[200px]">
+                  {file.name}
+                </h3>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {file.size ? `${(file.size / 1024 / 1024).toFixed(2)} MB` : 'Uploaded file'}
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onRemove}
+              className="text-xs px-3 py-1.5 text-red-400 hover:bg-red-900/30 hover:text-red-300 transition-colors"
+            >
+              <X className="w-4 h-4 mr-1.5" />
+              Remove
+            </Button>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onRemove}
-            className="h-6 w-6 rounded-full hover:bg-red-500/20"
-          >
-            <X className="h-4 w-4 text-red-500" />
-          </Button>
         </div>
-        <div className="w-full h-[1px] bg-gray-900 mb-4" />
-        <div className="w-full bg-gray-900 rounded-lg shadow-inner p-3 max-h-[300px] overflow-y-auto custom-scrollbar">
-          {loading && <div className="text-cyan-300 text-sm">Loading ZIP contents...</div>}
-          {error && <div className="text-red-400 text-sm">{error}</div>}
-          {files.length > 0 && <FileList files={files} />}
-          {files.length === 0 && !loading && !error && (
-            <div className="text-cyan-200 text-xs">(Empty ZIP file)</div>
+
+        <div className="p-4">
+          {loading ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex items-center justify-center p-4 bg-cyan-950/20 rounded-lg border border-cyan-900/30"
+            >
+              <Loader2 className="w-5 h-5 mr-2 text-cyan-400 animate-spin" />
+              <span className="text-cyan-300 text-sm">
+                Loading ZIP contents...
+              </span>
+            </motion.div>
+          ) : error ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex flex-col items-center p-3 text-center bg-red-900/10 border border-red-900/20 rounded-lg"
+            >
+              <AlertTriangle className="w-5 h-5 text-red-400 mb-1.5" />
+              <p className="text-red-300 text-sm">
+                {error}
+              </p>
+            </motion.div>
+          ) : files.length > 0 ? (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="bg-gray-900/50 border border-gray-800 rounded-lg overflow-hidden"
+            >
+              <div className="text-cyan-100 text-xs max-h-[300px] overflow-auto p-3 repo-scrollbar">
+                <FileList files={files} />
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex flex-col items-center justify-center p-6 text-center border-2 border-dashed border-gray-800 rounded-lg bg-gray-900/30"
+            >
+              <PackageOpen className="w-8 h-8 text-gray-500 mb-2" />
+              <p className="text-gray-400 text-sm">
+                The ZIP file is empty
+              </p>
+            </motion.div>
           )}
         </div>
-        {/* Custom scrollbar style */}
-        <style>{`
-          .custom-scrollbar::-webkit-scrollbar {
-            width: 8px;
-          }
-          .custom-scrollbar::-webkit-scrollbar-track {
-            background: rgba(16, 21, 28, 0.3);
-            border-radius: 4px;
-          }
-          .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: linear-gradient(120deg, rgba(34,211,238,0.5), rgba(59,130,246,0.4));
-            border-radius: 4px;
-          }
-          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(120deg, rgba(34,211,238,0.8), rgba(59,130,246,0.7));
-          }
-          .custom-scrollbar {
-            scrollbar-width: thin;
-            scrollbar-color: rgba(34,211,238,0.5) rgba(16,21,28,0.3);
-          }
-        `}</style>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
-export default FileUploadPreview; 
+export default FileUploadPreview;

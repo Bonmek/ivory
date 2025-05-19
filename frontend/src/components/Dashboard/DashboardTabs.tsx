@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { FormattedMessage } from 'react-intl'
 
 interface DashboardTabsProps {
   activeTab: string
@@ -49,7 +50,7 @@ const DashboardTabs = ({ activeTab, setActiveTab }: DashboardTabsProps) => {
               transition={{ duration: 0.2 }}
               className={activeTab === 'all' ? 'text-black' : 'text-white'}
             >
-              All
+              <FormattedMessage id="dashboard.tabs.all" />
             </motion.span>
           </TabsTrigger>
           <TabsTrigger
@@ -69,7 +70,7 @@ const DashboardTabs = ({ activeTab, setActiveTab }: DashboardTabsProps) => {
               transition={{ duration: 0.2 }}
               className={activeTab === 'building' ? 'text-black' : 'text-white'}
             >
-              Deploying
+              <FormattedMessage id="dashboard.tabs.building" />
             </motion.span>
           </TabsTrigger>
           <TabsTrigger
@@ -89,7 +90,7 @@ const DashboardTabs = ({ activeTab, setActiveTab }: DashboardTabsProps) => {
               transition={{ duration: 0.2 }}
               className={activeTab === 'active' ? 'text-black' : 'text-white'}
             >
-              Active
+              <FormattedMessage id="dashboard.tabs.active" />
             </motion.span>
           </TabsTrigger>
           <TabsTrigger
@@ -109,7 +110,7 @@ const DashboardTabs = ({ activeTab, setActiveTab }: DashboardTabsProps) => {
               transition={{ duration: 0.2 }}
               className={activeTab === 'failed' ? 'text-black' : 'text-white'}
             >
-              Failed
+              <FormattedMessage id="dashboard.tabs.failed" />
             </motion.span>
           </TabsTrigger>
         </TabsList>
