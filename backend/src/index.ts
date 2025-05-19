@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Request, Response } from "express";
 import fs from "fs-extra";
 import path from "path";
 import unzipper from "unzipper";
@@ -23,6 +23,8 @@ import {
   inputSetAttributesScheme,
   inputUpdateWriteBlobScheme,
 } from "./schemas/inputScheme";
+import { CloudTasksClient } from '@google-cloud/tasks';
+import { v4 as uuidv4 } from 'uuid';
 
 dotenv.config();
 const auth = new GoogleAuth({
@@ -48,6 +50,9 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(githubRoutes);
+
+const tasksClient = new CloudTasksClient();
+const parent = tasksClient.queuePath(process.env.PROJECT_ID || "", process.env.REGION || "", process.env.CLOUD_NAME || "");
 
 const hex = process.env.SUI_Hex || "";
 const secretKey = Uint8Array.from(Buffer.from(hex, "hex"));
@@ -220,7 +225,7 @@ app.post("/process-site", upload.single("file"), async (req, res) => {
         deletable: true,
         epochs: Number(attributes_data.data.epochs),
         signer: keypair,
-        attributes: { ...attributes_data.data, forceId: Date.now().toString() },
+        attributes: { ...attributes_data.data, forceId: uuidv4() },
       });
       if (
         new_blob_data.blobObject.certified_epoch ||
@@ -332,45 +337,46 @@ app.post("/process-site", upload.single("file"), async (req, res) => {
     return;
   }
 
-  const url = `https://run.googleapis.com/v2/projects/${process.env.PROJECT_ID}/locations/${process.env.REGION}/jobs/${process.env.CLOUD_RUN_JOB_NAME}:run`;
-  const client = await auth.getClient();
-  const token = await client.getAccessToken();
   let response;
   try {
-    response = await axios.post(
-      url,
-      {
-        overrides: {
-          containerOverrides: [
-            {
-              args: ["publish", blobObjectId],
-            },
-          ],
+    const payload = {
+      "arg1": "publish",
+      "arg2": blobObjectId
+    };
+
+    [response] = await tasksClient.createTask({
+      parent,
+      task: {
+        httpRequest: {
+          httpMethod: 'POST',
+          url: `https://job-777397487566.asia-southeast1.run.app`,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: Buffer.from(JSON.stringify(payload)).toString('base64'),
+          oidcToken: {
+            serviceAccountEmail: 'cloud-tasks-http-request@ivory-project-457721.iam.gserviceaccount.com',
+          },
         },
       },
-      {
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    });
   } catch (error) {
     res.status(500).json({
       statusCode: 0,
       error: {
         error_message:
-          "Failed to triggering Cloud Run job to publish walrus-site",
+          "Failed to create task",
         error_details: error,
       },
     });
     return;
   }
 
-  if (response.status == 200) {
+  if (response.name) {
     res.status(200).json({
       statusCode: 1,
       objectId: blobObjectId,
+      taskName: `Created task ${response.name}`,
     });
   }
 });
@@ -667,7 +673,7 @@ app.put("/update-blob-n-run-job", upload.single("file"), async (req, res) => {
     }
   }
 
-    try {
+  try {
     await walrusClient.executeDeleteBlobTransaction({
       signer: keypair,
       blobObjectId: old_object_id,
