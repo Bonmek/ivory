@@ -362,6 +362,7 @@ export default function CreateWebsitePage() {
         epochs: '1',
         start_date: startDate.toISOString(),
         end_date: endDate.toISOString(),
+        output_dir: buildOutputSettings.outputDirectory,
         status: '0',
         cache: advancedOptions.cacheControl,
         root: advancedOptions.rootDirectory || '/',
