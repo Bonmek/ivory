@@ -31,13 +31,13 @@ const auth = new GoogleAuth({
 const app = express();
 app.use(express.json());
 app.use(cors());
-// app.use(
-//   cors({
-//     origin: process.env.FRONTEND_URL,
-//     credentials: true,
-//     exposedHeaders: ["Content-Disposition", "Content-Length"],
-//   })
-// );
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL,
+    credentials: true,
+    exposedHeaders: ["Content-Disposition", "Content-Length"],
+  })
+);
 app.use(
   session({
     secret: "session-secret",
@@ -803,6 +803,76 @@ app.put("/update-blob-n-run-job", upload.single("file"), async (req, res) => {
     }
   }
 
+  if (!new_blob_data) {
+    res.status(503).json({
+      statusCode: 0,
+      error: "WriteBlob success but data is undefined",
+    });
+    return;
+  }
+
+  const blobObjectId = new_blob_data.blobObject.id.id;
+
+  if (attributes_data.data.is_build === "0") {
+    const buildDir = await findPackageJsonPath(extractPath);
+    if (!buildDir) throw new Error("package.json not found");
+    await new Promise((resolve, reject) => {
+      exec(attributes_data.data.install_command, { cwd: buildDir }, (err) => {
+        if (err) return reject(err);
+        exec(attributes_data.data.build_command, { cwd: buildDir }, (err2) => {
+          if (err2) return reject(err2);
+          resolve(true);
+        });
+      });
+    });
+    indexDir = await findIndexHtmlInKnownDirs(buildDir);
+    if (!indexDir) {
+      indexDir = await findIndexHtmlPath(extractPath);
+    }
+  } else {
+    indexDir = await findIndexHtmlPath(extractPath);
+  }
+
+  const old_site_name = old_attributes["site-name"];
+  const old_site_id = old_attributes["site_id"];
+  const site_statuss = old_attributes["site_status"];
+  let attributesUpdate;
+  if (site_statuss && site_statuss !== null) {
+    attributesUpdate = {
+      site_status: "0",
+      status: "0",
+      blobId: new_blob_data.blobId,
+      "site-name": old_site_name,
+      site_id: old_site_id,
+    };
+  } else {
+    attributesUpdate = {
+      status: "0",
+      blobId: new_blob_data.blobId,
+      "site-name": old_site_name,
+      site_id: old_site_id,
+    };
+  }
+  try {
+    await walrusClient.executeWriteBlobAttributesTransaction({
+      blobObjectId: blobObjectId,
+      signer: keypair,
+      attributes: attributesUpdate
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(502).json({
+        statusCode: 0,
+        error: {
+          error_message:
+            "Failed to execute write blob attributes transaction to Walrus",
+          error_details: error,
+        },
+      });
+      return;
+    }
+  }
+
   try {
     await walrusClient.executeDeleteBlobTransaction({
       signer: keypair,
@@ -818,75 +888,6 @@ app.put("/update-blob-n-run-job", upload.single("file"), async (req, res) => {
       },
     });
     return;
-  }
-
-  if (!new_blob_data) {
-    res.status(503).json({
-      statusCode: 0,
-      error: "WriteBlob success but data is undefined",
-    });
-    return;
-  }
-
-  const blobObjectId = new_blob_data.blobObject.id.id;
-
-  const old_attributes = await walrusClient.readBlobAttributes({
-    blobObjectId: old_object_id,
-  });
-
-  if (!old_attributes) {
-    res.status(404).json({
-      statusCode: 0,
-      error: "blob data not found",
-    });
-    return;
-  }
-
-  const old_site_name = old_attributes["site-name"];
-  const old_site_id = old_attributes["site_id"];
-  // const site_statuss = old_attributes["site_status"];
-  // let attributesUpdate;
-  // if (site_statuss && site_statuss !== null) {
-  //   attributesUpdate = {
-  //     site_status: "0",
-  //     status: "0",
-  //     blobId: new_blob_data.blobId,
-  //     site_name: old_site_name,
-  //     site_id: old_site_id,
-  //   };
-  // } else {
-  //   attributesUpdate = {
-  //     status: "0",
-  //     blobId: new_blob_data.blobId,
-  //     site_name: old_site_name,
-  //     site_id: old_site_id,
-  //   };
-  // }
-  try {
-    await walrusClient.executeWriteBlobAttributesTransaction({
-      blobObjectId: blobObjectId,
-      signer: keypair,
-      attributes: {
-        ...updated_data,
-        site_status: "0",
-        status: "0",
-        blobId: new_blob_data.blobId,
-        site_name: old_site_name,
-        site_id: old_site_id,
-      },
-    });
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(502).json({
-        statusCode: 0,
-        error: {
-          error_message:
-            "Failed to execute write blob attributes transaction to Walrus",
-          error_details: error,
-        },
-      });
-      return;
-    }
   }
 
   const url = `https://run.googleapis.com/v2/projects/${process.env.PROJECT_ID}/locations/${process.env.REGION}/jobs/${process.env.CLOUD_RUN_JOB_NAME}:run`;

@@ -76,6 +76,7 @@ export default function CreateWebsitePage() {
   // State for project name
   const [name, setName] = useState('')
   const [nameErrors, setNameErrors] = useState<string[]>([])
+  const [placeHolderName, setPlaceHolderName] = useState('Enter Project Name')
 
   // State for build output settings
   const [buildOutputSettings, setBuildOutputSettings] =
@@ -155,6 +156,8 @@ export default function CreateWebsitePage() {
   const [repoContents, setRepoContents] = useState<any[] | null>(null)
   const [repoContentsLoading, setRepoContentsLoading] = useState(false)
   const [repoContentsError, setRepoContentsError] = useState<string | null>(null)
+  const [branches, setBranches] = useState<{ name: string; commit: string; protected: boolean }[]>([])
+  const [selectedBranch, setSelectedBranch] = useState<string | undefined>('main')
 
   // File handlers
   const handleDragOver = (e: React.DragEvent) => {
@@ -219,7 +222,6 @@ export default function CreateWebsitePage() {
 
   const handleRemoveFile = () => {
     setSelectedFile(null)
-    setName('')
     setAdvancedOptions({ ...advancedOptions, rootDirectory: '/' })
     setFileErrors([])
     if (fileInputRef.current) {
@@ -255,25 +257,34 @@ export default function CreateWebsitePage() {
     }
   }
 
-  // Function to download repository zip and set as selected file
-  const downloadRepositoryZip = async (owner: string, repo: string) => {
+  // Function to download repository zip, set as selected file, and download to local
+  const downloadRepositoryZip = async (owner: string, repo: string, branch?: string) => {
     try {
+      const branch = selectedBranch || 'main';
       const response = await apiClient.get(`/api/repositories/${owner}/${repo}/download`, {
         responseType: 'blob',
-        params: {
-          branch: 'main'
-        }
+        params: { branch }
       });
 
-      const file = new File([
-        response.data
-      ], `${repo}-main.zip`, {
-        type: 'application/zip'
-      });
+      const zipBlob = new Blob([response.data], { type: 'application/zip' });
+      const fileName = `${repo}-${branch}.zip`;
 
+      // Create a File object for internal app use
+      const file = new File([zipBlob], fileName, { type: 'application/zip' });
       setSelectedRepoFile(file);
       setFileErrors([]);
       setUploadMethod(UploadMethod.GitHub);
+
+      // Trigger download to local
+      const url = window.URL.createObjectURL(zipBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url); // Clean up
+
       toast.success('Repository downloaded successfully');
     } catch (error) {
       console.error('Error downloading repository:', error);
@@ -304,8 +315,20 @@ export default function CreateWebsitePage() {
 
   const handleSelectRepository = (id: number | null, name: string) => {
     setSelectedRepo(id)
-    setName(name)
+    setPlaceHolderName(name)
     setAdvancedOptions({ ...advancedOptions, rootDirectory: '/' })
+  }
+
+  const fetchBranches = async () => {
+    try {
+      const repo = repositories.find((r) => r.id === selectedRepo)
+      if (!repo) return
+      const response = await apiClient.get(`/api/repositories/${repo.owner}/${repo.name}/branches`)
+      const branches = response.data as { name: string; commit: string; protected: boolean }[]
+      setBranches(branches)
+    } catch (error) {
+      console.error('Error fetching branches:', error)
+    }
   }
 
   const handleSelectFramework = (frameworkId: string) => {
@@ -342,12 +365,9 @@ export default function CreateWebsitePage() {
         file: uploadMethod === "upload" ? selectedFile! : selectedRepoFile!,
         attributes,
       })
-
-      console.log('Response:', response)
       setDeployingState(DeployingState.Deployed)
       setDeployingResponse(response as unknown as ApiResponseSuccess)
       setDeployedObjectId((response as unknown as ApiResponseSuccess).objectId)
-      console.log('Deployed Object ID:', deployedObjectId)
       return response
     } catch (error) {
       console.error('Error:', error)
@@ -401,10 +421,17 @@ export default function CreateWebsitePage() {
     if (!repo) return
     setRepoContentsLoading(true)
     setRepoContentsError(null)
+    fetchBranches()
+    downloadRepositoryZip(repo.owner, repo.name, selectedBranch)
 
     apiClient
       .get(
         `${process.env.REACT_APP_API_REPOSITORIES}/${repo.owner}/${repo.name}/contents`,
+        {
+          params: {
+            branch: selectedBranch || 'main'
+          }
+        }
       )
       .then((res) => {
         setRepoContents(res.data)
@@ -422,7 +449,115 @@ export default function CreateWebsitePage() {
         }
         setRepoContentsLoading(false)
       })
-  }, [selectedRepo, repositories])
+  }, [selectedRepo, repositories, selectedBranch])
+
+  useEffect(() => {
+    if (selectedFile) {
+      const fileReader = new FileReader()
+      fileReader.onload = async (e) => {
+        try {
+          const arrayBuffer = e.target?.result as ArrayBuffer
+          const zip = await JSZip.loadAsync(arrayBuffer)
+          const files: string[] = []
+
+          zip.forEach((relativePath: string, file: any) => {
+            if (!file.dir) {
+              files.push(relativePath)
+            }
+          })
+
+          // Convert flat file list to hierarchical structure
+          const structure: FileItem[] = []
+          const pathMap = new Map<string, FileItem>()
+
+          files.forEach(filePath => {
+            const parts = filePath.split('/')
+            let currentPath = ''
+            let currentParent = structure
+
+            parts.forEach((part, index) => {
+              if (!part) return
+              currentPath = currentPath ? `${currentPath}/${part}` : part
+              const isLastPart = index === parts.length - 1
+
+              if (!pathMap.has(currentPath)) {
+                const isFolder = !isLastPart
+                const newItem: FileItem = {
+                  name: part,
+                  isFolder,
+                  path: currentPath,
+                  children: []
+                }
+
+                currentParent.push(newItem)
+                pathMap.set(currentPath, newItem)
+
+                if (isFolder) {
+                  currentParent = newItem.children!
+                }
+              } else if (pathMap.get(currentPath)?.isFolder) {
+                currentParent = pathMap.get(currentPath)!.children!
+              }
+            })
+          })
+
+          setFileStructure(structure)
+        } catch (error) {
+          console.error('Error processing ZIP file:', error)
+          setFileErrors([intl.formatMessage({ id: 'createWebsite.invalidZipFile' })])
+        }
+      }
+
+      fileReader.readAsArrayBuffer(selectedFile)
+    } else {
+      setFileStructure([])
+    }
+  }, [selectedFile, intl])
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    const checkStatus = () => {
+      if (metadata && deployedObjectId) {
+        const filteredProjects = metadata
+          .map((meta, index) => transformMetadataToProject(meta, index))
+          .filter((project: Project) => project.parentId === deployedObjectId);
+
+        if (filteredProjects.length > 0) {
+          if (filteredProjects[0].status === 1) {
+            setBuildingState(BuildingState.Built);
+            return true;
+          } else if (filteredProjects[0].status === 2) {
+            setBuildingState(BuildingState.Failed);
+            return true;
+          }
+        }
+      }
+      return false;
+    };
+
+    if (deployingState === DeployingState.Deployed &&
+      buildingState !== BuildingState.Built &&
+      buildingState !== BuildingState.Failed) {
+
+      refetch().then(() => {
+        checkStatus();
+      });
+
+      interval = setInterval(() => {
+        refetch().then(() => {
+          const shouldStop = checkStatus();
+          if (shouldStop && interval) {
+            clearInterval(interval);
+          }
+        });
+      }, 5000);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [deployingState, refetch, metadata, name, transformMetadataToProject, buildingState]);
 
   useEffect(() => {
     if (selectedFile) {
@@ -661,7 +796,7 @@ export default function CreateWebsitePage() {
                             <FileUploadPreview
                               file={selectedFile}
                               onRemove={handleRemoveFile}
-                              setName={setName}
+                              setPlaceHolderName={setPlaceHolderName}
                             />
                           ) : (
                             <div className="flex flex-col items-center justify-center py-10 w-full relative z-10">
@@ -743,9 +878,11 @@ export default function CreateWebsitePage() {
                         repoContentsLoading={repoContentsLoading}
                         repoContentsError={repoContentsError}
                         handleLogout={handleLogout}
-                        downloadRepositoryZip={downloadRepositoryZip}
                         setSelectedRepoFile={setSelectedRepoFile}
                         fileErrors={fileErrors}
+                        branches={branches}
+                        selectedBranch={selectedBranch}
+                        setSelectedBranch={setSelectedBranch}
                       />
                     </TabsContent>
                   </Tabs>
@@ -771,6 +908,7 @@ export default function CreateWebsitePage() {
                         'bg-primary-500 border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500',
                         nameErrors.length > 0 && 'border-red-500',
                       )}
+                      placeholder={placeHolderName}
                       onChange={handleNameChange}
                       value={name}
                     />

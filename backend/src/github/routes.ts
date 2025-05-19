@@ -2,6 +2,9 @@ import { Router, Request, Response } from "express";
 import passport from "passport";
 import axios, { AxiosResponse } from "axios";
 import { GitHubProfile, Repository } from "../@types/github";
+import AdmZip from "adm-zip";
+import archiver from "archiver";
+import stream from "stream";
 
 // Extend Request interface for authenticated user
 export interface AuthenticatedRequest extends Request {
@@ -103,96 +106,103 @@ router.get("/api/repositories", (async (req, res) => {
 }) as import("express").RequestHandler);
 
 // Repository download endpoint
-router.get("/api/repositories/:owner/:repo/download", (async (req, res) => {
-  const authReq = req as AuthenticatedRequest;
-  if (!authReq.isAuthenticated() || !authReq.user) {
-    return res.status(401).send("Unauthorized");
-  }
+router.get(
+  "/api/repositories/:owner/:repo/download",
+  (async (req, res) => {
+    const authReq = req as AuthenticatedRequest;
+    if (!authReq.isAuthenticated() || !authReq.user) {
+      return res.status(401).send("Unauthorized");
+    }
 
-  const accessToken = authReq.user.accessToken;
-  const { owner, repo } = req.params;
-  const branch = (req.query.branch as string) || "main";
+    const accessToken = authReq.user.accessToken;
+    const { owner, repo } = req.params;
+    const branch = (req.query.branch as string) || "main";
 
-  try {
-    // Verify repository access
-    const repoCheckResponse: AxiosResponse<unknown> = await axios.get(
-      `https://api.github.com/repos/${owner}/${repo}`,
-      {
+    try {
+      // Download zipball
+      const response: AxiosResponse<Buffer> = await axios({
+        method: "get",
+        url: `https://api.github.com/repos/${owner}/${repo}/zipball/${branch}`,
         headers: {
           Authorization: `token ${accessToken}`,
           Accept: "application/vnd.github.v3+json",
           "User-Agent": "node.js",
         },
-      }
-    );
+        responseType: "arraybuffer",
+        maxContentLength: 100 * 1024 * 1024,
+        timeout: 30000,
+      });
 
-    // @ts-expect-error: dynamic property from API
-    const defaultBranch = repoCheckResponse.data.default_branch;
-    const actualBranch = branch || defaultBranch;
+      const zip = new AdmZip(response.data);
+      const entries = zip.getEntries();
 
-    // Download repository
-    const response: AxiosResponse<Buffer> = await axios({
-      method: "get",
-      url: `https://api.github.com/repos/${owner}/${repo}/zipball/${actualBranch}`,
-      headers: {
-        Authorization: `token ${accessToken}`,
-        Accept: "application/vnd.github.v3+json",
-        "User-Agent": "node.js",
-      },
-      responseType: "arraybuffer",
-      maxContentLength: 100 * 1024 * 1024, // 100MB max size
-      timeout: 30000, // 30 second timeout
-    });
+      const archive = archiver("zip", { zlib: { level: 9 } });
+      const passthrough = new stream.PassThrough();
 
-    // Set download headers
-    res.setHeader("Content-Type", "application/zip");
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename=${repo}-${actualBranch}.zip`
-    );
-    res.setHeader("Content-Length", response.data.length);
+      // Set headers
+      res.setHeader("Content-Type", "application/zip");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename=${repo}-${branch}-flat.zip`
+      );
 
-    res.send(response.data);
-  } catch (err: unknown) {
-    let statusCode = 500;
-    let errorMessage = "An unknown error occurred";
-    let details = "";
-    if (axios.isAxiosError(err)) {
-      statusCode = err.response?.status || 500;
-      details = err.message;
-      if (err.response) {
-        switch (statusCode) {
-          case 401:
-            errorMessage = "Authentication failed. Please log in again.";
-            break;
-          case 403:
-            errorMessage =
-              "Access denied. Please ensure you have access to this repository.";
-            break;
-          case 404:
-            errorMessage =
-              "Repository not found or you don't have access to it.";
-            break;
-          case 451:
-            errorMessage = "Repository unavailable due to legal reasons.";
-            break;
-          default:
-            errorMessage =
-              err.response.data?.message || "Failed to download repository";
+      archive.pipe(passthrough);
+      passthrough.pipe(res);
+
+      for (const entry of entries) {
+        const pathParts = entry.entryName.split("/");
+        if (pathParts.length > 1) {
+          const flattenedPath = pathParts.slice(1).join("/");
+          if (!entry.isDirectory) {
+            archive.append(entry.getData(), { name: flattenedPath });
+          }
         }
-      } else if (err.code === "ECONNABORTED") {
-        statusCode = 504;
-        errorMessage = "Download timed out. The repository might be too large.";
       }
-    } else if (err instanceof Error) {
-      details = err.message;
+
+      await archive.finalize();
+    } catch (err: unknown) {
+      let statusCode = 500;
+      let errorMessage = "An unknown error occurred";
+      let details = "";
+
+      if (axios.isAxiosError(err)) {
+        statusCode = err.response?.status || 500;
+        details = err.message;
+        if (err.response) {
+          switch (statusCode) {
+            case 401:
+              errorMessage = "Authentication failed. Please log in again.";
+              break;
+            case 403:
+              errorMessage =
+                "Access denied. Please ensure you have access to this repository.";
+              break;
+            case 404:
+              errorMessage =
+                "Repository not found or you don't have access to it.";
+              break;
+            case 451:
+              errorMessage = "Repository unavailable due to legal reasons.";
+              break;
+            default:
+              errorMessage =
+                err.response.data?.message || "Failed to download repository";
+          }
+        } else if (err.code === "ECONNABORTED") {
+          statusCode = 504;
+          errorMessage = "Download timed out. The repository might be too large.";
+        }
+      } else if (err instanceof Error) {
+        details = err.message;
+      }
+
+      res.status(statusCode).json({
+        error: errorMessage,
+        details,
+      });
     }
-    res.status(statusCode).json({
-      error: errorMessage,
-      details,
-    });
-  }
-}) as import("express").RequestHandler);
+  }) as import("express").RequestHandler
+);
 
 // Logout endpoint
 router.get("/auth/github/logout", (req: Request, res: Response) => {
@@ -207,6 +217,39 @@ router.get("/auth/github/logout", (req: Request, res: Response) => {
     res.redirect(`${process.env.FRONTEND_URL}`);
   });
 });
+
+// Get branches for a repository
+router.get("/api/repositories/:owner/:repo/branches", (async (req, res) => {
+  const authReq = req as AuthenticatedRequest;
+  if (!authReq.isAuthenticated() || !authReq.user) {
+    return res.status(401).send("Unauthorized");
+  }
+
+  const { owner, repo } = req.params;
+  const accessToken = (authReq.user as any).accessToken;
+
+  try {
+    const response = await axios.get(`https://api.github.com/repos/${owner}/${repo}/branches`, {
+      headers: {
+        Authorization: `token ${accessToken}`,
+        Accept: 'application/vnd.github.v3+json',
+      },
+    });
+
+    const branches = response.data.map((branch: any) => ({
+      name: branch.name,
+      commit: branch.commit ? branch.commit.sha : null,
+      protected: branch.protected || false,
+    }));
+
+    res.json(branches);
+  } catch (error: any) {
+    console.error('Error fetching branches:', error);
+    res.status(error.response?.status || 500).json({
+      error: error.response?.data?.message || 'Failed to fetch branches',
+    });
+  }
+}) as import("express").RequestHandler);
 
 // Fetch directory contents endpoint
 router.get("/api/repositories/:owner/:repo/contents", (async (req, res) => {

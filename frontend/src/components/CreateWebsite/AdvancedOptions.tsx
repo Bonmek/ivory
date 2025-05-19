@@ -138,8 +138,6 @@ function AdvancedOptions({ advancedOptions, setAdvancedOptions, fileStructure = 
     );
   };
 
-  console.log("githubContents", githubContents)
-
   const toggleFolder = (path: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation()
     setExpandedFolders(prev => {
