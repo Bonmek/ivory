@@ -575,9 +575,17 @@ const ProjectCard = memo(
                     </>
                   ) : (
                     <>
-                      <DropdownMenuItem className="focus:bg-primary-800">
-                        <RefreshCw className="mr-2 h-4 w-4" />
-                        <span><FormattedMessage id="projectCard.updateSite" /></span>
+                      <DropdownMenuItem 
+                        className="focus:bg-primary-800 opacity-60 cursor-not-allowed flex items-center justify-between" 
+                        disabled
+                      >
+                        <div className="flex items-center">
+                          <RefreshCw className="mr-2 h-4 w-4" />
+                          <span><FormattedMessage id="projectCard.updateSite" /></span>
+                        </div>
+                        <div className="ml-1 text-[9px] px-1 py-0 leading-tight rounded-sm bg-secondary-500/10 text-secondary-400/80 whitespace-nowrap">
+                          <FormattedMessage id="projectCard.comingSoon" />
+                        </div>
                       </DropdownMenuItem>
                       {!project.siteId && (
                         <DropdownMenuItem
