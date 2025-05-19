@@ -22,6 +22,14 @@ export default {
   'wallet.address': '钱包地址',
   'wallet.copyAddress': '复制地址',
 
+  // Checklist steps
+  'checklist.confirm': '等待确认',
+  'checklist.deploy': '创建中',
+  'checklist.build': '构建中',
+  'checklist.done': '部署完成',
+  'checklist.failed': '失败',
+  'createWebsite.redeploy': '重新部署',
+
   // Messages
   'message.welcome': '欢迎使用 Ivory',
   'message.loading': '加载中...',
@@ -34,7 +42,10 @@ export default {
   'createWebsite.projectFilesTooltip': '上传您的项目文件或连接到 GitHub 仓库。',
   'createWebsite.upload': '上传',
   'createWebsite.github': 'Github',
-  'createWebsite.dragDrop': '将 ZIP 文件拖放到此处',
+  'createWebsite.dragDrop': '将文件拖放到此处',
+  'createWebsite.zipOnly': '仅支持ZIP文件 • 最大300MB',
+  'createWebsite.error.invalidFileType': '仅支持.zip格式的文件',
+  'createWebsite.error.fileTooLarge': '文件过大，最大支持{maxSize}',
   'createWebsite.browseFile': '浏览文件',
   'createWebsite.or': '或',
   'createWebsite.name': '名称',
@@ -44,7 +55,8 @@ export default {
   'createWebsite.error.githubRepo': '请选择仓库',
   'createWebsite.githubUrlPlaceholder': '输入 GitHub 仓库 URL',
   'createWebsite.githubUrlExample': '示例：https://github.com/username/repository',
-  'createWebsite.githubSignIn': '登录 GitHub',
+  'createWebsite.githubSignIn': '连接 GitHub',
+  'createWebsite.githubDescription': '连接您的 GitHub 账户以导入仓库',
   'createWebsite.githubLogout': '从 GitHub 登出',
   'createWebsite.githubRepository': 'GitHub 仓库',
   'createWebsite.githubSearch': '搜索仓库...',
@@ -120,12 +132,26 @@ export default {
   'createWebsite.processingTime': '这可能需要几分钟',
   'createWebsite.continueEditing': '继续编辑',
   'createWebsite.deploy': '部署',
-  'createWebsite.viewDashboard': '您现在可以在 {dashboardLink} 查看部署状态',
+  'createWebsite.viewDashboard': '下一步，我们将为您构建项目。',
   'createWebsite.failedToDeploy': '部署失败',
   'createWebsite.failedToDeployDescription': '请重试或联系支持获取帮助。',
 
   'createWebsite.helpCenter': '帮助中心',
   'createWebsite.helpCenterDescription': '获取创建和部署网站的帮助。',
+
+  'createWebsite.selectRootDirectory': '选择根目录',
+  'createWebsite.selectRootDirectoryDescription': '选择您的项目根目录。',
+
+  'createWebsite.building': '正在构建...',
+  'createWebsite.buildingTime': '这可能需要几分钟',
+
+  'createWebsite.failedToBuild': '构建失败',
+  'createWebsite.failedToBuildDescription': '请重试或联系支持获取帮助。',
+
+  'createWebsite.built': '构建成功！',
+  'createWebsite.viewDashboardbuilt': '您现在可以在 {dashboardLink} 上查看您的部署网站',
+
+  'createWebsite.selectBranch': '选择分支',
 
   // Homepage
   'homepage.hero.title1': '部署',

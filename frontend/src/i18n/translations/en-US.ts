@@ -22,6 +22,14 @@ export default {
   'wallet.address': 'Wallet Address',
   'wallet.copyAddress': 'Copy Address',
 
+  // Checklist steps
+  'checklist.confirm': 'Waiting for Confirmation',
+  'checklist.deploy': 'Initializing',
+  'checklist.build': 'Building',
+  'checklist.done': 'Deployed',
+  'checklist.failed': 'Failed',
+  'createWebsite.redeploy': 'Redeploy',
+
   // Messages
   'message.welcome': 'Welcome to Ivory',
   'message.loading': 'Loading...',
@@ -34,7 +42,10 @@ export default {
   'createWebsite.projectFilesTooltip': 'Upload your project files or connect to a GitHub repository.',
   'createWebsite.upload': 'Upload',
   'createWebsite.github': 'Github',
-  'createWebsite.dragDrop': 'Drag & drop ZIP file here',
+  'createWebsite.dragDrop': 'Drag & drop file here',
+  'createWebsite.zipOnly': 'ZIP files only • Max size: 300MB',
+  'createWebsite.error.invalidFileType': 'Only .zip files are allowed',
+  'createWebsite.error.fileTooLarge': 'File is too large. Maximum size is {maxSize}',
   'createWebsite.browseFile': 'Browse file',
   'createWebsite.or': 'or',
   'createWebsite.name': 'Name',
@@ -44,7 +55,8 @@ export default {
   'createWebsite.error.githubRepo': 'Please select a repository',
   'createWebsite.githubUrlPlaceholder': 'Enter GitHub repository URL',
   'createWebsite.githubUrlExample': 'Example: https://github.com/username/repository',
-  'createWebsite.githubSignIn': 'Sign in to GitHub',
+  'createWebsite.githubSignIn': 'Connect to GitHub',
+  'createWebsite.githubDescription': 'Connect your GitHub account to import repositories',
   'createWebsite.githubLogout': 'Logout from GitHub',
   'createWebsite.githubRepository': 'GitHub Repository',
   'createWebsite.githubSearch': 'Search repositories...',
@@ -126,6 +138,21 @@ export default {
 
   'createWebsite.helpCenter': 'Help Center',
   'createWebsite.helpCenterDescription': 'Get help with creating and deploying your website.',
+
+  'createWebsite.selectRootDirectory': 'Select root directory',
+  'createWebsite.selectRootDirectoryDescription': 'Choose the base directory of your project.',
+
+  'createWebsite.viewDashboard': 'Next, we are building your project.',
+  'createWebsite.building': 'Building...',
+  'createWebsite.buildingTime': 'This may take a few moments',
+
+  'createWebsite.failedToBuild': 'Failed to build',
+  'createWebsite.failedToBuildDescription': 'Please try again or contact support for assistance.',
+
+  'createWebsite.built': 'Built successfully!',
+  'createWebsite.viewDashboardbuilt': 'You can now see your deployed website at {dashboardLink}',
+
+  'createWebsite.selectBranch': 'Select branch',
 
   // Homepage
   'homepage.hero.title1': 'Deploy',

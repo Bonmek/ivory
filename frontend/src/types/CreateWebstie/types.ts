@@ -32,6 +32,7 @@ export interface CloudRunJobDetails {
 
 export interface ApiResponseSuccess {
   statusCode: 1;
+  objectId: string;
   details: CloudRunJobDetails;
 }
 
@@ -39,7 +40,7 @@ export interface ApiResponseError {
   statusCode: 0;
   error: {
     error_message: string;
-    error_details: Record<string, any>;
+    error_details: string;
   };
 }
 
