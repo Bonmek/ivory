@@ -19,11 +19,6 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
 # ติดตั้ง yarn และ pnpm
 RUN npm install -g yarn pnpm
 
-# ติดตั้ง Google Cloud SDK
-RUN curl -sSL https://sdk.cloud.google.com | bash -s -- --disable-prompts && \
-    ln -s /root/google-cloud-sdk/bin/gcloud /usr/local/bin/gcloud
-ENV PATH="/root/google-cloud-sdk/bin:$PATH"
-
 RUN pip install google-cloud-firestore
 
 # ดาวน์โหลด Sui
