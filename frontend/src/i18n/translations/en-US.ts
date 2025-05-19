@@ -157,11 +157,11 @@ export default {
   'createWebsite.selectBranch': 'Select branch',
 
   // Homepage
-  'homepage.hero.title1': 'Deploy',
-  'homepage.hero.title2': 'Your',
-  'homepage.hero.title3': 'Site',
-  'homepage.hero.title4': 'In',
-  'homepage.hero.title5': 'Minutes',
+  'homepage.hero.title1': 'Launch Your Site In Few Clicks',
+  'homepage.hero.title2': '',
+  'homepage.hero.title3': '',
+  'homepage.hero.title4': '',
+  'homepage.hero.title5': '',
   'homepage.hero.title6': 'everywhere',
   'homepage.hero.desc': 'Ivory is a no-code, low-cost platform for deploying static websites with Walrus. Enjoy high availability, censorship resistance, data integrity, and full ownership — all with free bandwidth and zero complexity.',
   'homepage.hero.deploy': 'Deploy Now',

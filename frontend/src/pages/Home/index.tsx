@@ -128,10 +128,6 @@ export default function HomePage() {
 
   const heroWords = [
     intl.formatMessage({ id: 'homepage.hero.title1' }),
-    intl.formatMessage({ id: 'homepage.hero.title2' }),
-    intl.formatMessage({ id: 'homepage.hero.title3' }),
-    intl.formatMessage({ id: 'homepage.hero.title4' }),
-    intl.formatMessage({ id: 'homepage.hero.title5' }),
   ]
   const heroLast = intl.formatMessage({ id: 'homepage.hero.title6' })
 
@@ -368,7 +364,7 @@ export default function HomePage() {
 
           <div className="max-w-5xl mx-auto text-center z-10 relative">
             <motion.h1
-              className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 tracking-tight"
+              className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 tracking-tight whitespace-nowrap"
               variants={itemVariants}
               style={{
                 textShadow:
@@ -393,16 +389,15 @@ export default function HomePage() {
                           ease: 'easeInOut',
                         },
                       }}
-                      
                     >
-                      {char}
+                      {char === ' ' ? <div className="inline-block w-3"></div> : char}
                     </motion.span>
                   ))}
-                  {wordIndex < 4 && <span className="inline-block w-4" />}
+                  <span className="inline-block w-2" />
                 </span>
               ))}
-              <span className="inline-block w-4" />
-              <motion.span className="text-white inline-block">
+              <div className="w-full"></div>
+              <motion.span className="text-white inline-block mt-2">
                 {heroLast.split('').map((char, index) => (
                   <motion.span
                     key={index}

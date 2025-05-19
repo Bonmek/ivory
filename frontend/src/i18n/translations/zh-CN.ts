@@ -156,11 +156,11 @@ export default {
   'createWebsite.selectBranch': '选择分支',
 
   // Homepage
-  'homepage.hero.title1': '部署',
-  'homepage.hero.title2': '您的',
-  'homepage.hero.title3': '网站',
-  'homepage.hero.title4': '只需',
-  'homepage.hero.title5': '几秒',
+  'homepage.hero.title1': '轻松几步即可上线您的网站',
+  'homepage.hero.title2': '',
+  'homepage.hero.title3': '',
+  'homepage.hero.title4': '',
+  'homepage.hero.title5': '',
   'homepage.hero.title6': '随处可用',
   'homepage.hero.desc': 'Ivory 是一个无需编码、低成本的平台，使用 Walrus 部署静态网站。享受高可用性、抗审查、数据完整性和完全所有权——所有这些都带有免费带宽和零复杂性。',
   'homepage.hero.deploy': '立即部署',
