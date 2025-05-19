@@ -17,10 +17,12 @@
   "packageManager": "pnpm@10.10.0",
   "dependencies": {
     "@google-cloud/run": "^2.0.1",
+    "@google-cloud/tasks": "^6.1.0",
     "@mysten/sui": "^1.29.1",
     "@mysten/sui.js": "^0.54.1",
     "@mysten/wallet-standard": "^0.14.9",
     "@mysten/walrus": "^0.0.21",
+    "@types/uuid": "^10.0.0",
     "adm-zip": "^0.5.16",
     "archiver": "^7.0.1",
     "axios": "^1.9.0",
@@ -36,6 +38,7 @@
     "passport": "^0.7.0",
     "passport-github2": "^0.1.12",
     "unzipper": "^0.12.3",
+    "uuid": "^11.1.0",
     "zod": "^3.24.4"
   },
   "devDependencies": {

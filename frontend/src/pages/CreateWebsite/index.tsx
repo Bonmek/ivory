@@ -84,6 +84,7 @@ export default function CreateWebsitePage() {
       buildCommand: '',
       installCommand: '',
       outputDirectory: '',
+      rootDirectory: '/',
     })
 
   // State for advanced options
@@ -268,7 +269,7 @@ export default function CreateWebsitePage() {
       });
 
       const zipBlob = new Blob([response.data], { type: 'application/zip' });
-      const fileName = `${repo}-${branch}.zip`;
+      const fileName = `${repo}.zip`;
 
       // Create a File object for internal app use
       const file = new File([zipBlob], fileName, { type: 'application/zip' });
@@ -347,8 +348,18 @@ export default function CreateWebsitePage() {
     setSelectedFramework(frameworkId)
   }
 
+  const startDate = new Date('2025-05-06T15:00:50.907Z');
+  const endDate = new Date('2025-05-20T15:00:50.907Z');
+  const remainingTime = endDate.getTime() - new Date().getTime();
+
   const handleClickDeploy = async () => {
     setOpen(false)
+
+    let rootDirectory = advancedOptions.rootDirectory
+    if (showBuildOutputSettings && buildOutputSettings.outputDirectory) {
+      rootDirectory = buildOutputSettings.outputDirectory
+    }
+
     try {
       const attributes: WebsiteAttributes = {
         'site-name': name,
@@ -356,11 +367,12 @@ export default function CreateWebsitePage() {
         ownership: '0',
         send_to: currentAccount?.address!,
         epochs: '1',
-        start_date: new Date().toISOString(),
-        end_date: addDays(new Date(), 14).toISOString(),
+        start_date: startDate.toISOString(),
+        end_date: endDate.toISOString(),
+        output_dir: showBuildOutputSettings ? buildOutputSettings.outputDirectory : '',
         status: '0',
         cache: advancedOptions.cacheControl,
-        root: advancedOptions.rootDirectory || '/',
+        root: rootDirectory,
         install_command: buildOutputSettings.installCommand || 'npm install',
         build_command: buildOutputSettings.buildCommand || 'npm run build',
         default_route: advancedOptions.defaultPath || '/index.html',
@@ -840,6 +852,8 @@ export default function CreateWebsitePage() {
                       setShowBuildOutputSettings={setShowBuildOutputSettings}
                       buildOutputSettings={buildOutputSettings}
                       setBuildOutputSettings={setBuildOutputSettings}
+                      fileStructure={fileStructure}
+                      githubContents={uploadMethod === UploadMethod.GitHub ? repoContents : []}
                     />
 
                     <AdvancedOptions
@@ -847,11 +861,38 @@ export default function CreateWebsitePage() {
                       setAdvancedOptions={setAdvancedOptions}
                       fileStructure={fileStructure}
                       githubContents={uploadMethod === UploadMethod.GitHub ? repoContents : []}
+                      showBuildOutputSettings={showBuildOutputSettings}
                     />
                   </article>
 
                   <Separator className="mb-4" />
-                  <section className="pt-4 flex justify-end">
+                  <div className="mb-4 px-4 py-2.5 bg-primary-700/50 border border-primary-600/50 rounded-lg backdrop-blur-sm">
+                    <div className="flex items-center gap-3">
+                      <svg className="w-4 h-4 text-amber-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <p className="text-sm text-amber-50/90 whitespace-nowrap">
+                        <FormattedMessage
+                          id="createWebsite.expirationNotice"
+                          defaultMessage="Your Site will expire on {expiryDate}"
+                          values={{
+                            expiryDate: (
+                              <span className="font-medium text-amber-100 ml-1">
+                                {new Date(endDate).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                  hour12: true
+                                })}
+                              </span>
+                            )
+                          }}
+                        />
+                      </p>
+                    </div>
+                  </div>
+                  <section className="pt-2 flex justify-end">
                     <Button
                       onClick={() => {
                         if (!validateName(name) || !validateFile()) return
@@ -893,6 +934,7 @@ export default function CreateWebsitePage() {
                 deployingResponse={deployingResponse}
                 buildingState={buildingState}
                 projectShowcaseUrl={projectShowcaseUrl}
+                selectedBranch={selectedBranch}
               />
             </motion.div>
           </>

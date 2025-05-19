@@ -29,6 +29,7 @@ interface AdvancedOptionsProps {
   setAdvancedOptions: (options: advancedOptionsType) => void
   fileStructure?: FileItem[]
   githubContents?: any[] | null
+  showBuildOutputSettings?: boolean
 }
 
 interface GitHubTreeItem {
@@ -69,7 +70,7 @@ function buildDirectoryTree(items: any[]): GitHubTreeItem[] {
   return Object.values(root);
 }
 
-function AdvancedOptions({ advancedOptions, setAdvancedOptions, fileStructure = [], githubContents = [] }: AdvancedOptionsProps) {
+function AdvancedOptions({ advancedOptions, setAdvancedOptions, fileStructure = [], githubContents = [], showBuildOutputSettings = false }: AdvancedOptionsProps) {
   const [showFileSelector, setShowFileSelector] = useState(false)
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
 
@@ -251,53 +252,54 @@ function AdvancedOptions({ advancedOptions, setAdvancedOptions, fileStructure = 
               className='space-y-6'
             >
 
-              <section className='px-2 mt-4'>
-                <div className="flex items-center mb-2">
-                  <h3 className="text-sm text-gray-300 font-semibold">
-                    <FormattedMessage id="createWebsite.rootDirectory" />
-                  </h3>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help"
-                        onClick={() => {
-                          const helpCenter = document.getElementById('advanced-options')
-                          if (helpCenter) {
-                            helpCenter.scrollIntoView({ behavior: 'smooth' })
-                          }
-                        }}
-                      />
-                    </TooltipTrigger>
-                    <TooltipContent className='w-[260px]' side="right">
-                      <FormattedMessage id="createWebsite.rootDirectoryTooltip" /> <FormattedMessage id="createWebsite.rootDirectoryTooltipDescription" />
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-                <div className="relative">
-                  <div className="relative group w-full">
-                    <Input
-                      value={advancedOptions.rootDirectory || '/'}
-                      onChange={(e) => setAdvancedOptions({ ...advancedOptions, rootDirectory: e.target.value })}
-                      placeholder="/"
-                      className="w-full bg-primary-500/80 border-gray-600 rounded-md h-10 transition-all cursor-pointer duration-300 focus:border-secondary-500 focus:ring-1 focus:ring-secondary-500/50 pr-10 backdrop-blur-sm group-hover:bg-primary-500/90 text-sm sm:text-base"
-                    // readOnly={true}
-                    // onClick={() => setShowFileSelector(true)}
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0 hover:bg-primary-400/20 transition-colors duration-200"
-                      onClick={() => setShowFileSelector(true)}
-                      aria-label="Select directory"
-                    >
-                      <Folder className="h-4 w-4 text-secondary-500" />
-                    </Button>
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent to-primary-700/30 rounded-md pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              {!showBuildOutputSettings && (
+                <section className='px-2 mt-4'>
+                  <div className="flex items-center mb-2">
+                    <h3 className="text-sm text-gray-300 font-semibold">
+                      <FormattedMessage id="createWebsite.rootDirectory" />
+                    </h3>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help"
+                          onClick={() => {
+                            const helpCenter = document.getElementById('advanced-options')
+                            if (helpCenter) {
+                              helpCenter.scrollIntoView({ behavior: 'smooth' })
+                            }
+                          }}
+                        />
+                      </TooltipTrigger>
+                      <TooltipContent className='w-[260px]' side="right">
+                        <FormattedMessage id="createWebsite.rootDirectoryTooltip" /> <FormattedMessage id="createWebsite.rootDirectoryTooltipDescription" />
+                      </TooltipContent>
+                    </Tooltip>
                   </div>
-                </div>
+                  <div className="relative">
+                    <div className="relative group w-full">
+                      <Input
+                        value={advancedOptions.rootDirectory || '/'}
+                        onChange={(e) => setAdvancedOptions({ ...advancedOptions, rootDirectory: e.target.value })}
+                        placeholder="/"
+                        className="w-full bg-primary-500/80 border-gray-600 rounded-md h-10 transition-all cursor-pointer duration-300 focus:border-secondary-500 focus:ring-1 focus:ring-secondary-500/50 pr-10 backdrop-blur-sm group-hover:bg-primary-500/90 text-sm sm:text-base"
+                      // readOnly={true}
+                      // onClick={() => setShowFileSelector(true)}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0 hover:bg-primary-400/20 transition-colors duration-200"
+                        onClick={() => setShowFileSelector(true)}
+                        aria-label="Select directory"
+                      >
+                        <Folder className="h-4 w-4 text-secondary-500" />
+                      </Button>
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent to-primary-700/30 rounded-md pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    </div>
+                  </div>
 
-                <Dialog open={showFileSelector} onOpenChange={setShowFileSelector}>
-                  <DialogContent className="w-[calc(100%-2rem)] sm:w-[90%] md:w-[80%] lg:w-[70%] max-w-[800px] max-h-[90vh] flex flex-col bg-gradient-to-br from-primary-900/95 via-primary-900/90 to-primary-900/95 shadow-2xl shadow-primary-900/30 backdrop-blur-sm overflow-hidden">
+                  <Dialog open={showFileSelector} onOpenChange={setShowFileSelector}>
+                    <DialogContent className="w-[calc(100%-2rem)] sm:w-[90%] md:w-[80%] lg:w-[70%] max-w-[800px] max-h-[90vh] flex flex-col bg-gradient-to-br from-primary-900/95 via-primary-900/90 to-primary-900/95 shadow-2xl shadow-primary-900/30 backdrop-blur-sm overflow-hidden">
                     <DialogHeader className="px-1 sm:px-0 relative z-10">
                       <div className="relative inline-block">
                         <div className="absolute -left-2 -top-2 w-8 h-8 sm:w-10 sm:h-10 bg-secondary-500/20 rounded-full blur-md animate-pulse" />
@@ -367,9 +369,10 @@ function AdvancedOptions({ advancedOptions, setAdvancedOptions, fileStructure = 
                     {/* Decorative elements */}
                     <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 rounded-full -mr-16 -mt-16 blur-3xl pointer-events-none" />
                     <div className="absolute bottom-0 left-0 w-40 h-40 bg-indigo-500/5 rounded-full -ml-20 -mb-20 blur-3xl pointer-events-none" />
-                  </DialogContent>
-                </Dialog>
-              </section>
+                    </DialogContent>
+                  </Dialog>
+                </section>
+              )}
 
               <section className='px-2 mt-4'>
                 <div className="flex items-center mb-2">
