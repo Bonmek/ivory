@@ -2,6 +2,7 @@ import { memo, useState, useEffect } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { useSignAndExecuteTransaction } from '@mysten/dapp-kit'
 import { useWalletKit } from '@mysten/wallet-kit'
+import { useIntl, FormattedMessage } from 'react-intl'
 import {
   MoreHorizontal,
   Users,
@@ -14,7 +15,6 @@ import {
   Link,
   Timer,
   Loader2,
-  Key,
 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import {
@@ -110,8 +110,6 @@ const ProjectCard = memo(
     const [open, setOpen] = useState(false)
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
     const [isDeleting, setIsDeleting] = useState(false)
-    const [generateDialogOpen, setGenerateDialogOpen] = useState(false)
-    const [isGenerating, setIsGenerating] = useState(false)
 
     useEffect(() => {
       if (project.status === 0) {
@@ -223,18 +221,17 @@ const ProjectCard = memo(
       const finalSuins = selectedSuins === 'other' ? otherSuins : selectedSuins
 
       if (!finalSuins) {
-        toast.error('Please select or enter a SUINS domain', {
-          className: 'bg-red-900 border-red-500/20 text-white',
-          description: 'Click the wallet button in the top right to connect',
-        })
+        toast.error(<FormattedMessage id="projectCard.pleaseSelect" />)
         return
       }
 
       if (!userAddress) {
-        toast.error('Please connect your wallet first', {
-          className: 'bg-red-900 border-red-500/20 text-white',
-          description: 'Click the wallet button in the top right to connect',
-        })
+        toast.error(
+          <FormattedMessage id="projectCard.connectWallet" />, 
+          {
+            description: intl.formatMessage({ id: 'projectCard.connectWalletDesc' }),
+          }
+        )
         return
       }
 
@@ -267,24 +264,26 @@ const ProjectCard = memo(
           `/set-attributes?object_id=${project.parentId}&sui_ns=${finalSuins}`,
         )
         if (result.status === 'success') {
-          toast.success('SUINS linked successfully', {
-            className: 'bg-primary-900 border-secondary-500/20 text-white',
-            description:
-              'Your SUINS domain has been linked to this project. It may take a few moments to update.',
-            duration: 5000,
-          })
+          toast.success(
+            <FormattedMessage id="projectCard.suinsLinked" />, 
+            {
+              description: intl.formatMessage({ id: 'projectCard.suinsLinkedDesc' }),
+              duration: 5000,
+            }
+          )
           if (result.status === 'success' && response.status === 200) {
             onRefetch()
           }
         }
       } catch (error: any) {
         console.error('Error linking SUINS:', error)
-        toast.error(error.message || 'Failed to link SUINS', {
-          className: 'bg-red-900 border-red-500/20 text-white',
-          description:
-            'Please try again or contact support if the problem persists.',
-          duration: 5000,
-        })
+        toast.error(
+          error.message || <FormattedMessage id="projectCard.failedToLink" />, 
+          {
+            description: intl.formatMessage({ id: 'projectCard.failedToLinkDesc' }),
+            duration: 5000,
+          }
+        )
       } finally {
         setIsLinking(false)
       }
@@ -330,24 +329,6 @@ const ProjectCard = memo(
       }
     }
 
-    const handleGenerateSiteId = async () => {
-      setIsGenerating(true)
-      try {
-        await apiClient.put(`/add-site-id?object_id=${project.parentId}`)
-        console.log(project.parentId)
-        toast.success('Site ID generated successfully', {
-          description: 'Please wait a moment',
-          duration: 5000,
-        })
-        setGenerateDialogOpen(false)
-        onRefetch()
-      } catch (error: any) {
-        toast.error(error?.message || 'Failed to generate Site ID')
-      } finally {
-        setIsGenerating(false)
-      }
-    }
-
     return (
       <>
         <div
@@ -361,154 +342,151 @@ const ProjectCard = memo(
           >
             {/* Dropdown Menu: Top Right */}
             <div className="absolute top-2 right-2 z-10 opacity-80 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-2">
-              {!project.suins &&
-                project.status === 1 &&
-                project.siteId &&
-                project.site_status === 1 && (
-                  <Dialog open={open} onOpenChange={setOpen}>
-                    <DialogTrigger asChild>
-                      <button
-                        className={`h-8 px-3 flex items-center justify-center rounded-full ${colors.dropdown} transition-all duration-200 hover:scale-110 active:scale-95`}
-                      >
-                        <Link className="h-4 w-4 mr-1.5" />
-                        <span className="text-sm">Link SUINS</span>
-                        <span className="text-[10px] opacity-60 ml-1">
-                          (initial setup)
-                        </span>
-                      </button>
-                    </DialogTrigger>
-                    <DialogContent className="bg-primary-900 border-secondary-500/20 text-white">
-                      <DialogHeader>
-                        <DialogTitle className="text-secondary-400">
-                          Link SUINS
-                        </DialogTitle>
-                        <DialogDescription className="text-white/60">
-                          Select your SUINS name to link it with this project
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="grid gap-4 py-4">
-                        <div className="grid gap-2">
-                          {isLoadingSuins ? (
-                            <div className="flex items-center justify-center py-4">
-                              <Loader2 className="h-6 w-6 animate-spin text-secondary-400" />
+              {!project.suins && project.status === 1 && (
+                <Dialog open={open} onOpenChange={setOpen}>
+                  <DialogTrigger asChild>
+                    <button
+                      className={`h-8 px-3 flex items-center justify-center rounded-full ${colors.dropdown} transition-all duration-200 hover:scale-110 active:scale-95`}
+                    >
+                      <Link className="h-4 w-4 mr-1.5" />
+                      <span className="text-sm"><FormattedMessage id="projectCard.linkSuins" /></span>
+                      <span className="text-[10px] opacity-60 ml-1">
+                        <FormattedMessage id="projectCard.initialSetup" />
+                      </span>
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="bg-primary-900 border-secondary-500/20 text-white">
+                    <DialogHeader>
+                      <DialogTitle className="text-secondary-400">
+                        <FormattedMessage id="projectCard.dialogTitle" />
+                      </DialogTitle>
+                      <DialogDescription className="text-white/60">
+                        <FormattedMessage id="projectCard.dialogDescription" />
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <div className="grid gap-2">
+                        {isLoadingSuins ? (
+                          <div className="flex items-center justify-center py-4">
+                            <Loader2 className="h-6 w-6 animate-spin text-secondary-400" />
+                          </div>
+                        ) : (
+                          <>
+                            <div className="flex gap-2 items-center">
+                              <Select
+                                value={selectedSuins}
+                                onValueChange={setSelectedSuins}
+                              >
+                                <SelectTrigger className="bg-primary-800 border-secondary-500/20 text-white w-full flex-1">
+                                  <SelectValue placeholder={intl.formatMessage({ id: 'projectCard.selectDomain' })} />
+                                </SelectTrigger>
+                                <SelectContent className="bg-primary-800 border-secondary-500/20 text-white">
+                                  {suins.map((sui) => {
+                                    const domainName =
+                                      sui.data?.content?.fields?.domain_name ||
+                                      ''
+                                    const displayName = domainName.endsWith(
+                                      '.sui',
+                                    )
+                                      ? domainName.slice(0, -4)
+                                      : domainName
+
+                                    return (
+                                      <SelectItem
+                                        key={sui.data?.objectId}
+                                        value={domainName}
+                                        className="hover:bg-primary-700"
+                                      >
+                                        {displayName}
+                                      </SelectItem>
+                                    )
+                                  })}
+                                  <SelectItem
+                                    value="other"
+                                    className="hover:bg-primary-700"
+                                  >
+                                    Other
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <Button
+                                onClick={handleRefreshSuins}
+                                variant="outline"
+                                className="border-secondary-500/20 text-white hover:bg-primary-800"
+                                disabled={isLoadingSuins || isRefreshing}
+                              >
+                                {isRefreshing ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <RefreshCw className="h-4 w-4" />
+                                )}
+                              </Button>
                             </div>
-                          ) : (
-                            <>
-                              <div className="flex gap-2 items-center">
-                                <Select
-                                  value={selectedSuins}
-                                  onValueChange={setSelectedSuins}
-                                >
-                                  <SelectTrigger className="bg-primary-800 border-secondary-500/20 text-white w-full flex-1">
-                                    <SelectValue placeholder="Select SUINS domain" />
-                                  </SelectTrigger>
-                                  <SelectContent className="bg-primary-800 border-secondary-500/20 text-white">
-                                    {suins.map((sui) => {
-                                      const domainName =
-                                        sui.data?.content?.fields
-                                          ?.domain_name || ''
-                                      const displayName = domainName.endsWith(
-                                        '.sui',
-                                      )
-                                        ? domainName.slice(0, -4)
-                                        : domainName
 
-                                      return (
-                                        <SelectItem
-                                          key={sui.data?.objectId}
-                                          value={domainName}
-                                          className="hover:bg-primary-700"
-                                        >
-                                          {displayName}
-                                        </SelectItem>
-                                      )
-                                    })}
-                                    <SelectItem
-                                      value="other"
-                                      className="hover:bg-primary-700"
-                                    >
-                                      Other
-                                    </SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                <Button
-                                  onClick={handleRefreshSuins}
-                                  variant="outline"
-                                  className="border-secondary-500/20 text-white hover:bg-primary-800"
-                                  disabled={isLoadingSuins || isRefreshing}
-                                >
-                                  {isRefreshing ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                  ) : (
-                                    <RefreshCw className="h-4 w-4" />
-                                  )}
-                                </Button>
-                              </div>
-
-                              {selectedSuins === 'other' && (
-                                <div className="relative mt-2 group">
-                                  <Input
-                                    placeholder="Enter your domain name"
-                                    value={otherSuins}
-                                    onChange={(e) => {
-                                      const value = e.target.value.replace(
-                                        '.wal.app',
-                                        '',
-                                      )
-                                      setOtherSuins(value)
-                                    }}
-                                    className="bg-primary-800 border-secondary-500/20 text-white pr-[85px] transition-all duration-200 
+                            {selectedSuins === 'other' && (
+                              <div className="relative mt-2 group">
+                                <Input
+                                  placeholder="Enter your domain name"
+                                  value={otherSuins}
+                                  onChange={(e) => {
+                                    const value = e.target.value.replace(
+                                      '.wal.app',
+                                      '',
+                                    )
+                                    setOtherSuins(value)
+                                  }}
+                                  className="bg-primary-800 border-secondary-500/20 text-white pr-[85px] transition-all duration-200 
                                     placeholder:text-white/30 focus:border-secondary-500/50 focus:ring-1 focus:ring-secondary-500/50
                                     group-hover:border-secondary-500/30"
-                                  />
-                                  <div
-                                    className="absolute right-0 top-1/2 -translate-y-1/2 px-3 h-full flex items-center
+                                />
+                                <div
+                                  className="absolute right-0 top-1/2 -translate-y-1/2 px-3 h-full flex items-center
                                   border-l border-secondary-500/20 text-secondary-400/70 select-none bg-secondary-500/5
                                   text-sm font-medium transition-colors duration-200 group-hover:text-secondary-400/90
                                   group-hover:border-secondary-500/30 group-hover:bg-secondary-500/10"
-                                  >
-                                    .wal.app
-                                  </div>
+                                >
+                                  .wal.app
                                 </div>
-                              )}
-                            </>
-                          )}
-                        </div>
-                        {project.status === 1 && (
-                          <div className="flex gap-2">
-                            <Button
-                              onClick={() => handleLinkSuins()}
-                              className="bg-secondary-500 hover:bg-secondary-600 text-white flex-1 relative"
-                              disabled={
-                                isLinking ||
-                                isLoadingSuins ||
-                                !selectedSuins ||
-                                (selectedSuins === 'other' && !otherSuins)
-                              }
-                            >
-                              {isLinking ? (
-                                <div className="flex items-center justify-center">
-                                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                  <span>Linking SUINS...</span>
-                                </div>
-                              ) : (
-                                <div className="flex items-center justify-center">
-                                  <Link className="h-4 w-4 mr-2" />
-                                  <span>Link SUINS</span>
-                                </div>
-                              )}
-                            </Button>
-                          </div>
-                        )}
-                        {project.status !== 1 && (
-                          <div className="text-sm text-white/60 italic">
-                            SUINS linking is only available for active projects
-                          </div>
+                              </div>
+                            )}
+                          </>
                         )}
                       </div>
-                    </DialogContent>
-                  </Dialog>
-                )}
+                      {project.status === 1 && (
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => handleLinkSuins()}
+                            className="bg-secondary-500 hover:bg-secondary-600 text-white flex-1 relative"
+                            disabled={
+                              isLinking ||
+                              isLoadingSuins ||
+                              !selectedSuins ||
+                              (selectedSuins === 'other' && !otherSuins)
+                            }
+                          >
+                            {isLinking ? (
+                              <div className="flex items-center justify-center">
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                <span>Linking SUINS...</span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center justify-center">
+                                <Link className="h-4 w-4 mr-2" />
+                                <span>Link SUINS</span>
+                              </div>
+                            )}
+                          </Button>
+                        </div>
+                      )}
+                      {project.status !== 1 && (
+                        <div className="text-sm text-white/60 italic">
+                          SUINS linking is only available for active projects
+                        </div>
+                      )}
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
@@ -548,29 +526,16 @@ const ProjectCard = memo(
                   ) : (
                     <>
                       <DropdownMenuItem className="focus:bg-primary-800">
-                        <RefreshCw className="mr-2 h-4 w-4" />
-                        <span>Update site</span>
+                        <Users className="mr-2 h-4 w-4" />
+                        <span>Transfer ownership</span>
                       </DropdownMenuItem>
-                      {!project.siteId && (
-                        <DropdownMenuItem
-                          className="focus:bg-primary-800"
-                          onClick={() => setGenerateDialogOpen(true)}
-                          disabled={project.site_status === 0}
-                        >
-                          <Key className="mr-2 h-4 w-4" />
-                          <span>Generate Site ID</span>
-                          {isGenerating && (
-                            <Loader2 className="ml-2 h-4 w-4 animate-spin text-secondary-400" />
-                          )}
-                        </DropdownMenuItem>
-                      )}
                       <DropdownMenuItem className="focus:bg-primary-800">
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         <span>Extend site</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem className="focus:bg-primary-800">
-                        <Users className="mr-2 h-4 w-4" />
-                        <span>Transfer ownership</span>
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        <span>Update site</span>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator className="bg-secondary-500/20" />
                       <DropdownMenuItem
@@ -726,13 +691,13 @@ const ProjectCard = memo(
               </div>
 
               {/* Project Link */}
-              <div className="flex items-center text-sm group-hover:translate-x-0.5 transition-transform duration-200">
+              <div className="flex items-center text-sm mb-1 group-hover:translate-x-0.5 transition-transform duration-200">
                 {project.suins ? (
                   <a
                     href={`https://${project.suins?.endsWith('.sui') ? project.suins.slice(0, -4) : project.suins}.wal.app`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center h-[28px] hover:underline truncate transition-colors duration-200 text-secondary-200/80 hover:text-secondary-100/90 max-w-[340px]"
+                    className={`flex items-center h-[28px] hover:underline truncate transition-colors duration-200 ${colors.link}`}
                   >
                     {project.suins?.endsWith('.sui')
                       ? project.suins.slice(0, -4)
@@ -742,72 +707,26 @@ const ProjectCard = memo(
                       <ExternalLink className="h-4 w-4 flex-shrink-0" />
                     </span>
                   </a>
-                ) : project.showcase_url ? (
-                  <a
-                    href={`https://kursui.wal.app/${project.showcase_url}/index.html`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center h-[24px] hover:underline transition-colors duration-200 text-secondary-200/80 hover:text-secondary-100/90 max-w-[340px]"
-                    title={`https://kursui.wal.app/${project.showcase_url}/index.html`}
-                  >
-                    <span className="flex-shrink-0">https://</span>
-                    <span className="truncate" style={{ minWidth: 0 }}>
-                      kursui.wal.app/{project.showcase_url}/index.html
-                    </span>
-                    <span className="ml-1 group-hover:translate-x-0.5 transition-transform duration-200">
-                      <ExternalLink className="h-4 w-4 flex-shrink-0" />
-                    </span>
-                  </a>
                 ) : null}
               </div>
 
               {/* Site ID with Copy Button */}
-              {project.status === 1 && !project.suins && (
-                <div className="flex items-center text-xs group-hover:translate-x-0.5 transition-transform duration-200 min-h-[20px]">
-                  {project.site_status === 0 ? (
-                    <span
-                      className="flex items-center gap-2 px-2 py-0.5 rounded-md bg-yellow-400/10 border border-yellow-300/30 shadow-sm text-yellow-200 text-xs animate-pulse"
-                      style={{ minHeight: 28 }}
-                    >
-                      <Loader2 className="h-4 w-4 animate-spin text-yellow-300" />
-                      <span>Generating Site ID...</span>
-                    </span>
-                  ) : project.site_status === 2 ? (
-                    <span
-                      className="flex items-center gap-2 px-2 py-0.5 rounded-md bg-red-400/10 border border-red-400/30 shadow-sm text-red-300 text-xs"
-                      style={{ minHeight: 28 }}
-                    >
-                      <svg
-                        className="h-4 w-4 text-red-400"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                        viewBox="0 0 24 24"
-                      >
-                        <circle cx="12" cy="12" r="10" />
-                        <line x1="15" y1="9" x2="9" y2="15" />
-                        <line x1="9" y1="9" x2="15" y2="15" />
-                      </svg>
-                      <span>Failed to generate Site ID</span>
-                    </span>
-                  ) : project.siteId ? (
-                    <>
-                      <span className="truncate mr-2 text-white/80">
-                        Site ID: {project.siteId.slice(0, 6)}...
-                        {project.siteId.slice(-4)}
-                      </span>
-                      <button
-                        onClick={() => handleCopy(project.siteId!)}
-                        className="p-1 rounded-full hover:bg-white/10 transition-colors duration-200"
-                      >
-                        {copied ? (
-                          <Check className="h-3.5 w-3.5 text-green-400" />
-                        ) : (
-                          <Copy className="h-3.5 w-3.5" />
-                        )}
-                      </button>
-                    </>
-                  ) : null}
+              {project.status === 1 && project.siteId && (
+                <div className="flex items-center text-xs text-white/60 mb-2 group-hover:translate-x-0.5 transition-transform duration-200">
+                  <span className="truncate mr-2">
+                    Site ID: {project.siteId.slice(0, 6)}...
+                    {project.siteId.slice(-4)}
+                  </span>
+                  <button
+                    onClick={() => handleCopy(project.siteId!)}
+                    className="p-1 rounded-full hover:bg-white/10 transition-colors duration-200"
+                  >
+                    {copied ? (
+                      <Check className="h-3.5 w-3.5 text-green-400" />
+                    ) : (
+                      <Copy className="h-3.5 w-3.5" />
+                    )}
+                  </button>
                 </div>
               )}
 
@@ -949,40 +868,6 @@ const ProjectCard = memo(
                     <span>Delete Site</span>
                   </div>
                 )}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* Generate Site ID Dialog */}
-        <Dialog open={generateDialogOpen} onOpenChange={setGenerateDialogOpen}>
-          <DialogContent className="bg-primary-900 border-secondary-500/20 text-white">
-            <DialogHeader>
-              <DialogTitle className="text-secondary-400">
-                Generate Site ID
-              </DialogTitle>
-              <DialogDescription className="text-white/60">
-                Do you want to generate a new Site ID for this project?
-              </DialogDescription>
-            </DialogHeader>
-            <div className="flex justify-end gap-3 mt-6">
-              <Button
-                variant="outline"
-                onClick={() => setGenerateDialogOpen(false)}
-                className="border-white/20 text-white hover:bg-white/10"
-                disabled={isGenerating}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleGenerateSiteId}
-                className="bg-secondary-500 hover:bg-secondary-600 text-white"
-                disabled={isGenerating}
-              >
-                {isGenerating ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                ) : null}
-                Generate
               </Button>
             </div>
           </DialogContent>
