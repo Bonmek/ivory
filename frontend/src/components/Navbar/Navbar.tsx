@@ -2,16 +2,24 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, X, Blocks, Wallet, ChevronDown, LogOut } from 'lucide-react'
 import { Link, useLocation } from 'react-router'
-import LoginDialog from './LoginDialog'
+import LoginDialog from '../LoginDialog'
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-} from './ui/dropdown-menu'
-import { Button } from './ui/button'
+} from '../ui/dropdown-menu'
+import { Button } from '../ui/button'
 import { useWalletKit } from '@mysten/wallet-kit'
 import { useAuth } from '@/context/AuthContext'
+import { useLanguage } from '@/context/LanguageContext'
+import { FormattedMessage } from 'react-intl'
+import { LanguageSelector } from './LanguageSelector'
+
+const languages = [
+  { code: 'en-US', name: 'English' },
+  { code: 'zh-CN', name: '中文' },
+]
 
 const Navbar = () => {
   const { currentAccount, disconnect } = useWalletKit()
@@ -22,6 +30,7 @@ const Navbar = () => {
   const location = useLocation()
   const [copied, setCopied] = useState(false)
   const logo = '/images/logos/Ivory_cliped.png';
+  const { language, setLanguage } = useLanguage()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -40,10 +49,10 @@ const Navbar = () => {
   }
 
   const navItems = [
-    { name: 'Home', to: '/' },
-    { name: 'Dashboard', to: '/dashboard' },
-    { name: 'How to use', to: '/how-to-use' },
-    { name: 'About', to: '/about' },
+    { id: 'nav.home', to: '/' },
+    ...((currentAccount?.address || zkloginAddress) ? [{ id: 'nav.dashboard', to: '/dashboard' }] : []),
+    { id: 'nav.howToUse', to: '/how-to-use' },
+    { id: 'nav.about', to: '/about' },
   ]
 
   const isActivePath = (path: string) => {
@@ -70,12 +79,12 @@ const Navbar = () => {
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-8">
+            <div className="hidden md:flex items-center space-x-6">
               {/* Nav Links */}
               <div className="flex space-x-6">
-                {navItems.map((item, index) => (
+                {navItems.map((item) => (
                   <Link
-                    key={item.name}
+                    key={item.id}
                     to={item.to}
                     className={`relative group transition-all duration-300 ${
                       isActivePath(item.to)
@@ -86,10 +95,12 @@ const Navbar = () => {
                     <motion.div
                       initial={{ opacity: 0, y: -20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: index * 0.1 }}
+                      transition={{ duration: 0.5 }}
                       className="relative"
                     >
-                      <span className="relative z-10">{item.name}</span>
+                      <span className="relative z-10">
+                        <FormattedMessage id={item.id} />
+                      </span>
                       <motion.span
                         className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-secondary-400 to-secondary-600"
                         initial={{ scaleX: 0 }}
@@ -107,6 +118,11 @@ const Navbar = () => {
                     </motion.div>
                   </Link>
                 ))}
+              </div>
+
+              {/* Language Selector */}
+              <div className="flex items-center">
+                <LanguageSelector />
               </div>
 
               {/* Connect Wallet Button */}
@@ -159,7 +175,7 @@ const Navbar = () => {
                         }}
                         title="Copy address"
                       >
-                        {copied ? 'Copied!' : 'Copy'}
+                        <FormattedMessage id={copied ? 'nav.copied' : 'nav.copy'} />
                       </button>
                     </div>
                     <div className="my-2 h-px bg-secondary-500/20" />
@@ -168,7 +184,7 @@ const Navbar = () => {
                       className="text-red-400 hover:bg-primary-800/80 hover:text-red-500 focus:bg-primary-800/80 focus:text-red-500 font-semibold rounded-lg transition-colors duration-150 cursor-pointer px-3 py-2 flex items-center"
                     >
                       <LogOut className="w-4 h-4 mr-2" />
-                      Logout
+                      <FormattedMessage id="nav.logout" />
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -183,7 +199,7 @@ const Navbar = () => {
                 >
                   <Wallet className="w-4 h-4 text-black" />
                   <span className="text-black font-bold font-pixel">
-                    Connect Wallet
+                    <FormattedMessage id="wallet.connect" />
                   </span>
                 </motion.button>
               )}
@@ -234,7 +250,7 @@ const Navbar = () => {
               <div className="p-6 space-y-6">
                 {navItems.map((item, index) => (
                   <Link
-                    key={item.name}
+                    key={item.id}
                     to={item.to}
                     className={`block py-3 transition-all duration-300 ${isActivePath(item.to)
                       ? 'text-white font-bold bg-gradient-to-r from-secondary-400/20 to-secondary-600/20 rounded-lg p-4'
@@ -248,7 +264,9 @@ const Navbar = () => {
                       transition={{ delay: index * 0.1 }}
                       className="flex items-center space-x-2"
                     >
-                      <span className="text-lg tracking-wide">{item.name}</span>
+                      <span className="text-lg tracking-wide">
+                        <FormattedMessage id={item.id} />
+                      </span>
                     </motion.div>
                   </Link>
                 ))}

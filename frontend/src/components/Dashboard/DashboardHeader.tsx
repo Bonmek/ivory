@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { Search, Filter, ChevronDown } from 'lucide-react'
+import { Search, Filter, ChevronDown, RefreshCw } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import {
@@ -8,32 +8,38 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { FormattedMessage, useIntl } from 'react-intl'
 
 interface DashboardHeaderProps {
   searchQuery: string
   setSearchQuery: (query: string) => void
-  sortType: string
-  setSortType: (type: string) => void
   date: Date | undefined
   setDate: (date: Date | undefined) => void
-}
-
-const sortTypeLabel = {
-  latest: 'Latest',
-  'name-az': 'Name A-Z',
-  'name-za': 'Name Z-A',
-  'remaining-low': 'Remaining Days: low to high',
-  'remaining-high': 'Remaining Days: high to low',
+  sortType: string
+  setSortType: (type: string) => void
+  onRefresh: () => Promise<void>
+  isRefreshing: boolean
 }
 
 const DashboardHeader = ({
   searchQuery,
   setSearchQuery,
-  sortType,
-  setSortType,
   date,
   setDate,
+  sortType,
+  setSortType,
+  onRefresh,
+  isRefreshing,
 }: DashboardHeaderProps) => {
+  const intl = useIntl();
+  
+  const sortTypeLabel = {
+    latest: intl.formatMessage({ id: 'dashboard.sort.latest' }),
+    'name-az': intl.formatMessage({ id: 'dashboard.sort.nameAZ' }),
+    'name-za': intl.formatMessage({ id: 'dashboard.sort.nameZA' }),
+    'remaining-low': intl.formatMessage({ id: 'dashboard.sort.remainingLow' }),
+    'remaining-high': intl.formatMessage({ id: 'dashboard.sort.remainingHigh' }),
+  }
   return (
     <motion.div
       initial={{ opacity: 0, y: -20 }}
@@ -58,10 +64,10 @@ const DashboardHeader = ({
           damping: 15,
         }}
       >
-        Dashboard
+        <FormattedMessage id="dashboard.title" />
       </motion.h1>
       <motion.div
-        className="flex flex-col space-y-4 md:flex-row md:space-x-4 md:space-y-0"
+        className="flex flex-col space-y-4 md:flex-row md:space-y-0 gap-2"
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{
@@ -79,8 +85,8 @@ const DashboardHeader = ({
         >
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-secondary-400 z-10 pointer-events-none" />
           <Input
-            type="search"
-            placeholder="Search projects..."
+            type="search" 
+            placeholder={intl.formatMessage({ id: 'dashboard.search' })}
             className="w-full pl-10 md:w-[250px] bg-primary-900/80 border-secondary-500/20 text-white placeholder:text-secondary-400 backdrop-blur-sm"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -121,7 +127,7 @@ const DashboardHeader = ({
                   : ''
               }
             >
-              Latest
+              <FormattedMessage id="dashboard.sort.latest" />
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => setSortType('name-az')}
@@ -131,7 +137,7 @@ const DashboardHeader = ({
                   : ''
               }
             >
-              Name A-Z
+              <FormattedMessage id="dashboard.sort.nameAZ" />
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => setSortType('name-za')}
@@ -141,7 +147,7 @@ const DashboardHeader = ({
                   : ''
               }
             >
-              Name Z-A
+              <FormattedMessage id="dashboard.sort.nameZA" />
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => setSortType('remaining-low')}
@@ -151,7 +157,7 @@ const DashboardHeader = ({
                   : ''
               }
             >
-              Remaining Days: low to high
+              <FormattedMessage id="dashboard.sort.remainingLow" />
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => setSortType('remaining-high')}
@@ -161,10 +167,20 @@ const DashboardHeader = ({
                   : ''
               }
             >
-              Remaining Days: high to low
+              <FormattedMessage id="dashboard.sort.remainingHigh" />
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={onRefresh}
+          disabled={isRefreshing}
+          className="h-9 w-9 cursor-pointer"
+        >
+          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+        </Button>
 
         {(date || searchQuery) && (
           <motion.div

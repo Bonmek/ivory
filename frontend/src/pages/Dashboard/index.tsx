@@ -3,7 +3,6 @@
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import ThreeJSBackground from '@/components/ThreeJsBackground'
-import ProjectCard from '@/components/Dashboard/ProjectCard'
 import DashboardHeader from '@/components/Dashboard/DashboardHeader'
 import DashboardTabs from '@/components/Dashboard/DashboardTabs'
 import EmptyState from '@/components/Dashboard/EmptyState'
@@ -11,6 +10,13 @@ import Loading from '@/components/Loading'
 import { Helmet } from 'react-helmet'
 import { useSuiData } from '@/hooks/useSuiData'
 import { transformMetadataToProject } from '@/utils/metadataUtils'
+import { useWalletKit } from '@mysten/wallet-kit'
+import { useAuth } from '@/context/AuthContext'
+import { RefreshCw } from 'lucide-react'
+import { mockProjects } from '@/mocks/projectData'
+import { Project } from '@/types/project'
+import ProjectCard from '@/components/Dashboard/ProjectCard'
+import { FormattedMessage, useIntl } from 'react-intl'
 
 const formatDate = (date: Date) => {
   return date.toLocaleDateString('en-GB', {
@@ -25,48 +31,70 @@ const calculateDaysBetween = (date1: Date, date2: Date) => {
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 }
 
+function getPageList(current: number, total: number) {
+  const pages: (number | string)[] = []
+  if (total <= 5) {
+    for (let i = 1; i <= total; i++) pages.push(i)
+  } else {
+    if (current > 2) pages.push(1)
+    if (current > 3) pages.push('...')
+    for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) {
+      pages.push(i)
+    }
+    if (current < total - 2) pages.push('...')
+    if (current < total - 1) pages.push(total)
+  }
+  return pages
+}
+
 export default function Dashboard() {
+  const { address } = useAuth()
   const [searchQuery, setSearchQuery] = useState('')
+  const intl = useIntl()
   const [date, setDate] = useState<Date | undefined>(undefined)
   const [activeTab, setActiveTab] = useState('all')
   const [hoveredCard, setHoveredCard] = useState<number | null>(null)
   const [sortType, setSortType] = useState('latest')
   const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 6 // 2 rows of 3 items
+  const itemsPerPage = 6
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
-  // TODO: Replace hardcoded address with user's connected wallet address
-  const [inputAddress, setAddress] = useState(
-    '0x18a4c45a96c15d62b82b341f18738125bf875fee86057d88589a183700601a1c',
-  )
+  const { metadata, isLoading, refetch } = useSuiData(address || '')
 
-  const { metadata, isLoading } = useSuiData(inputAddress)
-
-  // Transform metadata into project format
   const filteredProjects = useMemo(() => {
-    if (!metadata || metadata.length === 0) return []
-    return metadata
-      .map((meta, index) => transformMetadataToProject(meta, index))
-      .filter((project) => {
-        const matchesSearch =
-          project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          project.url.toLowerCase().includes(searchQuery.toLowerCase())
+    const projects = metadata
+      ? metadata.map((meta, index) => transformMetadataToProject(meta, index))
+      : []
+    if (!projects || projects.length === 0) return []
+    let filtered = projects.filter((project) => {
+      const matchesSearch =
+        project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        project.url.toLowerCase().includes(searchQuery.toLowerCase())
 
-        const matchesDate =
-          !date ||
-          formatDate(project.startDate) === formatDate(date) ||
-          formatDate(project.expiredDate) === formatDate(date)
+      const matchesDate =
+        !date ||
+        formatDate(project.startDate) === formatDate(date) ||
+        formatDate(project.expiredDate) === formatDate(date)
 
-        const remaining = calculateDaysBetween(new Date(), project.expiredDate)
+      const matchesTab =
+        activeTab === 'all' ||
+        (activeTab === 'building' && project.status === 0) ||
+        (activeTab === 'active' && project.status === 1) ||
+        (activeTab === 'failed' && project.status === 2)
 
-        const matchesTab =
-          activeTab === 'all' ||
-          (activeTab === 'expiring' && remaining <= 30) ||
-          (activeTab === 'recent' &&
-            calculateDaysBetween(new Date(), project.startDate) <= 30)
+      return matchesSearch && matchesDate && matchesTab
+    })
 
-        return matchesSearch && matchesDate && matchesTab
-      })
-  }, [metadata, searchQuery, date, activeTab])
+    if (activeTab === 'building') {
+      filtered = filtered.filter((p) => p.status === 0)
+    } else if (activeTab === 'active') {
+      filtered = filtered.filter((p) => p.status === 1)
+    } else if (activeTab === 'failed') {
+      filtered = filtered.filter((p) => p.status === 2)
+    }
+
+    return filtered
+  }, [searchQuery, date, activeTab, metadata])
 
   const sortedProjects = useMemo(() => {
     return [...filteredProjects].sort((a, b) => {
@@ -95,14 +123,12 @@ export default function Dashboard() {
     })
   }, [filteredProjects, sortType])
 
-  // Pagination
-  const totalPages = Math.ceil(filteredProjects.length / itemsPerPage)
-  const paginatedProjects = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage
-    return sortedProjects.slice(startIndex, startIndex + itemsPerPage)
-  }, [sortedProjects, currentPage])
-
   // Reset to first page when search changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, date, activeTab])
+
+  // Reset section pages when filter changes
   useEffect(() => {
     setCurrentPage(1)
   }, [searchQuery, date, activeTab])
@@ -120,14 +146,35 @@ export default function Dashboard() {
     setHoveredCard(null)
   }, [])
 
+  const handleRefresh = async () => {
+    setIsRefreshing(true)
+    try {
+      await refetch()
+    } finally {
+      setIsRefreshing(false)
+    }
+  }
+
+  // Calculate total pages
+  const totalPages = Math.ceil(sortedProjects.length / itemsPerPage)
+
+  // Get current page items
+  const currentItems = sortedProjects.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage,
+  )
+
+  // Get page numbers to display
+  const pageNumbers = getPageList(currentPage, totalPages)
+
   return (
     <>
       <Helmet>
         <meta charSet="utf-8" />
-        <title>Dashboard | Ivory</title>
+        <title>{intl.formatMessage({ id: 'dashboard.title' })} | Ivory</title>
         <link rel="canonical" href="http://mysite.com/example" />
       </Helmet>
-      <main>
+      <main className="min-h-screen pb-24 relative">
         <div className="container mx-auto relative z-10">
           <DashboardHeader
             searchQuery={searchQuery}
@@ -136,6 +183,8 @@ export default function Dashboard() {
             setSortType={setSortType}
             date={date}
             setDate={setDate}
+            onRefresh={handleRefresh}
+            isRefreshing={isRefreshing}
           />
 
           <DashboardTabs activeTab={activeTab} setActiveTab={setActiveTab} />
@@ -146,74 +195,87 @@ export default function Dashboard() {
             </div>
           ) : (
             <>
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={currentPage}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
-                  className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 items-stretch"
-                >
-                  {paginatedProjects.map((project, index) => (
-                    <motion.div
-                      key={project.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: index * 0.1 }}
-                    >
-                      <ProjectCard
-                        project={project}
-                        index={index}
-                        onHoverStart={handleHoverStart}
-                        onHoverEnd={handleHoverEnd}
-                      />
-                    </motion.div>
-                  ))}
-                </motion.div>
-              </AnimatePresence>
-
-              {totalPages > 1 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: 0.2 }}
-                  className="flex justify-center items-center gap-2 mt-8"
-                >
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="px-4 py-2 rounded-md bg-primary-700 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary-600"
-                  >
-                    Previous
-                  </motion.button>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                    <motion.button
-                      key={page}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => handlePageChange(page)}
-                      className={`px-4 py-2 rounded-md ${
-                        currentPage === page
-                          ? 'bg-secondary-500 text-black'
-                          : 'bg-primary-700 text-white hover:bg-primary-600'
-                      }`}
-                    >
-                      {page}
-                    </motion.button>
-                  ))}
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    className="px-4 py-2 rounded-md bg-primary-700 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary-600"
-                  >
-                    Next
-                  </motion.button>
-                </motion.div>
+              {sortedProjects.length > 0 && (
+                <section className="my-10">
+                  <div className="rounded-xl">
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={currentPage}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.3 }}
+                        className="grid grid-cols-1 gap-4 md:grid-cols-2 items-stretch"
+                      >
+                        {currentItems.map((project, index) => (
+                          <motion.div
+                            key={project.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3, delay: index * 0.1 }}
+                          >
+                            <ProjectCard
+                              project={project}
+                              index={index}
+                              onHoverStart={handleHoverStart}
+                              onHoverEnd={handleHoverEnd}
+                              userAddress={address || ''}
+                              onRefetch={async () => {
+                                await refetch()
+                              }}
+                            />
+                          </motion.div>
+                        ))}
+                        {currentItems.length < 6 &&
+                          Array.from({ length: 6 - currentItems.length }).map(
+                            (_, index) => (
+                              <motion.div
+                                key={`empty-${index}`}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 0.3 }}
+                                className="min-h-[160px] rounded-lg bg-primary-800/30 border border-white/5"
+                              />
+                            ),
+                          )}
+                      </motion.div>
+                    </AnimatePresence>
+                  </div>
+                  {totalPages > 1 && (
+                    <div className="flex justify-center items-center gap-2 mt-8">
+                      <button
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="px-3 py-1.5 rounded-lg bg-primary-700 text-white disabled:opacity-50 hover:bg-primary-600 transition-colors duration-200"
+                      >
+                        <FormattedMessage id="dashboard.pagination.previous" />
+                      </button>
+                      {pageNumbers.map((page, index) => (
+                        <button
+                          key={index}
+                          onClick={() =>
+                            typeof page === 'number' && handlePageChange(page)
+                          }
+                          className={`px-3 py-1.5 rounded-lg transition-colors duration-200 ${
+                            page === currentPage
+                              ? 'bg-secondary-500 text-black'
+                              : page === '...'
+                                ? 'bg-transparent text-white cursor-default'
+                                : 'bg-primary-700 text-white hover:bg-primary-600'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="px-3 py-1.5 rounded-lg bg-primary-700 text-white disabled:opacity-50 hover:bg-primary-600 transition-colors duration-200"
+                      >
+                        <FormattedMessage id="dashboard.pagination.next" />
+                      </button>
+                    </div>
+                  )}
+                </section>
               )}
             </>
           )}

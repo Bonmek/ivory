@@ -7,29 +7,39 @@ class SuiService {
   private client: SuiClient
 
   constructor() {
-    this.client = new SuiClient({ url: getFullnodeUrl(SUI_NETWORK as 'mainnet' | 'testnet' | 'devnet' | 'localnet') })
+    this.client = new SuiClient({
+      url: getFullnodeUrl(
+        SUI_NETWORK as 'mainnet' | 'testnet' | 'devnet' | 'localnet',
+      ),
+    })
   }
 
-  async getBlobs(address: string) {
+  async getBlobs(address: string, filter?: { StructType: string }) {
     try {
-      console.log('Fetching blobs for address:', address)
       let allData: any[] = []
       let cursor: string | null = null
       let hasNextPage = true
 
       while (hasNextPage) {
-        const { data, hasNextPage: nextPage, nextCursor } = await this.client.getOwnedObjects({
+        const {
+          data,
+          hasNextPage: nextPage,
+          nextCursor,
+        } = await this.client.getOwnedObjects({
           owner: address,
-          filter: { StructType: BLOB_TYPE as string },
+          filter: filter || { StructType: BLOB_TYPE as string },
           options: { showContent: true },
-          cursor: cursor
+          cursor: cursor,
         })
-        allData = [...allData, ...data]
+        const blobsWithParent = data.map((blob) => ({
+          ...blob,
+          parentId: blob.data?.objectId || '',
+        }))
+        allData = [...allData, ...blobsWithParent]
         hasNextPage = nextPage
         cursor = nextCursor || null
       }
 
-      console.log('Fetched all blobs:', allData)
       return allData
     } catch (error) {
       console.error('Error fetching blobs:', error)
@@ -44,12 +54,20 @@ class SuiService {
       let hasNextPage = true
 
       while (hasNextPage) {
-        const { data, hasNextPage: nextPage, nextCursor } = await this.client.getDynamicFields({ 
+        const {
+          data,
+          hasNextPage: nextPage,
+          nextCursor,
+        } = await this.client.getDynamicFields({
           parentId: blobId,
-          cursor: cursor
+          cursor: cursor,
         })
-        
-        allData = [...allData, ...data]
+
+        const fieldsWithParent = data.map((field) => ({
+          ...field,
+          parentId: blobId,
+        }))
+        allData = [...allData, ...fieldsWithParent]
         hasNextPage = nextPage
         cursor = nextCursor || null
       }
@@ -61,13 +79,16 @@ class SuiService {
     }
   }
 
-  async getMetadata(objectId: string) {
+  async getMetadata(objectId: string, parentId?: string) {
     try {
       const { data } = await this.client.getObject({
         id: objectId,
         options: { showContent: true },
       })
-      return data
+      return {
+        ...data,
+        parentId: parentId || '',
+      }
     } catch (error) {
       console.error('Error fetching metadata:', error)
       throw error
@@ -75,4 +96,4 @@ class SuiService {
   }
 }
 
-export const suiService = new SuiService() 
+export const suiService = new SuiService()

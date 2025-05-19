@@ -6,6 +6,9 @@ import { Input } from '@/components/ui/input'
 import { advancedOptionsType } from '@/types/CreateWebstie/types'
 import { CacheControl } from '@/types/CreateWebstie/enums'
 import { useState } from 'react'
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
+import { FormattedMessage } from 'react-intl'
+import { useIntl } from 'react-intl'
 
 interface AdvancedOptionsProps {
   advancedOptions: advancedOptionsType
@@ -13,6 +16,7 @@ interface AdvancedOptionsProps {
 }
 
 function AdvancedOptions({ advancedOptions, setAdvancedOptions }: AdvancedOptionsProps) {
+  const intl = useIntl()
   const [isOpen, setIsOpen] = useState(false)
   return (
     <motion.div
@@ -23,7 +27,9 @@ function AdvancedOptions({ advancedOptions, setAdvancedOptions }: AdvancedOption
       <section className="w-full bg-primary-700/70  backdrop-blur-3xl shadow-lg p-2 px-4 rounded-xl">
         <div className="flex items-center justify-between px-2 cursor-pointer"
           onClick={() => setIsOpen((prev) => !prev)}>
-          <h2 className="font-semibold bg-gradient-to-r text-base text-white ">Advanced options</h2>
+          <h2 className="font-semibold bg-gradient-to-r text-base text-white ">
+            <FormattedMessage id="createWebsite.advancedOptions" />
+          </h2>
           <Button
             variant="link"
             size="sm"
@@ -45,73 +51,97 @@ function AdvancedOptions({ advancedOptions, setAdvancedOptions }: AdvancedOption
               className='space-y-6'
             >
 
-              <section className='px-2 mt-4 border-t border-gray-800'>
-                <div className="flex items-center mt-4 mb-2">
-                  <h3 className="text-sm text-gray-300 font-semibold">Default Path</h3>
-                  <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
+              <section className='px-2 mt-4'>
+                <div className="flex items-center mb-2">
+                  <h3 className="text-sm text-gray-300 font-semibold">
+                    <FormattedMessage id="createWebsite.rootDirectory" />
+                  </h3>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help"
+                        onClick={() => {
+                          const helpCenter = document.getElementById('advanced-options')
+                          if (helpCenter) {
+                            helpCenter.scrollIntoView({ behavior: 'smooth' })
+                          }
+                        }}
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent className='w-[260px]' side="right">
+                      <FormattedMessage id="createWebsite.rootDirectoryTooltip" /> <FormattedMessage id="createWebsite.rootDirectoryTooltipDescription" />
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
                 <Input
-                  value={advancedOptions.defaultPath}
-                  onChange={(e) => setAdvancedOptions({ ...advancedOptions, defaultPath: e.target.value })}
+                  value={advancedOptions.rootDirectory}
+                  onChange={(e) => setAdvancedOptions({ ...advancedOptions, rootDirectory: e.target.value })}
                   placeholder="/"
                   className="bg-primary-500 border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500"
                 />
               </section>
 
-              <section className='px-2 mt-4 border-t border-gray-800'>
-                <div className="flex items-center mt-4 mb-2">
-                  <h3 className="text-sm text-gray-300  font-semibold">Cache Control</h3>
-                  <HelpCircleIcon className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
+              <section className='px-2 mt-4'>
+                <div className="flex items-center mb-2">
+                  <h3 className="text-sm text-gray-300 font-semibold">
+                    <FormattedMessage id="createWebsite.defaultPath" />
+                  </h3>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help"
+                        onClick={() => {
+                          const helpCenter = document.getElementById('advanced-options')
+                          if (helpCenter) {
+                            helpCenter.scrollIntoView({ behavior: 'smooth' })
+                          }
+                        }}
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent className='w-[260px]' side="right">
+                      <FormattedMessage id="createWebsite.defaultPathTooltip" /> <FormattedMessage id="createWebsite.defaultPathTooltipDescription" />
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
-                <Select onValueChange={(value) => setAdvancedOptions({ ...advancedOptions, cacheControl: value as CacheControl })}>
-                  <SelectTrigger className="bg-primary-500 border-gray-700 rounded-md h-12 transition-all duration-300 hover:border-secondary-500">
+                <Input
+                  value={advancedOptions.defaultPath}
+                  onChange={(e) => setAdvancedOptions({ ...advancedOptions, defaultPath: e.target.value })}
+                  placeholder="/index.html"
+                  className="bg-primary-500 border-gray-700 rounded-md h-10 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500"
+                />
+              </section>
+
+              <section className='px-2 mt-4 mb-4'>
+                <div className="flex items-center mb-2">
+                  <h3 className="text-sm text-gray-300 font-semibold">
+                    <FormattedMessage id="createWebsite.cacheControl" />
+                  </h3>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help"
+                        onClick={() => {
+                          const helpCenter = document.getElementById('advanced-options')
+                          if (helpCenter) {
+                            helpCenter.scrollIntoView({ behavior: 'smooth' })
+                          }
+                        }}
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent className='w-[260px]' side="right">
+                      <FormattedMessage id="createWebsite.cacheControlTooltip" /> <FormattedMessage id="createWebsite.cacheControlTooltipDescription" />
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <Select value={advancedOptions.cacheControl} onValueChange={(value) => setAdvancedOptions({ ...advancedOptions, cacheControl: value as CacheControl })}>
+                  <SelectTrigger className="bg-primary-500 border-gray-700 rounded-md h-12 transition-all duration-300 hover:border-secondary-500 w-full">
                     <SelectValue placeholder="Select cache control" />
                   </SelectTrigger>
                   <SelectContent className="bg-primary-500">
                     <SelectItem value={CacheControl.NoCache}>No Cache</SelectItem>
-                    <SelectItem value={CacheControl.Public}>Public</SelectItem>
-                    <SelectItem value={CacheControl.Private}>Private</SelectItem>
+                    <SelectItem value={CacheControl.OneDay}>1 Day</SelectItem>
+                    <SelectItem value={CacheControl.OneWeek}>1 Week</SelectItem>
+                    <SelectItem value={CacheControl.OneMonth}>1 Month</SelectItem>
+                    <SelectItem value={CacheControl.OneYear}>1 Year</SelectItem>
                   </SelectContent>
                 </Select>
-              </section>
-
-              <section className='px-2'>
-                <div className="flex items-center mb-2">
-                  <h3 className="text-sm text-gray-300 font-semibold">Route</h3>
-                  <HelpCircle className="h-5 w-5 text-secondary-500 ml-2 hover:text-secondary-700 transition-colors cursor-help" />
-                </div>
-                {advancedOptions.route.map((route, idx) => (
-                  <div key={idx} className="flex items-center space-x-2 mb-4">
-                    <Input
-                      value={route.name}
-                      onChange={(e) => {
-                        const newRoutes = [...advancedOptions.route]
-                        newRoutes[idx] = { ...newRoutes[idx], name: e.target.value }
-                        setAdvancedOptions({ ...advancedOptions, route: newRoutes })
-                      }}
-                      className="bg-primary-500 border-gray-700 rounded-md h-8 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500" />
-                    <span>to</span>
-                    <Input
-                      value={route.path}
-                      onChange={(e) => {
-                        const newRoutes = [...advancedOptions.route]
-                        newRoutes[idx] = { ...newRoutes[idx], path: e.target.value }
-                        setAdvancedOptions({ ...advancedOptions, route: newRoutes })
-                      }}
-                      className="bg-primary-500 border-gray-700 rounded-md h-8 transition-all duration-300 focus:border-secondary-500 focus:ring-secondary-500" />
-                    {idx === advancedOptions.route.length - 1 && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="rounded-full bg-secondary-500 hover:bg-secondary-700 transform transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-secondary-500/20"
-                        onClick={() => setAdvancedOptions({ ...advancedOptions, route: [...advancedOptions.route, { name: '', path: '' }] })}
-                        type="button"
-                      >
-                        <Plus className="h-5 w-5 text-black" />
-                      </Button>
-                    )}
-                  </div>
-                ))}
               </section>
             </motion.div>
           )}
