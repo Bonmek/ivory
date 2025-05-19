@@ -22,6 +22,14 @@ export default {
   'wallet.address': 'Wallet Address',
   'wallet.copyAddress': 'Copy Address',
 
+  // Checklist steps
+  'checklist.confirm': 'Waiting for Confirmation',
+  'checklist.deploy': 'Initializing',
+  'checklist.build': 'Building',
+  'checklist.done': 'Deployed',
+  'checklist.failed': 'Failed',
+  'createWebsite.redeploy': 'Redeploy',
+
   // Messages
   'message.welcome': 'Welcome to Ivory',
   'message.loading': 'Loading...',
@@ -34,7 +42,10 @@ export default {
   'createWebsite.projectFilesTooltip': 'Upload your project files or connect to a GitHub repository.',
   'createWebsite.upload': 'Upload',
   'createWebsite.github': 'Github',
-  'createWebsite.dragDrop': 'Drag & drop ZIP file here',
+  'createWebsite.dragDrop': 'Drag & drop file here',
+  'createWebsite.zipOnly': 'ZIP files only • Max size: 300MB',
+  'createWebsite.error.invalidFileType': 'Only .zip files are allowed',
+  'createWebsite.error.fileTooLarge': 'File is too large. Maximum size is {maxSize}',
   'createWebsite.browseFile': 'Browse file',
   'createWebsite.or': 'or',
   'createWebsite.name': 'Name',
@@ -44,7 +55,8 @@ export default {
   'createWebsite.error.githubRepo': 'Please select a repository',
   'createWebsite.githubUrlPlaceholder': 'Enter GitHub repository URL',
   'createWebsite.githubUrlExample': 'Example: https://github.com/username/repository',
-  'createWebsite.githubSignIn': 'Sign in to GitHub',
+  'createWebsite.githubSignIn': 'Connect to GitHub',
+  'createWebsite.githubDescription': 'Connect your GitHub account to import repositories',
   'createWebsite.githubLogout': 'Logout from GitHub',
   'createWebsite.githubRepository': 'GitHub Repository',
   'createWebsite.githubSearch': 'Search repositories...',
@@ -127,12 +139,29 @@ export default {
   'createWebsite.helpCenter': 'Help Center',
   'createWebsite.helpCenterDescription': 'Get help with creating and deploying your website.',
 
+  'createWebsite.selectRootDirectory': 'Select root directory',
+  'createWebsite.selectRootDirectoryDescription': 'Choose the base directory of your project.',
+
+  'createWebsite.viewDashboard': 'Next, we are building your project.',
+  'createWebsite.building': 'Building...',
+  'createWebsite.buildingTime': 'This may take a few moments',
+
+  'createWebsite.failedToBuild': 'Failed to build',
+  'createWebsite.failedToBuildDescription': 'Please try again or contact support for assistance.',
+
+  'createWebsite.built': 'Built successfully!',
+  'createWebsite.viewDashboardbuilt': 'You can now see your deployed website at {dashboardLink}',
+  'createWebsite.deployed': 'Deployed successfully!',
+  'createWebsite.showcaseUrl': 'Your showcase URL is {showcaseUrl}',
+
+  'createWebsite.selectBranch': 'Select branch',
+
   // Homepage
-  'homepage.hero.title1': 'Deploy',
-  'homepage.hero.title2': 'Your',
-  'homepage.hero.title3': 'Site',
-  'homepage.hero.title4': 'In',
-  'homepage.hero.title5': 'Seconds',
+  'homepage.hero.title1': 'Launch Your Site In Few Clicks',
+  'homepage.hero.title2': '',
+  'homepage.hero.title3': '',
+  'homepage.hero.title4': '',
+  'homepage.hero.title5': '',
   'homepage.hero.title6': 'everywhere',
   'homepage.hero.desc': 'Ivory is a no-code, low-cost platform for deploying static websites with Walrus. Enjoy high availability, censorship resistance, data integrity, and full ownership — all with free bandwidth and zero complexity.',
   'homepage.hero.deploy': 'Deploy Now',
@@ -143,7 +172,7 @@ export default {
   'homepage.feature.secure': 'Secure & Ownable',
   'homepage.feature.secure.desc': 'You control your data. Ivory guarantees full ownership and tamper-proof deployment with zero vendor lock-in.',
   'homepage.feature.nocode': 'No-Code Deployment',
-  'homepage.feature.nocode.desc': 'Publish your site in seconds. No coding, no setup — just click, deploy, and go live.',
+  'homepage.feature.nocode.desc': 'Publish your site in minutes. No coding, no setup — just click, deploy, and go live.',
   'homepage.feature.availability': 'High Availability',
   'homepage.feature.availability.desc': 'Your site is served from a global edge network, ensuring blazing-fast load times and near-100% uptime.',
   'homepage.feature.integrity': 'Data Integrity',
@@ -170,6 +199,9 @@ export default {
   'dashboard.empty.description': 'You don\'t have any projects yet. Create your first project to get started.',
   'dashboard.empty.reset': 'Reset filters',
   'dashboard.empty.create': 'Create new project',
+  'dashboard.refresh': 'Refresh data',
+  'dashboard.lastRefresh': 'Last: {time}',
+  'dashboard.createNew': 'Deploy Site',
 
   // ProjectCard
   'projectCard.linkSuins': 'Link SUINS',
@@ -187,9 +219,9 @@ export default {
   'projectCard.connectWallet': 'Please connect your wallet first',
   'projectCard.connectWalletDesc': 'Click the wallet button in the top right to connect',
   'projectCard.suinsLinked': 'SUINS linked successfully',
-  'projectCard.suinsLinkedDesc': 'Your SUINS domain has been linked to this project. It may take a few moments to update.',
+  'projectCard.suinsLinkedDesc': 'Your SUINS domain has been linked to this project. It may take a few minutes to update.',
   'projectCard.failedToLink': 'Failed to link SUINS',
-  'projectCard.failedToLinkDesc': 'Please try again or contact support if the problem persists.',
+  'projectCard.failedToLinkDesc': 'Please try again or contact support for assistance.',
   'projectCard.siteDeleted': 'Site deleted successfully',
   'projectCard.siteDeletedDesc': 'The site deletion process may take 1-2 minutes to complete.',
   'projectCard.failedToDelete': 'Failed to delete site',
@@ -217,5 +249,10 @@ export default {
   'projectCard.building': 'Building',
   'projectCard.buildingInProgress': 'Building in Progress',
   'projectCard.buildingDesc': 'Your site is currently being built. This process may take a few minutes.',
-  'projectCard.active': 'Active'
+  'projectCard.active': 'Active',
+  'projectCard.generateSiteId': 'Generate Site ID',
+  'projectCard.generateSiteIdDesc': 'Do you want to generate a new Site ID for this project?',
+  'projectCard.generating': 'Generating...',
+  'projectCard.generate': 'Generate',
+  'projectCard.comingSoon': 'Soon'
 } as const;

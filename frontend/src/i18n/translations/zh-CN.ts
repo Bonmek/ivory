@@ -22,6 +22,14 @@ export default {
   'wallet.address': '钱包地址',
   'wallet.copyAddress': '复制地址',
 
+  // Checklist steps
+  'checklist.confirm': '等待确认',
+  'checklist.deploy': '创建中',
+  'checklist.build': '构建中',
+  'checklist.done': '部署完成',
+  'checklist.failed': '失败',
+  'createWebsite.redeploy': '重新部署',
+
   // Messages
   'message.welcome': '欢迎使用 Ivory',
   'message.loading': '加载中...',
@@ -34,7 +42,10 @@ export default {
   'createWebsite.projectFilesTooltip': '上传您的项目文件或连接到 GitHub 仓库。',
   'createWebsite.upload': '上传',
   'createWebsite.github': 'Github',
-  'createWebsite.dragDrop': '将 ZIP 文件拖放到此处',
+  'createWebsite.dragDrop': '将文件拖放到此处',
+  'createWebsite.zipOnly': '仅支持ZIP文件 • 最大300MB',
+  'createWebsite.error.invalidFileType': '仅支持.zip格式的文件',
+  'createWebsite.error.fileTooLarge': '文件过大，最大支持{maxSize}',
   'createWebsite.browseFile': '浏览文件',
   'createWebsite.or': '或',
   'createWebsite.name': '名称',
@@ -44,7 +55,8 @@ export default {
   'createWebsite.error.githubRepo': '请选择仓库',
   'createWebsite.githubUrlPlaceholder': '输入 GitHub 仓库 URL',
   'createWebsite.githubUrlExample': '示例：https://github.com/username/repository',
-  'createWebsite.githubSignIn': '登录 GitHub',
+  'createWebsite.githubSignIn': '连接 GitHub',
+  'createWebsite.githubDescription': '连接您的 GitHub 账户以导入仓库',
   'createWebsite.githubLogout': '从 GitHub 登出',
   'createWebsite.githubRepository': 'GitHub 仓库',
   'createWebsite.githubSearch': '搜索仓库...',
@@ -120,19 +132,35 @@ export default {
   'createWebsite.processingTime': '这可能需要几分钟',
   'createWebsite.continueEditing': '继续编辑',
   'createWebsite.deploy': '部署',
-  'createWebsite.viewDashboard': '您现在可以在 {dashboardLink} 查看部署状态',
+  'createWebsite.viewDashboard': '下一步，我们将为您构建项目。',
   'createWebsite.failedToDeploy': '部署失败',
   'createWebsite.failedToDeployDescription': '请重试或联系支持获取帮助。',
 
   'createWebsite.helpCenter': '帮助中心',
   'createWebsite.helpCenterDescription': '获取创建和部署网站的帮助。',
 
+  'createWebsite.selectRootDirectory': '选择根目录',
+  'createWebsite.selectRootDirectoryDescription': '选择您的项目根目录。',
+
+  'createWebsite.building': '正在构建...',
+  'createWebsite.buildingTime': '这可能需要几分钟',
+
+  'createWebsite.failedToBuild': '构建失败',
+  'createWebsite.failedToBuildDescription': '请重试或联系支持获取帮助。',
+
+  'createWebsite.built': '构建成功！',
+  'createWebsite.viewDashboardbuilt': '您现在可以在 {dashboardLink} 上查看您的部署网站',
+  'createWebsite.deployed': '部署成功！',
+  'createWebsite.showcaseUrl': '您的展示 URL 是 {showcaseUrl}',
+
+  'createWebsite.selectBranch': '选择分支',
+
   // Homepage
-  'homepage.hero.title1': '部署',
-  'homepage.hero.title2': '您的',
-  'homepage.hero.title3': '网站',
-  'homepage.hero.title4': '只需',
-  'homepage.hero.title5': '几秒',
+  'homepage.hero.title1': '轻松几步即可上线您的网站',
+  'homepage.hero.title2': '',
+  'homepage.hero.title3': '',
+  'homepage.hero.title4': '',
+  'homepage.hero.title5': '',
   'homepage.hero.title6': '随处可用',
   'homepage.hero.desc': 'Ivory 是一个无需编码、低成本的平台，使用 Walrus 部署静态网站。享受高可用性、抗审查、数据完整性和完全所有权——所有这些都带有免费带宽和零复杂性。',
   'homepage.hero.deploy': '立即部署',
@@ -170,6 +198,9 @@ export default {
   'dashboard.empty.description': '您还没有任何项目。创建您的第一个项目以开始使用。',
   'dashboard.empty.reset': '重置筛选器',
   'dashboard.empty.create': '创建新项目',
+  'dashboard.refresh': '刷新数据',
+  'dashboard.lastRefresh': '上次: {time}',
+  'dashboard.createNew': '部署站点',
 
   // ProjectCard
   'projectCard.linkSuins': '链接 SUINS',
@@ -217,5 +248,10 @@ export default {
   'projectCard.building': '构建中',
   'projectCard.buildingInProgress': '正在进行构建',
   'projectCard.buildingDesc': '您的网站正在构建中。此过程可能需要几分钟。',
-  'projectCard.active': '活跃'
+  'projectCard.active': '活跃',
+  'projectCard.generateSiteId': '生成站点 ID',
+  'projectCard.generateSiteIdDesc': '您想为此项目生成新的站点 ID 吗？',
+  'projectCard.generating': '正在生成',
+  'projectCard.generate': '生成',
+  'projectCard.comingSoon': '即将'
 } as const;
