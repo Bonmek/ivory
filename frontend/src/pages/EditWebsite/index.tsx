@@ -13,13 +13,16 @@ import { Upload, X } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import { useSuiData } from '@/hooks/useSuiData';
 import { useAuth } from '@/context/AuthContext';
-import { transformMetadataToProject } from '@/utils/metadataUtils';
+import { Project, transformMetadataToProject } from '@/utils/metadataUtils';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import ProjectCard from '@/components/Dashboard/ProjectCard';
+import { id } from 'date-fns/locale';
+import { useParams } from 'react-router';
 
 function App() {
   const [name, setName] = useState('');
@@ -36,6 +39,8 @@ function App() {
   const { metadata, isLoading, refetch } = useSuiData(
     '0x18a4c45a96c15d62b82b341f18738125bf875fee86057d88589a183700601a1c',
   );
+  const {id} = useParams();
+  console.log(id, 'parentId');
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: { 'application/zip': ['.zip'] }, // Fixed typo in accept
@@ -58,6 +63,7 @@ function App() {
   const filteredProjects = useMemo(() => {
     const projects = metadata
       ? metadata.map((meta, index) => transformMetadataToProject(meta, index))
+      .filter((project: Project) => project.parentId === id)
       : [];
     if (!projects || projects.length === 0) return [];
     let filtered = projects.filter((project) => {
@@ -72,10 +78,12 @@ function App() {
 
       return matchesSearch && matchesDate;
     });
-    console.log(filtered, 'hello');
 
     return filtered;
   }, [searchQuery, date, metadata]);
+  console.log(filteredProjects, 'find one');
+  console.log(metadata, 'metadata');
+
 
   const handlePreview = (url: string) => {
     setPreviewUrl(url);
@@ -153,19 +161,17 @@ function App() {
                     filteredProjects.map((project, index) => (
                       <div
                         key={index}
-                        className="bg-gray-600/30 border-cyan-600/50 text-cyan-100 p-3 rounded-lg mb-2 flex justify-between items-center transition-all duration-200 hover:bg-teal-600/20"
+                        className="bg-gray-600/30 border-cyan-600/50 text-cyan-100 p-3 rounded-lg mb-2 transition-all duration-200 hover:bg-teal-600/20"
                       >
                         <span>{project.name}</span>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handlePreview(project.url)}
-                          disabled={!project.url}
-                          className="bg-cyan-500 hover:bg-teal-600 text-white border-none transition-colors duration-200"
-                        >
-                          Preview
-                        </Button>
+                        <br/>
+                        <span>{project.installCommand}</span>
+                        <br/>
+                        <span>{project.buildCommand}</span>
+                        <br/>
+                        <span>{project.defaultRoute}</span>
                       </div>
+                      
                     ))
                   ) : (
                     <div className="bg-gray-600/30 border-cyan-600/50 text-cyan-100 p-3 rounded-lg">
@@ -254,33 +260,6 @@ function App() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Preview Modal */}
-      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="max-w-5xl bg-gray-800/90 backdrop-blur-sm border-cyan-600/50 text-cyan-100">
-          <DialogHeader>
-            <DialogTitle className="text-cyan-200">Site Preview</DialogTitle>
-          </DialogHeader>
-          <div className="relative">
-            {previewUrl ? (
-              <iframe
-                src={previewUrl}
-                className="w-full h-[70vh] rounded-lg border border-cyan-600/50"
-                title="Site Preview"
-                onError={() => (
-                  <div className="text-red-400 text-center py-4">
-                    Failed to load preview. Please check the URL.
-                  </div>
-                )}
-              />
-            ) : (
-              <div className="text-cyan-300/70 text-center py-4">
-                No preview URL available
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
