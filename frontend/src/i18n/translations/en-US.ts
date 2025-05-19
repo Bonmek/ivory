@@ -155,6 +155,7 @@ export default {
   'createWebsite.showcaseUrl': 'Your showcase URL is {showcaseUrl}',
 
   'createWebsite.selectBranch': 'Select branch',
+  'createWebsite.expirationNotice': 'Your Site will expire on {expiryDate}',
 
   // Homepage
   'homepage.hero.title1': 'Deploy',

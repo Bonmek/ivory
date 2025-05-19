@@ -154,6 +154,7 @@ export default {
   'createWebsite.showcaseUrl': '您的展示 URL 是 {showcaseUrl}',
 
   'createWebsite.selectBranch': '选择分支',
+  'createWebsite.expirationNotice': '您的网站将在 {expiryDate} 过期',
 
   // Homepage
   'homepage.hero.title1': '部署',
