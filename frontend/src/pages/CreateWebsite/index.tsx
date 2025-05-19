@@ -84,6 +84,7 @@ export default function CreateWebsitePage() {
       buildCommand: '',
       installCommand: '',
       outputDirectory: '',
+      rootDirectory: '/',
     })
 
   // State for advanced options
@@ -353,6 +354,12 @@ export default function CreateWebsitePage() {
 
   const handleClickDeploy = async () => {
     setOpen(false)
+
+    let rootDirectory = advancedOptions.rootDirectory
+    if (showBuildOutputSettings && buildOutputSettings.outputDirectory) {
+      rootDirectory = buildOutputSettings.outputDirectory
+    }
+
     try {
       const attributes: WebsiteAttributes = {
         'site-name': name,
@@ -362,10 +369,10 @@ export default function CreateWebsitePage() {
         epochs: '1',
         start_date: startDate.toISOString(),
         end_date: endDate.toISOString(),
-        output_dir: buildOutputSettings.outputDirectory,
+        output_dir: showBuildOutputSettings ? buildOutputSettings.outputDirectory : '',
         status: '0',
         cache: advancedOptions.cacheControl,
-        root: advancedOptions.rootDirectory || '/',
+        root: rootDirectory,
         install_command: buildOutputSettings.installCommand || 'npm install',
         build_command: buildOutputSettings.buildCommand || 'npm run build',
         default_route: advancedOptions.defaultPath || '/index.html',
@@ -845,6 +852,8 @@ export default function CreateWebsitePage() {
                       setShowBuildOutputSettings={setShowBuildOutputSettings}
                       buildOutputSettings={buildOutputSettings}
                       setBuildOutputSettings={setBuildOutputSettings}
+                      fileStructure={fileStructure}
+                      githubContents={uploadMethod === UploadMethod.GitHub ? repoContents : []}
                     />
 
                     <AdvancedOptions
@@ -852,6 +861,7 @@ export default function CreateWebsitePage() {
                       setAdvancedOptions={setAdvancedOptions}
                       fileStructure={fileStructure}
                       githubContents={uploadMethod === UploadMethod.GitHub ? repoContents : []}
+                      showBuildOutputSettings={showBuildOutputSettings}
                     />
                   </article>
 
