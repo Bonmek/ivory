@@ -227,11 +227,19 @@ const ProjectCard = memo(
 
       if (!userAddress) {
         toast.error(
-          <FormattedMessage id="projectCard.connectWallet" />, 
+          <FormattedMessage id="projectCard.connectWallet" />,
           {
             description: intl.formatMessage({ id: 'projectCard.connectWalletDesc' }),
           }
         )
+        return
+      }
+
+      if (!userAddress) {
+        toast.error('Please connect your wallet first', {
+          className: 'bg-red-900 border-red-500/20 text-white',
+          description: 'Click the wallet button in the top right to connect',
+        })
         return
       }
 
@@ -265,7 +273,7 @@ const ProjectCard = memo(
         )
         if (result.status === 'success') {
           toast.success(
-            <FormattedMessage id="projectCard.suinsLinked" />, 
+            <FormattedMessage id="projectCard.suinsLinked" />,
             {
               description: intl.formatMessage({ id: 'projectCard.suinsLinkedDesc' }),
               duration: 5000,
@@ -278,7 +286,7 @@ const ProjectCard = memo(
       } catch (error: any) {
         console.error('Error linking SUINS:', error)
         toast.error(
-          error.message || <FormattedMessage id="projectCard.failedToLink" />, 
+          error.message || <FormattedMessage id="projectCard.failedToLink" />,
           {
             description: intl.formatMessage({ id: 'projectCard.failedToLinkDesc' }),
             duration: 5000,
