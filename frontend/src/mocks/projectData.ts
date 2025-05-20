@@ -98,7 +98,7 @@ export const mockProjects = [
     expiredDate: new Date('2025-05-30T00:00:00Z'),
     color: "#4F46E5",
     urlImg: "/images/walrus.png",
-    status: 3,
+    status: 2,
     siteId: "asdasdsadadsadsdasdasd",
     blobId: "k1hMux1OtC2podUiXOe2hObEz4t4vC7HTM6uFi_ZDrY",
     installCommand: "npm install",

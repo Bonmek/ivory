@@ -518,13 +518,6 @@ const ProjectCard = memo(
                 >
                   {project.status === 2 ? (
                     <>
-                      <DropdownMenuItem className="focus:bg-primary-800 cursor-pointer">
-                        <RefreshCw className="mr-2 h-4 w-4" />
-                        <span>
-                          <FormattedMessage id="projectCard.redeploy" />
-                        </span>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator className="bg-secondary-500/20" />
                       <DropdownMenuItem
                         className="text-red-400 focus:text-red-400 focus:bg-primary-800 cursor-pointer"
                         onClick={() => setDeleteDialogOpen(true)}
@@ -535,7 +528,6 @@ const ProjectCard = memo(
                     </>
                   ) : project.status === 0 ? (
                     <>
-                      {/* ไม่แสดงอะไรเลยสำหรับโปรเจกต์ที่กำลัง deploy */}
                     </>
                   ) : project.status === 3 ? (
                     <>
