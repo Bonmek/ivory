@@ -74,7 +74,7 @@ const Navbar = () => {
         <nav className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <Link to="/" className="flex items-center space-x-2 group">
+            <Link to="/" className="flex items-center space-x-2 group cursor-pointer">
               <img src={logo} alt="logo" className="w-25 h-auto" />
             </Link>
 
@@ -86,7 +86,7 @@ const Navbar = () => {
                   <Link
                     key={item.id}
                     to={item.to}
-                    className={`relative group transition-all duration-300 ${
+                    className={`relative group transition-all duration-300 cursor-pointer ${
                       isActivePath(item.to)
                         ? 'text-white font-bold tracking-wide'
                         : 'text-secondary-200 hover:text-white font-medium'
@@ -130,7 +130,7 @@ const Navbar = () => {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <motion.button
-                      className="flex items-center space-x-2 px-6 py-2.5 rounded-full bg-gradient-to-r from-secondary-500 to-secondary-600 text-black hover:shadow-lg hover:shadow-secondary-500/20 transition-all duration-300 group"
+                      className="flex items-center space-x-2 px-6 py-2.5 rounded-full bg-gradient-to-r from-secondary-500 to-secondary-600 text-black hover:shadow-lg hover:shadow-secondary-500/20 transition-all duration-300 group cursor-pointer"
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
                       whileHover={{ scale: 1.05, y: -2 }}
@@ -159,7 +159,7 @@ const Navbar = () => {
                         ...
                       </span>
                       <button
-                        className="ml-auto px-2 py-1 rounded bg-secondary-700/30 hover:bg-secondary-500/40 text-xs text-secondary-200 transition"
+                        className="ml-auto px-2 py-1 rounded bg-secondary-700/30 hover:bg-secondary-500/40 text-xs text-secondary-200 transition cursor-pointer"
                         onClick={() => {
                           if (currentAccount?.address) {
                             navigator.clipboard.writeText(
@@ -207,7 +207,7 @@ const Navbar = () => {
 
             {/* Mobile Menu Button */}
             <motion.button
-              className="md:hidden p-2 text-secondary-200 hover:text-white transition-colors duration-300"
+              className="md:hidden p-2 text-secondary-200 hover:text-white transition-colors duration-300 cursor-pointer"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               whileTap={{ scale: 0.9 }}
             >
@@ -232,7 +232,7 @@ const Navbar = () => {
           >
             {/* Backdrop */}
             <motion.div
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm cursor-pointer"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -252,7 +252,7 @@ const Navbar = () => {
                   <Link
                     key={item.id}
                     to={item.to}
-                    className={`block py-3 transition-all duration-300 ${isActivePath(item.to)
+                    className={`block py-3 transition-all duration-300 cursor-pointer ${isActivePath(item.to)
                       ? 'text-white font-bold bg-gradient-to-r from-secondary-400/20 to-secondary-600/20 rounded-lg p-4'
                       : 'text-secondary-200 hover:text-white hover:bg-secondary-500/10 rounded-lg p-4'
                       }`}
@@ -270,10 +270,20 @@ const Navbar = () => {
                     </motion.div>
                   </Link>
                 ))}
+                
+                {/* Language Selector for Mobile */}
+                <div className="mt-4 mb-2">
+                  <div className="text-secondary-400 text-sm mb-2 px-4">
+                    <FormattedMessage id="nav.language" defaultMessage="Language" />
+                  </div>
+                  <div className="px-4">
+                    <LanguageSelector />
+                  </div>
+                </div>
                 {currentAccount?.address || zkloginAddress ? (
                   <section className="space-y-2">
                     <Button
-                      className="block w-full px-3 py-2 rounded-lg bg-primary-300/20 text-secondary-200 font-mono font-semibold text-sm text-center truncate select-all mb-2 border border-secondary-500/20 shadow-sm transition-colors duration-200 hover:bg-primary-300/40 focus:outline-none"
+                      className="block w-full px-3 py-2 rounded-lg bg-primary-300/20 text-secondary-200 font-mono font-semibold text-sm text-center truncate select-all mb-2 border border-secondary-500/20 shadow-sm transition-colors duration-200 hover:bg-primary-300/40 focus:outline-none cursor-pointer"
                       onClick={() => {
                         if (currentAccount?.address) {
                           navigator.clipboard.writeText(currentAccount.address)
@@ -294,7 +304,7 @@ const Navbar = () => {
                           : `${zkloginAddress?.slice(0, 25)}...`}
                     </Button>
                     <motion.button
-                      className="w-full flex items-center justify-center mt-5 space-x-2 px-6 py-3 rounded-full bg-red-500 text-white font-bold tracking-wide hover:shadow-lg hover:shadow-secondary-500/20 transition-all duration-300"
+                      className="w-full flex items-center justify-center mt-5 space-x-2 px-6 py-3 rounded-full bg-red-500 text-white font-bold tracking-wide hover:shadow-lg hover:shadow-secondary-500/20 transition-all duration-300 cursor-pointer"
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.3 }}
@@ -308,7 +318,7 @@ const Navbar = () => {
                   </section>
                 ) : (
                   <motion.button
-                    className="w-full flex items-center justify-center space-x-2 px-6 py-3 rounded-full bg-gradient-to-r from-secondary-500 to-secondary-600 text-black font-bold tracking-wide hover:shadow-lg hover:shadow-secondary-500/20 transition-all duration-300"
+                    className="w-full flex items-center justify-center space-x-2 px-6 py-3 rounded-full bg-gradient-to-r from-secondary-500 to-secondary-600 text-black font-bold tracking-wide hover:shadow-lg hover:shadow-secondary-500/20 transition-all duration-300 cursor-pointer"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}

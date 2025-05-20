@@ -26,7 +26,7 @@ export const LanguageSelector = () => {
     <div className="relative">
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 px-3 py-2 bg-primary-800/80 hover:bg-primary-700/80 rounded-lg shadow-md transition-all duration-200"
+        className="flex items-center gap-1.5 px-3 py-2 bg-primary-800/80 hover:bg-primary-700/80 rounded-lg shadow-md transition-all duration-200 cursor-pointer"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >
@@ -42,7 +42,7 @@ export const LanguageSelector = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-40"
+              className="fixed inset-0 z-40 cursor-pointer"
               onClick={() => setIsOpen(false)}
             />
 
@@ -57,7 +57,7 @@ export const LanguageSelector = () => {
                     setLanguage(lang.code)
                     setIsOpen(false)
                   }}
-                  className={`w-full flex items-center justify-center py-2.5 hover:bg-primary-700/50 transition-all duration-200 ${
+                  className={`w-full flex items-center justify-center py-2.5 hover:bg-primary-700/50 transition-all duration-200 cursor-pointer ${
                     language === lang.code ? 'bg-primary-700/50' : ''
                   }`}
                   whileHover={{ 

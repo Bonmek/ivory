@@ -69,9 +69,10 @@ export default function Dashboard() {
   const { metadata, isLoading, refetch } = useSuiData(address || '')
 
   const filteredProjects = useMemo(() => {
-    const projects = metadata
-      ? metadata.map((meta, index) => transformMetadataToProject(meta, index))
-      : []
+    // const projects = metadata
+    //   ? metadata.map((meta, index) => transformMetadataToProject(meta, index))
+    //   : []
+    const projects = mockProjects
     if (!projects || projects.length === 0) return []
 
     const currentDate = new Date()

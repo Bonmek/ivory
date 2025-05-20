@@ -122,7 +122,7 @@ const DashboardHeader = ({
             variant="outline"
             size="icon"
             onClick={() => setSearchExpanded(true)}
-            className="md:hidden h-9 w-9 bg-primary-900/80 border-secondary-500/20 text-white hover:bg-secondary-500/10"
+            className="md:hidden h-9 w-9 bg-primary-900/80 border-secondary-500/20 text-white hover:bg-secondary-500/10 cursor-pointer"
           >
             <Search className="h-4 w-4 text-secondary-400" />
           </Button>
@@ -163,7 +163,7 @@ const DashboardHeader = ({
                     variant="ghost"
                     size="icon"
                     onClick={() => setSearchExpanded(false)}
-                    className="h-8 w-8 text-secondary-400 hover:text-white"
+                    className="h-8 w-8 text-secondary-400 hover:text-white cursor-pointer"
                   >
                     <X className="h-5 w-5" />
                   </Button>
@@ -185,14 +185,14 @@ const DashboardHeader = ({
                   <Button
                     variant="ghost"
                     onClick={() => setSearchExpanded(false)}
-                    className="text-secondary-300 hover:text-white"
+                    className="text-secondary-300 hover:text-white cursor-pointer"
                   >
                     <FormattedMessage id="common.cancel" defaultMessage="Cancel" />
                   </Button>
                   <Button
                     variant="outline"
                     onClick={() => setSearchExpanded(false)}
-                    className="bg-secondary-500/20 text-secondary-500 border-secondary-500/40 hover:bg-secondary-500/30"
+                    className="bg-secondary-500/20 text-secondary-500 border-secondary-500/40 hover:bg-secondary-500/30 cursor-pointer"
                   >
                     <FormattedMessage id="common.search" defaultMessage="Search" />
                   </Button>
@@ -212,7 +212,7 @@ const DashboardHeader = ({
             <Button
               onClick={() => window.location.href = '/create-website'}
               variant="outline"
-              className="w-full sm:w-auto bg-primary-800 text-white font-medium flex items-center gap-1.5 border-secondary-500/40 hover:bg-primary-700 hover:border-secondary-500/70"
+              className="w-full sm:w-auto bg-primary-800 text-white font-medium flex items-center gap-1.5 border-secondary-500/40 hover:bg-primary-700 hover:border-secondary-500/70 cursor-pointer"
             >
               <PlusCircle className="h-4 w-4 text-secondary-500" />
               <FormattedMessage id="dashboard.createNew" defaultMessage="Deploy Site" />
@@ -230,7 +230,7 @@ const DashboardHeader = ({
             >
               <Button
                 variant="outline"
-                className="bg-primary-900/80 border-secondary-500/20 text-white hover:bg-secondary-500/10 hover:text-secondary-500 h-9 w-9"
+                className="bg-primary-900/80 border-secondary-500/20 text-white hover:bg-secondary-500/10 hover:text-secondary-500 h-9 w-9 cursor-pointer"
                 title="Actions"
               >
                 <SlidersHorizontal className="h-4 w-4" />
@@ -248,55 +248,35 @@ const DashboardHeader = ({
             <DropdownMenuGroup>
               <DropdownMenuItem
                 onClick={() => setSortType('latest')}
-                className={
-                  sortType === 'latest'
-                    ? 'bg-secondary-500/10 text-secondary-500 font-bold'
-                    : ''
-                }
+                className={`cursor-pointer ${sortType === 'latest' ? 'bg-secondary-500/10 text-secondary-500 font-bold' : ''}`}
               >
                 <Filter className="h-4 w-4 mr-2" />
                 <FormattedMessage id="dashboard.sort.latest" />
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => setSortType('name-az')}
-                className={
-                  sortType === 'name-az'
-                    ? 'bg-secondary-500/10 text-secondary-500 font-bold'
-                    : ''
-                }
+                className={`cursor-pointer ${sortType === 'name-az' ? 'bg-secondary-500/10 text-secondary-500 font-bold' : ''}`}
               >
                 <Filter className="h-4 w-4 mr-2" />
                 <FormattedMessage id="dashboard.sort.nameAZ" />
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => setSortType('name-za')}
-                className={
-                  sortType === 'name-za'
-                    ? 'bg-secondary-500/10 text-secondary-500 font-bold'
-                    : ''
-                }
+                className={`cursor-pointer ${sortType === 'name-za' ? 'bg-secondary-500/10 text-secondary-500 font-bold' : ''}`}
               >
                 <Filter className="h-4 w-4 mr-2" />
                 <FormattedMessage id="dashboard.sort.nameZA" />
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => setSortType('remaining-low')}
-                className={
-                  sortType === 'remaining-low'
-                    ? 'bg-secondary-500/10 text-secondary-500 font-bold'
-                    : ''
-                }
+                className={`cursor-pointer ${sortType === 'remaining-low' ? 'bg-secondary-500/10 text-secondary-500 font-bold' : ''}`}
               >
                 <Filter className="h-4 w-4 mr-2" />
                 <FormattedMessage id="dashboard.sort.remainingLow" />
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => setSortType('remaining-high')}
-                className={
-                  sortType === 'remaining-high'
-                    ? 'bg-secondary-500/10 text-secondary-500 font-bold'
-                    : ''
-                }
+                className={`cursor-pointer ${sortType === 'remaining-high' ? 'bg-secondary-500/10 text-secondary-500 font-bold' : ''}`}
               >
                 <Filter className="h-4 w-4 mr-2" />
                 <FormattedMessage id="dashboard.sort.remainingHigh" />
@@ -311,7 +291,7 @@ const DashboardHeader = ({
               <DropdownMenuItem
                 onClick={onRefresh}
                 disabled={isRefreshing}
-                className="md:hidden"
+                className="md:hidden cursor-pointer"
               >
                 <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
                 <FormattedMessage id="dashboard.refresh" defaultMessage="Refresh Data" />
@@ -332,6 +312,7 @@ const DashboardHeader = ({
                     setSearchQuery('')
                     setDate(undefined)
                   }}
+                  className="cursor-pointer"
                 >
                   <FormattedMessage id="dashboard.clearFilters" defaultMessage="Clear Filters" />
                 </DropdownMenuItem>
