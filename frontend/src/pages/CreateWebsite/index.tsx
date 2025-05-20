@@ -117,10 +117,35 @@ export default function CreateWebsitePage() {
 
   // Validate name field
   const validateName = (value: string) => {
+    const filteredProjects = metadata
+      .map((meta, index) => transformMetadataToProject(meta, index) as Project)
+      .filter((project: Project) => project.name.toLowerCase() === value.trim().toLowerCase());
+
     const errors: string[] = []
+    // Check for required name
     if (!value.trim()) {
       errors.push(intl.formatMessage({ id: 'createWebsite.error.required' }))
+      setNameErrors(errors)
+      return false
     }
+
+    // Check for duplicate project name
+    if (filteredProjects.length > 0) {
+      errors.push(intl.formatMessage({ id: 'createWebsite.error.duplicateName' }))
+      setNameErrors(errors)
+      return false
+    }
+
+    // Check for maximum length
+    if (value.trim().length > 40) {
+      errors.push(intl.formatMessage({ id: 'createWebsite.error.maxLength' }, { max: 40 }))
+    }
+
+    // Only allow English letters (both cases), numbers, and spaces
+    if (!/^[a-zA-Z0-9 ]+$/.test(value)) {
+      errors.push(intl.formatMessage({ id: 'createWebsite.error.englishOnly' }))
+    }
+
     setNameErrors(errors)
     return errors.length === 0
   }

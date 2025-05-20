@@ -157,6 +157,10 @@ export default {
   'createWebsite.selectBranch': 'Select branch',
   'createWebsite.expirationNotice': 'Your Site will expire on {expiryDate}',
 
+  'createWebsite.error.maxLength': 'Maximum length is {max} characters',
+  'createWebsite.error.englishOnly': 'Only English letters, numbers, and spaces are allowed',
+  'createWebsite.error.duplicateName': 'Project name already exists',
+
   // Homepage
   'homepage.hero.title1': 'Launch Your Site In Few Clicks',
   'homepage.hero.title2': '',
