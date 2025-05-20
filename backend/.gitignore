@@ -6,4 +6,4 @@ dist-ssr
 .env
 service-account-key.json
 ivory-project-457721-2d60ad88afc9.json
-.dockerignore
+
