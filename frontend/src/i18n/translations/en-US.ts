@@ -253,7 +253,9 @@ export default {
   'projectCard.active': 'Active',
   'projectCard.generateSiteId': 'Generate Site ID',
   'projectCard.generateSiteIdDesc': 'Do you want to generate a new Site ID for this project?',
-  'projectCard.generating': 'Generating...',
+  'projectCard.generating': 'Generating',
   'projectCard.generate': 'Generate',
+  'projectCard.generatingSiteId': 'Generating Site ID...',
+  'projectCard.failedToGenerateSiteId': 'Failed to generate Site ID',
   'projectCard.comingSoon': 'Soon'
 } as const;

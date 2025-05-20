@@ -254,5 +254,7 @@ export default {
   'projectCard.generateSiteIdDesc': '您想为此项目生成新的站点 ID 吗？',
   'projectCard.generating': '正在生成',
   'projectCard.generate': '生成',
+  'projectCard.generatingSiteId': '正在生成站点 ID...',
+  'projectCard.failedToGenerateSiteId': '生成站点 ID 失败',
   'projectCard.comingSoon': '即将'
 } as const;
