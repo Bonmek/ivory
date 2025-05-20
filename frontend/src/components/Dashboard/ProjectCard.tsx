@@ -236,9 +236,7 @@ const ProjectCard = memo(
     }
 
     const handleLinkSuins = async () => {
-      const finalSuins = selectedSuins === 'other' ? otherSuins : selectedSuins
-
-      if (!finalSuins) {
+      if (!selectedSuins) {
         toast.error(<FormattedMessage id="projectCard.pleaseSelect" />)
         return
       }
@@ -265,7 +263,7 @@ const ProjectCard = memo(
 
         // Get the NFT ID for the selected SUINS
         const selectedSuinsData = suins.find(
-          (s) => s.data?.content?.fields?.domain_name === finalSuins,
+          (s) => s.data?.content?.fields?.domain_name === selectedSuins,
         )
         if (!selectedSuinsData?.data?.objectId) {
           throw new Error('SUINS NFT not found')
@@ -285,7 +283,7 @@ const ProjectCard = memo(
           process.env.REACT_APP_SUI_NETWORK as 'mainnet' | 'testnet',
         )
         const response = await apiClient.put(
-          `/set-attributes?object_id=${project.parentId}&sui_ns=${finalSuins}`,
+          `/set-attributes?object_id=${project.parentId}&sui_ns=${selectedSuins}`,
         )
         setOpen(false)
         if (result.status === 'success') {
@@ -449,12 +447,6 @@ const ProjectCard = memo(
                                         </SelectItem>
                                       )
                                     })}
-                                    <SelectItem
-                                      value="other"
-                                      className="hover:bg-primary-700"
-                                    >
-                                      Other
-                                    </SelectItem>
                                   </SelectContent>
                                 </Select>
                                 <Button
@@ -471,32 +463,7 @@ const ProjectCard = memo(
                                 </Button>
                               </div>
 
-                              {selectedSuins === 'other' && (
-                                <div className="relative mt-2 group">
-                                  <Input
-                                    placeholder="Enter your domain name"
-                                    value={otherSuins}
-                                    onChange={(e) => {
-                                      const value = e.target.value.replace(
-                                        '.wal.app',
-                                        '',
-                                      )
-                                      setOtherSuins(value)
-                                    }}
-                                    className="bg-primary-800 border-secondary-500/20 text-white pr-[85px] transition-all duration-200 
-                                    placeholder:text-white/30 focus:border-secondary-500/50 focus:ring-1 focus:ring-secondary-500/50
-                                    group-hover:border-secondary-500/30"
-                                  />
-                                  <div
-                                    className="absolute right-0 top-1/2 -translate-y-1/2 px-3 h-full flex items-center
-                                  border-l border-secondary-500/20 text-secondary-400/70 select-none bg-secondary-500/5
-                                  text-sm font-medium transition-colors duration-200 group-hover:text-secondary-400/90
-                                  group-hover:border-secondary-500/30 group-hover:bg-secondary-500/10"
-                                  >
-                                    .wal.app
-                                  </div>
-                                </div>
-                              )}
+
                             </>
                           )}
                         </div>
@@ -504,12 +471,11 @@ const ProjectCard = memo(
                           <div className="flex gap-2">
                             <Button
                               onClick={() => handleLinkSuins()}
-                              className="bg-secondary-500 hover:bg-secondary-600 text-white flex-1 relative ${isLinking || isLoadingSuins || !selectedSuins || (selectedSuins === 'other' && !otherSuins) ? '' : 'cursor-pointer'}"
+                              className="bg-secondary-500 hover:bg-secondary-600 text-white flex-1 relative ${isLinking || isLoadingSuins || !selectedSuins ? '' : 'cursor-pointer'}"
                               disabled={
                                 isLinking ||
                                 isLoadingSuins ||
-                                !selectedSuins ||
-                                (selectedSuins === 'other' && !otherSuins)
+                                !selectedSuins
                               }
                             >
                               {isLinking ? (

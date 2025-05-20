@@ -25,6 +25,7 @@ interface DashboardHeaderProps {
   isRefreshing: boolean
   lastRefreshTime?: Date
   hasProjects?: boolean
+  activeTab: string
 }
 
 const DashboardHeader = ({
@@ -38,6 +39,7 @@ const DashboardHeader = ({
   isRefreshing,
   lastRefreshTime,
   hasProjects = false,
+  activeTab,
 }: DashboardHeaderProps) => {
   const intl = useIntl();
   const [searchExpanded, setSearchExpanded] = useState(false);
@@ -117,7 +119,6 @@ const DashboardHeader = ({
         }}
       >
         <motion.div className="relative order-none flex-shrink-0 search-container">
-          {/* แสดงเฉพาะไอคอนแว่นขยายบนมือถือ */}
           <Button
             variant="outline"
             size="icon"
@@ -127,7 +128,6 @@ const DashboardHeader = ({
             <Search className="h-4 w-4 text-secondary-400" />
           </Button>
           
-          {/* ช่องค้นหาแบบเต็มสำหรับ desktop */}
           <motion.div
             className="relative hidden md:flex"
             whileHover={{ scale: 1.02 }}
@@ -144,7 +144,6 @@ const DashboardHeader = ({
           </motion.div>
         </motion.div>
         
-        {/* Modal ช่องค้นหาลอยตรงกลางจอสำหรับมือถือ */}
         {searchExpanded && (
           <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 md:hidden">
             <motion.div 
@@ -202,8 +201,8 @@ const DashboardHeader = ({
           </div>
         )}
         
-        {/* ปุ่ม Deploy Site */}
-        {!hasProjects && (
+        {/* ปุ่ม Deploy Site - only show on 'all' or 'active' tabs */}
+        {(activeTab === 'all' || activeTab === 'active') && !hasProjects && (
           <motion.div
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
