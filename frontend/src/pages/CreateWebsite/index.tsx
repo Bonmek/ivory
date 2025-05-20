@@ -50,8 +50,8 @@ import { useAuth } from '@/context/AuthContext'
 
 export default function CreateWebsitePage() {
   useTheme()
-  const { currentAccount } = useAuth()
-  const { metadata, isLoading, refetch } = useSuiData(currentAccount?.address || '')
+  const { address } = useAuth()
+  const { metadata, isLoading, refetch } = useSuiData(address || '')
 
   const intl = useIntl()
 
@@ -369,9 +369,9 @@ export default function CreateWebsitePage() {
     try {
       const attributes: WebsiteAttributes = {
         'site-name': name,
-        owner: currentAccount?.address!,
+        owner: address!,
         ownership: '0',
-        send_to: currentAccount?.address!,
+        send_to: address!,
         epochs: '1',
         start_date: todayDate.toString(),
         end_date: checkEndDate().toISOString(),
