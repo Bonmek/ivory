@@ -348,7 +348,15 @@ export default function CreateWebsitePage() {
 
   const startDate = new Date('2025-05-06T15:00:50.907Z');
   const endDate = new Date('2025-05-20T15:00:50.907Z');
-  const remainingTime = endDate.getTime() - new Date().getTime();
+  const todayDate = new Date().getTime();
+
+  const checkEndDate = () => {
+    let newEndDate = new Date(endDate);
+    while (startDate.getTime() < todayDate && todayDate > newEndDate.getTime()) {
+      newEndDate = new Date(newEndDate.getTime() + 14 * 24 * 60 * 60 * 1000);
+    }
+    return newEndDate;
+  }
 
   const handleClickDeploy = async () => {
     setOpen(false)
@@ -365,8 +373,8 @@ export default function CreateWebsitePage() {
         ownership: '0',
         send_to: currentAccount?.address!,
         epochs: '1',
-        start_date: startDate.toISOString(),
-        end_date: endDate.toISOString(),
+        start_date: todayDate.toString(),
+        end_date: checkEndDate().toISOString(),
         output_dir: showBuildOutputSettings ? buildOutputSettings.outputDirectory : '',
         status: '0',
         cache: advancedOptions.cacheControl,
@@ -876,7 +884,7 @@ export default function CreateWebsitePage() {
                           values={{
                             expiryDate: (
                               <span className="font-medium text-amber-100 ml-1">
-                                {new Date(endDate).toLocaleDateString('en-US', {
+                                {new Date(checkEndDate()).toLocaleDateString('en-US', {
                                   month: 'short',
                                   day: 'numeric',
                                   hour: '2-digit',
