@@ -48,6 +48,7 @@ import JSZip from 'jszip'
 import { useSuiData } from '@/hooks/useSuiData'
 import { transformMetadataToProject } from '@/utils/metadataUtils'
 import { Project } from '@/types/project'
+import PreviewWebsite from '@/components/CreateWebsite/PreviewWebsite'
 
 
 export default function CreateWebsitePage() {

@@ -95,6 +95,7 @@ import { DeployingState, BuildingState } from "@/types/CreateWebstie/enums";
 import { Link, useNavigate } from "react-router";
 import { useRef, useEffect, useState } from 'react';
 import { ApiResponse } from "@/types/CreateWebstie/types";
+import PreviewWebsite from "./PreviewWebsite";
 
 interface PreviewSummaryProps {
   name: string;
@@ -200,7 +201,6 @@ const StatusChecklist: React.FC<{ deployingState: DeployingState, buildingState:
   return (
     <div className="w-full mb-4">
       <div className="w-full px-2">
-
         <ul
           className="w-full flex flex-row items-center justify-center gap-0 px-4 py-4 bg-gradient-to-r from-primary-900/70 via-primary-800/80 to-primary-900/70 dark:from-gray-900/80 dark:via-gray-800/90 dark:to-gray-900/80 rounded-2xl shadow-lg border-2 border-muted/30"
         >
@@ -281,17 +281,20 @@ export const PreviewSummary: React.FC<PreviewSummaryProps> = ({
   const deployStatusRef = React.useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
-  // Scroll to top when clicking the continue editing button
   const handleContinueEditing = () => {
-    // First set the preview to false
     setShowPreview(false);
-    // Then scroll to top after a small delay
-    setTimeout(() => {
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
-    }, 50);
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+        document.documentElement.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+      }, 100);
+    });
   };
 
   // Countdown logic for redirect
@@ -497,6 +500,8 @@ export const PreviewSummary: React.FC<PreviewSummaryProps> = ({
           <FormattedMessage id="createWebsite.previewSummaryDescription" />
         </p>
       </article>
+
+      <PreviewWebsite selectedFile={selectedFile!} selectedRepoFile={selectedRepoFile!} uploadMethod={uploadMethod!} />
 
       <Card className="w-full border-2 border-muted/30 bg-primary-800 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 mb-4">
         <CardContent className="space-y-12 pb-2 px-8">
