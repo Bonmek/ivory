@@ -10,7 +10,8 @@ interface WebsitePreviewProps {
 export default function WebsitePreview({ htmlContent, assetMap }: WebsitePreviewProps) {
     const iframeRef = useRef<HTMLIFrameElement>(null)
     const [width, setWidth] = useState(100) // percentage
-
+    console.log('assetMap', assetMap)
+    console.log('htmlContent', htmlContent)
     useEffect(() => {
         if (!iframeRef.current || !htmlContent) return
 

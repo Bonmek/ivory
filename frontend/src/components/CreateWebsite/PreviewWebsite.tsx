@@ -32,6 +32,21 @@ export default function PreviewWebsite({ selectedFile, selectedRepoFile, uploadM
         if (file.name.endsWith('.zip')) {
             try {
                 const zip = await JSZip.loadAsync(file);
+                const fileNames = Object.keys(zip.files);
+
+                // Check if index.html exists at the top level only
+                const hasTopLevelIndexHtml = fileNames.some(path =>
+                    path === 'index.html' ||
+                    // Also check for index.html in the first level directory
+                    // (e.g., dist/index.html, build/index.html)
+                    /^[^/]+\/index\.html$/.test(path)
+                );
+
+                if (!hasTopLevelIndexHtml) {
+                    console.log('Skipping processing: No index.html found at top level');
+                    return;
+                }
+
                 const files: File[] = [];
 
                 // Process each file in the zip
@@ -67,7 +82,8 @@ export default function PreviewWebsite({ selectedFile, selectedRepoFile, uploadM
                 // Handle error appropriately
             }
         } else {
-            // Handle single file
+            // For single files, we can't really determine if it's a built project
+            // So we'll just process it as before
             const dataTransfer = new DataTransfer();
             dataTransfer.items.add(file);
             handleFilesSelected(dataTransfer.files);
