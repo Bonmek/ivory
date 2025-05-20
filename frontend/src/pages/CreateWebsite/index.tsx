@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { AnimatePresence, motion } from 'framer-motion'
-import { CircleAlert, CirclePlus, Github, HelpCircle, Upload, Archive, BadgeCheck, SlidersHorizontal, Package, Settings2 } from 'lucide-react'
+import { CircleAlert, CirclePlus, Github, HelpCircle, Upload, Archive } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
@@ -34,8 +34,6 @@ import { frameworks } from '@/constants/frameworks'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Helmet } from 'react-helmet'
 import { WebsiteAttributes, writeBlobAndRunJob } from '@/api/createWebsiteApi'
-import { useWalletKit } from '@mysten/wallet-kit'
-import { addDays } from 'date-fns'
 import apiClient from '@/lib/axiosConfig'
 import { useQuery } from 'wagmi/query'
 import { PreviewSummary } from '@/components/CreateWebsite/PreviewSummary'
@@ -48,12 +46,11 @@ import JSZip from 'jszip'
 import { useSuiData } from '@/hooks/useSuiData'
 import { transformMetadataToProject } from '@/utils/metadataUtils'
 import { Project } from '@/types/project'
-import PreviewWebsite from '@/components/CreateWebsite/PreviewWebsite'
-
+import { useAuth } from '@/context/AuthContext'
 
 export default function CreateWebsitePage() {
   useTheme()
-  const { currentAccount } = useWalletKit()
+  const { currentAccount } = useAuth()
   const { metadata, isLoading, refetch } = useSuiData(currentAccount?.address || '')
 
   const intl = useIntl()
