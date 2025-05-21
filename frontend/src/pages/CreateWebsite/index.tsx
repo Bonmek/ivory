@@ -33,7 +33,7 @@ import {
 import { frameworks } from '@/constants/frameworks'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Helmet } from 'react-helmet'
-import { WebsiteAttributes, writeBlobAndRunJob } from '@/api/createWebsiteApi'
+import { previewWebsite, WebsiteAttributes, writeBlobAndRunJob } from '@/api/createWebsiteApi'
 import apiClient from '@/lib/axiosConfig'
 import { useQuery } from 'wagmi/query'
 import { PreviewSummary } from '@/components/CreateWebsite/PreviewSummary'
@@ -47,6 +47,7 @@ import { useSuiData } from '@/hooks/useSuiData'
 import { transformMetadataToProject } from '@/utils/metadataUtils'
 import { Project } from '@/types/project'
 import { useAuth } from '@/context/AuthContext'
+import Loading from '@/components/Loading'
 
 export default function CreateWebsitePage() {
   useTheme()
@@ -96,11 +97,13 @@ export default function CreateWebsitePage() {
   const [open, setOpen] = useState(false)
 
   // State for deploying
+  const [isLoadingPreview, setIsLoadingPreview] = useState<boolean>(false)
   const [deployingState, setDeployingState] = useState<DeployingState>(DeployingState.None)
   const [deployingResponse, setDeployingResponse] = useState<ApiResponse | null>(null)
   const [buildingState, setBuildingState] = useState<BuildingState>(BuildingState.None)
   const [deployedObjectId, setDeployedObjectId] = useState<string | null>(null)
   const [projectShowcaseUrl, setProjectShowcaseUrl] = useState<string | null>(null)
+  const [projectPreview, setProjectPreview] = useState<File>()
 
   // State for file upload
   const [uploadMethod, setUploadMethod] = useState<UploadMethod>(
@@ -308,9 +311,6 @@ export default function CreateWebsitePage() {
   };
 
   useEffect(() => {
-    console.log('User effect running');
-    console.log('REACT_APP_SERVER_URL:', process.env.REACT_APP_SERVER_URL);
-
     if (!process.env.REACT_APP_SERVER_URL) {
       console.error('REACT_APP_SERVER_URL environment variable is not set');
       setUser(null);
@@ -319,12 +319,10 @@ export default function CreateWebsitePage() {
     }
 
     const userEndpoint = `${process.env.REACT_APP_SERVER_URL}/api/user`;
-    console.log('User endpoint:', userEndpoint);
 
     apiClient
       .get(userEndpoint)
       .then((res) => {
-        console.log('User data received:', res.data);
         setUser(res.data.user);
         setDeployingState(DeployingState.None);
       })
@@ -383,6 +381,47 @@ export default function CreateWebsitePage() {
     return newEndDate;
   }
 
+  const handlePreview = async () => {
+    if (!validateName(name) || !validateFile()) return
+
+    let rootDirectory = advancedOptions.rootDirectory
+    if (showBuildOutputSettings && buildOutputSettings.outputDirectory) {
+      rootDirectory = buildOutputSettings.outputDirectory
+    }
+    const attributes: WebsiteAttributes = {
+      'site-name': name,
+      owner: address!,
+      ownership: '0',
+      send_to: address!,
+      epochs: '1',
+      start_date: new Date(todayDate).toISOString(),
+      end_date: checkEndDate().toISOString(),
+      output_dir: showBuildOutputSettings ? buildOutputSettings.outputDirectory : '',
+      status: '0',
+      cache: advancedOptions.cacheControl,
+      root: rootDirectory,
+      install_command: buildOutputSettings.installCommand || 'npm install',
+      build_command: buildOutputSettings.buildCommand || 'npm run build',
+      default_route: advancedOptions.defaultPath || '/index.html',
+      is_build: showBuildOutputSettings ? '0' : '1',
+    }
+
+    try {
+      setIsLoadingPreview(true)
+      const response = await previewWebsite({
+        file: uploadMethod === "upload" ? selectedFile! : selectedRepoFile!,
+        attributes,
+      })
+      setShowPreview(true);
+      setProjectPreview(response)
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setIsLoadingPreview(false)
+      return response
+    } catch (error) {
+      console.error('Error previewing site:', error)
+    }
+  }
+
   const handleClickDeploy = async () => {
     setOpen(false)
 
@@ -398,7 +437,7 @@ export default function CreateWebsitePage() {
         ownership: '0',
         send_to: address!,
         epochs: '1',
-        start_date: todayDate.toString(),
+        start_date: new Date(todayDate).toISOString(),
         end_date: checkEndDate().toISOString(),
         output_dir: showBuildOutputSettings ? buildOutputSettings.outputDirectory : '',
         status: '0',
@@ -615,6 +654,10 @@ export default function CreateWebsitePage() {
       if (interval) clearInterval(interval);
     };
   }, [deployingState, refetch, metadata, name, transformMetadataToProject, buildingState]);
+
+  if (isLoading || isLoadingPreview) {
+    return <Loading />
+  }
 
   return (
     <>
@@ -878,14 +921,14 @@ export default function CreateWebsitePage() {
                   />
 
                   <article className="flex flex-col gap-4">
-                    <BuildOutputSetting
+                    {<BuildOutputSetting
                       showBuildOutputSettings={showBuildOutputSettings}
                       setShowBuildOutputSettings={setShowBuildOutputSettings}
                       buildOutputSettings={buildOutputSettings}
                       setBuildOutputSettings={setBuildOutputSettings}
                       fileStructure={fileStructure}
                       githubContents={uploadMethod === UploadMethod.GitHub ? repoContents : []}
-                    />
+                    />}
 
                     <AdvancedOptions
                       advancedOptions={advancedOptions}
@@ -925,11 +968,7 @@ export default function CreateWebsitePage() {
                   </div>
                   <section className="pt-2 flex justify-end">
                     <Button
-                      onClick={() => {
-                        if (!validateName(name) || !validateFile()) return
-                        setShowPreview(true);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
+                      onClick={handlePreview}
                       className="bg-secondary-500 hover:bg-secondary-700 text-black p-6 rounded-md text-base transform transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-secondary-500/20"
                     >
                       <FormattedMessage id="createWebsite.createWebsite" />
@@ -966,6 +1005,7 @@ export default function CreateWebsitePage() {
                 buildingState={buildingState}
                 projectShowcaseUrl={projectShowcaseUrl}
                 selectedBranch={selectedBranch}
+                projectPreview={projectPreview}
               />
             </motion.div>
           </>

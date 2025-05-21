@@ -107,6 +107,7 @@ interface PreviewSummaryProps {
   setOpen: (open: boolean) => void;
   selectedBranch?: string;
   setShowPreview: (showPreview: boolean) => void;
+  projectPreview?: File;
   selectedRepoFile?: File | null;
   showBuildOutputSettings: boolean;
   deployingState: DeployingState;
@@ -276,6 +277,7 @@ export const PreviewSummary: React.FC<PreviewSummaryProps> = ({
   setShowPreview,
   selectedRepoFile,
   showBuildOutputSettings,
+  projectPreview,
   deployingResponse,
   buildingState,
 }) => {
@@ -299,26 +301,6 @@ export const PreviewSummary: React.FC<PreviewSummaryProps> = ({
       }, 100);
     });
   };
-
-  // Countdown logic for redirect
-  const [countdown, setCountdown] = useState(10);
-  const showCountdown = deployingState === DeployingState.Deployed && buildingState === BuildingState.Built;
-
-  // useEffect(() => {
-  //   if (showCountdown) {
-  //     setCountdown(10);
-  //   }
-  // }, [showCountdown]);
-
-  // useEffect(() => {
-  //   if (!showCountdown) return;
-  //   if (countdown <= 0) {
-  //     navigate('/dashboard');
-  //     return;
-  //   }
-  //   const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
-  //   return () => clearTimeout(timer);
-  // }, [countdown, showCountdown, navigate]);
 
   useEffect(() => {
     if (deployingState === DeployingState.Deploying && deployStatusRef.current) {
@@ -398,28 +380,6 @@ export const PreviewSummary: React.FC<PreviewSummaryProps> = ({
                   ariaLive="polite"
                 />
               )
-              const countdownCard = (countdown < 10) ? (
-                <StatusMotionCard
-                  key="built-countdown"
-                  icon={<Check className="w-5 h-5 text-green-400" />}
-                  color="green"
-                  title={<FormattedMessage id="createWebsite.redirecting" defaultMessage="Redirecting to dashboard..." />}
-                  description={
-                    <span>
-                      <FormattedMessage id="createWebsite.redirectIn" defaultMessage="You will be redirected in {seconds} seconds." values={{ seconds: countdown }} />
-                    </span>
-                  }
-                  ariaLive="polite"
-                >
-                  <Button
-                    variant="outline"
-                    className="mt-2 w-fit"
-                    onClick={() => navigate('/dashboard')}
-                  >
-                    <FormattedMessage id="createWebsite.goNow" defaultMessage="Go now" />
-                  </Button>
-                </StatusMotionCard>
-              ) : null;
               return <>{successCard}{ShowcaseCard}</>;
             }
             if (deployingState === DeployingState.Deploying) {
@@ -504,7 +464,7 @@ export const PreviewSummary: React.FC<PreviewSummaryProps> = ({
         </p>
       </article>
 
-      <PreviewWebsite selectedFile={selectedFile!} selectedRepoFile={selectedRepoFile!} uploadMethod={uploadMethod!} />
+      <PreviewWebsite projectPreview={projectPreview!} />
 
       <Card className="w-full border-2 border-muted/30 bg-primary-800 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 mb-4">
         <CardContent className="space-y-12 pb-2 px-8">
