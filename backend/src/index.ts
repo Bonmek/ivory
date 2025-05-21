@@ -242,12 +242,24 @@ app.post("/preview", upload.single("file"), async (req, res) => {
 
   await addFilesToZip(indexDir);
   zip.writeZip(outputZipPath);
-  res.status(200).json({
-    statusCode: 0,
-    error: "22",
+
+  res.download(outputZipPath, "output.zip", async (err) => {
+    if (err) {
+      console.error("Error sending file:", err);
+      res.status(500).json({
+        statusCode: 0,
+        error: "Failed to send ZIP file",
+      });
+    }
+
+    await fs.remove(extractPath);
+    if (req.file && req.file.path) {
+      await fs.remove(req.file.path);
+    }
+    await fs.remove(outputZipPath);
   });
-  return;
 });
+
 app.post("/process-site", upload.single("file"), async (req, res) => {
   if (!req.file) {
     res.status(400).json({
