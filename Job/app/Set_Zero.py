@@ -2,11 +2,11 @@ import subprocess
 from google.cloud import firestore
 
 def set_zero(showcase_obj_id, showcase_blob_id):
-    showcase_site_id = "0x43781dff393952358f7df65ddbea9eaaca31d63c87be44bf72dca78269dc8cbc"
+    showcase_site_id = "0x8ea2941b08cad8b5b667fab8cffc26d4fc8bdaa00366e9d2e0dd233f46ee84bc"
     try:
         try:
             update_result = subprocess.run(
-                ["site-builder", "update", "IVORY-SHOWCASE", showcase_site_id, "--epochs", "1"],
+                ["site-builder", "update", "IVORY-SHOWCASE", showcase_site_id, "--epochs", "2"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True
@@ -36,7 +36,7 @@ def set_zero(showcase_obj_id, showcase_blob_id):
 
         # Store the zipped file in Walrus
         result = subprocess.run(
-            ["walrus", "store", "IVORY-SHOWCASE.zip", "--epochs", "1", "--deletable", "--force"],
+            ["walrus", "store", "IVORY-SHOWCASE.zip", "--epochs", "2", "--deletable", "--force"],
             check=True, capture_output=True, text=True
         )
             

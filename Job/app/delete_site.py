@@ -6,7 +6,7 @@ from google.cloud import firestore
 def dlete_walrus_site(object_id, showcase_obj_id, showcase_blob_id):
     status = "2"  # Default status
     client_error_description = ""
-    showcase_site_id = "0x43781dff393952358f7df65ddbea9eaaca31d63c87be44bf72dca78269dc8cbc"
+    showcase_site_id = "0x8ea2941b08cad8b5b667fab8cffc26d4fc8bdaa00366e9d2e0dd233f46ee84bc"
 
     try:
         # STEP 0: Check arguments
@@ -96,7 +96,7 @@ def dlete_walrus_site(object_id, showcase_obj_id, showcase_blob_id):
             epochs = attributes["epochs"]
 
             subprocess.run(
-                ["site-builder", "update", showcase_root, showcase_site_id, "--epochs", epochs],
+                ["site-builder", "update", showcase_root, showcase_site_id, "--epochs", "2"],
                 check=True, capture_output=True, text=True
             )
             print(f"✅ STEP 5 DONE: Site updated with site-builder in ./{showcase_root}")
@@ -124,7 +124,7 @@ def dlete_walrus_site(object_id, showcase_obj_id, showcase_blob_id):
 
             # Store the zipped file in Walrus
             result = subprocess.run(
-                ["walrus", "store", new_showcase_zip, "--epochs", epochs, "--deletable", "--force"],
+                ["walrus", "store", new_showcase_zip, "--epochs", "2", "--deletable", "--force"],
                 check=True, capture_output=True, text=True
             )
             print("✅ STEP 6.2 DONE: Stored new showcase site in Walrus")
