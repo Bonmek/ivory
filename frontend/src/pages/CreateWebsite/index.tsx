@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { AnimatePresence, motion } from 'framer-motion'
-import { CircleAlert, CirclePlus, Github, HelpCircle, Upload, Archive, BadgeCheck, SlidersHorizontal, Package, Settings2 } from 'lucide-react'
+import { CircleAlert, CirclePlus, Github, HelpCircle, Upload, Archive } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
@@ -34,8 +34,6 @@ import { frameworks } from '@/constants/frameworks'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Helmet } from 'react-helmet'
 import { WebsiteAttributes, writeBlobAndRunJob } from '@/api/createWebsiteApi'
-import { useWalletKit } from '@mysten/wallet-kit'
-import { addDays } from 'date-fns'
 import apiClient from '@/lib/axiosConfig'
 import { useQuery } from 'wagmi/query'
 import { PreviewSummary } from '@/components/CreateWebsite/PreviewSummary'
@@ -48,12 +46,12 @@ import JSZip from 'jszip'
 import { useSuiData } from '@/hooks/useSuiData'
 import { transformMetadataToProject } from '@/utils/metadataUtils'
 import { Project } from '@/types/project'
-
+import { useAuth } from '@/context/AuthContext'
 
 export default function CreateWebsitePage() {
   useTheme()
-  const { currentAccount } = useWalletKit()
-  const { metadata, isLoading, refetch } = useSuiData(currentAccount?.address || '')
+  const { address } = useAuth()
+  const { metadata, isLoading, refetch } = useSuiData(address || '')
 
   const intl = useIntl()
 
@@ -119,10 +117,35 @@ export default function CreateWebsitePage() {
 
   // Validate name field
   const validateName = (value: string) => {
+    const filteredProjects = metadata
+      .map((meta, index) => transformMetadataToProject(meta, index) as Project)
+      .filter((project: Project) => project.name.toLowerCase() === value.trim().toLowerCase());
+
     const errors: string[] = []
+    // Check for required name
     if (!value.trim()) {
       errors.push(intl.formatMessage({ id: 'createWebsite.error.required' }))
+      setNameErrors(errors)
+      return false
     }
+
+    // Check for duplicate project name
+    if (filteredProjects.length > 0) {
+      errors.push(intl.formatMessage({ id: 'createWebsite.error.duplicateName' }))
+      setNameErrors(errors)
+      return false
+    }
+
+    // Check for maximum length
+    if (value.trim().length > 40) {
+      errors.push(intl.formatMessage({ id: 'createWebsite.error.maxLength' }, { max: 40 }))
+    }
+
+    // Only allow English letters (both cases), numbers, and spaces
+    if (!/^[a-zA-Z0-9 ]+$/.test(value)) {
+      errors.push(intl.formatMessage({ id: 'createWebsite.error.englishOnly' }))
+    }
+
     setNameErrors(errors)
     return errors.length === 0
   }
@@ -350,7 +373,15 @@ export default function CreateWebsitePage() {
 
   const startDate = new Date('2025-05-06T15:00:50.907Z');
   const endDate = new Date('2025-05-20T15:00:50.907Z');
-  const remainingTime = endDate.getTime() - new Date().getTime();
+  const todayDate = new Date().getTime();
+
+  const checkEndDate = () => {
+    let newEndDate = new Date(endDate);
+    while (startDate.getTime() < todayDate && todayDate > newEndDate.getTime()) {
+      newEndDate = new Date(newEndDate.getTime() + 14 * 24 * 60 * 60 * 1000);
+    }
+    return newEndDate;
+  }
 
   const handleClickDeploy = async () => {
     setOpen(false)
@@ -363,12 +394,12 @@ export default function CreateWebsitePage() {
     try {
       const attributes: WebsiteAttributes = {
         'site-name': name,
-        owner: currentAccount?.address!,
+        owner: address!,
         ownership: '0',
-        send_to: currentAccount?.address!,
+        send_to: address!,
         epochs: '1',
-        start_date: startDate.toISOString(),
-        end_date: endDate.toISOString(),
+        start_date: todayDate.toString(),
+        end_date: checkEndDate().toISOString(),
         output_dir: showBuildOutputSettings ? buildOutputSettings.outputDirectory : '',
         status: '0',
         cache: advancedOptions.cacheControl,
@@ -878,7 +909,7 @@ export default function CreateWebsitePage() {
                           values={{
                             expiryDate: (
                               <span className="font-medium text-amber-100 ml-1">
-                                {new Date(endDate).toLocaleDateString('en-US', {
+                                {new Date(checkEndDate()).toLocaleDateString('en-US', {
                                   month: 'short',
                                   day: 'numeric',
                                   hour: '2-digit',

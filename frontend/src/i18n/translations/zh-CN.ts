@@ -156,6 +156,10 @@ export default {
   'createWebsite.selectBranch': '选择分支',
   'createWebsite.expirationNotice': '您的网站将在 {expiryDate} 过期',
 
+  'createWebsite.error.maxLength': '最大长度为 {max} 个字符',
+  'createWebsite.error.englishOnly': '仅允许英文、数字和空格',
+  'createWebsite.error.duplicateName': '项目名称已存在',
+
   // Homepage
   'homepage.hero.title1': '轻松几步即可上线您的网站',
   'homepage.hero.title2': '',
