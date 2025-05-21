@@ -318,71 +318,72 @@ export default function GithubRepoInput({
 
                     {selectedRepo === repository.id ? (
                       <Button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleSelectRepository(repository.id, repository.name);
-                        }}
-                        size="sm"
-                        className="bg-secondary-500 hover:bg-secondary-600 text-black transition-all duration-200"
-                        aria-label="Selected repository"
-                      >
-                        <motion.span
-                          initial={{ opacity: 0, scale: 0.9 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.9 }}
-                          transition={{ duration: 0.15, ease: "easeInOut" }}
-                        >
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              d="M5 13l4 4L19 7"
-                            />
-                          </svg>
-                          <span className="text-sm">
-                            <FormattedMessage id="createWebsite.githubSelected" />
-                          </span>
-                        </motion.span>
-                      </Button>
+  onClick={(e) => {
+    e.stopPropagation();
+    handleSelectRepository(repository.id, repository.name);
+  }}
+  size="sm"
+  className="bg-secondary-500 hover:bg-secondary-600 text-black transition-all duration-200 flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 md:px-5 md:py-3 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary-400 active:ring-2 active:ring-secondary-600"
+  aria-label="Selected repository"
+>
+  <motion.span
+    initial={{ opacity: 0, scale: 0.9 }}
+    animate={{ opacity: 1, scale: 1 }}
+    exit={{ opacity: 0, scale: 0.9 }}
+    transition={{ duration: 0.15, ease: "easeInOut" }}
+    className="flex items-center gap-2"
+  >
+    <svg
+      className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+        d="M5 13l4 4L19 7"
+      />
+    </svg>
+    <span className="text-xs sm:text-sm md:text-base">
+      <FormattedMessage id="createWebsite.githubSelected" />
+    </span>
+  </motion.span>
+</Button>
                     ) : (
-                      <div className="invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                        <Button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSelectRepository(repository.id, repository.name);
-                          }}
-                          size="sm"
-                          className="bg-primary-600/50 text-white hover:bg-primary-500/70 transition-all duration-200"
-                          aria-label="Import repository"
-                        >
-                          <span className="flex items-center space-x-1.5 px-3 py-2">
-                            <svg
-                              className="w-4 h-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                              />
-                            </svg>
-                            <span className="text-sm">
-                              <FormattedMessage id="createWebsite.githubImport" />
-                            </span>
-                          </span>
-                        </Button>
-                      </div>
+                      <div className="invisible group-hover:visible group-focus-within:visible group-active:visible opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 group-active:opacity-100 transition-opacity duration-200">
+  <Button
+    onClick={(e) => {
+      e.stopPropagation();
+      handleSelectRepository(repository.id, repository.name);
+    }}
+    size="sm"
+    className="bg-primary-600/50 text-white hover:bg-primary-500/70 transition-all duration-200 flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 md:px-5 md:py-3 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 active:ring-2 active:ring-primary-600"
+    aria-label="Import repository"
+  >
+    <span className="flex items-center gap-1.5">
+      <svg
+        className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+        />
+      </svg>
+      <span className="text-xs sm:text-sm md:text-base">
+        <FormattedMessage id="createWebsite.githubImport" />
+      </span>
+    </span>
+  </Button>
+</div>
                     )}
                   </div>
                 </motion.div>
