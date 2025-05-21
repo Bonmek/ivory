@@ -18,13 +18,13 @@ RUN npm install -g pnpm
 COPY package.json pnpm-lock.yaml ./
 
 # Install dependencies
-RUN pnpm install --frozen-lockfile
+RUN pnpm install
 
 # Copy the rest of the application code
 COPY . .
 
-# Build the TypeScript code
-RUN pnpm build
+# Build the application
+RUN pnpm run build
 
 # Expose the application port
 EXPOSE 5000

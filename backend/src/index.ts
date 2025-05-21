@@ -112,6 +112,142 @@ const findIndexHtmlInKnownDirs = async (
   return null;
 };
 
+app.post("/preview", upload.single("file"), async (req, res) => {
+  if (!req.file) {
+    res.status(400).json({
+      statusCode: 0,
+      error: "No file uploaded",
+    });
+    return;
+  }
+
+  const zipFile = req.file;
+  const extractPath = path.join(__dirname, "temp", Date.now().toString());
+  await fs
+    .createReadStream(zipFile.path)
+    .pipe(unzipper.Extract({ path: extractPath }))
+    .promise();
+
+  const attributes = req.body.attributes
+    ? typeof req.body.attributes === "string"
+      ? JSON.parse(req.body.attributes)
+      : req.body.attributes
+    : {};
+  const attributes_data = inputWriteBlobScheme.safeParse(attributes);
+  if (!attributes_data.success) {
+    res.status(400).json({
+      statusCode: 0,
+      errors: attributes_data.error.errors.map((err) => ({
+        error_message: err.message,
+        error_field: err.path.join("."),
+      })),
+    });
+    return;
+  }
+
+  let indexDir: string | null;
+
+  if (attributes_data.data.is_build === "0") {
+    const buildDir = await findPackageJsonPath(extractPath);
+    if (!buildDir) {
+      res.status(400).json({
+        statusCode: 0,
+        error: "package.json not found",
+      });
+      return;
+    }
+
+    try {
+      await new Promise((resolve, reject) => {
+        exec(
+          attributes_data.data.install_command,
+          { cwd: buildDir },
+          (err, stdout, stderr) => {
+            if (err) {
+              console.error("install error", err);
+              console.error("install stderr", stderr);
+              return reject(err);
+            }
+            console.log("install stdout", stdout);
+
+            exec(
+              attributes_data.data.build_command,
+              { cwd: buildDir },
+              (err2, stdout2, stderr2) => {
+                if (err2) {
+                  console.error("build error", err2);
+                  console.error("build stderr", stderr2);
+                  return reject(err2);
+                }
+                console.log("build stdout", stdout2);
+                resolve(true);
+              }
+            );
+          }
+        );
+      });
+    } catch (error) {
+      console.error("Build process failed:", error);
+      res.status(500).json({
+        statusCode: 0,
+        error: "Build process failed",
+      });
+      return;
+    }
+
+    indexDir = await findIndexHtmlInKnownDirs(buildDir);
+    if (!indexDir) {
+      indexDir = await findIndexHtmlPath(extractPath);
+    }
+  } else {
+    indexDir = await findIndexHtmlPath(extractPath);
+  }
+
+  if (!indexDir) {
+    res.status(400).json({
+      statusCode: 0,
+      error: "index.html not found",
+    });
+    return;
+  }
+
+  const indexPath = path.join(indexDir, "index.html");
+  if (await fs.pathExists(indexPath)) {
+    let html = await fs.readFile(indexPath, "utf-8");
+    html = html.replace(/(href|src)=["'`]\/(?!\/)/g, '$1="');
+    await fs.writeFile(indexPath, html, "utf-8");
+  }
+
+  const outputZipPath = path.join(
+    __dirname,
+    "outputs",
+    `${uuidv4()}_${Date.now()}.zip`
+  );
+  await fs.ensureDir(path.dirname(outputZipPath));
+  const zip = new AdmZip();
+
+  const addFilesToZip = async (dir: string, baseInZip = "") => {
+    const entries = await fs.readdir(dir);
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry);
+      const stat = await fs.stat(fullPath);
+      if (stat.isDirectory()) {
+        await addFilesToZip(fullPath, path.join(baseInZip, entry));
+      } else {
+        const fileContent = await fs.readFile(fullPath);
+        zip.addFile(path.join(baseInZip, entry), fileContent);
+      }
+    }
+  };
+
+  await addFilesToZip(indexDir);
+  zip.writeZip(outputZipPath);
+  res.status(200).json({
+    statusCode: 0,
+    error: "22",
+  });
+  return;
+});
 app.post("/process-site", upload.single("file"), async (req, res) => {
   if (!req.file) {
     res.status(400).json({
@@ -210,6 +346,14 @@ app.post("/process-site", upload.single("file"), async (req, res) => {
     });
     return;
   }
+
+  const indexPath = path.join(indexDir, "index.html");
+  if (await fs.pathExists(indexPath)) {
+    let html = await fs.readFile(indexPath, "utf-8");
+    html = html.replace(/(href|src)=["'`]\/(?!\/)/g, '$1="');
+    await fs.writeFile(indexPath, html, "utf-8");
+  }
+
   const wsResources = {
     headers: {},
     routes: {},
@@ -410,6 +554,13 @@ app.post("/process-site", upload.single("file"), async (req, res) => {
       },
     });
     return;
+  }
+  finally {
+    await fs.remove(extractPath);
+    if (req.file && req.file.path) {
+      await fs.remove(req.file.path);
+      await fs.remove(outputZipPath);
+    }
   }
 
   if (response.name) {
