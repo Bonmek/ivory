@@ -12,6 +12,7 @@ import {
   Clock,
   Wallet,
   Info,
+  Trash2,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -23,6 +24,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -262,51 +269,87 @@ const DashboardHeader = ({
         
         {/* Warning Dialog for 1 project per wallet limit */}
         <Dialog open={showLimitWarning} onOpenChange={setShowLimitWarning}>
-          <DialogContent className="bg-primary-800 border-amber-500/30 text-white max-w-xs p-0 overflow-hidden">
+          <DialogContent className="bg-primary-900 border-amber-500/20 text-white max-w-xs p-0 overflow-hidden rounded-xl shadow-xl">
             {/* Top decorative banner */}
-            <div className="bg-gradient-to-r from-amber-600 to-amber-500 p-2 relative overflow-hidden">
-              <div className="absolute -right-4 -top-4 w-12 h-12 rounded-full bg-amber-400/20"></div>
-              <div className="absolute right-8 bottom-1 w-4 h-4 rounded-full bg-amber-400/30"></div>
-              <div className="absolute left-8 top-4 w-2 h-2 rounded-full bg-amber-400/30"></div>
-              <div className="relative flex items-center gap-1.5">
-                <div className="bg-amber-400/20 p-1 rounded-full flex items-center justify-center">
+            <div className="bg-gradient-to-r from-amber-600 to-amber-500 p-3 relative overflow-hidden">
+              <div className="absolute -right-4 -top-4 w-16 h-16 rounded-full bg-amber-400/20 blur-sm"></div>
+              <div className="absolute right-12 bottom-1 w-6 h-6 rounded-full bg-amber-400/30 blur-sm"></div>
+              <div className="absolute left-12 top-6 w-3 h-3 rounded-full bg-amber-400/30 blur-sm"></div>
+              <div className="relative flex items-center gap-2.5">
+                <div className="bg-white/20 backdrop-blur-sm p-1.5 rounded-full flex items-center justify-center border border-white/30">
                   <img src="/images/logos/Ivory.png" alt="Ivory Logo" className="h-4 w-4 object-contain" />
                 </div>
                 <div>
-                  <h2 className="text-white font-bold text-sm">
+                  <h2 className="text-white font-bold text-sm tracking-wide">
                     <FormattedMessage
                       id="dashboard.projectLimit.title"
                       defaultMessage="Beta Testing Limit"
                     />
                   </h2>
-                  <p className="text-amber-100 text-xs">Ivory Platform</p>
+                  <p className="text-amber-100/80 text-xs">Ivory Platform</p>
                 </div>
               </div>
             </div>
             
-            <div className="p-2.5">
-              <div className="space-y-2">
+            <div className="px-3.5 py-3 bg-gradient-to-b from-primary-800 to-primary-900">
+              <div className="space-y-3">
+                {/* Important message first */}
+                <div className="bg-amber-500/10 rounded-xl p-3 border border-amber-500/30 flex gap-2.5 items-center">
+                  <div className="bg-amber-500 p-1.5 rounded-full flex-shrink-0 flex items-center justify-center">
+                    <Trash2 className="h-3.5 w-3.5 text-white" />
+                  </div>
+                  <p className="text-white text-xs font-medium leading-relaxed">
+                    If you encounter issues, you can <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="text-amber-400 font-semibold cursor-help border-b border-dashed border-amber-400/50">delete your existing project</span>
+                        </TooltipTrigger>
+                        <TooltipContent className="bg-amber-600 text-white text-xs p-2 max-w-[200px]">
+                          You can delete your project from the dashboard by selecting the project and clicking the delete option.
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider> and create a new one
+                  </p>
+                </div>
+                
                 {/* Key points with icons */}
-                <div className="flex gap-1.5 items-start">
-                  <div className="bg-amber-500 p-1 rounded-full flex-shrink-0 mt-0.5 flex items-center justify-center">
-                    <Wallet className="h-3 w-3 text-white" />
+                <div className="grid grid-cols-2 gap-2.5 mt-1">
+                  <div className="flex gap-2 items-center bg-primary-800/50 rounded-lg p-2 border border-secondary-800">
+                    <div className="bg-amber-500 p-1.5 rounded-full flex-shrink-0 flex items-center justify-center">
+                      <Wallet className="h-3 w-3 text-white" />
+                    </div>
+                    <p className="text-secondary-200 text-xs">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="font-medium text-amber-400 cursor-help border-b border-dashed border-amber-400/50">1 project per wallet</span>
+                          </TooltipTrigger>
+                          <TooltipContent className="bg-amber-600 text-white text-xs p-2 max-w-[200px]">
+                            During beta testing, each wallet address is limited to creating one project at a time.
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider> during beta testing
+                    </p>
                   </div>
-                  <p className="text-secondary-200 text-xs">
-                    <span className="font-medium text-amber-400">1 project per wallet</span> during beta testing
-                  </p>
+                  
+                  <div className="flex gap-2 items-center bg-primary-800/50 rounded-lg p-2 border border-secondary-800">
+                    <div className="bg-amber-500 p-1.5 rounded-full flex-shrink-0 flex items-center justify-center">
+                      <Clock className="h-3 w-3 text-white" />
+                    </div>
+                    <p className="text-secondary-200 text-xs">
+                      Limit refreshes each <a 
+                        href="https://docs.wal.app/print.html" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="font-medium text-amber-400 cursor-pointer border-b border-dashed border-amber-400/50 hover:text-amber-300 transition-colors"
+                        onClick={(e) => e.stopPropagation()}
+                      >epoch</a> to ensure fair access
+                    </p>
+                  </div>
                 </div>
                 
-                <div className="flex gap-1.5 items-start">
-                  <div className="bg-amber-500 p-1 rounded-full flex-shrink-0 mt-0.5 flex items-center justify-center">
-                    <Clock className="h-3 w-3 text-white" />
-                  </div>
-                  <p className="text-secondary-200 text-xs">
-                    Limit refreshes each <span className="font-medium text-amber-400">epoch</span> to ensure fair access
-                  </p>
-                </div>
-                
-                <div className="bg-amber-500/10 rounded-lg p-2 text-xs text-secondary-300 border border-amber-500/20">
-                  <p>
+                <div className="bg-primary-800/30 rounded-lg p-2.5 text-xs text-secondary-300 border border-secondary-800/50">
+                  <p className="leading-relaxed">
                     <FormattedMessage
                       id="dashboard.projectLimit.description"
                       defaultMessage="During our beta testing phase, we're limiting each wallet to one project per epoch to ensure everyone gets a chance to try the platform. Thank you for your understanding and participation!"
@@ -316,11 +359,11 @@ const DashboardHeader = ({
               </div>
             </div>
             
-            <DialogFooter className="px-2.5 pb-2.5 pt-0.5">
+            <DialogFooter className="px-3.5 pb-3.5 pt-0 bg-primary-900">
               <Button
                 variant="default"
                 onClick={() => setShowLimitWarning(false)}
-                className="bg-amber-600 hover:bg-amber-700 text-white w-full py-1.5 text-xs font-medium shadow-sm shadow-amber-900/20 transition-all duration-200 hover:shadow-amber-900/30 hover:translate-y-[-1px]"
+                className="bg-amber-600 hover:bg-amber-500 text-white w-full py-2 text-xs font-medium rounded-lg shadow-lg shadow-amber-900/30 transition-all duration-200 hover:shadow-amber-900/50 hover:translate-y-[-1px] border border-amber-500/30"
               >
                 <FormattedMessage
                   id="dashboard.projectLimit.understand"
