@@ -200,60 +200,60 @@ const StatusChecklist: React.FC<{ deployingState: DeployingState, buildingState:
   ];
   return (
     <div className="w-full mb-4">
-  <div className="w-full px-1 sm:px-2">
-    <ul
-      className="w-full flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2 sm:gap-0 px-2 sm:px-4 py-3 sm:py-4 bg-gradient-to-r from-primary-900/70 via-primary-800/80 to-primary-900/70 dark:from-gray-900/80 dark:via-gray-800/90 dark:to-gray-900/80 rounded-2xl shadow-lg border-2 border-muted/30 overflow-x-auto scrollbar-thin scrollbar-thumb-primary-700 scrollbar-track-transparent"
-      style={{ WebkitOverflowScrolling: 'touch' }}
-    >
+      <div className="w-full px-1 sm:px-2">
+        <ul
+          className="w-full flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2 sm:gap-0 px-2 sm:px-4 py-3 sm:py-4 bg-gradient-to-r from-primary-900/70 via-primary-800/80 to-primary-900/70 dark:from-gray-900/80 dark:via-gray-800/90 dark:to-gray-900/80 rounded-2xl shadow-lg border-2 border-muted/30 overflow-x-auto scrollbar-thin scrollbar-thumb-primary-700 scrollbar-track-transparent"
+          style={{ WebkitOverflowScrolling: 'touch' }}
+        >
           {steps.map((step, i) => (
             <>
               <motion.li
-  key={step.key}
-  initial={{ opacity: 0, y: 10 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ delay: i * 0.08 }}
-  className={
-    "flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-2 rounded-xl transition-all duration-200 min-w-[190px] sm:min-w-[0] " +
-    (step.status === 'failed'
-      ? 'bg-red-100/40 dark:bg-red-900/40 shadow-md shadow-red-200/30 dark:shadow-red-900/40'
-      : step.status === 'done'
-        ? 'bg-green-100/40 dark:bg-green-900/40 shadow-sm'
-        : step.status === 'in-progress'
-          ? 'bg-yellow-50/40 dark:bg-yellow-900/40 shadow-sm animate-pulse'
-          : 'hover:bg-gray-100/40 dark:hover:bg-gray-800/40')
-  }
-  tabIndex={0}
->
+                key={step.key}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.08 }}
+                className={
+                  "flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-2 rounded-xl transition-all duration-200 min-w-[190px] sm:min-w-[0] " +
+                  (step.status === 'failed'
+                    ? 'bg-red-100/40 dark:bg-red-900/40 shadow-md shadow-red-200/30 dark:shadow-red-900/40'
+                    : step.status === 'done'
+                      ? 'bg-green-100/40 dark:bg-green-900/40 shadow-sm'
+                      : step.status === 'in-progress'
+                        ? 'bg-yellow-50/40 dark:bg-yellow-900/40 shadow-sm animate-pulse'
+                        : 'hover:bg-gray-100/40 dark:hover:bg-gray-800/40')
+                }
+                tabIndex={0}
+              >
 
                 {step.status === 'done' && (step.key === 'done'
-  ? <span className="w-6 h-6 sm:w-6 sm:h-6 flex items-center justify-center bg-green-200 dark:bg-green-900 rounded-full p-1 shadow"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 sm:w-5 sm:h-5 text-green-600"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m7 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></span>
-  : <Check className="w-6 h-6 sm:w-6 sm:h-6 text-green-500 bg-green-100 dark:bg-green-900 rounded-full p-1 shadow" />)}
-{step.status === 'failed' && (
-  <span className="w-6 h-6 sm:w-6 sm:h-6 flex items-center justify-center bg-red-100 dark:bg-red-900 rounded-full p-1 shadow "><X className="w-5 h-5 sm:w-5 sm:h-5 text-red-500" /></span>
-)}
-{step.status === 'in-progress' && (step.key === 'confirm'
-  ? <span className="w-6 h-6 sm:w-6 sm:h-6 flex items-center justify-center bg-yellow-50 dark:bg-yellow-900 rounded-full p-1 shadow animate-pulse"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 sm:w-5 sm:h-5 text-yellow-500"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l2 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></span>
-  : <RefreshCw className="w-6 h-6 sm:w-6 sm:h-6 text-yellow-400 bg-yellow-50 dark:bg-yellow-900 rounded-full p-1 animate-spin shadow" />)}
-{step.status === 'pending' && (step.key === 'done'
-  ? <span className="w-6 h-6 sm:w-6 sm:h-6 flex items-center justify-center bg-gray-200 dark:bg-gray-800 rounded-full p-1 shadow"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 sm:w-5 sm:h-5 text-gray-400 dark:text-gray-600"><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" fill="none" /></svg></span>
-  : <span className="inline-block w-5 h-5 sm:w-5 sm:h-5 rounded-full border-2 border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800" />)}
-<span className={
-  'ml-2 text-xs sm:text-sm md:text-base ' +
-  (step.status === 'done'
-    ? 'text-green-600 dark:text-green-300 font-semibold'
-    : step.status === 'in-progress'
-      ? 'text-yellow-500 dark:text-yellow-300 font-semibold'
-      : 'text-gray-400 dark:text-gray-500')
-}>
-  {step.label}
-</span>
+                  ? <span className="w-6 h-6 sm:w-6 sm:h-6 flex items-center justify-center bg-green-200 dark:bg-green-900 rounded-full p-1 shadow"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 sm:w-5 sm:h-5 text-green-600"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m7 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></span>
+                  : <Check className="w-6 h-6 sm:w-6 sm:h-6 text-green-500 bg-green-100 dark:bg-green-900 rounded-full p-1 shadow" />)}
+                {step.status === 'failed' && (
+                  <span className="w-6 h-6 sm:w-6 sm:h-6 flex items-center justify-center bg-red-100 dark:bg-red-900 rounded-full p-1 shadow "><X className="w-5 h-5 sm:w-5 sm:h-5 text-red-500" /></span>
+                )}
+                {step.status === 'in-progress' && (step.key === 'confirm'
+                  ? <span className="w-6 h-6 sm:w-6 sm:h-6 flex items-center justify-center bg-yellow-50 dark:bg-yellow-900 rounded-full p-1 shadow animate-pulse"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 sm:w-5 sm:h-5 text-yellow-500"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l2 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></span>
+                  : <RefreshCw className="w-6 h-6 sm:w-6 sm:h-6 text-yellow-400 bg-yellow-50 dark:bg-yellow-900 rounded-full p-1 animate-spin shadow" />)}
+                {step.status === 'pending' && (step.key === 'done'
+                  ? <span className="w-6 h-6 sm:w-6 sm:h-6 flex items-center justify-center bg-gray-200 dark:bg-gray-800 rounded-full p-1 shadow"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 sm:w-5 sm:h-5 text-gray-400 dark:text-gray-600"><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" fill="none" /></svg></span>
+                  : <span className="inline-block w-5 h-5 sm:w-5 sm:h-5 rounded-full border-2 border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800" />)}
+                <span className={
+                  'ml-2 text-xs sm:text-sm md:text-base ' +
+                  (step.status === 'done'
+                    ? 'text-green-600 dark:text-green-300 font-semibold'
+                    : step.status === 'in-progress'
+                      ? 'text-yellow-500 dark:text-yellow-300 font-semibold'
+                      : 'text-gray-400 dark:text-gray-500')
+                }>
+                  {step.label}
+                </span>
               </motion.li>
               {/* Divider/progress bar except after last item */}
-{i < steps.length - 1 && (
-  <span className="h-4 w-full sm:w-8 flex items-center justify-center">
-    <span className="block w-full h-0.5 sm:h-1 rounded-full bg-gradient-to-r from-primary-600 via-primary-400 to-primary-600 dark:from-primary-900 dark:via-primary-700 dark:to-primary-900 opacity-70 mx-0.5" />
-  </span>
-)}
+              {i < steps.length - 1 && (
+                <span className="h-4 w-full sm:w-8 flex items-center justify-center">
+                  <span className="block w-full h-0.5 sm:h-1 rounded-full bg-gradient-to-r from-primary-600 via-primary-400 to-primary-600 dark:from-primary-900 dark:via-primary-700 dark:to-primary-900 opacity-70 mx-0.5" />
+                </span>
+              )}
             </>
           ))}
         </ul>
