@@ -42,6 +42,18 @@ import {
 import { FormattedMessage, useIntl } from 'react-intl'
 import { useState, useEffect } from 'react'
 
+// Define the CSS for the pulse animation
+const pulseAnimationStyle = `
+  @keyframes pulse-slow {
+    0% { opacity: 0.3; }
+    50% { opacity: 0.6; }
+    100% { opacity: 0.3; }
+  }
+  .animate-pulse-slow {
+    animation: pulse-slow 2s ease-in-out infinite;
+  }
+`;
+
 interface DashboardHeaderProps {
   searchQuery: string
   setSearchQuery: (query: string) => void
@@ -112,7 +124,9 @@ const DashboardHeader = ({
     }),
   }
   return (
-    <motion.div
+    <>
+      <style dangerouslySetInnerHTML={{ __html: pulseAnimationStyle }} />
+      <motion.div
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{
@@ -257,13 +271,17 @@ const DashboardHeader = ({
               }
             }}
             variant="outline"
-            className="w-full sm:w-auto bg-primary-800 text-white font-medium flex items-center gap-1.5 border-secondary-500/40 hover:bg-primary-700 hover:border-secondary-500/70 cursor-pointer"
+            className="w-full sm:w-auto bg-primary-800 text-white font-medium flex items-center gap-1.5 border-secondary-500/40 hover:bg-primary-700 hover:border-secondary-500 cursor-pointer shadow-lg shadow-secondary-500/20 ring-2 ring-secondary-500/20 hover:ring-secondary-500/50 transition-all duration-200 transform hover:scale-105 relative overflow-hidden group"
           >
-            <PlusCircle className="h-4 w-4 text-secondary-500" />
-            <FormattedMessage
-              id="dashboard.createNew"
-              defaultMessage="Deploy Site"
-            />
+            <div className="absolute inset-0 bg-secondary-500/10 animate-pulse-slow rounded-md pointer-events-none"></div>
+            <div className="absolute -inset-1 bg-secondary-500/5 blur-sm animate-pulse-slow rounded-md pointer-events-none"></div>
+            <PlusCircle className="h-4 w-4 text-secondary-500 relative z-10" />
+            <span className="relative z-10">
+              <FormattedMessage
+                id="dashboard.createNew"
+                defaultMessage="Deploy Site"
+              />
+            </span>
           </Button>
         </motion.div>
         
@@ -299,16 +317,31 @@ const DashboardHeader = ({
                     <Trash2 className="h-3.5 w-3.5 text-white" />
                   </div>
                   <p className="text-white text-xs font-medium leading-relaxed">
-                    If you encounter issues, you can <TooltipProvider>
+                    <FormattedMessage
+                      id="dashboard.projectLimit.deleteInfo"
+                      defaultMessage="If you encounter issues, you can"
+                    />{" "}<TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <span className="text-amber-400 font-semibold cursor-help border-b border-dashed border-amber-400/50">delete your existing project</span>
+                          <span className="text-amber-400 font-semibold cursor-help border-b border-dashed border-amber-400/50">
+                            <FormattedMessage
+                              id="dashboard.projectLimit.deleteProject"
+                              defaultMessage="delete your existing project"
+                            />
+                          </span>
                         </TooltipTrigger>
                         <TooltipContent className="bg-amber-600 text-white text-xs p-2 max-w-[200px]">
-                          You can delete your project from the dashboard by selecting the project and clicking the delete option.
+                          <FormattedMessage
+                            id="dashboard.projectLimit.deleteHelp"
+                            defaultMessage="You can delete your project from the dashboard by selecting the project and clicking the delete option."
+                          />
                         </TooltipContent>
                       </Tooltip>
-                    </TooltipProvider> and create a new one
+                    </TooltipProvider>{" "}
+                    <FormattedMessage
+                      id="dashboard.projectLimit.createNew"
+                      defaultMessage="and create a new one"
+                    />
                   </p>
                 </div>
                 
@@ -322,13 +355,25 @@ const DashboardHeader = ({
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <span className="font-medium text-amber-400 cursor-help border-b border-dashed border-amber-400/50">1 project per wallet</span>
+                            <span className="font-medium text-amber-400 cursor-help border-b border-dashed border-amber-400/50">
+                              <FormattedMessage
+                                id="dashboard.projectLimit.oneProject"
+                                defaultMessage="1 project per wallet"
+                              />
+                            </span>
                           </TooltipTrigger>
                           <TooltipContent className="bg-amber-600 text-white text-xs p-2 max-w-[200px]">
-                            During beta testing, each wallet address is limited to creating one project at a time.
+                            <FormattedMessage
+                              id="dashboard.projectLimit.walletLimit"
+                              defaultMessage="During beta testing, each wallet address is limited to creating one project at a time."
+                            />
                           </TooltipContent>
                         </Tooltip>
-                      </TooltipProvider> during beta testing
+                      </TooltipProvider>{" "}
+                      <FormattedMessage
+                        id="dashboard.projectLimit.duringBeta"
+                        defaultMessage="during beta testing"
+                      />
                     </p>
                   </div>
                   
@@ -337,13 +382,26 @@ const DashboardHeader = ({
                       <Clock className="h-3 w-3 text-white" />
                     </div>
                     <p className="text-secondary-200 text-xs">
-                      Limit refreshes each <a 
+                      <FormattedMessage
+                        id="dashboard.projectLimit.limitRefreshes"
+                        defaultMessage="Limit refreshes each"
+                      />{" "}
+                      <a 
                         href="https://docs.wal.app/print.html" 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="font-medium text-amber-400 cursor-pointer border-b border-dashed border-amber-400/50 hover:text-amber-300 transition-colors"
                         onClick={(e) => e.stopPropagation()}
-                      >epoch</a> to ensure fair access
+                      >
+                        <FormattedMessage
+                          id="dashboard.projectLimit.epoch"
+                          defaultMessage="epoch"
+                        />
+                      </a>{" "}
+                      <FormattedMessage
+                        id="dashboard.projectLimit.fairAccess"
+                        defaultMessage="to ensure fair access"
+                      />
                     </p>
                   </div>
                 </div>
@@ -516,6 +574,7 @@ const DashboardHeader = ({
         </div>
       </motion.div>
     </motion.div>
+  </>
   )
 }
 
