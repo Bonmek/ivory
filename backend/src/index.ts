@@ -113,11 +113,84 @@ const findIndexHtmlInKnownDirs = async (
   return null;
 };
 
+// Add these helper functions at the top level
+async function containsJavaScriptFiles(dir: string): Promise<boolean> {
+  const files = await fs.readdir(dir);
+  for (const file of files) {
+    const fullPath = path.join(dir, file);
+    const stat = await fs.stat(fullPath);
+    if (stat.isDirectory()) {
+      if (await containsJavaScriptFiles(fullPath)) {
+        return true;
+      }
+    } else if (file.endsWith('.js') || file.endsWith('.jsx') || file.endsWith('.ts') || file.endsWith('.tsx')) {
+      return true;
+    }
+  }
+  return false;
+}
+
+async function detectBuildTool(buildDir: string): Promise<{ tool: string; configPath: string } | null> {
+  const configFiles = [
+    { tool: 'vite', patterns: ['vite.config.ts', 'vite.config.js'] },
+    { tool: 'webpack', patterns: ['webpack.config.js', 'webpack.config.ts'] },
+    { tool: 'rollup', patterns: ['rollup.config.js', 'rollup.config.ts'] }
+  ];
+
+  for (const { tool, patterns } of configFiles) {
+    for (const pattern of patterns) {
+      const configPath = path.join(buildDir, pattern);
+      if (await fs.pathExists(configPath)) {
+        return { tool, configPath };
+      }
+    }
+  }
+  return null;
+}
+
+async function modifyBuildConfig(configPath: string, tool: string): Promise<void> {
+  const content = await fs.readFile(configPath, 'utf-8');
+  let modifiedContent = content;
+
+  switch (tool) {
+    case 'vite':
+      // Add or modify base and build.outDir
+      if (!content.includes('base:')) {
+        modifiedContent = modifiedContent.replace(
+          /export default defineConfig\(\{/,
+          'export default defineConfig({\n  base: "./",\n  build: {\n    outDir: "dist",\n  },'
+        );
+      }
+      break;
+    case 'webpack':
+      // Add or modify output.path and output.publicPath
+      if (!content.includes('output:')) {
+        modifiedContent = modifiedContent.replace(
+          /module.exports = \{/,
+          'module.exports = {\n  output: {\n    path: path.resolve(__dirname, "dist"),\n    publicPath: "./",\n  },'
+        );
+      }
+      break;
+    case 'rollup':
+      // Add or modify output.dir and output.assetFileNames
+      if (!content.includes('output:')) {
+        modifiedContent = modifiedContent.replace(
+          /export default \{/,
+          'export default {\n  output: {\n    dir: "dist",\n    assetFileNames: "[name][extname]",\n  },'
+        );
+      }
+      break;
+  }
+
+  await fs.writeFile(configPath, modifiedContent, 'utf-8');
+}
+
 app.post("/preview", upload.single("file"), async (req, res) => {
   const startTime = performance.now();
   console.log('Start processing:', new Date().toISOString());
   let extractPath: string | null = null;
   let outputZipPath: string | null = null;
+  let indexDir: string | null = null;
 
   if (!req.file) {
     res.status(400).json({
@@ -157,9 +230,18 @@ app.post("/preview", upload.single("file"), async (req, res) => {
       return;
     }
 
-    let indexDir: string | null;
-
-    if (attributes_data.data.is_build === "0") {
+    if (attributes_data.data.is_build === "1") {
+      // Check for JavaScript files in the extracted directory
+      if (await containsJavaScriptFiles(extractPath)) {
+        await cleanupFiles(extractPath, zipFile.path, null);
+        res.status(404).json({
+          statusCode: 0,
+          error: "JavaScript files found in the uploaded zip. Only static files are allowed when is_build is 1.",
+        });
+        return;
+      }
+      indexDir = await findIndexHtmlPath(extractPath);
+    } else if (attributes_data.data.is_build === "0") {
       const buildDir = path.join(extractPath, attributes_data.data.root);
       const packageJsonPath = path.join(buildDir, "package.json");
       
@@ -173,6 +255,12 @@ app.post("/preview", upload.single("file"), async (req, res) => {
       }
 
       try {
+        // Detect build tool and modify config
+        const buildTool = await detectBuildTool(buildDir);
+        if (buildTool) {
+          await modifyBuildConfig(buildTool.configPath, buildTool.tool);
+        }
+
         // Measure install and build time
         const buildStart = performance.now();
         await new Promise((resolve, reject) => {
@@ -220,8 +308,6 @@ app.post("/preview", upload.single("file"), async (req, res) => {
         });
         return;
       }
-    } else {
-      indexDir = await findIndexHtmlPath(extractPath);
     }
 
     if (!indexDir) {
