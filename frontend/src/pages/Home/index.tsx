@@ -478,7 +478,7 @@ export default function HomePage() {
                 style={{
                   letterSpacing: '0.05em',
                 }}
-                onClick={() => navigate('/create-website')}
+                onClick={() => navigate('/dashboard')}
               >
                 <span className="text-black relative z-10">
                   <FormattedMessage id="homepage.hero.deploy" />
