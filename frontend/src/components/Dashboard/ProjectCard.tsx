@@ -575,8 +575,8 @@ const ProjectCard = memo(
                     </>
                   ) : (
                     <>
-                      <DropdownMenuItem 
-                        className="focus:bg-primary-800 opacity-60 cursor-not-allowed flex items-center justify-between" 
+                      <DropdownMenuItem
+                        className="focus:bg-primary-800 opacity-60 cursor-not-allowed flex items-center justify-between"
                         disabled
                       >
                         <div className="flex items-center">
@@ -600,8 +600,8 @@ const ProjectCard = memo(
                           )}
                         </DropdownMenuItem>
                       )}
-                      <DropdownMenuItem 
-                        className="focus:bg-primary-800 opacity-60 cursor-not-allowed flex items-center justify-between" 
+                      <DropdownMenuItem
+                        className="focus:bg-primary-800 opacity-60 cursor-not-allowed flex items-center justify-between"
                         disabled
                       >
                         <div className="flex items-center">
@@ -612,8 +612,8 @@ const ProjectCard = memo(
                           <FormattedMessage id="projectCard.comingSoon" />
                         </div>
                       </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        className="focus:bg-primary-800 opacity-60 cursor-not-allowed flex items-center justify-between" 
+                      <DropdownMenuItem
+                        className="focus:bg-primary-800 opacity-60 cursor-not-allowed flex items-center justify-between"
                         disabled
                       >
                         <div className="flex items-center">
@@ -855,10 +855,10 @@ const ProjectCard = memo(
                   ) : project.siteId ? (
                     <>
                       <span className="truncate mr-2 text-white/80">
-                        <FormattedMessage 
-                          id="projectCard.siteId" 
-                          values={{ id: `${project.siteId.slice(0, 6)}...${project.siteId.slice(-4)}` }} 
-                          defaultMessage="Site ID: {id}" 
+                        <FormattedMessage
+                          id="projectCard.siteId"
+                          values={{ id: `${project.siteId.slice(0, 6)}...${project.siteId.slice(-4)}` }}
+                          defaultMessage="Site ID: {id}"
                         />
                       </span>
                       <button
@@ -970,10 +970,10 @@ const ProjectCard = memo(
                       onMouseLeave={() => setRemainingOpen(false)}
                     >
                       <div className="text-sm">
-                        <FormattedMessage 
-                          id="projectCard.expiresOn" 
-                          values={{ date: formatDate(project.expiredDate) }} 
-                          defaultMessage="Expires on {date}" 
+                        <FormattedMessage
+                          id="projectCard.expiresOn"
+                          values={{ date: formatDate(project.expiredDate) }}
+                          defaultMessage="Expires on {date}"
                         />
                       </div>
                     </PopoverContent>
