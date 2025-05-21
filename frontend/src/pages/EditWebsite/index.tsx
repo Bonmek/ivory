@@ -207,23 +207,6 @@ function App() {
         <CardContent className="p-6 md:p-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Site Preview Section */}
-            <Card className="bg-gray-800/50 border-cyan-500/30 rounded-lg overflow-hidden transition-all duration-300 hover:shadow-cyan-500/20 lg:col-span-3">
-              <CardHeader className="border-b border-cyan-500/20">
-                <CardTitle className="text-lg text-cyan-300 font-medium">
-                  Site Preview
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="flex justify-center">
-                  <img
-                    src="https://via.placeholder.com/800x600/1F2A44/67E8F9?text=Website+Preview"
-                    alt="Site Preview"
-                    className="max-w-full h-auto rounded-lg border border-cyan-500/30 transition-transform duration-300 hover:scale-102 cursor-pointer"
-                    onClick={() => handlePreview('https://via.placeholder.com/800x600/1F2A44/67E8F9?text=Website+Preview')}
-                  />
-                </div>
-              </CardContent>
-            </Card>
 
             {/* Project Settings Section */}
             <div className="space-y-6 lg:col-span-2">

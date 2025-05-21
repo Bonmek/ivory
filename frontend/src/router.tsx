@@ -11,6 +11,7 @@ import HowToUsePage from './pages/Howtouse'
 import DashboardPage from './pages/Dashboard'
 import Callback from './pages/Callback'
 import EditWebsitePage from './pages/EditWebsite'
+import AboutUs from './pages/AboutUs'
 
 const router = createBrowserRouter([
   {
@@ -62,6 +63,14 @@ const router = createBrowserRouter([
         <ProtectedRoute>
           <Dashboard />
         </ProtectedRoute>
+      </Layout>
+    ),
+  },
+  {
+    path: '/about-us',
+    element: (
+      <Layout>
+        <AboutUs />
       </Layout>
     ),
   },
