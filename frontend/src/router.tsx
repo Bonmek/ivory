@@ -11,6 +11,8 @@ import HowToUsePage from './pages/Howtouse'
 import DashboardPage from './pages/Dashboard'
 import Callback from './pages/Callback'
 import EditWebsitePage from './pages/EditWebsite'
+import AboutUs from './pages/AboutUs'
+
 
 const router = createBrowserRouter([
   {
@@ -46,12 +48,28 @@ const router = createBrowserRouter([
     ),
   },
   {
+    path: '/edit-website/:id',
+    element: (
+      <Layout>
+        <EditWebsitePage />
+      </Layout>
+    ),
+  },
+  {
     path: '/dashboard',
     element: (
       <Layout>
         <ProtectedRoute>
           <Dashboard />
         </ProtectedRoute>
+      </Layout>
+    ),
+  },
+  {
+    path: '/about-us',
+    element: (
+      <Layout>
+        <AboutUs />
       </Layout>
     ),
   },
