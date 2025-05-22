@@ -72,9 +72,13 @@ const formatShortDate = (date: Date) => {
   })
 }
 
-const calculateDaysBetween = (date1: Date, date2: Date) => {
+const calculateTimeBetween = (date1: Date, date2: Date) => {
   const diffTime = Math.abs(date2.getTime() - date1.getTime())
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  const days = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+  const hours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+  const minutes = Math.floor((diffTime % (1000 * 60 * 60)) / (1000 * 60))
+  
+  return { days, hours, minutes, totalMs: diffTime }
 }
 
 const ProjectCard = memo(
@@ -87,7 +91,7 @@ const ProjectCard = memo(
     onRefetch,
   }: ProjectCardProps) => {
     const intl = useIntl()
-    const remainingDays = calculateDaysBetween(new Date(), project.expiredDate)
+    const remaining = calculateTimeBetween(new Date(), project.expiredDate)
     const [startDateOpen, setStartDateOpen] = useState(false)
     const [expiredDateOpen, setExpiredDateOpen] = useState(false)
     const [remainingOpen, setRemainingOpen] = useState(false)
@@ -188,14 +192,14 @@ const ProjectCard = memo(
           }
         case 3:
           return {
-            card: 'bg-primary-900/90 hover:bg-primary-900 border-purple-500/10 hover:border-purple-500/30',
-            text: 'text-purple-400',
-            badge: 'bg-purple-500/20 text-purple-300',
-            link: 'text-purple-300 hover:text-purple-400',
-            date: 'text-purple-300',
-            dropdown: 'text-purple-300 hover:text-white hover:bg-purple-500/20',
-            avatar: 'border-purple-500/50',
-            shadow: 'shadow-purple-500/5',
+            card: 'bg-primary-900/90 hover:bg-primary-900 border-gray-500/10 hover:border-gray-500/30',
+            text: 'text-gray-400',
+            badge: 'bg-gray-500/20 text-gray-300',
+            link: 'text-gray-300 hover:text-gray-400',
+            date: 'text-gray-300',
+            dropdown: 'text-gray-300 hover:text-white hover:bg-gray-500/20',
+            avatar: 'border-gray-500/50',
+            shadow: 'shadow-gray-500/5',
           }
         default:
           return {
@@ -232,20 +236,17 @@ const ProjectCard = memo(
     }
 
     const handleLinkSuins = async () => {
-      const finalSuins = selectedSuins === 'other' ? otherSuins : selectedSuins
-
-      if (!finalSuins) {
+      if (!selectedSuins) {
         toast.error(<FormattedMessage id="projectCard.pleaseSelect" />)
         return
       }
 
       if (!userAddress) {
-        toast.error(
-          <FormattedMessage id="projectCard.connectWallet" />,
-          {
-            description: intl.formatMessage({ id: 'projectCard.connectWalletDesc' }),
-          }
-        )
+        toast.error(<FormattedMessage id="projectCard.connectWallet" />, {
+          description: intl.formatMessage({
+            id: 'projectCard.connectWalletDesc',
+          }),
+        })
         return
       }
 
@@ -262,7 +263,7 @@ const ProjectCard = memo(
 
         // Get the NFT ID for the selected SUINS
         const selectedSuinsData = suins.find(
-          (s) => s.data?.content?.fields?.domain_name === finalSuins,
+          (s) => s.data?.content?.fields?.domain_name === selectedSuins,
         )
         if (!selectedSuinsData?.data?.objectId) {
           throw new Error('SUINS NFT not found')
@@ -282,17 +283,16 @@ const ProjectCard = memo(
           process.env.REACT_APP_SUI_NETWORK as 'mainnet' | 'testnet',
         )
         const response = await apiClient.put(
-          `/set-attributes?object_id=${project.parentId}&sui_ns=${finalSuins}`,
+          `/set-attributes?object_id=${project.parentId}&sui_ns=${selectedSuins}`,
         )
         setOpen(false)
         if (result.status === 'success') {
-          toast.success(
-            <FormattedMessage id="projectCard.suinsLinked" />,
-            {
-              description: intl.formatMessage({ id: 'projectCard.suinsLinkedDesc' }),
-              duration: 5000,
-            }
-          )
+          toast.success(<FormattedMessage id="projectCard.suinsLinked" />, {
+            description: intl.formatMessage({
+              id: 'projectCard.suinsLinkedDesc',
+            }),
+            duration: 5000,
+          })
           if (result.status === 'success' && response.status === 200) {
             onRefetch()
           }
@@ -302,9 +302,11 @@ const ProjectCard = memo(
         toast.error(
           error.message || <FormattedMessage id="projectCard.failedToLink" />,
           {
-            description: intl.formatMessage({ id: 'projectCard.failedToLinkDesc' }),
+            description: intl.formatMessage({
+              id: 'projectCard.failedToLinkDesc',
+            }),
             duration: 5000,
-          }
+          },
         )
       } finally {
         setIsLinking(false)
@@ -322,20 +324,21 @@ const ProjectCard = memo(
           `/delete-site?object_id=${project.parentId}`,
         )
         if (response.status === 200) {
-          toast.success(
-            <FormattedMessage id="projectCard.siteDeleted" />,
-            {
-              description: intl.formatMessage({ id: 'projectCard.siteDeletedDesc' }),
-              duration: 5000,
-            }
-          )
+          toast.success(<FormattedMessage id="projectCard.siteDeleted" />, {
+            description: intl.formatMessage({
+              id: 'projectCard.siteDeletedDesc',
+            }),
+            duration: 5000,
+          })
           setDeleteDialogOpen(false)
           onRefetch()
         }
       } catch (error: any) {
         console.error('Error deleting site:', error)
         toast.error(
-          error.response?.data?.message || <FormattedMessage id="projectCard.failedToDelete" />
+          error.response?.data?.message || (
+            <FormattedMessage id="projectCard.failedToDelete" />
+          ),
         )
       } finally {
         setIsDeleting(false)
@@ -389,7 +392,7 @@ const ProjectCard = memo(
                   <Dialog open={open} onOpenChange={setOpen}>
                     <DialogTrigger asChild>
                       <button
-                        className={`h-8 px-3 flex items-center justify-center rounded-full ${colors.dropdown} transition-all duration-200 hover:scale-110 active:scale-95`}
+                        className={`h-8 px-3 flex items-center justify-center rounded-full ${colors.dropdown} transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer`}
                       >
                         <Link className="h-4 w-4 mr-1.5" />
                         <span className="text-sm">Link SUINS</span>
@@ -444,18 +447,12 @@ const ProjectCard = memo(
                                         </SelectItem>
                                       )
                                     })}
-                                    <SelectItem
-                                      value="other"
-                                      className="hover:bg-primary-700"
-                                    >
-                                      Other
-                                    </SelectItem>
                                   </SelectContent>
                                 </Select>
                                 <Button
                                   onClick={handleRefreshSuins}
                                   variant="outline"
-                                  className="border-secondary-500/20 text-white hover:bg-primary-800"
+                                  className="border-secondary-500/20 text-white hover:bg-primary-800 ${isLoadingSuins || isRefreshing ? '' : 'cursor-pointer'}"
                                   disabled={isLoadingSuins || isRefreshing}
                                 >
                                   {isRefreshing ? (
@@ -466,32 +463,7 @@ const ProjectCard = memo(
                                 </Button>
                               </div>
 
-                              {selectedSuins === 'other' && (
-                                <div className="relative mt-2 group">
-                                  <Input
-                                    placeholder="Enter your domain name"
-                                    value={otherSuins}
-                                    onChange={(e) => {
-                                      const value = e.target.value.replace(
-                                        '.wal.app',
-                                        '',
-                                      )
-                                      setOtherSuins(value)
-                                    }}
-                                    className="bg-primary-800 border-secondary-500/20 text-white pr-[85px] transition-all duration-200 
-                                    placeholder:text-white/30 focus:border-secondary-500/50 focus:ring-1 focus:ring-secondary-500/50
-                                    group-hover:border-secondary-500/30"
-                                  />
-                                  <div
-                                    className="absolute right-0 top-1/2 -translate-y-1/2 px-3 h-full flex items-center
-                                  border-l border-secondary-500/20 text-secondary-400/70 select-none bg-secondary-500/5
-                                  text-sm font-medium transition-colors duration-200 group-hover:text-secondary-400/90
-                                  group-hover:border-secondary-500/30 group-hover:bg-secondary-500/10"
-                                  >
-                                    .wal.app
-                                  </div>
-                                </div>
-                              )}
+
                             </>
                           )}
                         </div>
@@ -499,12 +471,11 @@ const ProjectCard = memo(
                           <div className="flex gap-2">
                             <Button
                               onClick={() => handleLinkSuins()}
-                              className="bg-secondary-500 hover:bg-secondary-600 text-white flex-1 relative"
+                              className="bg-secondary-500 hover:bg-secondary-600 text-white flex-1 relative ${isLinking || isLoadingSuins || !selectedSuins ? '' : 'cursor-pointer'}"
                               disabled={
                                 isLinking ||
                                 isLoadingSuins ||
-                                !selectedSuins ||
-                                (selectedSuins === 'other' && !otherSuins)
+                                !selectedSuins
                               }
                             >
                               {isLinking ? (
@@ -530,29 +501,25 @@ const ProjectCard = memo(
                     </DialogContent>
                   </Dialog>
                 )}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    className={`h-8 w-8 flex items-center justify-center rounded-full ${colors.dropdown} transition-all duration-200 hover:scale-110 active:scale-95`}
-                    disabled={project.status === 0 || project.status === 3}
-                  >
-                    <MoreHorizontal className="h-5 w-5" />
-                    <span className="sr-only">Open menu</span>
-                  </button>
-                </DropdownMenuTrigger>
+              {project.status !== 0 && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className={`h-8 w-8 flex items-center justify-center rounded-full ${colors.dropdown} transition-all duration-200 hover:scale-110 active:scale-95 ${project.status === 3 ? '' : 'cursor-pointer'}`}
+                      disabled={project.status === 3}
+                    >
+                      <MoreHorizontal className="h-5 w-5" />
+                      <span className="sr-only">Open menu</span>
+                    </button>
+                  </DropdownMenuTrigger>
                 <DropdownMenuContent
                   align="end"
                   className="w-56 bg-primary-900 border-secondary-500/20 text-white backdrop-blur-sm"
                 >
                   {project.status === 2 ? (
                     <>
-                      <DropdownMenuItem className="focus:bg-primary-800">
-                        <RefreshCw className="mr-2 h-4 w-4" />
-                        <span><FormattedMessage id="projectCard.redeploy" /></span>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator className="bg-secondary-500/20" />
                       <DropdownMenuItem
-                        className="text-red-400 focus:text-red-400 focus:bg-primary-800"
+                        className="text-red-400 focus:text-red-400 focus:bg-primary-800 cursor-pointer"
                         onClick={() => setDeleteDialogOpen(true)}
                       >
                         <Trash className="mr-2 h-4 w-4" />
@@ -561,16 +528,15 @@ const ProjectCard = memo(
                     </>
                   ) : project.status === 0 ? (
                     <>
-                      <div className="px-4 py-2 text-yellow-400 flex items-center gap-2 text-sm">
-                        <Loader2 className="ml-1 h-3 w-3 text-yellow-300 animate-spin" />
-                        <FormattedMessage id="projectCard.deploying" />
-                      </div>
                     </>
                   ) : project.status === 3 ? (
                     <>
                       <div className="px-4 py-2 text-purple-400 flex items-center gap-2 text-sm">
                         <Loader2 className="ml-1 h-3 w-3 text-purple-300 animate-spin" />
-                        <FormattedMessage id="projectCard.deleting" defaultMessage="Deleting project..." />
+                        <FormattedMessage
+                          id="projectCard.deleting"
+                          defaultMessage="Deleting project..."
+                        />
                       </div>
                     </>
                   ) : (
@@ -581,7 +547,9 @@ const ProjectCard = memo(
                       >
                         <div className="flex items-center">
                           <RefreshCw className="mr-2 h-4 w-4" />
-                          <span><FormattedMessage id="projectCard.updateSite" /></span>
+                          <span>
+                            <FormattedMessage id="projectCard.updateSite" />
+                          </span>
                         </div>
                         <div className="ml-1 text-[9px] px-1 py-0 leading-tight rounded-sm bg-secondary-500/10 text-secondary-400/80 whitespace-nowrap">
                           <FormattedMessage id="projectCard.comingSoon" />
@@ -589,12 +557,14 @@ const ProjectCard = memo(
                       </DropdownMenuItem>
                       {!project.siteId && (
                         <DropdownMenuItem
-                          className="focus:bg-primary-800"
+                          className={`focus:bg-primary-800 ${project.site_status === 0 ? '' : 'cursor-pointer'}`}
                           onClick={() => setGenerateDialogOpen(true)}
                           disabled={project.site_status === 0}
                         >
                           <Key className="mr-2 h-4 w-4" />
-                          <span><FormattedMessage id="projectCard.generateSiteId" /></span>
+                          <span>
+                            <FormattedMessage id="projectCard.generateSiteId" />
+                          </span>
                           {isGenerating && (
                             <Loader2 className="ml-2 h-4 w-4 animate-spin text-secondary-400" />
                           )}
@@ -606,7 +576,9 @@ const ProjectCard = memo(
                       >
                         <div className="flex items-center">
                           <CalendarIcon className="mr-2 h-4 w-4" />
-                          <span><FormattedMessage id="projectCard.extendSite" /></span>
+                          <span>
+                            <FormattedMessage id="projectCard.extendSite" />
+                          </span>
                         </div>
                         <div className="ml-1 text-[9px] px-1 py-0 leading-tight rounded-sm bg-secondary-500/10 text-secondary-400/80 whitespace-nowrap">
                           <FormattedMessage id="projectCard.comingSoon" />
@@ -618,7 +590,9 @@ const ProjectCard = memo(
                       >
                         <div className="flex items-center">
                           <Users className="mr-2 h-4 w-4" />
-                          <span><FormattedMessage id="projectCard.transferOwnership" /></span>
+                          <span>
+                            <FormattedMessage id="projectCard.transferOwnership" />
+                          </span>
                         </div>
                         <div className="ml-1 text-[9px] px-1 py-0 leading-tight rounded-sm bg-secondary-500/10 text-secondary-400/80 whitespace-nowrap">
                           <FormattedMessage id="projectCard.comingSoon" />
@@ -626,7 +600,7 @@ const ProjectCard = memo(
                       </DropdownMenuItem>
                       <DropdownMenuSeparator className="bg-secondary-500/20" />
                       <DropdownMenuItem
-                        className="text-red-400 focus:text-red-400 focus:bg-primary-800"
+                        className="text-red-400 focus:text-red-400 focus:bg-primary-800 cursor-pointer"
                         onClick={() => setDeleteDialogOpen(true)}
                       >
                         <Trash className="mr-2 h-4 w-4" />
@@ -636,6 +610,7 @@ const ProjectCard = memo(
                   )}
                 </DropdownMenuContent>
               </DropdownMenu>
+              )}
             </div>
 
             {/* Left: Project Image */}
@@ -668,7 +643,10 @@ const ProjectCard = memo(
                   <div
                     className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${colors.badge} flex items-center gap-1`}
                   >
-                    <FormattedMessage id="projectCard.deleting" defaultMessage="Deleting" />
+                    <FormattedMessage
+                      id="projectCard.deleting"
+                      defaultMessage="Deleting"
+                    />
                     <span className="ml-1">
                       <span className="inline-block w-2 h-2 bg-purple-300 rounded-full animate-pulse" />
                     </span>
@@ -794,7 +772,7 @@ const ProjectCard = memo(
                     href={`https://${project.suins?.endsWith('.sui') ? project.suins.slice(0, -4) : project.suins}.wal.app`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center h-[28px] hover:underline truncate transition-colors duration-200 text-secondary-200/80 hover:text-secondary-100/90 max-w-[340px]"
+                    className="flex items-center h-[28px] hover:underline truncate transition-colors duration-200 text-secondary-200/80 hover:text-secondary-100/90 max-w-[340px] cursor-pointer"
                   >
                     {project.suins?.endsWith('.sui')
                       ? project.suins.slice(0, -4)
@@ -809,7 +787,7 @@ const ProjectCard = memo(
                     href={`https://kursui.wal.app/${project.showcase_url}/index.html`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center h-[24px] hover:underline transition-colors duration-200 text-secondary-200/80 hover:text-secondary-100/90 max-w-[340px]"
+                    className="flex items-center h-[24px] hover:underline transition-colors duration-200 text-secondary-200/80 hover:text-secondary-100/90 max-w-[340px] cursor-pointer"
                     title={`https://kursui.wal.app/${project.showcase_url}/index.html`}
                   >
                     <span className="flex-shrink-0">https://</span>
@@ -832,7 +810,9 @@ const ProjectCard = memo(
                       style={{ minHeight: 28 }}
                     >
                       <Loader2 className="h-4 w-4 animate-spin text-yellow-300" />
-                      <span><FormattedMessage id="projectCard.generatingSiteId" /></span>
+                      <span>
+                        <FormattedMessage id="projectCard.generatingSiteId" />
+                      </span>
                     </span>
                   ) : project.site_status === 2 ? (
                     <span
@@ -850,20 +830,21 @@ const ProjectCard = memo(
                         <line x1="15" y1="9" x2="9" y2="15" />
                         <line x1="9" y1="9" x2="15" y2="15" />
                       </svg>
-                      <span><FormattedMessage id="projectCard.failedToGenerateSiteId" /></span>
+                      <span>
+                        <FormattedMessage id="projectCard.failedToGenerateSiteId" />
+                      </span>
                     </span>
-                  ) : project.siteId ? (
+                  ) : project.siteId && project.siteId.trim() !== '' ? (
                     <>
                       <span className="truncate mr-2 text-white/80">
-                        <FormattedMessage
-                          id="projectCard.siteId"
-                          values={{ id: `${project.siteId.slice(0, 6)}...${project.siteId.slice(-4)}` }}
-                          defaultMessage="Site ID: {id}"
-                        />
+                        Site ID:{' '}
+                        {project.siteId && project.siteId.trim() !== ''
+                          ? `${project.siteId.slice(0, 6)}...${project.siteId.slice(-4)}`
+                          : 'N/A'}
                       </span>
                       <button
                         onClick={() => handleCopy(project.siteId!)}
-                        className="p-1 rounded-full hover:bg-white/10 transition-colors duration-200"
+                        className="p-1 rounded-full hover:bg-white/10 transition-colors duration-200 cursor-pointer"
                       >
                         {copied ? (
                           <Check className="h-3.5 w-3.5 text-green-400" />
@@ -961,7 +942,16 @@ const ProjectCard = memo(
                         onMouseEnter={() => setRemainingOpen(true)}
                         onMouseLeave={() => setRemainingOpen(false)}
                       >
-                        {remainingDays} <FormattedMessage id="projectCard.days" />
+                        {remaining.days === 0 ? (
+                          <>
+                            {remaining.hours}h {remaining.minutes}m
+                          </>
+                        ) : (
+                          <>
+                            {remaining.days}{' '}
+                            <FormattedMessage id="projectCard.days" />
+                          </>
+                        )}
                       </div>
                     </PopoverTrigger>
                     <PopoverContent
@@ -975,6 +965,11 @@ const ProjectCard = memo(
                           values={{ date: formatDate(project.expiredDate) }}
                           defaultMessage="Expires on {date}"
                         />
+                        {remaining.days === 0 && (
+                          <div className="mt-1 text-xs text-secondary-300">
+                            {remaining.hours} hours and {remaining.minutes} minutes remaining
+                          </div>
+                        )}
                       </div>
                     </PopoverContent>
                   </Popover>
@@ -998,13 +993,13 @@ const ProjectCard = memo(
               <Button
                 variant="outline"
                 onClick={() => setDeleteDialogOpen(false)}
-                className="border-white/20 text-white hover:bg-white/10"
+                className="border-white/20 text-white hover:bg-white/10 cursor-pointer"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleDeleteSite}
-                className="bg-red-500 hover:bg-red-600 text-white"
+                className="bg-red-500 hover:bg-red-600 text-white ${isDeleting ? '' : 'cursor-pointer'}"
                 disabled={isDeleting}
               >
                 {isDeleting ? (
@@ -1038,14 +1033,14 @@ const ProjectCard = memo(
               <Button
                 variant="outline"
                 onClick={() => setGenerateDialogOpen(false)}
-                className="border-white/20 text-white hover:bg-white/10"
+                className="border-white/20 text-white hover:bg-white/10 ${isGenerating ? '' : 'cursor-pointer'}"
                 disabled={isGenerating}
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleGenerateSiteId}
-                className="bg-secondary-500 hover:bg-secondary-600 text-white"
+                className="bg-secondary-500 hover:bg-secondary-600 text-white ${isGenerating ? '' : 'cursor-pointer'}"
                 disabled={isGenerating}
               >
                 {isGenerating ? (
