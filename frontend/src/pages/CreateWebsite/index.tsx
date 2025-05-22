@@ -399,7 +399,7 @@ export default function CreateWebsitePage() {
       output_dir: showBuildOutputSettings ? buildOutputSettings.outputDirectory : '',
       status: '0',
       cache: advancedOptions.cacheControl,
-      root: rootDirectory,
+      root: rootDirectory || '/',
       install_command: buildOutputSettings.installCommand || 'npm install',
       build_command: buildOutputSettings.buildCommand || 'npm run build',
       default_route: advancedOptions.defaultPath || '/index.html',
@@ -419,6 +419,7 @@ export default function CreateWebsitePage() {
       return response
     } catch (error) {
       console.error('Error previewing site:', error)
+      setIsLoadingPreview(false)
     }
   }
 
@@ -442,17 +443,17 @@ export default function CreateWebsitePage() {
         output_dir: showBuildOutputSettings ? buildOutputSettings.outputDirectory : '',
         status: '0',
         cache: advancedOptions.cacheControl,
-        root: rootDirectory,
         install_command: buildOutputSettings.installCommand || 'npm install',
         build_command: buildOutputSettings.buildCommand || 'npm run build',
-        default_route: advancedOptions.defaultPath || '/index.html',
         is_build: showBuildOutputSettings ? '0' : '1',
+        root: rootDirectory || '/',
+        default_route: advancedOptions.defaultPath || '/index.html',
       }
 
       setDeployingState(DeployingState.Deploying)
 
       const response = await writeBlobAndRunJob({
-        file: uploadMethod === "upload" ? selectedFile! : selectedRepoFile!,
+        file: projectPreview,
         attributes,
       })
       setDeployingState(DeployingState.Deployed)
