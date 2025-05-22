@@ -218,10 +218,10 @@ export default function WebsitePreview({ htmlContent, assetMap }: WebsitePreview
                 />
             )}
             <section className="flex-1 min-w-0">
-                <div className="relative w-full" style={{ paddingTop: '56.25%' }}>
+                <div className="relative w-full" style={{ paddingTop: '56.25%', }}>
                     <iframe
                         ref={iframeRef}
-                        className="absolute top-0 left-0 w-full h-full border-0 [&::-webkit-scrollbar]:w-2.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-muted-foreground/50 [scrollbar-width:thin] [scrollbar-color:oklch(var(--muted-foreground)/0.3)_transparent]"
+                        className="absolute top-0 left-0 w-full h-full border-0 pointer-events-none [&::-webkit-scrollbar]:w-2.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-muted-foreground/50 [scrollbar-width:thin] [scrollbar-color:oklch(var(--muted-foreground)/0.3)_transparent]"
                         title="Website Preview"
                         sandbox="allow-scripts allow-same-origin"
                     />
