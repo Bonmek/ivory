@@ -190,6 +190,40 @@ async function modifyBuildConfig(configPath: string, tool: string, attributes_da
   await fs.writeFile(configPath, modifiedContent, 'utf-8');
 }
 
+// Helper function to clean up files
+async function cleanupFiles(extractPath: string | null, uploadPath: string | null, outputPath: string | null) {
+  try {
+    await Promise.all([
+      extractPath ? fs.remove(extractPath) : Promise.resolve(),
+      uploadPath ? fs.remove(uploadPath) : Promise.resolve(),
+      outputPath ? fs.remove(outputPath) : Promise.resolve()
+    ]);
+  } catch (error) {
+    console.error("Error during cleanup:", error);
+  }
+}
+
+// Helper function to clean up all directories
+async function cleanupAllDirectories() {
+  try {
+    const dirs = ['outputs', 'temp', 'uploads'];
+    await Promise.all(
+      dirs.map(async dir => {
+        const dirPath = path.join(__dirname, dir);
+        if (await fs.pathExists(dirPath)) {
+          const files = await fs.readdir(dirPath);
+          await Promise.all(
+            files.map(file => fs.remove(path.join(dirPath, file)))
+          );
+          await fs.remove(dirPath);
+        }
+      })
+    );
+  } catch (error) {
+    console.error("Error cleaning up directories:", error);
+  }
+}
+
 app.post("/preview", upload.single("file"), async (req, res) => {
   const startTime = performance.now();
   console.log('Start processing:', new Date().toISOString());
@@ -198,6 +232,7 @@ app.post("/preview", upload.single("file"), async (req, res) => {
   let indexDir: string | null = null;
 
   if (!req.file) {
+    await cleanupAllDirectories();
     res.status(400).json({
       statusCode: 0,
       error: "No file uploaded",
@@ -206,39 +241,40 @@ app.post("/preview", upload.single("file"), async (req, res) => {
   }
 
   try {
-  const zipFile = req.file;
+    const zipFile = req.file;
     extractPath = path.join(__dirname, "temp", Date.now().toString());
     
     const extractStart = performance.now();
-  await fs
-    .createReadStream(zipFile.path)
-    .pipe(unzipper.Extract({ path: extractPath }))
-    .promise();
+    await fs
+      .createReadStream(zipFile.path)
+      .pipe(unzipper.Extract({ path: extractPath }))
+      .promise();
     console.log(`File extraction took: ${(performance.now() - extractStart).toFixed(2)}ms`);
 
-  const attributes = req.body.attributes
-    ? typeof req.body.attributes === "string"
-      ? JSON.parse(req.body.attributes)
-      : req.body.attributes
-    : {};
+    const attributes = req.body.attributes
+      ? typeof req.body.attributes === "string"
+        ? JSON.parse(req.body.attributes)
+        : req.body.attributes
+      : {};
     console.log('Received attributes from frontend:', JSON.stringify(attributes, null, 2));
-  const attributes_data = inputWriteBlobScheme.safeParse(attributes);
-  if (!attributes_data.success) {
+    const attributes_data = inputWriteBlobScheme.safeParse(attributes);
+    if (!attributes_data.success) {
       await cleanupFiles(extractPath, zipFile.path, null);
-    res.status(400).json({
-      statusCode: 0,
-      errors: attributes_data.error.errors.map((err) => ({
-        error_message: err.message,
-        error_field: err.path.join("."),
-      })),
-    });
-    return;
-  }
+      await cleanupAllDirectories();
+      res.status(400).json({
+        statusCode: 0,
+        errors: attributes_data.error.errors.map((err) => ({
+          error_message: err.message,
+          error_field: err.path.join("."),
+        })),
+      });
+      return;
+    }
 
     if (attributes_data.data.is_build === "1") {
-      //check if there are any javascript files in the uploaded zip 
       if (await containsJavaScriptFiles(extractPath)) {
         await cleanupFiles(extractPath, zipFile.path, null);
+        await cleanupAllDirectories();
         res.status(404).json({
           statusCode: 0,
           error: "JavaScript files found in the uploaded zip. Only static files are allowed when is_build is 1.",
@@ -252,26 +288,24 @@ app.post("/preview", upload.single("file"), async (req, res) => {
       console.log('buildDir', buildDir);
       console.log('packageJsonPath', packageJsonPath);
 
-      
       if (!await fs.pathExists(packageJsonPath)) {
         await cleanupFiles(extractPath, zipFile.path, null);
+        await cleanupAllDirectories();
         res.status(404).json({
-        statusCode: 0,
+          statusCode: 0,
           error: "package.json not found in specified root directory",
-      });
-      return;
-    }
+        });
+        return;
+      }
 
-    try {
-        // Detect build tool and modify config
+      try {
         const buildTool = await detectBuildTool(buildDir);
         if (buildTool) {
           await modifyBuildConfig(buildTool.configPath, buildTool.tool, attributes_data.data);
         }
 
-        // Measure install and build time
         const buildStart = performance.now();
-      await new Promise((resolve, reject) => {
+        await new Promise((resolve, reject) => {
           const install = exec(attributes_data.data.install_command, { cwd: buildDir });
           install.on('exit', (code) => {
             if (code !== 0) {
@@ -286,19 +320,19 @@ app.post("/preview", upload.single("file"), async (req, res) => {
               if (code !== 0) {
                 reject(new Error(`Build failed with code ${code}`));
                 return;
-                }
+              }
               console.log(`Build took: ${(performance.now() - buildCommandStart).toFixed(2)}ms`);
-                resolve(true);
+              resolve(true);
             });
           });
-      });
+        });
 
-        // Check for index.html in dist folder
         const distPath = path.join(buildDir, attributes_data.data.output_dir);
         const indexPath = path.join(distPath, 'index.html');
         
         if (!await fs.pathExists(indexPath)) {
           await cleanupFiles(extractPath, zipFile.path, null);
+          await cleanupAllDirectories();
           res.status(404).json({
             statusCode: 0,
             error: "index.html not found in dist folder",
@@ -307,66 +341,59 @@ app.post("/preview", upload.single("file"), async (req, res) => {
         }
         
         indexDir = distPath;
-    } catch (error) {
+      } catch (error) {
         await cleanupFiles(extractPath, zipFile.path, null);
-      console.error("Build process failed:", error);
-      res.status(500).json({
+        await cleanupAllDirectories();
+        console.error("Build process failed:", error);
+        res.status(500).json({
+          statusCode: 0,
+          error: "Build process failed",
+        });
+        return;
+      }
+    }
+
+    if (!indexDir) {
+      await cleanupFiles(extractPath, zipFile.path, null);
+      await cleanupAllDirectories();
+      res.status(400).json({
         statusCode: 0,
-        error: "Build process failed",
+        error: "index.html not found",
       });
       return;
     }
-  }
 
-  if (!indexDir) {
-      await cleanupFiles(extractPath, zipFile.path, null);
-    res.status(400).json({
-      statusCode: 0,
-      error: "index.html not found",
-    });
-    return;
-  }
-
-  // const indexPath = path.join(indexDir, "index.html");
-  // if (await fs.pathExists(indexPath)) {
-  //     const htmlStart = performance.now();
-  //   let html = await fs.readFile(indexPath, "utf-8");
-  //   html = html.replace(/(href|src)=["'`]\/(?!\/)/g, '$1="');
-  //   await fs.writeFile(indexPath, html, "utf-8");
-  //     console.log(`HTML processing took: ${(performance.now() - htmlStart).toFixed(2)}ms`);
-  // }
-
-    // Measure zip creation time
     const zipStart = performance.now();
     outputZipPath = path.join(__dirname, "outputs", `${uuidv4()}_${Date.now()}.zip`);
-  await fs.ensureDir(path.dirname(outputZipPath));
+    await fs.ensureDir(path.dirname(outputZipPath));
     
-  const zip = new AdmZip();
+    const zip = new AdmZip();
     zip.addLocalFolder(indexDir);
-  zip.writeZip(outputZipPath);
+    zip.writeZip(outputZipPath);
     console.log(`ZIP creation took: ${(performance.now() - zipStart).toFixed(2)}ms`);
 
-    // Send response and clean up
-  res.download(outputZipPath, "output.zip", async (err) => {
-    if (err) {
-      console.error("Error sending file:", err);
+    res.download(outputZipPath, "output.zip", async (err) => {
+      if (err) {
+        console.error("Error sending file:", err);
         await cleanupFiles(extractPath, zipFile.path, outputZipPath);
-      res.status(500).json({
-        statusCode: 0,
-        error: "Failed to send ZIP file",
-      });
-    }
+        await cleanupAllDirectories();
+        res.status(500).json({
+          statusCode: 0,
+          error: "Failed to send ZIP file",
+        });
+      }
 
       const cleanupStart = performance.now();
       await cleanupFiles(extractPath, zipFile.path, outputZipPath);
+      await cleanupAllDirectories();
       console.log(`Cleanup took: ${(performance.now() - cleanupStart).toFixed(2)}ms`);
       
-      // Log total processing time
       console.log(`Total processing time: ${(performance.now() - startTime).toFixed(2)}ms`);
     });
   } catch (error) {
     console.error("Preview processing error:", error);
     await cleanupFiles(extractPath, req.file?.path, outputZipPath);
+    await cleanupAllDirectories();
     res.status(500).json({
       statusCode: 0,
       error: "Internal server error during preview processing"
@@ -374,21 +401,9 @@ app.post("/preview", upload.single("file"), async (req, res) => {
   }
 });
 
-// Helper function to clean up files
-async function cleanupFiles(extractPath: string | null, uploadPath: string | null, outputPath: string | null) {
-  try {
-    await Promise.all([
-      extractPath ? fs.remove(extractPath) : Promise.resolve(),
-      uploadPath ? fs.remove(uploadPath) : Promise.resolve(),
-      outputPath ? fs.remove(outputPath) : Promise.resolve()
-    ]);
-  } catch (error) {
-    console.error("Error during cleanup:", error);
-  }
-}
-
 app.post("/process-site", upload.single("file"), async (req, res) => {
   if (!req.file) {
+    await cleanupAllDirectories();
     res.status(400).json({
       statusCode: 0,
       error: "No file uploaded",
@@ -399,12 +414,13 @@ app.post("/process-site", upload.single("file"), async (req, res) => {
   const zipFile = req.file;
   
   const attributes = req.body.attributes
-  ? typeof req.body.attributes === "string"
-  ? JSON.parse(req.body.attributes)
-  : req.body.attributes
-  : {};
+    ? typeof req.body.attributes === "string"
+      ? JSON.parse(req.body.attributes)
+      : req.body.attributes
+    : {};
   const attributes_data = inputWriteBlobScheme.safeParse(attributes);
   if (!attributes_data.success) {
+    await cleanupAllDirectories();
     res.status(400).json({
       statusCode: 0,
       errors: attributes_data.error.errors.map((err) => ({
@@ -416,226 +432,246 @@ app.post("/process-site", upload.single("file"), async (req, res) => {
   }
   
   const extractPath = path.join(__dirname, "temp", attributes_data.data["site-name"]);
-  await fs
-    .createReadStream(zipFile.path)
-    .pipe(unzipper.Extract({ path: extractPath }))
-    .promise();
-
-
-  const wsResources = {
-    headers: {},
-    routes: {},
-    metadata: {
-      link: "https://subdomain.wal.app/",
-      image_url: "https://www.walrus.xyz/walrus-site",
-      description: "This is a walrus site.",
-      project_url: "https://github.com/MystenLabs/walrus-sites/",
-      creator: "MystenLabs",
-    },
-    ignore: ["/private/", "/secret.txt", "/images/tmp/*"],
-  };
-
-  await fs.writeJson(path.join(extractPath, "ws-resources.json"), wsResources, {
-    spaces: 2,
-  });
-
-  const outputZipPath = path.join(
-    __dirname,
-    "outputs",
-    `${uuidv4()}_${Date.now()}.zip`
-  );
-  await fs.ensureDir(path.dirname(outputZipPath));
-  const zip = new AdmZip();
-
-  const addFilesToZip = async (dir: string, baseInZip = "") => {
-    const entries = await fs.readdir(dir);
-    for (const entry of entries) {
-      const fullPath = path.join(dir, entry);
-      const stat = await fs.stat(fullPath);
-      if (stat.isDirectory()) {
-        await addFilesToZip(fullPath, path.join(baseInZip, entry));
-      } else {
-        const fileContent = await fs.readFile(fullPath);
-        zip.addFile(path.join(baseInZip, entry), fileContent);
-      }
-    }
-  };
-
-  await addFilesToZip(extractPath);
-  zip.writeZip(outputZipPath);
-
-  let new_blob_data;
-  let write_blob_attempts = 0;
-  const delay = 1000;
-  const max_attempts_write_blob = 2;
-  const max_attempts_set_status = 5;
-  const zipBuffer = await readFile(outputZipPath);
-  while (write_blob_attempts < max_attempts_write_blob) {
-    try {
-      new_blob_data = await walrusClient.writeBlob({
-        blob: zipBuffer,
-        deletable: true,
-        epochs: Number(attributes_data.data.epochs),
-        signer: keypair,
-        attributes: { ...attributes_data.data, forceId: uuidv4() },
-      });
-      console.log("wrote blob");
-      if (
-        new_blob_data.blobObject.certified_epoch ||
-        new_blob_data.blobObject.certified_epoch !== null
-      ) {
-        break;
-      }
-      write_blob_attempts++;
-      await new Promise((resolve) => setTimeout(resolve, delay));
-    } catch (error) {
-      res.status(502).json({
-        statusCode: 0,
-        error: {
-          error_message: "Failed to write blob to Walrus",
-          error_details: error,
-        },
-      });
-      return;
-    }
-
-    if (write_blob_attempts === max_attempts_write_blob) {
-      let set_status_attempts = 0;
-      while (set_status_attempts < max_attempts_set_status) {
-        try {
-          await walrusClient.executeWriteBlobAttributesTransaction({
-            blobObjectId: new_blob_data.blobObject.id.id,
-            signer: keypair,
-            attributes: { status: "2" },
-          });
-          break;
-        } catch (error) {
-          set_status_attempts++;
-          if (set_status_attempts === max_attempts_set_status) {
-            if (error instanceof Error) {
-              res.status(502).json({
-                statusCode: 0,
-                error: {
-                  error_message:
-                    "Failed to change status code to 2 in blob attributes",
-                  error_details: error,
-                },
-              });
-              return;
-            }
-          }
-          await new Promise((resolve) => setTimeout(resolve, delay));
-        }
-      }
-      res.status(504).json({
-        statusCode: 0,
-        error: "Certified epoch is null",
-      });
-      return;
-    }
-  }
-
-  if (!new_blob_data) {
-    res.status(503).json({
-      statusCode: 0,
-      error: "WriteBlob success but data is undefined",
-    });
-    return;
-  }
-
-  const blobObjectId = new_blob_data.blobObject.id.id;
-
   try {
-    await walrusClient.executeWriteBlobAttributesTransaction({
-      blobObjectId: blobObjectId,
-      signer: keypair,
-      attributes: { blobId: new_blob_data.blobId },
-    });
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(502).json({
-        statusCode: 0,
-        error: {
-          error_message:
-            "Failed to execute write blob attributes transaction to Walrus",
-          error_details: error,
-        },
-      });
-      return;
-    }
-  }
+    await fs
+      .createReadStream(zipFile.path)
+      .pipe(unzipper.Extract({ path: extractPath }))
+      .promise();
 
-  let check_blob_id;
-
-  try {
-    check_blob_id = await walrusClient.readBlobAttributes({
-      blobObjectId: blobObjectId,
-    });
-  } catch (error) {
-    res.status(502).json({
-      statusCode: 0,
-      error: {
-        error_message: "Failed to read blob attributes from Walrus",
-        error_details: error,
+    const wsResources = {
+      headers: {},
+      routes: {},
+      metadata: {
+        link: "https://subdomain.wal.app/",
+        image_url: "https://www.walrus.xyz/walrus-site",
+        description: "This is a walrus site.",
+        project_url: "https://github.com/MystenLabs/walrus-sites/",
+        creator: "MystenLabs",
       },
-    });
-    return;
-  }
-
-  if (!check_blob_id || !check_blob_id.blobId) {
-    res.status(502).json({
-      statusCode: 0,
-      error: "Failed to add blobId to attributes",
-    });
-    return;
-  }
-
-  let response;
-  try {
-    const payload = {
-      arg1: "publish",
-      arg2: blobObjectId,
+      ignore: ["/private/", "/secret.txt", "/images/tmp/*"],
     };
 
-    [response] = await tasksClient.createTask({
-      parent,
-      task: {
-        httpRequest: {
-          httpMethod: "POST",
-          url: `https://${process.env.JOB_ID}.${process.env.REGION}.run.app`,
-          headers: {
-            "Content-Type": "application/json",
+    await fs.writeJson(path.join(extractPath, "ws-resources.json"), wsResources, {
+      spaces: 2,
+    });
+
+    const outputZipPath = path.join(
+      __dirname,
+      "outputs",
+      `${uuidv4()}_${Date.now()}.zip`
+    );
+    await fs.ensureDir(path.dirname(outputZipPath));
+    const zip = new AdmZip();
+
+    const addFilesToZip = async (dir: string, baseInZip = "") => {
+      const entries = await fs.readdir(dir);
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry);
+        const stat = await fs.stat(fullPath);
+        if (stat.isDirectory()) {
+          await addFilesToZip(fullPath, path.join(baseInZip, entry));
+        } else {
+          const fileContent = await fs.readFile(fullPath);
+          zip.addFile(path.join(baseInZip, entry), fileContent);
+        }
+      }
+    };
+
+    await addFilesToZip(extractPath);
+    zip.writeZip(outputZipPath);
+
+    let new_blob_data;
+    let write_blob_attempts = 0;
+    const delay = 1000;
+    const max_attempts_write_blob = 2;
+    const max_attempts_set_status = 5;
+    const zipBuffer = await readFile(outputZipPath);
+    while (write_blob_attempts < max_attempts_write_blob) {
+      try {
+        new_blob_data = await walrusClient.writeBlob({
+          blob: zipBuffer,
+          deletable: true,
+          epochs: Number(attributes_data.data.epochs),
+          signer: keypair,
+          attributes: { ...attributes_data.data, forceId: uuidv4() },
+        });
+        console.log("wrote blob");
+        if (
+          new_blob_data.blobObject.certified_epoch ||
+          new_blob_data.blobObject.certified_epoch !== null
+        ) {
+          break;
+        }
+        write_blob_attempts++;
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      } catch (error) {
+        await cleanupFiles(extractPath, zipFile.path, outputZipPath);
+        await cleanupAllDirectories();
+        res.status(502).json({
+          statusCode: 0,
+          error: {
+            error_message: "Failed to write blob to Walrus",
+            error_details: error,
           },
-          body: Buffer.from(JSON.stringify(payload)).toString("base64"),
-          oidcToken: {
-            serviceAccountEmail: process.env.SERVICE_ACCOUNT_EMAIL,
+        });
+        return;
+      }
+
+      if (write_blob_attempts === max_attempts_write_blob) {
+        let set_status_attempts = 0;
+        while (set_status_attempts < max_attempts_set_status) {
+          try {
+            await walrusClient.executeWriteBlobAttributesTransaction({
+              blobObjectId: new_blob_data.blobObject.id.id,
+              signer: keypair,
+              attributes: { status: "2" },
+            });
+            break;
+          } catch (error) {
+            set_status_attempts++;
+            if (set_status_attempts === max_attempts_set_status) {
+              await cleanupFiles(extractPath, zipFile.path, outputZipPath);
+              await cleanupAllDirectories();
+              if (error instanceof Error) {
+                res.status(502).json({
+                  statusCode: 0,
+                  error: {
+                    error_message:
+                      "Failed to change status code to 2 in blob attributes",
+                    error_details: error,
+                  },
+                });
+                return;
+              }
+            }
+            await new Promise((resolve) => setTimeout(resolve, delay));
+          }
+        }
+        await cleanupFiles(extractPath, zipFile.path, outputZipPath);
+        await cleanupAllDirectories();
+        res.status(504).json({
+          statusCode: 0,
+          error: "Certified epoch is null",
+        });
+        return;
+      }
+    }
+
+    if (!new_blob_data) {
+      await cleanupFiles(extractPath, zipFile.path, outputZipPath);
+      await cleanupAllDirectories();
+      res.status(503).json({
+        statusCode: 0,
+        error: "WriteBlob success but data is undefined",
+      });
+      return;
+    }
+
+    const blobObjectId = new_blob_data.blobObject.id.id;
+
+    try {
+      await walrusClient.executeWriteBlobAttributesTransaction({
+        blobObjectId: blobObjectId,
+        signer: keypair,
+        attributes: { blobId: new_blob_data.blobId },
+      });
+    } catch (error) {
+      await cleanupFiles(extractPath, zipFile.path, outputZipPath);
+      await cleanupAllDirectories();
+      if (error instanceof Error) {
+        res.status(502).json({
+          statusCode: 0,
+          error: {
+            error_message:
+              "Failed to execute write blob attributes transaction to Walrus",
+            error_details: error,
+          },
+        });
+        return;
+      }
+    }
+
+    let check_blob_id;
+
+    try {
+      check_blob_id = await walrusClient.readBlobAttributes({
+        blobObjectId: blobObjectId,
+      });
+    } catch (error) {
+      await cleanupFiles(extractPath, zipFile.path, outputZipPath);
+      await cleanupAllDirectories();
+      res.status(502).json({
+        statusCode: 0,
+        error: {
+          error_message: "Failed to read blob attributes from Walrus",
+          error_details: error,
+        },
+      });
+      return;
+    }
+
+    if (!check_blob_id || !check_blob_id.blobId) {
+      await cleanupFiles(extractPath, zipFile.path, outputZipPath);
+      await cleanupAllDirectories();
+      res.status(502).json({
+        statusCode: 0,
+        error: "Failed to add blobId to attributes",
+      });
+      return;
+    }
+
+    let response;
+    try {
+      const payload = {
+        arg1: "publish",
+        arg2: blobObjectId,
+      };
+
+      [response] = await tasksClient.createTask({
+        parent,
+        task: {
+          httpRequest: {
+            httpMethod: "POST",
+            url: `https://${process.env.JOB_ID}.${process.env.REGION}.run.app`,
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: Buffer.from(JSON.stringify(payload)).toString("base64"),
+            oidcToken: {
+              serviceAccountEmail: process.env.SERVICE_ACCOUNT_EMAIL,
+            },
           },
         },
-      },
-    });
+      });
+    } catch (error) {
+      await cleanupFiles(extractPath, zipFile.path, outputZipPath);
+      await cleanupAllDirectories();
+      res.status(500).json({
+        statusCode: 0,
+        error: {
+          error_message: "Failed to create task",
+          error_details: error,
+        },
+      });
+      return;
+    }
+
+    await cleanupFiles(extractPath, zipFile.path, outputZipPath);
+    await cleanupAllDirectories();
+
+    if (response.name) {
+      res.status(200).json({
+        statusCode: 1,
+        objectId: blobObjectId,
+        taskName: `Created task ${response.name}`,
+      });
+    }
   } catch (error) {
+    await cleanupFiles(extractPath, zipFile.path, null);
+    await cleanupAllDirectories();
     res.status(500).json({
       statusCode: 0,
-      error: {
-        error_message: "Failed to create task",
-        error_details: error,
-      },
-    });
-    return;
-  }
-  finally {
-    await fs.remove(extractPath);
-    if (req.file && req.file.path) {
-      await fs.remove(req.file.path);
-      await fs.remove(outputZipPath);
-    }
-  }
-
-  if (response.name) {
-    res.status(200).json({
-      statusCode: 1,
-      objectId: blobObjectId,
-      taskName: `Created task ${response.name}`,
+      error: "Internal server error during site processing"
     });
   }
 });
