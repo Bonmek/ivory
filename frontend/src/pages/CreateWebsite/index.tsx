@@ -385,8 +385,8 @@ export default function CreateWebsitePage() {
     if (!validateName(name) || !validateFile()) return
 
     let rootDirectory = advancedOptions.rootDirectory
-    if (showBuildOutputSettings && buildOutputSettings.outputDirectory) {
-      rootDirectory = buildOutputSettings.outputDirectory
+    if (showBuildOutputSettings) {
+      rootDirectory = buildOutputSettings.rootDirectory
     }
     const attributes: WebsiteAttributes = {
       'site-name': name,
@@ -426,8 +426,8 @@ export default function CreateWebsitePage() {
     setOpen(false)
 
     let rootDirectory = advancedOptions.rootDirectory
-    if (showBuildOutputSettings && buildOutputSettings.outputDirectory) {
-      rootDirectory = buildOutputSettings.outputDirectory
+    if (showBuildOutputSettings) {
+      rootDirectory = buildOutputSettings.rootDirectory
     }
 
     try {

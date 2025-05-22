@@ -25,6 +25,7 @@ import {
 } from "./schemas/inputScheme";
 import { CloudTasksClient } from "@google-cloud/tasks";
 import { v4 as uuidv4 } from "uuid";
+import { TypeOf } from "zod";
 
 dotenv.config();
 
@@ -148,7 +149,7 @@ async function detectBuildTool(buildDir: string): Promise<{ tool: string; config
   return null;
 }
 
-async function modifyBuildConfig(configPath: string, tool: string): Promise<void> {
+async function modifyBuildConfig(configPath: string, tool: string, attributes_data: TypeOf<typeof inputWriteBlobScheme>): Promise<void> {
   const content = await fs.readFile(configPath, 'utf-8');
   let modifiedContent = content;
 
@@ -158,7 +159,7 @@ async function modifyBuildConfig(configPath: string, tool: string): Promise<void
       if (!content.includes('base:')) {
         modifiedContent = modifiedContent.replace(
           /export default defineConfig\(\{/,
-          'export default defineConfig({\n  base: "./",\n  build: {\n    outDir: "dist",\n  },'
+          `export default defineConfig({\n  base: "./",\n  build: {\n    outDir: "${attributes_data.output_dir}",\n  },`
         );
       }
       break;
@@ -201,34 +202,35 @@ app.post("/preview", upload.single("file"), async (req, res) => {
   }
 
   try {
-    const zipFile = req.file;
+  const zipFile = req.file;
     extractPath = path.join(__dirname, "temp", uuidv4());
     
     // Measure file extraction time
     const extractStart = performance.now();
-    await fs
-      .createReadStream(zipFile.path)
-      .pipe(unzipper.Extract({ path: extractPath }))
-      .promise();
+  await fs
+    .createReadStream(zipFile.path)
+    .pipe(unzipper.Extract({ path: extractPath }))
+    .promise();
     console.log(`File extraction took: ${(performance.now() - extractStart).toFixed(2)}ms`);
 
-    const attributes = req.body.attributes
-      ? typeof req.body.attributes === "string"
-        ? JSON.parse(req.body.attributes)
-        : req.body.attributes
-      : {};
-    const attributes_data = inputWriteBlobScheme.safeParse(attributes);
-    if (!attributes_data.success) {
+  const attributes = req.body.attributes
+    ? typeof req.body.attributes === "string"
+      ? JSON.parse(req.body.attributes)
+      : req.body.attributes
+    : {};
+    console.log('Received attributes from frontend:', JSON.stringify(attributes, null, 2));
+  const attributes_data = inputWriteBlobScheme.safeParse(attributes);
+  if (!attributes_data.success) {
       await cleanupFiles(extractPath, zipFile.path, null);
-      res.status(400).json({
-        statusCode: 0,
-        errors: attributes_data.error.errors.map((err) => ({
-          error_message: err.message,
-          error_field: err.path.join("."),
-        })),
-      });
-      return;
-    }
+    res.status(400).json({
+      statusCode: 0,
+      errors: attributes_data.error.errors.map((err) => ({
+        error_message: err.message,
+        error_field: err.path.join("."),
+      })),
+    });
+    return;
+  }
 
     if (attributes_data.data.is_build === "1") {
       // Check for JavaScript files in the extracted directory
@@ -244,26 +246,29 @@ app.post("/preview", upload.single("file"), async (req, res) => {
     } else if (attributes_data.data.is_build === "0") {
       const buildDir = path.join(extractPath, attributes_data.data.root);
       const packageJsonPath = path.join(buildDir, "package.json");
+      console.log('buildDir', buildDir);
+      console.log('packageJsonPath', packageJsonPath);
+
       
       if (!await fs.pathExists(packageJsonPath)) {
         await cleanupFiles(extractPath, zipFile.path, null);
         res.status(404).json({
-          statusCode: 0,
+        statusCode: 0,
           error: "package.json not found in specified root directory",
-        });
-        return;
-      }
+      });
+      return;
+    }
 
-      try {
+    try {
         // Detect build tool and modify config
         const buildTool = await detectBuildTool(buildDir);
         if (buildTool) {
-          await modifyBuildConfig(buildTool.configPath, buildTool.tool);
+          await modifyBuildConfig(buildTool.configPath, buildTool.tool, attributes_data.data);
         }
 
         // Measure install and build time
         const buildStart = performance.now();
-        await new Promise((resolve, reject) => {
+      await new Promise((resolve, reject) => {
           const install = exec(attributes_data.data.install_command, { cwd: buildDir });
           install.on('exit', (code) => {
             if (code !== 0) {
@@ -278,15 +283,15 @@ app.post("/preview", upload.single("file"), async (req, res) => {
               if (code !== 0) {
                 reject(new Error(`Build failed with code ${code}`));
                 return;
-              }
+                }
               console.log(`Build took: ${(performance.now() - buildCommandStart).toFixed(2)}ms`);
-              resolve(true);
+                resolve(true);
             });
           });
-        });
+      });
 
         // Check for index.html in dist folder
-        const distPath = path.join(buildDir, 'dist');
+        const distPath = path.join(buildDir, attributes_data.data.output_dir);
         const indexPath = path.join(distPath, 'index.html');
         
         if (!await fs.pathExists(indexPath)) {
@@ -299,55 +304,55 @@ app.post("/preview", upload.single("file"), async (req, res) => {
         }
         
         indexDir = distPath;
-      } catch (error) {
+    } catch (error) {
         await cleanupFiles(extractPath, zipFile.path, null);
-        console.error("Build process failed:", error);
-        res.status(500).json({
-          statusCode: 0,
-          error: "Build process failed",
-        });
-        return;
-      }
-    }
-
-    if (!indexDir) {
-      await cleanupFiles(extractPath, zipFile.path, null);
-      res.status(400).json({
+      console.error("Build process failed:", error);
+      res.status(500).json({
         statusCode: 0,
-        error: "index.html not found",
+        error: "Build process failed",
       });
       return;
     }
+  }
 
-    const indexPath = path.join(indexDir, "index.html");
-    if (await fs.pathExists(indexPath)) {
+  if (!indexDir) {
+      await cleanupFiles(extractPath, zipFile.path, null);
+    res.status(400).json({
+      statusCode: 0,
+      error: "index.html not found",
+    });
+    return;
+  }
+
+  const indexPath = path.join(indexDir, "index.html");
+  if (await fs.pathExists(indexPath)) {
       const htmlStart = performance.now();
-      let html = await fs.readFile(indexPath, "utf-8");
-      html = html.replace(/(href|src)=["'`]\/(?!\/)/g, '$1="');
-      await fs.writeFile(indexPath, html, "utf-8");
+    let html = await fs.readFile(indexPath, "utf-8");
+    html = html.replace(/(href|src)=["'`]\/(?!\/)/g, '$1="');
+    await fs.writeFile(indexPath, html, "utf-8");
       console.log(`HTML processing took: ${(performance.now() - htmlStart).toFixed(2)}ms`);
-    }
+  }
 
     // Measure zip creation time
     const zipStart = performance.now();
     outputZipPath = path.join(__dirname, "outputs", `${uuidv4()}_${Date.now()}.zip`);
-    await fs.ensureDir(path.dirname(outputZipPath));
+  await fs.ensureDir(path.dirname(outputZipPath));
     
-    const zip = new AdmZip();
+  const zip = new AdmZip();
     zip.addLocalFolder(indexDir);
-    zip.writeZip(outputZipPath);
+  zip.writeZip(outputZipPath);
     console.log(`ZIP creation took: ${(performance.now() - zipStart).toFixed(2)}ms`);
 
     // Send response and clean up
-    res.download(outputZipPath, "output.zip", async (err) => {
-      if (err) {
-        console.error("Error sending file:", err);
+  res.download(outputZipPath, "output.zip", async (err) => {
+    if (err) {
+      console.error("Error sending file:", err);
         await cleanupFiles(extractPath, zipFile.path, outputZipPath);
-        res.status(500).json({
-          statusCode: 0,
-          error: "Failed to send ZIP file",
-        });
-      }
+      res.status(500).json({
+        statusCode: 0,
+        error: "Failed to send ZIP file",
+      });
+    }
 
       const cleanupStart = performance.now();
       await cleanupFiles(extractPath, zipFile.path, outputZipPath);
