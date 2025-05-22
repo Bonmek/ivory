@@ -32,7 +32,7 @@ export const inputWriteBlobScheme = z
     default_route: z.string(),
     is_build: z.union([z.literal("0"), z.literal("1")]),
     sui_ns: z.string().regex(/^0x[a-fA-F0-9]{64}$/).optional(),
-    output_dir: z.string(),
+    output_dir: z.string().optional(),
 
   })
   .superRefine((data, ctx) => {

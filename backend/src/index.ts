@@ -15,7 +15,6 @@ import passport from "passport";
 import session from "express-session";
 import "./github/githubAuth";
 import { githubRoutes } from "./github/routes";
-import { performance } from 'perf_hooks';
 
 import {
   inputWriteBlobScheme,
@@ -25,7 +24,6 @@ import {
 } from "./schemas/inputScheme";
 import { CloudTasksClient } from "@google-cloud/tasks";
 import { v4 as uuidv4 } from "uuid";
-import { TypeOf } from "zod";
 
 dotenv.config();
 
@@ -58,10 +56,6 @@ const suiClient = new SuiClient({ url: getFullnodeUrl("mainnet") });
 const walrusClient = new WalrusClient({
   network: "mainnet",
   suiClient,
-  storageNodeClientOptions: {
-    timeout: 60_000, // 60 วินาที
-    onError: (error) => console.log(error),
-  },
 });
 
 const tasksClient = new CloudTasksClient();
@@ -412,7 +406,12 @@ app.post("/process-site", upload.single("file"), async (req, res) => {
   }
 
   const zipFile = req.file;
-  
+  const extractPath = path.join(__dirname, "temp", Date.now().toString());
+  await fs
+    .createReadStream(zipFile.path)
+    .pipe(unzipper.Extract({ path: extractPath }))
+    .promise();
+
   const attributes = req.body.attributes
     ? typeof req.body.attributes === "string"
       ? JSON.parse(req.body.attributes)
@@ -770,17 +769,14 @@ app.put("/update-blob-n-run-job", upload.single("file"), async (req, res) => {
   let indexDir: string | null;
 
   if (attributes_data.data.is_build === "0") {
-    const buildDir = path.join(extractPath, attributes_data.data.root);
-    const packageJsonPath = path.join(buildDir, "package.json");
-
-    if (!await fs.pathExists(packageJsonPath)) {
-      res.status(404).json({
+    const buildDir = await findPackageJsonPath(extractPath);
+    if (!buildDir) {
+      res.status(400).json({
         statusCode: 0,
-        error: "package.json not found in specified root directory",
+        error: "package.json not found",
       });
       return;
     }
-
     try {
       await new Promise((resolve, reject) => {
         exec(
@@ -818,7 +814,6 @@ app.put("/update-blob-n-run-job", upload.single("file"), async (req, res) => {
       });
       return;
     }
-
     indexDir = await findIndexHtmlInKnownDirs(buildDir);
     if (!indexDir) {
       indexDir = await findIndexHtmlPath(extractPath);

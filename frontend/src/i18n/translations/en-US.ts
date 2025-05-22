@@ -49,7 +49,7 @@ export default {
   'createWebsite.browseFile': 'Browse file',
   'createWebsite.or': 'or',
   'createWebsite.name': 'Name',
-  'createWebsite.createWebsite': 'Next',
+  'createWebsite.createWebsite': 'Create website',
   'createWebsite.error.required': 'Project name is required',
   'createWebsite.error.zipFile': 'Please select a ZIP file',
   'createWebsite.error.githubRepo': 'Please select a repository',
@@ -157,33 +157,6 @@ export default {
   'createWebsite.selectBranch': 'Select branch',
   'createWebsite.expirationNotice': 'Your Site will expire on {expiryDate}',
 
-  'createWebsite.error.maxLength': 'Maximum length is {max} characters',
-  'createWebsite.error.englishOnly': 'Only English letters, numbers, and spaces are allowed',
-  'createWebsite.error.duplicateName': 'Project name already exists',
-
-  'createWebsite.preview.issues.incorrectPaths': 'Incorrect paths',
-  'createWebsite.preview.issues.jsErrors': 'JavaScript errors in the browser console',
-  'createWebsite.preview.issues.mixedContent': 'Blocked mixed content (HTTP/HTTPS conflicts)',
-  'createWebsite.preview.issues.missingDependencies': 'Missing required dependencies or libraries',
-  'createWebsite.preview.issues.incorrectMimeTypes': 'Incorrect MIME types for files',
-  'createWebsite.preview.issues.pathIssues': 'Relative vs absolute path issues',
-  'createWebsite.preview.issues.missingIndex': 'Missing index.html or incorrect entry point',
-  'createWebsite.preview.issues.browserCaching': 'Browser caching of old files',
-  'createWebsite.preview.issues.networkIssues': 'Network connectivity issues',
-  'createWebsite.preview.issues.adBlockers': 'Ad blockers or browser extensions interfering',
-  'createWebsite.preview.issues.ssrRequirements': 'Server-side rendering requirements not met',
-
-  'createWebsite.preview.title': 'Preview Information',
-  'createWebsite.preview.commonIssues': 'Common Issues',
-  'createWebsite.preview.quickTips': 'Quick Tips',
-  'createWebsite.preview.tipCheckConsole': 'Check browser console for specific error messages (Press F12)',
-  'createWebsite.preview.tipVerifyPaths': 'Ensure all file paths in your HTML are correct',
-  'createWebsite.preview.tipNetworkTab': 'Verify network requests in the Network tab',
-  'createWebsite.preview.tipHardRefresh': 'Try hard refreshing (Ctrl+F5) to clear cache',
-  'createWebsite.preview.tipJsErrors': 'Check for JavaScript errors in the Console tab',
-  'createWebsite.preview.buttonPreviewNotLoading': 'Preview not loading?',
-  'createWebsite.preview.ariaLabel': 'Preview not loading? Click for help',
-
   // Homepage
   'homepage.hero.title1': 'Launch Your Site In Few Clicks',
   'homepage.hero.title2': '',
@@ -230,6 +203,21 @@ export default {
   'dashboard.refresh': 'Refresh data',
   'dashboard.lastRefresh': 'Last: {time}',
   'dashboard.createNew': 'Deploy Site',
+  
+  // Beta Testing Limit Modal
+  'dashboard.projectLimit.title': 'Beta Testing Limit',
+  'dashboard.projectLimit.description': 'During our beta testing phase, we\'re limiting each wallet to one project per epoch to ensure everyone gets a chance to try the platform. Thank you for your understanding and participation!',
+  'dashboard.projectLimit.understand': 'I Understand',
+  'dashboard.projectLimit.deleteInfo': 'If you encounter issues, you can',
+  'dashboard.projectLimit.deleteProject': 'delete your existing project',
+  'dashboard.projectLimit.deleteHelp': 'You can delete your project from the dashboard by selecting the project and clicking the delete option.',
+  'dashboard.projectLimit.createNew': 'and create a new one',
+  'dashboard.projectLimit.oneProject': '1 project per wallet',
+  'dashboard.projectLimit.walletLimit': 'During beta testing, each wallet address is limited to creating one project at a time.',
+  'dashboard.projectLimit.duringBeta': 'during beta testing',
+  'dashboard.projectLimit.limitRefreshes': 'Limit refreshes each',
+  'dashboard.projectLimit.epoch': 'epoch',
+  'dashboard.projectLimit.fairAccess': 'to ensure fair access',
 
   // ProjectCard
   'projectCard.linkSuins': 'Link SUINS',
@@ -280,7 +268,9 @@ export default {
   'projectCard.active': 'Active',
   'projectCard.generateSiteId': 'Generate Site ID',
   'projectCard.generateSiteIdDesc': 'Do you want to generate a new Site ID for this project?',
-  'projectCard.generating': 'Generating...',
+  'projectCard.generating': 'Generating',
   'projectCard.generate': 'Generate',
+  'projectCard.generatingSiteId': 'Generating Site ID...',
+  'projectCard.failedToGenerateSiteId': 'Failed to generate Site ID',
   'projectCard.comingSoon': 'Soon'
 } as const;

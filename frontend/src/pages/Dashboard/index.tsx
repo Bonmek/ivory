@@ -67,11 +67,15 @@ export default function Dashboard() {
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   const { metadata, isLoading, refetch } = useSuiData(address || '')
-
-  const filteredProjects = useMemo(() => {
-    const projects = metadata
+  // Get all projects before filtering by tab
+  const allProjects = useMemo(() => {
+    return metadata
       ? metadata.map((meta, index) => transformMetadataToProject(meta, index))
       : []
+  }, [metadata])
+
+  const filteredProjects = useMemo(() => {
+    const projects = [...allProjects]
     if (!projects || projects.length === 0) return []
 
     const currentDate = new Date()
@@ -223,7 +227,8 @@ export default function Dashboard() {
             onRefresh={handleRefresh}
             isRefreshing={isRefreshing}
             lastRefreshTime={lastRefreshTime}
-            hasProjects={sortedProjects.length > 0}
+            hasProjects={allProjects.length > 0}
+            activeTab={activeTab}
           />
 
           <DashboardTabs activeTab={activeTab} setActiveTab={setActiveTab} />
@@ -323,7 +328,6 @@ export default function Dashboard() {
             <EmptyState onReset={() => setSearchQuery('')} />
           )}
         </div>
-
       </main>
     </>
   )

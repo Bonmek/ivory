@@ -107,7 +107,6 @@ interface PreviewSummaryProps {
   setOpen: (open: boolean) => void;
   selectedBranch?: string;
   setShowPreview: (showPreview: boolean) => void;
-  projectPreview?: File;
   selectedRepoFile?: File | null;
   showBuildOutputSettings: boolean;
   deployingState: DeployingState;
@@ -201,10 +200,9 @@ const StatusChecklist: React.FC<{ deployingState: DeployingState, buildingState:
   ];
   return (
     <div className="w-full mb-4">
-      <div className="w-full px-1 sm:px-2">
+      <div className="w-full px-2">
         <ul
-          className="w-full flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2 sm:gap-0 px-2 sm:px-4 py-3 sm:py-4 bg-gradient-to-r from-primary-900/70 via-primary-800/80 to-primary-900/70 dark:from-gray-900/80 dark:via-gray-800/90 dark:to-gray-900/80 rounded-2xl shadow-lg border-2 border-muted/30 overflow-x-auto scrollbar-thin scrollbar-thumb-primary-700 scrollbar-track-transparent"
-          style={{ WebkitOverflowScrolling: 'touch' }}
+          className="w-full flex flex-row items-center justify-center gap-0 px-4 py-4 bg-gradient-to-r from-primary-900/70 via-primary-800/80 to-primary-900/70 dark:from-gray-900/80 dark:via-gray-800/90 dark:to-gray-900/80 rounded-2xl shadow-lg border-2 border-muted/30"
         >
           {steps.map((step, i) => (
             <>
@@ -214,7 +212,7 @@ const StatusChecklist: React.FC<{ deployingState: DeployingState, buildingState:
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.08 }}
                 className={
-                  "flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-2 rounded-xl transition-all duration-200 min-w-[190px] sm:min-w-[0] " +
+                  "flex items-center gap-3 px-5 py-2 rounded-xl transition-all duration-200 " +
                   (step.status === 'failed'
                     ? 'bg-red-100/40 dark:bg-red-900/40 shadow-md shadow-red-200/30 dark:shadow-red-900/40'
                     : step.status === 'done'
@@ -225,34 +223,32 @@ const StatusChecklist: React.FC<{ deployingState: DeployingState, buildingState:
                 }
                 tabIndex={0}
               >
-
                 {step.status === 'done' && (step.key === 'done'
-                  ? <span className="w-6 h-6 sm:w-6 sm:h-6 flex items-center justify-center bg-green-200 dark:bg-green-900 rounded-full p-1 shadow"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 sm:w-5 sm:h-5 text-green-600"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m7 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></span>
-                  : <Check className="w-6 h-6 sm:w-6 sm:h-6 text-green-500 bg-green-100 dark:bg-green-900 rounded-full p-1 shadow" />)}
+                  ? <span className="w-6 h-6 flex items-center justify-center bg-green-200 dark:bg-green-900 rounded-full p-1 shadow"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-green-600"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m7 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></span>
+                  : <Check className="w-6 h-6 text-green-500 bg-green-100 dark:bg-green-900 rounded-full p-1 shadow" />)}
                 {step.status === 'failed' && (
-                  <span className="w-6 h-6 sm:w-6 sm:h-6 flex items-center justify-center bg-red-100 dark:bg-red-900 rounded-full p-1 shadow "><X className="w-5 h-5 sm:w-5 sm:h-5 text-red-500" /></span>
+                  <span className="w-6 h-6 flex items-center justify-center bg-red-100 dark:bg-red-900 rounded-full p-1 shadow "><X className="w-5 h-5 text-red-500" /></span>
                 )}
                 {step.status === 'in-progress' && (step.key === 'confirm'
-                  ? <span className="w-6 h-6 sm:w-6 sm:h-6 flex items-center justify-center bg-yellow-50 dark:bg-yellow-900 rounded-full p-1 shadow animate-pulse"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 sm:w-5 sm:h-5 text-yellow-500"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l2 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></span>
-                  : <RefreshCw className="w-6 h-6 sm:w-6 sm:h-6 text-yellow-400 bg-yellow-50 dark:bg-yellow-900 rounded-full p-1 animate-spin shadow" />)}
+                  ? <span className="w-6 h-6 flex items-center justify-center bg-yellow-50 dark:bg-yellow-900 rounded-full p-1 shadow animate-pulse"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-yellow-500"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l2 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></span>
+                  : <RefreshCw className="w-6 h-6 text-yellow-400 bg-yellow-50 dark:bg-yellow-900 rounded-full p-1 animate-spin shadow" />)}
                 {step.status === 'pending' && (step.key === 'done'
-                  ? <span className="w-6 h-6 sm:w-6 sm:h-6 flex items-center justify-center bg-gray-200 dark:bg-gray-800 rounded-full p-1 shadow"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 sm:w-5 sm:h-5 text-gray-400 dark:text-gray-600"><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" fill="none" /></svg></span>
-                  : <span className="inline-block w-5 h-5 sm:w-5 sm:h-5 rounded-full border-2 border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800" />)}
+                  ? <span className="w-6 h-6 flex items-center justify-center bg-gray-200 dark:bg-gray-800 rounded-full p-1 shadow"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-gray-400 dark:text-gray-600"><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" fill="none" /></svg></span>
+                  : <span className="inline-block w-5 h-5 rounded-full border-2 border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800" />)}
                 <span className={
-                  'ml-2 text-xs sm:text-sm md:text-base ' +
-                  (step.status === 'done'
+                  step.status === 'done'
                     ? 'text-green-600 dark:text-green-300 font-semibold'
                     : step.status === 'in-progress'
                       ? 'text-yellow-500 dark:text-yellow-300 font-semibold'
-                      : 'text-gray-400 dark:text-gray-500')
+                      : 'text-gray-400 dark:text-gray-500'
                 }>
                   {step.label}
                 </span>
               </motion.li>
               {/* Divider/progress bar except after last item */}
               {i < steps.length - 1 && (
-                <span className="h-4 w-full sm:w-8 flex items-center justify-center">
-                  <span className="block w-full h-0.5 sm:h-1 rounded-full bg-gradient-to-r from-primary-600 via-primary-400 to-primary-600 dark:from-primary-900 dark:via-primary-700 dark:to-primary-900 opacity-70 mx-0.5" />
+                <span className="h-6 w-8 flex items-center justify-center">
+                  <span className="block w-full h-1 rounded-full bg-gradient-to-r from-primary-600 via-primary-400 to-primary-600 dark:from-primary-900 dark:via-primary-700 dark:to-primary-900 opacity-70 mx-0.5" />
                 </span>
               )}
             </>
@@ -277,7 +273,6 @@ export const PreviewSummary: React.FC<PreviewSummaryProps> = ({
   setShowPreview,
   selectedRepoFile,
   showBuildOutputSettings,
-  projectPreview,
   deployingResponse,
   buildingState,
 }) => {
@@ -301,6 +296,26 @@ export const PreviewSummary: React.FC<PreviewSummaryProps> = ({
       }, 100);
     });
   };
+
+  // Countdown logic for redirect
+  const [countdown, setCountdown] = useState(10);
+  const showCountdown = deployingState === DeployingState.Deployed && buildingState === BuildingState.Built;
+
+  // useEffect(() => {
+  //   if (showCountdown) {
+  //     setCountdown(10);
+  //   }
+  // }, [showCountdown]);
+
+  // useEffect(() => {
+  //   if (!showCountdown) return;
+  //   if (countdown <= 0) {
+  //     navigate('/dashboard');
+  //     return;
+  //   }
+  //   const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
+  //   return () => clearTimeout(timer);
+  // }, [countdown, showCountdown, navigate]);
 
   useEffect(() => {
     if (deployingState === DeployingState.Deploying && deployStatusRef.current) {
@@ -380,6 +395,28 @@ export const PreviewSummary: React.FC<PreviewSummaryProps> = ({
                   ariaLive="polite"
                 />
               )
+              const countdownCard = (countdown < 10) ? (
+                <StatusMotionCard
+                  key="built-countdown"
+                  icon={<Check className="w-5 h-5 text-green-400" />}
+                  color="green"
+                  title={<FormattedMessage id="createWebsite.redirecting" defaultMessage="Redirecting to dashboard..." />}
+                  description={
+                    <span>
+                      <FormattedMessage id="createWebsite.redirectIn" defaultMessage="You will be redirected in {seconds} seconds." values={{ seconds: countdown }} />
+                    </span>
+                  }
+                  ariaLive="polite"
+                >
+                  <Button
+                    variant="outline"
+                    className="mt-2 w-fit"
+                    onClick={() => navigate('/dashboard')}
+                  >
+                    <FormattedMessage id="createWebsite.goNow" defaultMessage="Go now" />
+                  </Button>
+                </StatusMotionCard>
+              ) : null;
               return <>{successCard}{ShowcaseCard}</>;
             }
             if (deployingState === DeployingState.Deploying) {
@@ -464,7 +501,7 @@ export const PreviewSummary: React.FC<PreviewSummaryProps> = ({
         </p>
       </article>
 
-      <PreviewWebsite projectPreview={projectPreview!} />
+      <PreviewWebsite selectedFile={selectedFile!} selectedRepoFile={selectedRepoFile!} uploadMethod={uploadMethod!} />
 
       <Card className="w-full border-2 border-muted/30 bg-primary-800 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 mb-4">
         <CardContent className="space-y-12 pb-2 px-8">
