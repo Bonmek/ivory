@@ -75,21 +75,6 @@ const upload = multer({ dest: "uploads/" });
 
 const commonOutputDirs = ["build", "dist", "out", ".next"];
 
-const findPackageJsonPath = async (dir: string): Promise<string | null> => {
-  const files = await fs.readdir(dir);
-  for (const file of files) {
-    const fullPath = path.join(dir, file);
-    const stat = await fs.stat(fullPath);
-    if (stat.isDirectory()) {
-      const found = await findPackageJsonPath(fullPath);
-      if (found) return found;
-    } else if (file === "package.json") {
-      return dir;
-    }
-  }
-  return null;
-};
-
 const findIndexHtmlPath = async (dir: string): Promise<string | null> => {
   const files = await fs.readdir(dir);
   for (const file of files) {
@@ -666,7 +651,7 @@ app.post("/process-site", upload.single("file"), async (req, res) => {
         taskName: `Created task ${response.name}`,
       });
     }
-  } catch (error) {
+  } catch {
     await cleanupFiles(extractPath, zipFile.path, null);
     await cleanupAllDirectories();
     res.status(500).json({

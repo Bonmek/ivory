@@ -218,6 +218,18 @@ router.get("/auth/github/logout", (req: Request, res: Response) => {
   });
 });
 
+interface GitHubBranch {
+  name: string;
+  commit: {
+    sha: string;
+  } | null;
+  protected: boolean;
+}
+
+interface GitHubUser {
+  accessToken: string;
+}
+
 // Get branches for a repository
 router.get("/api/repositories/:owner/:repo/branches", (async (req, res) => {
   const authReq = req as AuthenticatedRequest;
@@ -226,7 +238,7 @@ router.get("/api/repositories/:owner/:repo/branches", (async (req, res) => {
   }
 
   const { owner, repo } = req.params;
-  const accessToken = (authReq.user as any).accessToken;
+  const accessToken = (authReq.user as GitHubUser).accessToken;
 
   try {
     const response = await axios.get(`https://api.github.com/repos/${owner}/${repo}/branches`, {
@@ -236,18 +248,24 @@ router.get("/api/repositories/:owner/:repo/branches", (async (req, res) => {
       },
     });
 
-    const branches = response.data.map((branch: any) => ({
+    const branches = response.data.map((branch: GitHubBranch) => ({
       name: branch.name,
       commit: branch.commit ? branch.commit.sha : null,
       protected: branch.protected || false,
     }));
 
     res.json(branches);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching branches:', error);
-    res.status(error.response?.status || 500).json({
-      error: error.response?.data?.message || 'Failed to fetch branches',
-    });
+    if (axios.isAxiosError(error)) {
+      res.status(error.response?.status || 500).json({
+        error: error.response?.data?.message || 'Failed to fetch branches',
+      });
+    } else {
+      res.status(500).json({
+        error: 'Failed to fetch branches',
+      });
+    }
   }
 }) as import("express").RequestHandler);
 
