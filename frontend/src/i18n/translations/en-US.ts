@@ -203,6 +203,21 @@ export default {
   'dashboard.refresh': 'Refresh data',
   'dashboard.lastRefresh': 'Last: {time}',
   'dashboard.createNew': 'Deploy Site',
+  
+  // Beta Testing Limit Modal
+  'dashboard.projectLimit.title': 'Beta Testing Limit',
+  'dashboard.projectLimit.description': 'During our beta testing phase, we\'re limiting each wallet to one project per epoch to ensure everyone gets a chance to try the platform. Thank you for your understanding and participation!',
+  'dashboard.projectLimit.understand': 'I Understand',
+  'dashboard.projectLimit.deleteInfo': 'If you encounter issues, you can',
+  'dashboard.projectLimit.deleteProject': 'delete your existing project',
+  'dashboard.projectLimit.deleteHelp': 'You can delete your project from the dashboard by selecting the project and clicking the delete option.',
+  'dashboard.projectLimit.createNew': 'and create a new one',
+  'dashboard.projectLimit.oneProject': '1 project per wallet',
+  'dashboard.projectLimit.walletLimit': 'During beta testing, each wallet address is limited to creating one project at a time.',
+  'dashboard.projectLimit.duringBeta': 'during beta testing',
+  'dashboard.projectLimit.limitRefreshes': 'Limit refreshes each',
+  'dashboard.projectLimit.epoch': 'epoch',
+  'dashboard.projectLimit.fairAccess': 'to ensure fair access',
 
   // ProjectCard
   'projectCard.linkSuins': 'Link SUINS',
