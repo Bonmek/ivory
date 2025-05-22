@@ -67,7 +67,6 @@ export default function Dashboard() {
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   const { metadata, isLoading, refetch } = useSuiData(address || '')
-
   // Get all projects before filtering by tab
   const allProjects = useMemo(() => {
     return metadata
@@ -329,7 +328,6 @@ export default function Dashboard() {
             <EmptyState onReset={() => setSearchQuery('')} />
           )}
         </div>
-
       </main>
     </>
   )

@@ -1,0 +1,70 @@
+/* Flow animations for UI elements */
+
+@keyframes flow-right {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes flow-left {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes flow-down {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes flow-up {
+  0% {
+    transform: translateY(100%);
+  }
+  100% {
+    transform: translateY(-100%);
+  }
+}
+
+.animate-flow-right {
+  animation: flow-right 2s infinite;
+}
+
+.animate-flow-left {
+  animation: flow-left 2s infinite;
+}
+
+.animate-flow-down {
+  animation: flow-down 2s infinite;
+}
+
+.animate-flow-up {
+  animation: flow-up 2s infinite;
+}
+
+/* Add a staggered delay to create a more natural flowing effect */
+.animate-flow-right {
+  animation-delay: 0ms;
+}
+
+.animate-flow-down {
+  animation-delay: 500ms;
+}
+
+.animate-flow-left {
+  animation-delay: 1000ms;
+}
+
+.animate-flow-up {
+  animation-delay: 1500ms;
+}

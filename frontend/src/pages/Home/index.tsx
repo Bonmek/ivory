@@ -460,31 +460,31 @@ export default function HomePage() {
             </motion.p>
 
             <motion.div
-              className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 justify-center w-full px-4 sm:px-0"
+              className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 justify-center w-full px-4 sm:px-0 group"
               variants={itemVariants}
             >
               <motion.button
-                className="font-pixel bg-gradient-to-r from-secondary-500 to-secondary-600 px-6 sm:px-8 py-3 sm:py-4 rounded-full text-base sm:text-lg font-medium relative overflow-hidden group w-full sm:w-auto"
+                className="font-pixel bg-gradient-to-r from-secondary-500 to-secondary-600 px-6 sm:px-8 py-3 sm:py-4 rounded-full text-base sm:text-lg font-medium relative w-full sm:w-auto"
                 whileHover={{
                   scale: 1.05,
                   textShadow: '0 0 8px rgb(255,255,255)',
-                  boxShadow:
-                    '0 0 30px var(--tw-color-secondary-500, #97f0e5, 0.7)',
                   filter: 'brightness(1.2)',
+                  boxShadow: '0 0 30px var(--tw-color-secondary-500, #97f0e5, 0.7)',
                 }}
                 whileTap={{ scale: 0.95 }}
                 variants={glowingBorderVariants}
                 animate="animate"
                 style={{
                   letterSpacing: '0.05em',
+                  margin: '8px',
                 }}
-                onClick={() => navigate('/create-website')}
+                onClick={() => navigate('/dashboard')}
               >
                 <span className="text-black relative z-10">
                   <FormattedMessage id="homepage.hero.deploy" />
                 </span>
                 <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-secondary-600 to-secondary-700"
+                  className="absolute inset-0 bg-gradient-to-r from-secondary-600 to-secondary-700 rounded-full"
                   animate={{
                     opacity: [0.5, 0.8, 0.5],
                   }}
@@ -494,22 +494,10 @@ export default function HomePage() {
                     repeatType: 'reverse',
                   }}
                 />
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-secondary-500/20 to-secondary-600/20 blur-xl"
-                  whileHover={{
-                    scale: 1.2,
-                    opacity: [0.5, 0.8, 0.5],
-                  }}
-                  transition={{
-                    duration: 1,
-                    repeat: Infinity,
-                    repeatType: 'reverse',
-                  }}
-                />
               </motion.button>
 
               <motion.button
-                className="font-pixel bg-white/10 backdrop-blur-sm border border-white/20 px-6 sm:px-8 py-3 sm:py-4 rounded-full text-base sm:text-lg font-medium w-full sm:w-auto"
+                className="font-pixel bg-white/10 backdrop-blur-sm border border-white/20 px-6 sm:px-8 py-3 sm:py-4 rounded-full text-base sm:text-lg font-medium w-full sm:w-auto relative"
                 whileHover={{
                   scale: 1.05,
                   textShadow: '0 0 8px rgb(255,255,255)',
@@ -518,9 +506,14 @@ export default function HomePage() {
                 whileTap={{ scale: 0.95 }}
                 style={{
                   letterSpacing: '0.05em',
+                  margin: '8px',
                 }}
+                onClick={() => window.open('https://kursui.wal.app/', '_blank')}
               >
-                <FormattedMessage id="homepage.hero.docs" />
+                <span className="flex items-center justify-center gap-2">
+                  <Globe className="w-4 h-4" />
+                  <span>Showcase</span>
+                </span>
               </motion.button>
             </motion.div>
           </div>
