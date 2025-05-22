@@ -10,7 +10,7 @@ import CreateWebsitePage from './pages/CreateWebsite'
 import HowToUsePage from './pages/Howtouse'
 import DashboardPage from './pages/Dashboard'
 import Callback from './pages/Callback'
-import EditWebsitePage from './pages/EditWebsite'
+// import EditWebsitePage from './pages/EditWebsite'
 import AboutUs from './pages/AboutUs'
 
 
@@ -39,22 +39,22 @@ const router = createBrowserRouter([
       </Layout>
     ),
   },
-  {
-    path: '/edit-website',
-    element: (
-      <Layout>
-        <EditWebsitePage />
-      </Layout>
-    ),
-  },
-  {
-    path: '/edit-website/:id',
-    element: (
-      <Layout>
-        <EditWebsitePage />
-      </Layout>
-    ),
-  },
+  // {
+  //   path: '/edit-website',
+  //   element: (
+  //     <Layout>
+  //       <EditWebsitePage />
+  //     </Layout>
+  //   ),
+  // },
+  // {
+  //   path: '/edit-website/:id',
+  //   element: (
+  //     <Layout>
+  //       <EditWebsitePage />
+  //     </Layout>
+  //   ),
+  // },
   {
     path: '/dashboard',
     element: (
@@ -66,7 +66,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/about-us',
+    path: '/about',
     element: (
       <Layout>
         <AboutUs />
