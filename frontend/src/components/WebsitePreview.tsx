@@ -157,9 +157,17 @@ export default function WebsitePreview({ htmlContent, assetMap }: WebsitePreview
                         </button>
                     </div>
 
-                    <div className="space-y-6">
-                        <div className="bg-muted/30 p-4 rounded-lg">
-                            <h3 className="font-semibold text-foreground mb-3">
+                    <div className="space-y-4">
+                        <div className="p-4 mb-4 bg-blue-50 dark:bg-blue-900/20 rounded-md">
+                            <p className="text-sm text-blue-800 dark:text-blue-200">
+                                <FormattedMessage 
+                                    id="createWebsite.preview.pathRecommendation" 
+                                    defaultMessage="For best compatibility, we recommend using relative paths (starting with './') for all local assets and links in your website." 
+                                />
+                            </p>
+                        </div>
+                        <div className="space-y-2">
+                            <h3 className="font-medium text-foreground">
                                 <FormattedMessage id="createWebsite.preview.commonIssues" defaultMessage="Common Issues" />
                             </h3>
                             <ul className="space-y-3">
@@ -218,7 +226,7 @@ export default function WebsitePreview({ htmlContent, assetMap }: WebsitePreview
                 />
             )}
             <section className="flex-1 min-w-0">
-                <div className="relative w-full" style={{ paddingTop: '56.25%', }}>
+                <div className="relative w-full" style={{ paddingTop: '56.25%', pointerEvents: 'none' }}>
                     <iframe
                         ref={iframeRef}
                         className="absolute top-0 left-0 w-full h-full border-0 pointer-events-none [&::-webkit-scrollbar]:w-2.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-muted-foreground/50 [scrollbar-width:thin] [scrollbar-color:oklch(var(--muted-foreground)/0.3)_transparent]"
