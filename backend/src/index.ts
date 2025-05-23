@@ -26,6 +26,12 @@ import {
 import { CloudTasksClient } from "@google-cloud/tasks";
 import { v4 as uuidv4 } from "uuid";
 import { TypeOf } from "zod";
+import { findIndexHtmlPath } from "./utils/findIndexHtmlPath";
+import { containsJavaScriptFiles } from "./utils/containsJavaScriptFiles";
+import { cleanupAllDirectories } from "./utils/cleanupAllDirectories";
+import { cleanupFiles } from "./utils/cleanupFiles";
+import { modifyBuildConfig } from "./utils/modifyBuildConfig";
+import { detectBuildTool } from "./utils/detectBuildTool";
 
 dotenv.config();
 
@@ -73,142 +79,8 @@ const parent = tasksClient.queuePath(
 
 const upload = multer({ dest: "uploads/" });
 
-const commonOutputDirs = ["build", "dist", "out", ".next"];
 
-const findIndexHtmlPath = async (dir: string): Promise<string | null> => {
-  const files = await fs.readdir(dir);
-  for (const file of files) {
-    const fullPath = path.join(dir, file);
-    const stat = await fs.stat(fullPath);
-    if (stat.isDirectory()) {
-      const found = await findIndexHtmlPath(fullPath);
-      if (found) return found;
-    } else if (file === "index.html") {
-      return path.dirname(fullPath);
-    }
-  }
-  return null;
-};
-
-const findIndexHtmlInKnownDirs = async (
-  baseDir: string
-): Promise<string | null> => {
-  for (const outDirName of commonOutputDirs) {
-    const candidateDir = path.join(baseDir, outDirName);
-    const indexPath = path.join(candidateDir, "index.html");
-    if (await fs.pathExists(indexPath)) {
-      return candidateDir;
-    }
-  }
-  return null;
-};
-
-// Add these helper functions at the top level
-async function containsJavaScriptFiles(dir: string): Promise<boolean> {
-  const files = await fs.readdir(dir);
-  for (const file of files) {
-    const fullPath = path.join(dir, file);
-    const stat = await fs.stat(fullPath);
-    if (stat.isDirectory()) {
-      if (await containsJavaScriptFiles(fullPath)) {
-        return true;
-      }
-    } else if (file.endsWith('.js') || file.endsWith('.jsx') || file.endsWith('.ts') || file.endsWith('.tsx')) {
-      return true;
-    }
-  }
-  return false;
-}
-
-async function detectBuildTool(buildDir: string): Promise<{ tool: string; configPath: string } | null> {
-  const configFiles = [
-    { tool: 'vite', patterns: ['vite.config.ts', 'vite.config.js'] },
-    { tool: 'webpack', patterns: ['webpack.config.js', 'webpack.config.ts'] },
-    { tool: 'rollup', patterns: ['rollup.config.js', 'rollup.config.ts'] }
-  ];
-
-  for (const { tool, patterns } of configFiles) {
-    for (const pattern of patterns) {
-      const configPath = path.join(buildDir, pattern);
-      if (await fs.pathExists(configPath)) {
-        return { tool, configPath };
-      }
-    }
-  }
-  return null;
-}
-
-async function modifyBuildConfig(configPath: string, tool: string, attributes_data: TypeOf<typeof inputWriteBlobScheme>): Promise<void> {
-  const content = await fs.readFile(configPath, 'utf-8');
-  let modifiedContent = content;
-
-  switch (tool) {
-    case 'vite':
-      // Add or modify base and build.outDir
-      if (!content.includes('base:')) {
-        modifiedContent = modifiedContent.replace(
-          /export default defineConfig\(\{/,
-          `export default defineConfig({\n  base: "./",\n  build: {\n    outDir: "${attributes_data.output_dir}",\n  },`
-        );
-      }
-      break;
-    case 'webpack':
-      // Add or modify output.path and output.publicPath
-      if (!content.includes('output:')) {
-        modifiedContent = modifiedContent.replace(
-          /module.exports = \{/,
-          'module.exports = {\n  output: {\n    path: path.resolve(__dirname, "dist"),\n    publicPath: "./",\n  },'
-        );
-      }
-      break;
-    case 'rollup':
-      // Add or modify output.dir and output.assetFileNames
-      if (!content.includes('output:')) {
-        modifiedContent = modifiedContent.replace(
-          /export default \{/,
-          'export default {\n  output: {\n    dir: "dist",\n    assetFileNames: "[name][extname]",\n  },'
-        );
-      }
-      break;
-  }
-
-  await fs.writeFile(configPath, modifiedContent, 'utf-8');
-}
-
-// Helper function to clean up files
-async function cleanupFiles(extractPath: string | null, uploadPath: string | null, outputPath: string | null) {
-  try {
-    await Promise.all([
-      extractPath ? fs.remove(extractPath) : Promise.resolve(),
-      uploadPath ? fs.remove(uploadPath) : Promise.resolve(),
-      outputPath ? fs.remove(outputPath) : Promise.resolve()
-    ]);
-  } catch (error) {
-    console.error("Error during cleanup:", error);
-  }
-}
-
-// Helper function to clean up all directories
-async function cleanupAllDirectories() {
-  try {
-    const dirs = ['outputs', 'temp', 'uploads'];
-    await Promise.all(
-      dirs.map(async dir => {
-        const dirPath = path.join(__dirname, dir);
-        if (await fs.pathExists(dirPath)) {
-          const files = await fs.readdir(dirPath);
-          await Promise.all(
-            files.map(file => fs.remove(path.join(dirPath, file)))
-          );
-          await fs.remove(dirPath);
-        }
-      })
-    );
-  } catch (error) {
-    console.error("Error cleaning up directories:", error);
-  }
-}
-
+// Add these helper functions at the top leve
 app.post("/preview", upload.single("file"), async (req, res) => {
   const startTime = performance.now();
   console.log('Start processing:', new Date().toISOString());
@@ -228,7 +100,7 @@ app.post("/preview", upload.single("file"), async (req, res) => {
   try {
     const zipFile = req.file;
     extractPath = path.join(__dirname, "temp", Date.now().toString());
-    
+
     const extractStart = performance.now();
     await fs
       .createReadStream(zipFile.path)
@@ -314,7 +186,7 @@ app.post("/preview", upload.single("file"), async (req, res) => {
 
         const distPath = path.join(buildDir, attributes_data.data.output_dir);
         const indexPath = path.join(distPath, 'index.html');
-        
+
         if (!await fs.pathExists(indexPath)) {
           await cleanupFiles(extractPath, zipFile.path, null);
           await cleanupAllDirectories();
@@ -324,7 +196,7 @@ app.post("/preview", upload.single("file"), async (req, res) => {
           });
           return;
         }
-        
+
         indexDir = distPath;
       } catch (error) {
         await cleanupFiles(extractPath, zipFile.path, null);
@@ -351,7 +223,7 @@ app.post("/preview", upload.single("file"), async (req, res) => {
     const zipStart = performance.now();
     outputZipPath = path.join(__dirname, "outputs", `${uuidv4()}_${Date.now()}.zip`);
     await fs.ensureDir(path.dirname(outputZipPath));
-    
+
     const zip = new AdmZip();
     zip.addLocalFolder(indexDir);
     zip.writeZip(outputZipPath);
@@ -372,7 +244,7 @@ app.post("/preview", upload.single("file"), async (req, res) => {
       await cleanupFiles(extractPath, zipFile.path, outputZipPath);
       await cleanupAllDirectories();
       console.log(`Cleanup took: ${(performance.now() - cleanupStart).toFixed(2)}ms`);
-      
+
       console.log(`Total processing time: ${(performance.now() - startTime).toFixed(2)}ms`);
     });
   } catch (error) {
@@ -397,7 +269,7 @@ app.post("/process-site", upload.single("file"), async (req, res) => {
   }
 
   const zipFile = req.file;
-  
+
   const attributes = req.body.attributes
     ? typeof req.body.attributes === "string"
       ? JSON.parse(req.body.attributes)
@@ -415,7 +287,7 @@ app.post("/process-site", upload.single("file"), async (req, res) => {
     });
     return;
   }
-  
+
   const extractPath = path.join(__dirname, "temp", attributes_data.data["site-name"]);
   try {
     await fs
@@ -719,343 +591,343 @@ app.put("/set-attributes", async (req, res) => {
   });
 });
 
-app.put("/update-blob-n-run-job", upload.single("file"), async (req, res) => {
-  if (!req.file) {
-    res.status(400).json({
-      statusCode: 0,
-      error: "No file uploaded",
-    });
-    return;
-  }
+// app.put("/update-blob-n-run-job", upload.single("file"), async (req, res) => {
+//   if (!req.file) {
+//     res.status(400).json({
+//       statusCode: 0,
+//       error: "No file uploaded",
+//     });
+//     return;
+//   }
 
-  const zipFile = req.file;
-  const extractPath = path.join(__dirname, "temp", Date.now().toString());
-  await fs
-    .createReadStream(zipFile.path)
-    .pipe(unzipper.Extract({ path: extractPath }))
-    .promise();
+//   const zipFile = req.file;
+//   const extractPath = path.join(__dirname, "temp", Date.now().toString());
+//   await fs
+//     .createReadStream(zipFile.path)
+//     .pipe(unzipper.Extract({ path: extractPath }))
+//     .promise();
 
-  const attributes = req.body.attributes
-    ? typeof req.body.attributes === "string"
-      ? JSON.parse(req.body.attributes)
-      : req.body.attributes
-    : {};
-  const attributes_data = inputUpdateWriteBlobScheme.safeParse(attributes);
-  if (!attributes_data.success) {
-    res.status(400).json({
-      statusCode: 0,
-      errors: attributes_data.error.errors.map((err) => ({
-        error_message: err.message,
-        error_field: err.path.join("."),
-      })),
-    });
-    return;
-  }
+//   const attributes = req.body.attributes
+//     ? typeof req.body.attributes === "string"
+//       ? JSON.parse(req.body.attributes)
+//       : req.body.attributes
+//     : {};
+//   const attributes_data = inputUpdateWriteBlobScheme.safeParse(attributes);
+//   if (!attributes_data.success) {
+//     res.status(400).json({
+//       statusCode: 0,
+//       errors: attributes_data.error.errors.map((err) => ({
+//         error_message: err.message,
+//         error_field: err.path.join("."),
+//       })),
+//     });
+//     return;
+//   }
 
-  let indexDir: string | null;
+//   let indexDir: string | null;
 
-  if (attributes_data.data.is_build === "0") {
-    const buildDir = path.join(extractPath, attributes_data.data.root);
-    const packageJsonPath = path.join(buildDir, "package.json");
+//   if (attributes_data.data.is_build === "0") {
+//     const buildDir = path.join(extractPath, attributes_data.data.root);
+//     const packageJsonPath = path.join(buildDir, "package.json");
 
-    if (!await fs.pathExists(packageJsonPath)) {
-      res.status(404).json({
-        statusCode: 0,
-        error: "package.json not found in specified root directory",
-      });
-      return;
-    }
+//     if (!await fs.pathExists(packageJsonPath)) {
+//       res.status(404).json({
+//         statusCode: 0,
+//         error: "package.json not found in specified root directory",
+//       });
+//       return;
+//     }
 
-    try {
-      await new Promise((resolve, reject) => {
-        exec(
-          attributes_data.data.install_command,
-          { cwd: buildDir },
-          (err, stdout, stderr) => {
-            if (err) {
-              console.error("install error", err);
-              console.error("install stderr", stderr);
-              return reject(err);
-            }
-            console.log("install stdout", stdout);
+//     try {
+//       await new Promise((resolve, reject) => {
+//         exec(
+//           attributes_data.data.install_command,
+//           { cwd: buildDir },
+//           (err, stdout, stderr) => {
+//             if (err) {
+//               console.error("install error", err);
+//               console.error("install stderr", stderr);
+//               return reject(err);
+//             }
+//             console.log("install stdout", stdout);
 
-            exec(
-              attributes_data.data.build_command,
-              { cwd: buildDir },
-              (err2, stdout2, stderr2) => {
-                if (err2) {
-                  console.error("build error", err2);
-                  console.error("build stderr", stderr2);
-                  return reject(err2);
-                }
-                console.log("build stdout", stdout2);
-                resolve(true);
-              }
-            );
-          }
-        );
-      });
-    } catch (error) {
-      console.error("Build process failed:", error);
-      res.status(500).json({
-        statusCode: 0,
-        error: "Build process failed",
-      });
-      return;
-    }
+//             exec(
+//               attributes_data.data.build_command,
+//               { cwd: buildDir },
+//               (err2, stdout2, stderr2) => {
+//                 if (err2) {
+//                   console.error("build error", err2);
+//                   console.error("build stderr", stderr2);
+//                   return reject(err2);
+//                 }
+//                 console.log("build stdout", stdout2);
+//                 resolve(true);
+//               }
+//             );
+//           }
+//         );
+//       });
+//     } catch (error) {
+//       console.error("Build process failed:", error);
+//       res.status(500).json({
+//         statusCode: 0,
+//         error: "Build process failed",
+//       });
+//       return;
+//     }
 
-    indexDir = await findIndexHtmlInKnownDirs(buildDir);
-    if (!indexDir) {
-      indexDir = await findIndexHtmlPath(extractPath);
-    }
-  } else {
-    indexDir = await findIndexHtmlPath(extractPath);
-  }
+//     indexDir = await findIndexHtmlInKnownDirs(buildDir, attributes_data.data.output_dir || "dist");
+//     if (!indexDir) {
+//       indexDir = await findIndexHtmlPath(extractPath);
+//     }
+//   } else {
+//     indexDir = await findIndexHtmlPath(extractPath);
+//   }
 
-  if (!indexDir) {
-    res.status(400).json({
-      statusCode: 0,
-      error: "index.html not found",
-    });
-    return;
-  }
-  const wsResources = {
-    headers: {},
-    routes: {},
-    metadata: {
-      link: "https://subdomain.wal.app/",
-      image_url: "https://www.walrus.xyz/walrus-site",
-      description: "This is a walrus site.",
-      project_url: "https://github.com/MystenLabs/walrus-sites/",
-      creator: "MystenLabs",
-    },
-    ignore: ["/private/", "/secret.txt", "/images/tmp/*"],
-  };
+//   if (!indexDir) {
+//     res.status(400).json({
+//       statusCode: 0,
+//       error: "index.html not found",
+//     });
+//     return;
+//   }
+//   const wsResources = {
+//     headers: {},
+//     routes: {},
+//     metadata: {
+//       link: "https://subdomain.wal.app/",
+//       image_url: "https://www.walrus.xyz/walrus-site",
+//       description: "This is a walrus site.",
+//       project_url: "https://github.com/MystenLabs/walrus-sites/",
+//       creator: "MystenLabs",
+//     },
+//     ignore: ["/private/", "/secret.txt", "/images/tmp/*"],
+//   };
 
-  await fs.writeJson(path.join(indexDir, "ws-resources.json"), wsResources, {
-    spaces: 2,
-  });
+//   await fs.writeJson(path.join(indexDir, "ws-resources.json"), wsResources, {
+//     spaces: 2,
+//   });
 
-  const outputZipPath = path.join(
-    __dirname,
-    "outputs",
-    `${attributes_data.data["old_object_id"].replace(
-      /\s+/g,
-      "_"
-    )}_${Date.now()}.zip`
-  );
-  await fs.ensureDir(path.dirname(outputZipPath));
-  const zip = new AdmZip();
+//   const outputZipPath = path.join(
+//     __dirname,
+//     "outputs",
+//     `${attributes_data.data["old_object_id"].replace(
+//       /\s+/g,
+//       "_"
+//     )}_${Date.now()}.zip`
+//   );
+//   await fs.ensureDir(path.dirname(outputZipPath));
+//   const zip = new AdmZip();
 
-  const addFilesToZip = async (dir: string, baseInZip = "") => {
-    const entries = await fs.readdir(dir);
-    for (const entry of entries) {
-      const fullPath = path.join(dir, entry);
-      const stat = await fs.stat(fullPath);
-      if (stat.isDirectory()) {
-        await addFilesToZip(fullPath, path.join(baseInZip, entry));
-      } else {
-        const fileContent = await fs.readFile(fullPath);
-        zip.addFile(path.join(baseInZip, entry), fileContent);
-      }
-    }
-  };
+//   const addFilesToZip = async (dir: string, baseInZip = "") => {
+//     const entries = await fs.readdir(dir);
+//     for (const entry of entries) {
+//       const fullPath = path.join(dir, entry);
+//       const stat = await fs.stat(fullPath);
+//       if (stat.isDirectory()) {
+//         await addFilesToZip(fullPath, path.join(baseInZip, entry));
+//       } else {
+//         const fileContent = await fs.readFile(fullPath);
+//         zip.addFile(path.join(baseInZip, entry), fileContent);
+//       }
+//     }
+//   };
 
-  await addFilesToZip(indexDir);
-  zip.writeZip(outputZipPath);
+//   await addFilesToZip(indexDir);
+//   zip.writeZip(outputZipPath);
 
-  let new_blob_data;
-  let write_blob_attempts = 0;
-  const delay = 1000;
-  const max_attempts_write_blob = 2;
-  const max_attempts_set_status = 5;
-  const zipBuffer = await readFile(outputZipPath);
-  const { old_object_id, ...updated_data } = attributes_data.data;
-  while (write_blob_attempts < max_attempts_write_blob) {
-    try {
-      new_blob_data = await walrusClient.writeBlob({
-        blob: zipBuffer,
-        deletable: true,
-        epochs: Number(attributes_data.data.epochs),
-        signer: keypair,
-        attributes: { ...updated_data },
-      });
-      if (
-        new_blob_data.blobObject.certified_epoch ||
-        new_blob_data.blobObject.certified_epoch !== null
-      ) {
-        break;
-      }
-      write_blob_attempts++;
-      await new Promise((resolve) => setTimeout(resolve, delay));
-    } catch (error) {
-      res.status(502).json({
-        statusCode: 0,
-        error: {
-          error_message: "Failed to write blob to Walrus",
-          error_details: error,
-        },
-      });
-      return;
-    }
+//   let new_blob_data;
+//   let write_blob_attempts = 0;
+//   const delay = 1000;
+//   const max_attempts_write_blob = 2;
+//   const max_attempts_set_status = 5;
+//   const zipBuffer = await readFile(outputZipPath);
+//   const { old_object_id, ...updated_data } = attributes_data.data;
+//   while (write_blob_attempts < max_attempts_write_blob) {
+//     try {
+//       new_blob_data = await walrusClient.writeBlob({
+//         blob: zipBuffer,
+//         deletable: true,
+//         epochs: Number(attributes_data.data.epochs),
+//         signer: keypair,
+//         attributes: { ...updated_data },
+//       });
+//       if (
+//         new_blob_data.blobObject.certified_epoch ||
+//         new_blob_data.blobObject.certified_epoch !== null
+//       ) {
+//         break;
+//       }
+//       write_blob_attempts++;
+//       await new Promise((resolve) => setTimeout(resolve, delay));
+//     } catch (error) {
+//       res.status(502).json({
+//         statusCode: 0,
+//         error: {
+//           error_message: "Failed to write blob to Walrus",
+//           error_details: error,
+//         },
+//       });
+//       return;
+//     }
 
-    if (write_blob_attempts === max_attempts_write_blob) {
-      let set_status_attempts = 0;
-      while (set_status_attempts < max_attempts_set_status) {
-        try {
-          await walrusClient.executeWriteBlobAttributesTransaction({
-            blobObjectId: new_blob_data.blobObject.id.id,
-            signer: keypair,
-            attributes: { status: "2" },
-          });
-          break;
-        } catch (error) {
-          set_status_attempts++;
-          if (set_status_attempts === max_attempts_set_status) {
-            if (error instanceof Error) {
-              res.status(502).json({
-                statusCode: 0,
-                error: {
-                  error_message:
-                    "Failed to change status code to 2 in blob attributes",
-                  error_details: error,
-                },
-              });
-              return;
-            }
-          }
-          await new Promise((resolve) => setTimeout(resolve, delay));
-        }
-      }
-      res.status(504).json({
-        statusCode: 0,
-        error: "Certified epoch is null",
-      });
-      return;
-    }
-  }
+//     if (write_blob_attempts === max_attempts_write_blob) {
+//       let set_status_attempts = 0;
+//       while (set_status_attempts < max_attempts_set_status) {
+//         try {
+//           await walrusClient.executeWriteBlobAttributesTransaction({
+//             blobObjectId: new_blob_data.blobObject.id.id,
+//             signer: keypair,
+//             attributes: { status: "2" },
+//           });
+//           break;
+//         } catch (error) {
+//           set_status_attempts++;
+//           if (set_status_attempts === max_attempts_set_status) {
+//             if (error instanceof Error) {
+//               res.status(502).json({
+//                 statusCode: 0,
+//                 error: {
+//                   error_message:
+//                     "Failed to change status code to 2 in blob attributes",
+//                   error_details: error,
+//                 },
+//               });
+//               return;
+//             }
+//           }
+//           await new Promise((resolve) => setTimeout(resolve, delay));
+//         }
+//       }
+//       res.status(504).json({
+//         statusCode: 0,
+//         error: "Certified epoch is null",
+//       });
+//       return;
+//     }
+//   }
 
-  if (!new_blob_data) {
-    res.status(503).json({
-      statusCode: 0,
-      error: "WriteBlob success but data is undefined",
-    });
-    return;
-  }
+//   if (!new_blob_data) {
+//     res.status(503).json({
+//       statusCode: 0,
+//       error: "WriteBlob success but data is undefined",
+//     });
+//     return;
+//   }
 
-  const blobObjectId = new_blob_data.blobObject.id.id;
+//   const blobObjectId = new_blob_data.blobObject.id.id;
 
-  const old_attributes = await walrusClient.readBlobAttributes({
-    blobObjectId: old_object_id,
-  });
+//   const old_attributes = await walrusClient.readBlobAttributes({
+//     blobObjectId: old_object_id,
+//   });
 
-  if (!old_attributes) {
-    res.status(404).json({
-      statusCode: 0,
-      error: "blob data not found",
-    });
-    return;
-  }
+//   if (!old_attributes) {
+//     res.status(404).json({
+//       statusCode: 0,
+//       error: "blob data not found",
+//     });
+//     return;
+//   }
 
-  const old_site_name = old_attributes["site-name"];
-  const old_site_id = old_attributes["site_id"];
-  const site_statuss = old_attributes["site_status"];
-  let attributesUpdate;
-  if (site_statuss && site_statuss !== null) {
-    attributesUpdate = {
-      site_status: "0",
-      status: "0",
-      blobId: new_blob_data.blobId,
-      "site-name": old_site_name,
-      site_id: old_site_id,
-    };
-  } else {
-    attributesUpdate = {
-      status: "0",
-      blobId: new_blob_data.blobId,
-      "site-name": old_site_name,
-      site_id: old_site_id,
-    };
-  }
-  try {
-    await walrusClient.executeWriteBlobAttributesTransaction({
-      blobObjectId: blobObjectId,
-      signer: keypair,
-      attributes: attributesUpdate,
-    });
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(502).json({
-        statusCode: 0,
-        error: {
-          error_message:
-            "Failed to execute write blob attributes transaction to Walrus",
-          error_details: error,
-        },
-      });
-      return;
-    }
-  }
+//   const old_site_name = old_attributes["site-name"];
+//   const old_site_id = old_attributes["site_id"];
+//   const site_statuss = old_attributes["site_status"];
+//   let attributesUpdate;
+//   if (site_statuss && site_statuss !== null) {
+//     attributesUpdate = {
+//       site_status: "0",
+//       status: "0",
+//       blobId: new_blob_data.blobId,
+//       "site-name": old_site_name,
+//       site_id: old_site_id,
+//     };
+//   } else {
+//     attributesUpdate = {
+//       status: "0",
+//       blobId: new_blob_data.blobId,
+//       "site-name": old_site_name,
+//       site_id: old_site_id,
+//     };
+//   }
+//   try {
+//     await walrusClient.executeWriteBlobAttributesTransaction({
+//       blobObjectId: blobObjectId,
+//       signer: keypair,
+//       attributes: attributesUpdate,
+//     });
+//   } catch (error) {
+//     if (error instanceof Error) {
+//       res.status(502).json({
+//         statusCode: 0,
+//         error: {
+//           error_message:
+//             "Failed to execute write blob attributes transaction to Walrus",
+//           error_details: error,
+//         },
+//       });
+//       return;
+//     }
+//   }
 
-  try {
-    await walrusClient.executeDeleteBlobTransaction({
-      signer: keypair,
-      blobObjectId: old_object_id,
-    });
-  } catch (error) {
-    res.status(502).json({
-      statusCode: 0,
-      error: {
-        error_message:
-          "Failed to execute delete blob attributes transaction to Walrus",
-        error_details: error,
-      },
-    });
-    return;
-  }
+//   try {
+//     await walrusClient.executeDeleteBlobTransaction({
+//       signer: keypair,
+//       blobObjectId: old_object_id,
+//     });
+//   } catch (error) {
+//     res.status(502).json({
+//       statusCode: 0,
+//       error: {
+//         error_message:
+//           "Failed to execute delete blob attributes transaction to Walrus",
+//         error_details: error,
+//       },
+//     });
+//     return;
+//   }
 
-  let response;
-  try {
-    const payload = {
-      arg1: "publish",
-      arg2: blobObjectId,
-    };
+//   let response;
+//   try {
+//     const payload = {
+//       arg1: "publish",
+//       arg2: blobObjectId,
+//     };
 
-    [response] = await tasksClient.createTask({
-      parent,
-      task: {
-        httpRequest: {
-          httpMethod: "POST",
-          url: `https://${process.env.JOB_ID}.${process.env.REGION}.run.app`,
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: Buffer.from(JSON.stringify(payload)).toString("base64"),
-          oidcToken: {
-            serviceAccountEmail: process.env.SERVICE_ACCOUNT_EMAIL,
-          },
-        },
-      },
-    });
-  } catch (error) {
-    res.status(500).json({
-      statusCode: 0,
-      error: {
-        error_message: "Failed to create task",
-        error_details: error,
-      },
-    });
-    return;
-  }
+//     [response] = await tasksClient.createTask({
+//       parent,
+//       task: {
+//         httpRequest: {
+//           httpMethod: "POST",
+//           url: `https://${process.env.JOB_ID}.${process.env.REGION}.run.app`,
+//           headers: {
+//             "Content-Type": "application/json",
+//           },
+//           body: Buffer.from(JSON.stringify(payload)).toString("base64"),
+//           oidcToken: {
+//             serviceAccountEmail: process.env.SERVICE_ACCOUNT_EMAIL,
+//           },
+//         },
+//       },
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       statusCode: 0,
+//       error: {
+//         error_message: "Failed to create task",
+//         error_details: error,
+//       },
+//     });
+//     return;
+//   }
 
-  if (response.name) {
-    res.status(200).json({
-      statusCode: 1,
-      objectId: blobObjectId,
-      taskName: `Created task ${response.name}`,
-    });
-  }
-});
+//   if (response.name) {
+//     res.status(200).json({
+//       statusCode: 1,
+//       objectId: blobObjectId,
+//       taskName: `Created task ${response.name}`,
+//     });
+//   }
+// });
 
 app.delete("/delete-site", async (req, res) => {
   const object_id = req.query.object_id;

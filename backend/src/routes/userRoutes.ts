@@ -1,7 +1,7 @@
 import express from "express";
 import multer from "multer";
 import { Request } from "express";
-import * as userController from "../controllers/userController";
+import { preview } from "../controllers/userController";
 
 const router = express.Router();
 
@@ -17,6 +17,6 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-router.post("/preview", upload.single("file"), userController.preview);
+router.post("/", upload.single("file"), preview);
 
 module.exports = router;
