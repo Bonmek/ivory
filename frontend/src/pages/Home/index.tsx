@@ -512,7 +512,7 @@ export default function HomePage() {
               >
                 <span className="flex items-center justify-center gap-2">
                   <Globe className="w-4 h-4" />
-                  <span>Showcase</span>
+                  <span>{intl.formatMessage({ id: 'homepage.showcase' })}</span>
                 </span>
               </motion.button>
             </motion.div>

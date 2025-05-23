@@ -358,7 +358,6 @@ const ProjectCard = memo(
       setIsGenerating(true)
       try {
         await apiClient.put(`/add-site-id?object_id=${project.parentId}`)
-        console.log(project.parentId)
         toast.success('Site ID generated successfully', {
           description: 'Please wait a moment',
           duration: 5000,

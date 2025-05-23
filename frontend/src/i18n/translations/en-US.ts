@@ -183,6 +183,7 @@ export default {
   'createWebsite.preview.tipJsErrors': 'Check for JavaScript errors in the Console tab',
   'createWebsite.preview.buttonPreviewNotLoading': 'Preview not loading?',
   'createWebsite.preview.ariaLabel': 'Preview not loading? Click for help',
+  'createWebsite.preview.pathRecommendation': 'For best compatibility, we recommend using relative paths (starting with \'./\') for all local assets and links in your website.',
 
   // Homepage
   'homepage.hero.title1': 'Launch Your Site In Few Clicks',
@@ -208,6 +209,7 @@ export default {
   'homepage.feature.bandwidth': 'Free Bandwidth',
   'homepage.feature.bandwidth.desc': 'Enjoy truly free hosting. Ivory serves your traffic at no cost — ideal for creators, devs, and indie projects.',
   'homepage.powered': 'Powered by',
+  'homepage.showcase': 'Showcase',
 
   // Dashboard
   'dashboard.title': 'Dashboard',
@@ -230,7 +232,7 @@ export default {
   'dashboard.refresh': 'Refresh data',
   'dashboard.lastRefresh': 'Last: {time}',
   'dashboard.createNew': 'Deploy Site',
-  
+
   // Beta Testing Limit Modal
   'dashboard.projectLimit.title': 'Beta Testing Limit',
   'dashboard.projectLimit.description': 'During our beta testing phase, we\'re limiting each wallet to one project per epoch to ensure everyone gets a chance to try the platform. Thank you for your understanding and participation!',
