@@ -54,7 +54,7 @@ const hex = process.env.SUI_Hex || "";
 const secretKey = Uint8Array.from(Buffer.from(hex, "hex"));
 const keypair = Ed25519Keypair.fromSecretKey(secretKey);
 
-const suiClient = new SuiClient({ url: getFullnodeUrl("mainnet") });
+const suiClient = new SuiClient({ url: 'https://sui-rpc.contributiondao.com/' });
 const walrusClient = new WalrusClient({
   network: "mainnet",
   suiClient,

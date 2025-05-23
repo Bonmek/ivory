@@ -6,66 +6,20 @@ import unzipper from 'unzipper';
 import { exec } from 'child_process';
 import AdmZip from 'adm-zip';
 import { v4 as uuidv4 } from 'uuid';
-import { z } from 'zod';
 import { inputWriteBlobScheme } from '../models/inputScheme';
 import { cleanupAllDirectories } from '../utils/cleanupAllDirectories';
 import { cleanupFiles } from '../utils/cleanupFiles';
 import { containsJavaScriptFiles } from '../utils/containsJavaScriptFiles';
 import { detectBuildTool } from '../utils/detectBuildTool';
+import { modifyBuildConfig } from '../utils/modifyBuildConfig';
+import { findIndexHtmlPath } from '../utils/findIndexHtmlPath';
 
 const input = require("../models/inputScheme");
-
-// Configure multer storage
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'uploads/');
-    },
-    filename: function (req, file, cb) {
-        cb(null, Date.now() + '-' + file.originalname);
-    }
-});
-
-const upload = multer({ storage: storage });
-
-// Define interfaces
-interface BuildTool {
-    configPath: string;
-    tool: string;
-}
 
 interface ZodError {
     message: string;
     path: string[];
 }
-
-
-async function findIndexHtmlPath(dir: string): Promise<string | null> {
-    const files = await fs.readdir(dir);
-    for (const file of files) {
-        const fullPath = path.join(dir, file);
-        const stat = await fs.stat(fullPath);
-        if (stat.isDirectory()) {
-            const found = await findIndexHtmlPath(fullPath);
-            if (found) return found;
-        } else if (file === "index.html") {
-            return path.dirname(fullPath);
-        }
-    }
-    return null;
-}
-
-async function modifyBuildConfig(configPath: string, tool: string, data: z.infer<typeof inputWriteBlobScheme>) {
-    // Implementation of build config modification
-}
-
-// Controller functions
-export const signup = async (req: Request, res: Response) => {
-    // Implementation of signup
-};
-
-export const login = async (req: Request, res: Response) => {
-    // Implementation of login
-};
 
 export const preview = async (req: Request, res: Response) => {
     const startTime = performance.now();
