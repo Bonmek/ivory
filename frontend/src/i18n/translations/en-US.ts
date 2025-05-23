@@ -208,6 +208,7 @@ export default {
   'homepage.feature.bandwidth': 'Free Bandwidth',
   'homepage.feature.bandwidth.desc': 'Enjoy truly free hosting. Ivory serves your traffic at no cost — ideal for creators, devs, and indie projects.',
   'homepage.powered': 'Powered by',
+  'homepage.showcase': 'Showcase',
 
   // Dashboard
   'dashboard.title': 'Dashboard',

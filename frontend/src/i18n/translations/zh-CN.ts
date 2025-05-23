@@ -207,6 +207,7 @@ export default {
   'homepage.feature.bandwidth': '免费带宽',
   'homepage.feature.bandwidth.desc': '享受真正免费的托管。Ivory 免费为您的流量提供服务——非常适合创作者、开发者和独立项目。',
   'homepage.powered': '技术支持',
+  'homepage.showcase': '展示案例',
 
   // Dashboard
   'dashboard.title': '仪表板',
