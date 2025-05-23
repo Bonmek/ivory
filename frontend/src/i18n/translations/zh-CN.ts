@@ -79,9 +79,6 @@ export default {
   'createWebsite.browseFile': '浏览文件',
   'createWebsite.or': '或',
   'createWebsite.name': '名称',
-<<<<<<< HEAD
-  'createWebsite.createWebsite': '下一步',
-=======
   
   // About Us sections
   'aboutus.section.projectDefinition': '项目定义',
@@ -92,7 +89,6 @@ export default {
   'aboutus.section.contact': '联系我们',
 
   'createWebsite.createWebsite': '创建网站',
->>>>>>> 9164b82e8ac6cb9f9387e4d4d49a4be43f80f4bc
   'createWebsite.error.required': '项目名称不能为空',
   'createWebsite.error.zipFile': '请选择 ZIP 文件',
   'createWebsite.error.githubRepo': '请选择仓库',
