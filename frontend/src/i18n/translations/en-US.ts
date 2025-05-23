@@ -1,7 +1,7 @@
 export default {
   // About Us
   'aboutus.hero.text': 'Empowering the future with seamless static site deployment on {walrus} storage.',
-  'aboutus.project.definition': 'Ivory is a cutting-edge deployment platform designed to simplify static website hosting using Walrus storage. Our mission is to make Web3 hosting accessible, cost-effective, and efficient for developers worldwide.',
+  'aboutus.project.definition': 'Ivory is a cutting-edge deployment platform designed to simplify static website hosting using Walrus storage. Our mission is to make Web hosting accessible, cost-effective, and efficient for developers worldwide.',
   'aboutus.techstack.nextjs': 'Next.js: React framework for scalable web applications',
   'aboutus.techstack.typescript': 'TypeScript: Type-safe JavaScript for robust code',
   'aboutus.techstack.tailwind': 'Tailwind CSS: Utility-first CSS for rapid UI development',
@@ -27,7 +27,7 @@ export default {
   'aboutus.goals.2': 'Capture a significant share of the Web hosting market.',
   'aboutus.goals.3': 'Reduce complexity and costs associated with deploying static websites.',
   'aboutus.team.title': 'By Kursui Team',
-  'aboutus.team.description': 'We are a passionate team of developers dedicated to revolutionizing Web3 deployment with innovative solutions.',
+  'aboutus.team.description': 'We are a passionate team of developers dedicated to revolutionizing Web deployment with innovative solutions.',
   'aboutus.contact.title': 'Contact Us',
   'aboutus.contact.github': 'GitHub',
   'aboutus.contact.twitter': 'Twitter',
@@ -209,7 +209,7 @@ export default {
   'homepage.hero.desc': 'Ivory is a no-code, low-cost platform for deploying static websites with Walrus. Enjoy high availability, censorship resistance, data integrity, and full ownership — all with free bandwidth and zero complexity.',
   'homepage.hero.deploy': 'Deploy Now',
   'homepage.hero.docs': 'Explore Docs',
-  'homepage.section.title': 'The future of Web3 development',
+  'homepage.section.title': 'The future of Web development',
   'homepage.feature.censorship': 'Censorship-Resistant',
   'homepage.feature.censorship.desc': "Stay online — always. Ivory sites are immune to takedown and centralized control thanks to Walrus's decentralized architecture.",
   'homepage.feature.secure': 'Secure & Ownable',
@@ -343,5 +343,17 @@ export default {
   'projectCard.generate': 'Generate',
   'projectCard.generatingSiteId': 'Generating Site ID...',
   'projectCard.failedToGenerateSiteId': 'Failed to generate Site ID',
-  'projectCard.comingSoon': 'Soon'
+  'projectCard.comingSoon': 'Soon',
+  // How to Use
+  'howtouse.securityTips.title': 'Security Tips',
+  'howtouse.securityTips.checkAddresses': 'Always verify wallet addresses before transactions',
+  'howtouse.securityTips.secureWallet': 'Use a secure wallet with hardware support',
+  'howtouse.securityTips.twoFactor': 'Enable two-factor authentication',
+  'howtouse.securityTips.checkSettings': 'Regularly review security settings',
+  
+  'howtouse.sidebar.title': 'How to Use',
+  'howtouse.sidebar.section1': 'Getting Started',
+  'howtouse.sidebar.section4': 'set your own domain',
+  'howtouse.backToTop': 'Back to Top',
+
 } as const;

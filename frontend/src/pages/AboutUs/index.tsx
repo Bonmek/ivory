@@ -497,11 +497,12 @@ export default function AboutUs() {
               <Button
                 variant="outline"
                 className="border-cyan-500 text-cyan-400 hover:bg-cyan-500/20 text-sm sm:text-base"
-                asChild
+                onClick={() => {
+                  navigator.clipboard.writeText('tinkivory@gmail.com');
+                  alert('Email address copied to clipboard!');
+                }}
               >
-                <a href="mailto:tinkivory@gmail.com?subject=Ivory%20Inquiry&body=Hello,%20I%20have%20a%20question%20about%20Ivory%20project...">
-                  <Mail className="mr-2 h-4 w-4" /> tinkivory@gmail.com
-                </a>
+                <Mail className="mr-2 h-4 w-4" /> tinkivory@gmail.com
               </Button>
               <Button
                 variant="outline"

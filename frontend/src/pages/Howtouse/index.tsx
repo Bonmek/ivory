@@ -2,67 +2,72 @@ import ThreeJSBackground from '@/components/ThreeJsBackground'
 import React, { useState, useEffect } from 'react'
 import { Helmet } from 'react-helmet'
 import { useIntl, FormattedMessage } from 'react-intl'
+import { useInView } from 'react-intersection-observer'
 
 function HowToUsePage() {
   const [activeSection, setActiveSection] = useState(
     'how-to-launch-website-with-us',
   )
   const { formatMessage } = useIntl()
+  const [ref, inView] = useInView({
+    threshold: 0.2,
+    triggerOnce: false
+  })
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
-  // Scroll handling for active section
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout | null = null;
+  // // Scroll handling for active section
+  // useEffect(() => {
+  //   let timeoutId: NodeJS.Timeout | null = null;
     
-    const handleScroll = () => {
-      // Prevent immediate updates to allow navigation clicks to complete
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-      timeoutId = setTimeout(() => {
-        // Select all heading levels and divs with id for accurate sidebar highlighting
-        const sections = document.querySelectorAll(
-          'h1[id],h2[id],h3[id],h4[id],h5[id],h6[id],div[id]',
-        )
-        let currentSection = sections[0]?.id || ''
+  //   const handleScroll = () => {
+  //     // Prevent immediate updates to allow navigation clicks to complete
+  //     if (timeoutId) {
+  //       clearTimeout(timeoutId);
+  //     }
+  //     timeoutId = setTimeout(() => {
+  //       // Select all heading levels and divs with id for accurate sidebar highlighting
+  //       const sections = document.querySelectorAll(
+  //         'h1[id],h2[id],h3[id],h4[id],h5[id],h6[id],div[id]',
+  //       )
+  //       let currentSection = sections[0]?.id || ''
         
-        // Calculate dynamic thresholds based on viewport height
-        const viewportHeight = window.innerHeight;
-        const topThreshold = viewportHeight * 0.1; // 10% of viewport height
-        const bottomThreshold = viewportHeight * 0.4; // 40% of viewport height
+  //       // Calculate dynamic thresholds based on viewport height
+  //       const viewportHeight = window.innerHeight;
+  //       const topThreshold = viewportHeight * 0.1; // 10% of viewport height
+  //       const bottomThreshold = viewportHeight * 0.4; // 40% of viewport height
         
-        // Find the section closest to the top of the viewport
-        let closestSection = sections[0];
-        let closestDistance = Infinity;
+  //       // Find the section closest to the top of the viewport
+  //       let closestSection = sections[0];
+  //       let closestDistance = Infinity;
         
-        sections.forEach((section) => {
-          const sectionTop = section.getBoundingClientRect().top;
-          const distanceFromTop = Math.abs(sectionTop);
+  //       sections.forEach((section) => {
+  //         const sectionTop = section.getBoundingClientRect().top;
+  //         const distanceFromTop = Math.abs(sectionTop);
           
-          // Update if this section is closer to the top and within viewport
-          if (distanceFromTop < closestDistance && sectionTop >= -topThreshold && sectionTop <= bottomThreshold) {
-            closestDistance = distanceFromTop;
-            closestSection = section;
-          }
-        });
+  //         // Update if this section is closer to the top and within viewport
+  //         if (distanceFromTop < closestDistance && sectionTop >= -topThreshold && sectionTop <= bottomThreshold) {
+  //           closestDistance = distanceFromTop;
+  //           closestSection = section;
+  //         }
+  //       });
         
-        if (closestSection) {
-          currentSection = closestSection.id;
-        }
+  //       if (closestSection) {
+  //         currentSection = closestSection.id;
+  //       }
         
-        setActiveSection(currentSection)
-      }, 100); // Small delay to allow navigation clicks to complete
-    }
+  //       setActiveSection(currentSection)
+  //     }, 100); // Small delay to allow navigation clicks to complete
+  //   }
 
-    window.addEventListener('scroll', handleScroll)
-    handleScroll()
-    return () => {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-      window.removeEventListener('scroll', handleScroll)
-    }
-  }, [])
+  //   window.addEventListener('scroll', handleScroll)
+  //   handleScroll()
+  //   return () => {
+  //     if (timeoutId) {
+  //       clearTimeout(timeoutId);
+  //     }
+  //     window.removeEventListener('scroll', handleScroll)
+  //   }
+  // }, [])
 
   return (
     <div className="text-white font-sans min-h-screen flex flex-col relative">
@@ -73,18 +78,6 @@ function HowToUsePage() {
       {/* ThreeJS Background */}
       <div className="fixed inset-0 z-0">
         <ThreeJSBackground />
-      </div>
-
-      {/* Container for Mobile Buttons */}
-      <div className="fixed top-1/2 right-0 transform -translate-y-1/2 flex flex-col items-end gap-2 lg:hidden">
-        {/* Back to Top Button - icon only, enhanced styling, consistent size */}
-        <button
-          className="bg-secondary-500 text-white p-3 rounded-l-md shadow-md hover:bg-secondary-600 focus:ring-2 focus:ring-secondary-400 focus:outline-none transition-colors duration-200 w-12 h-12 flex items-center justify-center"
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-        >
-          <span className="text-2xl font-bold">↑</span>
-          <span className="text-sm">{formatMessage({ id: 'howtouse.backToTop' })}</span>
-        </button>
       </div>
 
       {/* Main Content */}
@@ -111,18 +104,6 @@ function HowToUsePage() {
             {formatMessage({ id: 'howtouse.section1.description3' })}
           </p>
 
-          {/* Video Embed */}
-          <div className="h-120 rounded mb-6 relative flex justify-center">
-            <iframe
-              width="70%"
-              height="100%"
-              src="https://www.youtube.com/embed/czEy7XoeVa0?si=xCJmp2tXK2CEcBTh"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              title="Embedded YouTube Video"
-            ></iframe>
-          </div>
 
           {/* Launch Info Text */}
           <div>
@@ -133,12 +114,17 @@ function HowToUsePage() {
               <FormattedMessage id="howtouse.section2.description" />
             </p>
             <div className="flex justify-center mb-6">
-              <img
-                src="/images/walrus_building.png"
-                alt="UI mockup: Ivory deploy interface"
-                className="rounded-lg shadow-lg max-w-full w-[340px] sm:w-[480px] border border-cyan-700 bg-gray-800"
-                loading="lazy"
-              />
+              <div className="rounded-lg shadow-lg max-w-full w-[540px] sm:w-[680px] border border-cyan-700 bg-gray-800">
+                <iframe
+                  className="w-full h-[300px] sm:h-[400px]"
+                  src="https://drive.google.com/file/d/15hVK5mfiVTSGPE0Q1EHfNFkcUoMhUoVJ/preview"
+                  allow="fullscreen"
+                  allowFullScreen
+                  frameBorder="0"
+                >
+                  Your browser does not support iframes.
+                </iframe>
+              </div>
             </div>
             <h2 className="text-lg sm:text-xl font-semibold mt-4 mb-2">
               <FormattedMessage id="howtouse.section3.title" />
@@ -155,7 +141,7 @@ function HowToUsePage() {
             <div className="w-full">
               <h2
                 id="how-to-set-your-own-domain"
-                className="text-3xl sm:text-4xl md:text-5xl font-bold mt-8 mb-4 font-pixel"
+                className="text-3xl sm:text-4xl md:text-5xl font-bold mt-8 mb-4 font-pixel scroll-mt-20"
               >
                 {formatMessage({ id: 'howtouse.section4.title' })}
               </h2>
@@ -187,28 +173,32 @@ function HowToUsePage() {
               </div>
             </div>
           </div>
+          <div className="flex justify-center mb-6">
+              <div className="rounded-lg shadow-lg max-w-full w-[540px] sm:w-[680px] border border-cyan-700 bg-gray-800">
+                <iframe
+                  className="w-full h-[300px] sm:h-[400px]"
+                  src="https://drive.google.com/file/d/1vdl_kX5ZRZuF_xZzNrywLH_AVyNmL4Pp/preview"
+                  allow="fullscreen"
+                  allowFullScreen
+                  frameBorder="0"
+                >
+                  Your browser does not support iframes.
+                </iframe>
+              </div>
+            </div>
 
           {/* Security Tips */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
             <div className="w-full">
               <h2
+                ref={ref}
                 id="security"
                 className="text-lg sm:text-xl font-semibold mt-6 mb-4 flex items-center gap-2 text-red-300 drop-shadow-lg"
               >
-                <svg
-                  className="h-6 w-6 text-red-400 animate-pulse"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M12 9v2m0 4h.01M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z"
-                  />
-                </svg>
-                Security Tips
+                {inView && (
+                  <span className="animate-pulse">🔥</span>
+                )}
+                <FormattedMessage id="howtouse.securityTips.title" />
               </h2>
               <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 p-5 rounded-xl mb-6 border border-red-400/30 shadow-lg relative overflow-hidden">
                 <div className="absolute -top-4 -right-4 opacity-20 pointer-events-none select-none">
@@ -299,7 +289,10 @@ function HowToUsePage() {
               <ul className="ml-4 mt-2 space-y-1 pl-6"></ul>
             </li>
           </ul>
-          <div className="mt-6 flex items-center bg-gradient-to-r from-secondary-500 to-secondary-600 px-4 py-2 rounded-lg border-2 border-gradient-to-r from-secondary-500 to-secondary-600 hover:bg-gradient-to-r from-secondary-500/10 to-secondary-600/10 transition-all duration-300 w-[70%]">
+          <button
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="mt-6 flex items-center bg-gradient-to-r from-secondary-500 to-secondary-600 px-4 py-2 rounded-lg border-2 border-gradient-to-r from-secondary-500 to-secondary-600 hover:bg-gradient-to-r from-secondary-500/10 to-secondary-600/10 transition-all duration-300 w-[70%] cursor-pointer"
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-6 w-6 text-white mr-2 animate-pulse"
@@ -314,11 +307,22 @@ function HowToUsePage() {
                 d="M5 15l7-7 7 7"
               />
             </svg>
-            <a href="#" className="text-white hover:text-secondary-300">
+            <span className="text-white hover:text-secondary-300">
               {formatMessage({ id: 'howtouse.backToTop' })}
-            </a>
-          </div>
+            </span>
+          </button>
         </div>
+      </div>
+
+      {/* Container for Mobile Buttons */}
+      <div className="fixed top-1/2 right-0 transform -translate-y-1/2 flex flex-col items-end gap-2 lg:hidden">
+        {/* Back to Top Button - icon only, enhanced styling, consistent size */}
+        <button
+          className="bg-secondary-500 text-white p-3 rounded-l-md shadow-md hover:bg-secondary-600 focus:ring-2 focus:ring-secondary-400 focus:outline-none transition-colors duration-200 w-12 h-12 flex items-center justify-center"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        >
+          <span className="text-2xl font-bold">↑</span>
+        </button>
       </div>
     </div>
   )
