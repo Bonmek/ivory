@@ -229,6 +229,21 @@ export default {
   'dashboard.refresh': '刷新数据',
   'dashboard.lastRefresh': '上次: {time}',
   'dashboard.createNew': '部署站点',
+  
+  // Beta Testing Limit Modal
+  'dashboard.projectLimit.title': '测试阶段限制',
+  'dashboard.projectLimit.description': '在我们的测试阶段，我们限制每个钱包每个周期只能创建一个项目，以确保每个人都有机会尝试平台。感谢您的理解和参与！',
+  'dashboard.projectLimit.understand': '我明白了',
+  'dashboard.projectLimit.deleteInfo': '如果您遇到问题，您可以',
+  'dashboard.projectLimit.deleteProject': '删除您现有的项目',
+  'dashboard.projectLimit.deleteHelp': '您可以通过选择项目并点击删除选项来从仪表板删除您的项目。',
+  'dashboard.projectLimit.createNew': '并创建一个新的',
+  'dashboard.projectLimit.oneProject': '每个钱包一个项目',
+  'dashboard.projectLimit.walletLimit': '在测试阶段，每个钱包地址仅限于同时创建一个项目。',
+  'dashboard.projectLimit.duringBeta': '在测试期间',
+  'dashboard.projectLimit.limitRefreshes': '限制刷新每个',
+  'dashboard.projectLimit.epoch': '周期',
+  'dashboard.projectLimit.fairAccess': '以确保公平访问',
 
   // ProjectCard
   'projectCard.linkSuins': '链接 SUINS',
@@ -281,5 +296,7 @@ export default {
   'projectCard.generateSiteIdDesc': '您想为此项目生成新的站点 ID 吗？',
   'projectCard.generating': '正在生成',
   'projectCard.generate': '生成',
+  'projectCard.generatingSiteId': '正在生成站点 ID...',
+  'projectCard.failedToGenerateSiteId': '生成站点 ID 失败',
   'projectCard.comingSoon': '即将'
 } as const;
