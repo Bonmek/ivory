@@ -20,7 +20,6 @@ export class SiteService {
     }
 
     async handlePreview(req: Request) {
-        console.log('Start processing:', new Date().toISOString());
         let extractPath: string | null = null;
         let outputZipPath: string | null = null;
         let indexDir: string | null = null;
@@ -34,9 +33,7 @@ export class SiteService {
             const zipFile = req.file;
             extractPath = path.join(__dirname, "../temp", Date.now().toString());
 
-            const extractStart = performance.now();
             await this.fileService.extractZip(zipFile.path, extractPath);
-            console.log(`File extraction took: ${(performance.now() - extractStart).toFixed(2)}ms`);
 
             const attributes = req.body.attributes
                 ? typeof req.body.attributes === "string"
