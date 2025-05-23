@@ -648,7 +648,7 @@ export default function CreateWebsitePage() {
             clearInterval(interval);
           }
         });
-      }, 5000);
+      }, 30000);
     }
 
     return () => {

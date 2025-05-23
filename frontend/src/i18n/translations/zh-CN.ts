@@ -182,6 +182,7 @@ export default {
   'createWebsite.preview.tipJsErrors': '在控制台标签页检查JavaScript错误',
   'createWebsite.preview.buttonPreviewNotLoading': '预览未加载?',
   'createWebsite.preview.ariaLabel': '预览未加载？点击获取帮助',
+  'createWebsite.preview.pathRecommendation': '为了最佳兼容性，我们建议您使用相对路径（以 \'./\' 开始）为网站中的所有本地资产和链接。',
 
   // Homepage
   'homepage.hero.title1': '轻松几步即可上线您的网站',
@@ -230,7 +231,7 @@ export default {
   'dashboard.refresh': '刷新数据',
   'dashboard.lastRefresh': '上次: {time}',
   'dashboard.createNew': '部署站点',
-  
+
   // Beta Testing Limit Modal
   'dashboard.projectLimit.title': '测试阶段限制',
   'dashboard.projectLimit.description': '在我们的测试阶段，我们限制每个钱包每个周期只能创建一个项目，以确保每个人都有机会尝试平台。感谢您的理解和参与！',
