@@ -1,55 +1,98 @@
 export default {
+  // About Us
+  'aboutus.hero.text': '通过{walrus}存储，实现无缝的静态网站部署，为未来赋能。',
+  'aboutus.project.definition': 'Ivory是一个先进的部署平台，旨在简化使用Walrus存储的静态网站托管。我们的使命是让Web托管变得触手可及、成本效益高且高效，为全球开发者服务。',
+  'aboutus.techstack.nextjs': 'Next.js: 可扩展Web应用的React框架',
+  'aboutus.techstack.typescript': 'TypeScript: 用于编写健壮代码的类型安全JavaScript',
+  'aboutus.techstack.tailwind': 'Tailwind CSS: 用于快速UI开发的实用工具优先CSS',
+  'aboutus.techstack.shadcn': 'shadcn/ui: 可访问且可定制的UI组件',
+  'aboutus.techstack.sui': 'Sui区块链：高性能的Layer-1区块链',
+  'aboutus.techstack.walrus': 'Walrus: 静态资产的去中心化存储解决方案',
+  'aboutus.techstack.googlecloud': 'Google Cloud: 用于后台任务处理',
+  'aboutus.milestones.title': 'Milestones',
+  'aboutus.milestones.1': '初始网站部署平台的发布',
+  'aboutus.milestones.2': '参加2025年Sui Overflow竞赛展示我们的解决方案',
+  'aboutus.milestones.3': '财务规划阶段（正在进行中，尚未有具体计划）',
+  'aboutus.milestones.4': '集成AI生成内容以增强用户体验',
+  'aboutus.milestones.5': '将静态站点的所有权转移给我们的客户',
+  'aboutus.milestones.6': '为开发者提供扩展能力和API',
+  'aboutus.milestones.7': '持续改进和优化平台功能',
+  'aboutus.milestones.note': '注意：AI生成、扩展和财务规划正在进行中。',
+  'aboutus.goals.title': 'Our Goals',
+  'aboutus.goals.1': '增加在Sui和Walrus生态系统中的用户采用率',
+  'aboutus.goals.2': '在Web托管市场占据重要份额',
+  'aboutus.goals.3': '降低部署静态网站的复杂性和成本',
+  'aboutus.team.title': 'By Kursui Team',
+  'aboutus.team.description': '我们是一支致力于通过创新解决方案革新Web部署的开发团队。',
+  'aboutus.contact.title': 'Contact Us',
+  'aboutus.contact.github': 'GitHub',
+  'aboutus.contact.twitter': 'Twitter',
+  'aboutus.footer.copyright': '© 2025 Ivory. 保留所有权利。',
+  
   // Navigation
   'nav.home': '首页',
   'nav.dashboard': '仪表板',
-  'nav.howToUse': '使用说明',
-  'nav.about': '关于',
+  'nav.howToUse': '如何使用',
+  'nav.about': '关于我们',
   'nav.connectWallet': '连接钱包',
-  'nav.logout': '退出登录',
+  'nav.logout': '登出',
   'nav.copy': '复制',
   'nav.copied': '已复制！',
-
+  
   // Common actions
   'action.confirm': '确认',
   'action.cancel': '取消',
   'action.save': '保存',
   'action.edit': '编辑',
   'action.delete': '删除',
-
+  
   // Wallet
   'wallet.connect': '连接钱包',
   'wallet.disconnect': '断开连接',
   'wallet.address': '钱包地址',
   'wallet.copyAddress': '复制地址',
-
+  
   // Checklist steps
   'checklist.confirm': '等待确认',
-  'checklist.deploy': '创建中',
+  'checklist.deploy': '初始化',
   'checklist.build': '构建中',
-  'checklist.done': '部署完成',
+  'checklist.done': '已部署',
   'checklist.failed': '失败',
   'createWebsite.redeploy': '重新部署',
-
+  
   // Messages
-  'message.welcome': '欢迎使用 Ivory',
+  'message.welcome': '欢迎来到Ivory',
   'message.loading': '加载中...',
   'message.error': '发生错误',
   'message.success': '操作成功',
-
+  
   // Create Website
   'createWebsite.title': '创建新项目',
   'createWebsite.projectFiles': '项目文件',
-  'createWebsite.projectFilesTooltip': '上传您的项目文件或连接到 GitHub 仓库。',
+  'createWebsite.projectFilesTooltip': '上传您的项目文件或连接到GitHub仓库。',
   'createWebsite.upload': '上传',
   'createWebsite.github': 'Github',
   'createWebsite.dragDrop': '将文件拖放到此处',
-  'createWebsite.zipOnly': '仅支持ZIP文件 • 最大300MB',
-  'createWebsite.error.invalidFileType': '仅支持.zip格式的文件',
-  'createWebsite.error.fileTooLarge': '文件过大，最大支持{maxSize}',
+  'createWebsite.zipOnly': '仅支持ZIP文件 • 最大大小：300MB',
+  'createWebsite.error.invalidFileType': '仅允许.zip文件',
+  'createWebsite.error.fileTooLarge': '文件过大。最大大小为{maxSize}',
   'createWebsite.browseFile': '浏览文件',
   'createWebsite.or': '或',
   'createWebsite.name': '名称',
+<<<<<<< HEAD
   'createWebsite.createWebsite': '下一步',
+=======
+  
+  // About Us sections
+  'aboutus.section.projectDefinition': '项目定义',
+  'aboutus.section.technologyStack': '技术栈',
+  'aboutus.section.milestones': '里程碑',
+  'aboutus.section.goals': '我们的目标',
+  'aboutus.section.team': '团队',
+  'aboutus.section.contact': '联系我们',
+
+  'createWebsite.createWebsite': '创建网站',
+>>>>>>> 9164b82e8ac6cb9f9387e4d4d49a4be43f80f4bc
   'createWebsite.error.required': '项目名称不能为空',
   'createWebsite.error.zipFile': '请选择 ZIP 文件',
   'createWebsite.error.githubRepo': '请选择仓库',
@@ -153,6 +196,41 @@ export default {
   'createWebsite.deployed': '部署成功！',
   'createWebsite.showcaseUrl': '您的展示 URL 是 {showcaseUrl}',
 
+  // How to Use
+  'howtouse.title': '如何使用 - 部署和绑定 Sui NS',
+  'howtouse.section1.title': '如何通过我们部署网站',
+  'howtouse.section1.getStarted': '开始使用',
+  'howtouse.section1.description1': '通过我们的平台部署网站，您可以将静态网站部署到世界各地。',
+  'howtouse.section1.description2': '由于严格的安全政策，我们的服务不支持存储 .env 文件或密钥。因此，我们的平台非常适合面向公众的网站，如着陆页、文档或使用 Sui、Ethereum 或 Solana 等区块链后端的 DApp。',
+  'howtouse.section1.description3': '您只需支付部署、更新和时间延期的费用——无论您的网站使用多少带宽，都没有额外费用。这意味着我们为您的项目提供免费带宽。',
+
+  'howtouse.section2.title': '项目设置',
+  'howtouse.section2.description': '进入界面后，界面分为两部分。在左侧，您可以拖放静态文件或连接 GitHub 账户选择仓库。在右侧，您将设置站点名称和配置。如果您还没有构建站点，我们也可以帮您完成。设置完成后，只需点击部署即可启动。',
+
+  'howtouse.section3.title': '部署状态',
+  'howtouse.section3.status.yellow': '黄色：构建中',
+  'howtouse.section3.status.green': '绿色：构建成功 - 网站已上线',
+  'howtouse.section3.status.red': '红色：构建失败',
+  'howtouse.section3.description': '当状态变为绿色时，您的网站已准备好连接到 Suins，使您的用户能够立即访问。部署完成后，用户将收到一个 SHOWCASE_URL 来访问我们通过 DNS 准备的网站。从这一点开始，用户可以更新或删除站点。如果需要独立站点或希望配置自己的 DNS，请参阅下一节的说明。',
+
+  'howtouse.section4.title': '如何设置自定义域名',
+  'howtouse.section4.step1': '在我们的平台部署您的网站（请参见上方步骤）。',
+  'howtouse.section4.step2': '访问 suins.io 并购买您想要的 SuiNS 域名。',
+  'howtouse.section4.step3': '返回仪表板并为已部署的站点点击生成站点 ID。',
+  'howtouse.section4.step4': '复制生成的站点 ID。您可以：',
+  'howtouse.section4.step4.option1': '在 SuiNS 网站上自行绑定域名',
+  'howtouse.section4.step4.option2': '或者在我们的仪表板上点击链接到 SuiNS 以获得引导过程',
+  'howtouse.section4.step5': '如果您使用链接到 SuiNS，按照提示操作，支付所需费用，并完成交易。',
+  'howtouse.section4.step6': '完成后，您将收到一个自定义域名的新 URL。您的网站现在可以通过 SuiNS 域名访问！',
+
+  // 安全提示
+  'howtouse.securityTips.title': '安全提示',
+  'howtouse.securityTips.warning': '⚠️',
+  'howtouse.securityTips.checkAddresses': '在绑定之前仔细检查所有地址，避免出错',
+  'howtouse.securityTips.secureWallet': '使用安全的钱包并妥善保管恢复短语',
+  'howtouse.securityTips.twoFactor': '如果支持，考虑启用双因素认证',
+  'howtouse.securityTips.checkSettings': '定期检查域名设置，确保没有被篡改',
+
   'createWebsite.selectBranch': '选择分支',
   'createWebsite.expirationNotice': '您的网站将在 {expiryDate} 过期',
 
@@ -184,17 +262,36 @@ export default {
   'createWebsite.preview.ariaLabel': '预览未加载？点击获取帮助',
   'createWebsite.preview.pathRecommendation': '为了最佳兼容性，我们建议您使用相对路径（以 \'./\' 开始）为网站中的所有本地资产和链接。',
 
+  // 导航和页面导航
+  'howtouse.onThisPage': '在本页',
+  'howtouse.backToTop': '返回顶部',
+
+  // Launch Info Text
+  'howtouse.section2.deploy': '部署',
+
+  // Deployment Status
+  'howtouse.section3.dashboard': '仪表板',
+  'howtouse.section3.showcaseUrl': 'SHOWCASE_URL',
+  'howtouse.section3.update': '更新',
+  'howtouse.section3.delete': '删除',
+
   // Homepage
   'homepage.hero.title1': '轻松几步即可上线您的网站',
   'homepage.hero.title2': '',
   'homepage.hero.title3': '',
   'homepage.hero.title4': '',
+
+  // Sidebar
+  'howtouse.sidebar.title': '在本页',
+  'howtouse.sidebar.section1': '如何通过我们部署网站',
+  'howtouse.sidebar.section4': '如何设置自定义域名',
+ 
   'homepage.hero.title5': '',
   'homepage.hero.title6': '随处可用',
   'homepage.hero.desc': 'Ivory 是一个无需编码、低成本的平台，使用 Walrus 部署静态网站。享受高可用性、抗审查、数据完整性和完全所有权——所有这些都带有免费带宽和零复杂性。',
   'homepage.hero.deploy': '立即部署',
   'homepage.hero.docs': '查看文档',
-  'homepage.section.title': 'Web3 开发的未来',
+  'homepage.section.title': 'Web 开发的未来',
   'homepage.feature.censorship': '抗审查',
   'homepage.feature.censorship.desc': '始终在线。Ivory 网站由于 Walrus 的去中心化架构，免受下架和集中控制。',
   'homepage.feature.secure': '安全与所有权',
