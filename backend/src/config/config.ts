@@ -1,3 +1,4 @@
+// src/config/config.ts
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -5,6 +6,11 @@ dotenv.config();
 interface Config {
     port: number;
     suiHex: string;
+    blockchain: {
+        rpcUrl: string;
+        network: string;
+        storageTimeout: number;
+    };
     github: {
         clientId: string;
         clientSecret: string;
@@ -25,8 +31,13 @@ interface Config {
 }
 
 const config: Config = {
-    port: Number(process.env.BACKEND_URL) || 5000,
+    port: Number(process.env.BACKEND_PORT) || 5000,
     suiHex: process.env.SUI_HEX || '',
+    blockchain: {
+        rpcUrl: process.env.SUI_RPC_URL || 'https://sui-rpc.contributiondao.com/',
+        network: process.env.SUI_NETWORK || 'mainnet',
+        storageTimeout: Number(process.env.STORAGE_TIMEOUT) || 60000,
+    },
     github: {
         clientId: process.env.GITHUB_CLIENT_ID || '',
         clientSecret: process.env.GITHUB_CLIENT_SECRET || '',
@@ -34,7 +45,7 @@ const config: Config = {
     },
     urls: {
         frontend: process.env.FRONTEND_URL || '',
-        backend: process.env.BACKEND_URL || '',
+        backend: process.env.BACKEND_PORT || '',
     },
     google: {
         credentials: process.env.GOOGLE_APPLICATION_CREDENTIALS || '',
