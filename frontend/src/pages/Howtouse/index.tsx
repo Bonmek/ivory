@@ -1,40 +1,73 @@
 import ThreeJSBackground from '@/components/ThreeJsBackground'
 import React, { useState, useEffect } from 'react'
 import { Helmet } from 'react-helmet'
+import { useIntl, FormattedMessage } from 'react-intl'
 
 function HowToUsePage() {
   const [activeSection, setActiveSection] = useState(
     'how-to-launch-website-with-us',
   )
+  const { formatMessage } = useIntl()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   // Scroll handling for active section
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout | null = null;
+    
     const handleScroll = () => {
-      // Select all heading levels with id for accurate sidebar highlighting
-      const sections = document.querySelectorAll(
-        'h1[id],h2[id],h3[id],h4[id],h5[id],h6[id]',
-      )
-      let currentSection = sections[0]?.id || ''
-      sections.forEach((section) => {
-        const sectionTop = section.getBoundingClientRect().top
-        if (sectionTop <= 80) {
-          // Lowered threshold for more accurate detection
-          currentSection = section.id
+      // Prevent immediate updates to allow navigation clicks to complete
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      timeoutId = setTimeout(() => {
+        // Select all heading levels and divs with id for accurate sidebar highlighting
+        const sections = document.querySelectorAll(
+          'h1[id],h2[id],h3[id],h4[id],h5[id],h6[id],div[id]',
+        )
+        let currentSection = sections[0]?.id || ''
+        
+        // Calculate dynamic thresholds based on viewport height
+        const viewportHeight = window.innerHeight;
+        const topThreshold = viewportHeight * 0.1; // 10% of viewport height
+        const bottomThreshold = viewportHeight * 0.4; // 40% of viewport height
+        
+        // Find the section closest to the top of the viewport
+        let closestSection = sections[0];
+        let closestDistance = Infinity;
+        
+        sections.forEach((section) => {
+          const sectionTop = section.getBoundingClientRect().top;
+          const distanceFromTop = Math.abs(sectionTop);
+          
+          // Update if this section is closer to the top and within viewport
+          if (distanceFromTop < closestDistance && sectionTop >= -topThreshold && sectionTop <= bottomThreshold) {
+            closestDistance = distanceFromTop;
+            closestSection = section;
+          }
+        });
+        
+        if (closestSection) {
+          currentSection = closestSection.id;
         }
-      })
-      setActiveSection(currentSection)
+        
+        setActiveSection(currentSection)
+      }, 100); // Small delay to allow navigation clicks to complete
     }
 
     window.addEventListener('scroll', handleScroll)
     handleScroll()
-    return () => window.removeEventListener('scroll', handleScroll)
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      window.removeEventListener('scroll', handleScroll)
+    }
   }, [])
 
   return (
     <div className="text-white font-sans min-h-screen flex flex-col relative">
       <Helmet>
-        <title>How to Use - Launch and Bind Sui NS</title>
+        <title>{formatMessage({ id: 'howtouse.title' })}</title>
       </Helmet>
 
       {/* ThreeJS Background */}
@@ -50,6 +83,7 @@ function HowToUsePage() {
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         >
           <span className="text-2xl font-bold">↑</span>
+          <span className="text-sm">{formatMessage({ id: 'howtouse.backToTop' })}</span>
         </button>
       </div>
 
@@ -57,33 +91,24 @@ function HowToUsePage() {
       <div className="relative z-10 flex flex-col lg:flex-row p-4 sm:p-6 md:p-8 max-w-7xl mx-auto w-full">
         {/* Left Section */}
         <div className="w-full lg:w-3/4 lg:pr-8">
-          <h1
+          <h2
             id="how-to-launch-website-with-us"
-            className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 scroll-mt-20 font-pixel"
+            className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 scroll-mt-20 font-pixel"
           >
-            How to launch website with us
-          </h1>
+            <FormattedMessage id="howtouse.section1.title" />
+          </h2>
 
-          <h2 className="text-lg sm:text-xl font-semibold mb-2">Get Started</h2>
+          <h2 className="text-lg sm:text-xl font-semibold mb-2">
+            <FormattedMessage id="howtouse.section1.getStarted" />
+          </h2>
           <p className="text-gray-300 mb-4 text-sm sm:text-base">
-            When you launch your website through our platform, you'll be able to
-            deploy your static website and make it accessible from anywhere in
-            the world.
+            <FormattedMessage id="howtouse.section1.description1" />
           </p>
           <p className="text-gray-300 mb-4 text-sm sm:text-base">
-            Our service is{' '}
-            <strong>not designed to store .env files or secret keys</strong>,
-            due to strict security policies. Therefore, our platform is ideal
-            for <strong>public-facing sites</strong> like landing pages,
-            documentation, or DApps that use a blockchain backend such as Sui,
-            Ethereum, or Solana.
+            <FormattedMessage id="howtouse.section1.description2" />
           </p>
           <p className="text-gray-300 mb-4 text-sm sm:text-base">
-            You’ll only be charged for{' '}
-            <strong>deployment, updates, and time extensions</strong>—there are
-            no additional fees regardless of how much <strong>bandwidth</strong>{' '}
-            your site uses. This means we offer <strong>free bandwidth</strong>{' '}
-            for your project. If you're ready, simply click the{' '}
+            {formatMessage({ id: 'howtouse.section1.description3' })}
           </p>
 
           {/* Video Embed */}
@@ -102,16 +127,10 @@ function HowToUsePage() {
           {/* Launch Info Text */}
           <div>
             <h2 className="text-lg sm:text-xl font-semibold mt-4 mb-2">
-              Project Setup
+              <FormattedMessage id="howtouse.section2.title" />
             </h2>
             <p className="text-gray-300 mb-4 text-sm sm:text-base">
-              Once inside, the interface is split into two parts. On the{' '}
-              <strong>left side</strong>, you can drop your static files or
-              connect your GitHub account to choose a repository. On the{' '}
-              <strong>right side</strong>, you’ll set your site name and
-              configurations. If you haven’t built the site yet, we can handle
-              that for you too. Once everything is set, just hit{' '}
-              <strong>Deploy</strong> to launch.
+              <FormattedMessage id="howtouse.section2.description" />
             </p>
             <div className="flex justify-center mb-6">
               <img
@@ -122,30 +141,10 @@ function HowToUsePage() {
               />
             </div>
             <h2 className="text-lg sm:text-xl font-semibold mt-4 mb-2">
-              Deployment Status
+              <FormattedMessage id="howtouse.section3.title" />
             </h2>
             <p className="text-gray-300 text-sm sm:text-base">
-              After clicking deploy, you’ll be redirected to your{' '}
-              <strong>dashboard</strong>. There, you can monitor your deployment
-              status:
-              <ul className="list-disc list-inside mt-2">
-                <li>
-                  <strong>Yellow</strong>: Build in progress
-                </li>
-                <li>
-                  <strong>Green</strong>: Build successful – your site is live
-                </li>
-                <li>
-                  <strong>Red</strong>: Build failed
-                </li>
-              </ul>
-              Once the status is green, your site is ready to connect to{' '}
-              <strong>Suins</strong>, making it instantly accessible to your
-              users. After the deployment is complete, the user receives a
-              SHOWCASE_URL to access the website we have prepared via our DNS.
-              From this point, the user can UPDATE or DELETE the site as
-              desired. For those who want a separate site or wish to configure
-              their own DNS, please refer to the next section for instructions.
+              <FormattedMessage id="howtouse.section3.description" />
             </p>
           </div>
 
@@ -156,49 +155,33 @@ function HowToUsePage() {
             <div className="w-full">
               <h2
                 id="how-to-set-your-own-domain"
-                className="text-lg sm:text-xl font-semibold mt-6 mb-2"
+                className="text-3xl sm:text-4xl md:text-5xl font-bold mt-8 mb-4 font-pixel"
               >
-                How to set your own domain
+                {formatMessage({ id: 'howtouse.section4.title' })}
               </h2>
               <div className="bg-gray-900 p-4 rounded-lg mb-6">
                 <ol className="list-decimal list-inside text-gray-300 space-y-3 text-sm sm:text-base">
                   <li>
-                    <strong>Deploy your site</strong> on our platform (see steps
-                    above).
+                    {formatMessage({ id: 'howtouse.section4.step1' })}
                   </li>
                   <li>
-                    Go to{' '}
-                    <a
-                      href="https://suins.io"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-cyan-400 underline"
-                    >
-                      suins.io
-                    </a>{' '}
-                    and purchase the SuiNS domain you want.
+                    {formatMessage({ id: 'howtouse.section4.step2' })}
                   </li>
                   <li>
-                    Return to your dashboard and click{' '}
-                    <strong>Generate Site ID</strong> for your deployed site.
+                    {formatMessage({ id: 'howtouse.section4.step3' })}
                   </li>
                   <li>
-                    Copy the generated <strong>Site ID</strong>. You can now:
+                    {formatMessage({ id: 'howtouse.section4.step4' })}
                     <ul className="list-disc ml-6 mt-2 space-y-1">
-                      <li>Bind the domain yourself on the SuiNS website</li>
-                      <li>
-                        Or click <strong>Link to SuiNS</strong> on our dashboard
-                        for a guided process
-                      </li>
+                      <li>{formatMessage({ id: 'howtouse.section4.step4.option1' })}</li>
+                      <li>{formatMessage({ id: 'howtouse.section4.step4.option2' })}</li>
                     </ul>
                   </li>
                   <li>
-                    If you use <strong>Link to SuiNS</strong>, follow the
-                    prompts, pay the required fee, and complete the transaction.
+                    {formatMessage({ id: 'howtouse.section4.step5' })}
                   </li>
                   <li>
-                    Once done, you will receive a new URL for your custom
-                    domain. Your site is now accessible via your SuiNS domain!
+                    {formatMessage({ id: 'howtouse.section4.step6' })}
                   </li>
                 </ol>
               </div>
@@ -243,20 +226,19 @@ function HowToUsePage() {
                 <ul className="text-gray-200 space-y-4 text-base sm:text-lg font-medium">
                   <li className="flex items-center gap-2 bg-gray-800/70 rounded-lg px-3 py-2 border-l-4 border-red-400 shadow-sm">
                     <span className="text-red-400 text-xl">⚠️</span>
-                    Double-check all addresses before binding to avoid mistakes
+                    {formatMessage({ id: 'howtouse.securityTips.checkAddresses' })}
                   </li>
                   <li className="flex items-center gap-2 bg-gray-800/70 rounded-lg px-3 py-2 border-l-4 border-red-400 shadow-sm">
                     <span className="text-red-400 text-xl">⚠️</span>
-                    Use a secure wallet and keep your recovery phrase safe
+                    {formatMessage({ id: 'howtouse.securityTips.secureWallet' })}
                   </li>
                   <li className="flex items-center gap-2 bg-gray-800/70 rounded-lg px-3 py-2 border-l-4 border-red-400 shadow-sm">
                     <span className="text-red-400 text-xl">⚠️</span>
-                    Consider enabling two-factor authentication if supported
+                    {formatMessage({ id: 'howtouse.securityTips.twoFactor' })}
                   </li>
                   <li className="flex items-center gap-2 bg-gray-800/70 rounded-lg px-3 py-2 border-l-4 border-red-400 shadow-sm">
                     <span className="text-red-400 text-xl">⚠️</span>
-                    Regularly check your domain settings to ensure they haven't
-                    been tampered with
+                    {formatMessage({ id: 'howtouse.securityTips.checkSettings' })}
                   </li>
                 </ul>
               </div>
@@ -269,31 +251,50 @@ function HowToUsePage() {
           className={`hidden lg:block w-full lg:w-1/4 p-4 border-l border-gray-700 fixed right-0 top-20 h-[calc(100vh-80px)] overflow-auto transition-transform duration-300`}
         >
           <h3 className="text-lg font-semibold mb-4 font-pixel">
-            On this page
+            <FormattedMessage id="howtouse.sidebar.title" />
           </h3>
           <ul className="space-y-2">
             <li>
               <a
                 href="#how-to-launch-website-with-us"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setActiveSection('how-to-launch-website-with-us');
+                  const target = document.getElementById('how-to-launch-website-with-us');
+                  if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                }}
                 className={
                   activeSection === 'how-to-launch-website-with-us'
                     ? 'mt-6 flex items-center border-2 border-cyan-500 bg-black px-4 py-2 rounded-lg duration-300 w-[70%]'
                     : 'pl-4 text-gray-400'
                 }
               >
-                How to launch website with us
+                <FormattedMessage id="howtouse.sidebar.section1" />
               </a>
             </li>
             <li>
               <a
                 href="#how-to-set-your-own-domain"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setActiveSection('how-to-set-your-own-domain');
+                  // Give a small delay to ensure the active section is updated before scrolling
+                  setTimeout(() => {
+                    const target = document.getElementById('how-to-set-your-own-domain');
+                    if (target) {
+                      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                  }, 50);
+                }}
                 className={
                   activeSection === 'how-to-set-your-own-domain'
                     ? 'mt-6 flex items-center border-2 border-cyan-500 bg-black px-4 py-2 rounded-lg duration-300 w-[70%]'
                     : 'pl-4 text-gray-400'
                 }
               >
-                How to set your own domain
+                {formatMessage({ id: 'howtouse.sidebar.section4' })}
               </a>
               <ul className="ml-4 mt-2 space-y-1 pl-6"></ul>
             </li>
@@ -314,7 +315,7 @@ function HowToUsePage() {
               />
             </svg>
             <a href="#" className="text-white hover:text-secondary-300">
-              Back to top
+              {formatMessage({ id: 'howtouse.backToTop' })}
             </a>
           </div>
         </div>

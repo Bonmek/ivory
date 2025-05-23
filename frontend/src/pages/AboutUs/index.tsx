@@ -4,6 +4,7 @@ import { Separator } from "@/components/ui/separator";
 import { Mail } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Helmet } from "react-helmet";
+import { FormattedMessage, useIntl } from 'react-intl';
 
 export default function AboutUs() {
   const [glitch, setGlitch] = useState(false);
@@ -48,8 +49,9 @@ export default function AboutUs() {
           }
           
           @keyframes ivory-scanline {
-            0% { transform: translateY(-100%) !important; }
-            100% { transform: translateY(100%) !important; }
+            0% { opacity: 0.1; }
+            50% { opacity: 0.2; }
+            100% { opacity: 0.1; }
           }
           
           @keyframes ivory-glitchEffect {
@@ -179,14 +181,25 @@ export default function AboutUs() {
             font-family: 'Press Start 2P', cursive !important;
             letter-spacing: 1px !important;
           }
+          
+          /* Enhanced pixel font effect */
+          .ivory-strong-pixel {
+            font-family: 'Press Start 2P', cursive !important;
+            letter-spacing: 2px !important;
+            text-shadow: 2px 2px 0 rgba(0,0,0,0.2),
+                         -2px -2px 0 rgba(0,0,0,0.2),
+                         2px -2px 0 rgba(0,0,0,0.2),
+                         -2px 2px 0 rgba(0,0,0,0.2) !important;
+            transform: scale(1.2) !important;
+          }
         `}</style>
       </Helmet>
-      <div className="min-h-screen text-white">
+      <main className="min-h-screen text-white">
         {/* Hero Section */}
         <section className="container mx-auto px-4 py-12 sm:py-16 md:py-24">
           <div className="relative text-center space-y-8">
             <div className="relative z-10">
-              <h1 className="font-bold tracking-tight bg-gradient-to-r from-cyan-300 to-green-400 text-transparent bg-clip-text ivory-pixel-font w-full px-4 sm:px-0 whitespace-nowrap overflow-x-auto text-[1.1rem] xs:text-[1.35rem] sm:text-5xl md:text-6xl lg:text-7xl text-center">
+              <h1 className="font-bold tracking-tight bg-gradient-to-r from-cyan-200 to-cyan-300 text-transparent bg-clip-text ivory-pixel-font w-full px-4 sm:px-0 whitespace-nowrap overflow-x-auto text-[1.1rem] xs:text-[1.35rem] sm:text-5xl md:text-6xl lg:text-7xl text-center">
                 About Ivory
               </h1>
               {/* SVG blockchain animation under the title, not behind */}
@@ -194,8 +207,8 @@ export default function AboutUs() {
                 <svg width="900" height="120" viewBox="0 0 1200 120" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <defs>
                     <linearGradient id="blockchain-cyan-green" x1="0" y1="0" x2="1200" y2="0" gradientUnits="userSpaceOnUse">
-                      <stop stopColor="#22d3ee" />
-                      <stop offset="1" stopColor="#22c55e" />
+                      <stop stopColor="#60e4f9" />
+                      <stop offset="1" stopColor="#48d0f2" />
                     </linearGradient>
                     <radialGradient id="blockchain-dot" cx="0.5" cy="0.5" r="0.5">
                       <stop offset="0%" stopColor="#67e8f9" stopOpacity="0.7" />
@@ -256,16 +269,28 @@ export default function AboutUs() {
               </div>
             </div>
 
-            <p className="text-lg sm:text-xl md:text-2xl text-cyan-200 max-w-3xl mx-auto leading-relaxed relative z-10 font-medium drop-shadow-[0_2px_12px_rgba(34,213,238,0.25)]">
-              Empowering the future of <span className="text-cyan-400 font-bold">Web3</span> with seamless static site deployment on <span className="text-green-400 font-bold">Walrus</span> storage.
-            </p>
-            <div className="flex justify-center gap-4 mt-6 z-10 relative">
-              <a href="#project" className="px-6 py-2 rounded-full bg-gradient-to-r from-cyan-500 to-green-400 text-black font-bold shadow-lg hover:scale-105 transition-transform duration-200 border-2 border-cyan-400/60 hover:border-green-400/80">
-                Learn More
-              </a>
-              <a href="/create-website" className="px-6 py-2 rounded-full bg-black/80 text-cyan-300 font-bold border-2 border-cyan-400/60 hover:bg-cyan-500/10 hover:text-green-400 hover:border-green-400/80 transition-colors duration-200">
-                Get Started
-              </a>
+            <div>
+              <p className="text-lg sm:text-xl md:text-2xl text-cyan-200 max-w-3xl mx-auto leading-relaxed relative z-10 font-medium drop-shadow-[0_2px_12px_rgba(34,213,238,0.25)]">
+                <FormattedMessage id="aboutus.hero.text" values={{ walrus: <span className="text-cyan-300 font-bold animate-pulse hover:animate-bounce font-pixel">Walrus</span> }} />
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Walrus Logo */}
+        <section className="container mx-auto px-4 sm:px-6 py-12">
+          <div className="flex justify-center">
+            <div className="relative">
+              <img 
+                src="https://academy-public.coinmarketcap.com/srd-optimized-uploads/52564359d7544359a8f4063d924e1557.jpg" 
+                alt="Walrus Storage" 
+                className="h-32 w-auto grayscale hover:grayscale-0 transition-all duration-300 ease-in-out"
+                style={{ 
+                  filter: 'drop-shadow(0 4px 10px rgba(4, 217, 255, 0.3))',
+                  WebkitFilter: 'drop-shadow(0 4px 10px rgba(4, 217, 255, 0.3))'
+                }}
+              />
+              <div className="absolute -top-2 -left-2 right-0 bottom-0 bg-gradient-to-r from-cyan-500/20 to-transparent rounded-lg blur-sm"></div>
             </div>
           </div>
         </section>
@@ -278,9 +303,7 @@ export default function AboutUs() {
             </CardHeader>
             <CardContent>
               <p className="text-gray-300 text-sm sm:text-base leading-relaxed">
-                Ivory is a cutting-edge deployment platform designed to simplify static website hosting using Walrus
-                storage. Our mission is to make Web3 hosting accessible, cost-effective, and efficient for developers
-                worldwide.
+                <FormattedMessage id="aboutus.project.definition" />
               </p>
             </CardContent>
           </Card>
@@ -294,13 +317,13 @@ export default function AboutUs() {
             </CardHeader>
             <CardContent>
               <ul className="list-disc list-inside text-gray-300 text-sm sm:text-base space-y-3">
-                <li>Next.js: React framework for scalable web applications</li>
-                <li>TypeScript: Type-safe JavaScript for robust code</li>
-                <li>Tailwind CSS: Utility-first CSS for rapid UI development</li>
-                <li>shadcn/ui: Accessible and customizable UI components</li>
-                <li>Sui Blockchain: High-performance layer-1 blockchain</li>
-                <li>Walrus: Decentralized storage solution for static assets</li>
-                <li>Google Cloud: Used for background job processing</li>
+                <li><FormattedMessage id="aboutus.techstack.nextjs" /></li>
+                <li><FormattedMessage id="aboutus.techstack.typescript" /></li>
+                <li><FormattedMessage id="aboutus.techstack.tailwind" /></li>
+                <li><FormattedMessage id="aboutus.techstack.shadcn" /></li>
+                <li><FormattedMessage id="aboutus.techstack.sui" /></li>
+                <li><FormattedMessage id="aboutus.techstack.walrus" /></li>
+                <li><FormattedMessage id="aboutus.techstack.googlecloud" /></li>
               </ul>
             </CardContent>
           </Card>
@@ -310,19 +333,125 @@ export default function AboutUs() {
         <section className="container mx-auto px-4 sm:px-6 py-12">
           <Card className="bg-gray-800/70 border-cyan-500/30 backdrop-blur-sm ivory-web3-card">
             <CardHeader>
-              <CardTitle className="text-xl sm:text-2xl text-cyan-400">Milestones</CardTitle>
+              <CardTitle className="text-xl sm:text-2xl text-cyan-400">
+                <FormattedMessage id="aboutus.milestones.title" />
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <ol className="list-decimal list-inside text-gray-300 text-sm sm:text-base space-y-4">
-                <li>Launch of the initial website deployment platform.</li>
-                <li>Participation in Sui Overflow 2025 competition to showcase our solution.</li>
-                <li>Financial planning phase (ongoing, no concrete plan yet).</li>
-                <li>Integration of AI-generated content for enhanced user experience.</li>
-                <li>Transfer ownership of static sites to our client.</li>
-                <li>Provide extension capabilities and API for developers.</li>
-              </ol>
+              <div className="relative">
+                
+                {/* Timeline items */}
+                <div className="space-y-12">
+                  {/* Past milestones */}
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0 w-8 h-8 bg-cyan-400 rounded-full flex items-center justify-center relative">
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div className="ml-6">
+                      <p className="text-gray-300 text-sm sm:text-base">
+                        <FormattedMessage id="aboutus.milestones.1" />
+                      </p>
+                      <p className="text-gray-500 text-xs mt-1">
+                        <a href="https://www.facebook.com/story.php?story_fbid=1001718711951432&id=100063399376995" target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:text-cyan-300">
+                          Sui Overflow Hacker House 2025
+                        </a>
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Current milestone */}
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0 w-8 h-8 bg-cyan-400 rounded-full flex items-center justify-center relative">
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div className="ml-6">
+                      <p className="text-white font-semibold text-sm sm:text-base">
+                        <FormattedMessage id="aboutus.milestones.2"/>
+
+                      </p>
+                      <p className="text-gray-500 text-xs mt-1">
+                        <a href="https://sui.io/overflow" target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:text-cyan-300">
+                          Sui Overflow (current)
+                        </a>
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Future milestones */}
+                  <div className="flex items-center relative">
+                    <div className="flex-shrink-0 w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center relative">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    </div>
+                    <div className="ml-6">
+                      <p className="text-gray-300 text-sm sm:text-base opacity-70">
+                        <FormattedMessage id="aboutus.milestones.3" />
+                      </p>
+                    </div>
+                    <div className="absolute -left-1/2 w-1 h-full bg-cyan-500/30" />
+                  </div>
+
+                  
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0 w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center relative">
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    </div>
+                    <div className="ml-6">
+                      <p className="text-gray-300 text-sm sm:text-base opacity-70">
+                        <FormattedMessage id="aboutus.milestones.4" />
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0 w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center relative">
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    </div>
+                    <div className="ml-6">
+                      <p className="text-gray-300 text-sm sm:text-base opacity-70">
+                        <FormattedMessage id="aboutus.milestones.5" />
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0 w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center relative">
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    </div>
+                    <div className="ml-6">
+                      <p className="text-gray-300 text-sm sm:text-base opacity-70">
+                        <FormattedMessage id="aboutus.milestones.6" />
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0 w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center relative">
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    </div>
+                    <div className="ml-6">
+                      <p className="text-gray-300 text-sm sm:text-base opacity-70">
+                        <FormattedMessage id="aboutus.milestones.7" />
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
               <p className="mt-4 text-gray-400 italic text-sm sm:text-base">
-                Note: AI generation, extensions, and financial planning are in progress.
+                <FormattedMessage id="aboutus.milestones.note" />
               </p>
             </CardContent>
           </Card>
@@ -332,13 +461,15 @@ export default function AboutUs() {
         <section className="container mx-auto px-4 sm:px-6 py-12">
           <Card className="bg-gray-800/70 border-cyan-500/30 backdrop-blur-sm ivory-web3-card">
             <CardHeader>
-              <CardTitle className="text-xl sm:text-2xl text-cyan-400">Our Goals</CardTitle>
+              <CardTitle className="text-xl sm:text-2xl text-cyan-400">
+                <FormattedMessage id="aboutus.goals.title" />
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <ul className="list-disc list-inside text-gray-300 text-sm sm:text-base space-y-3">
-                <li>Increase user adoption on Sui and Walrus ecosystems.</li>
-                <li>Capture a significant share of the Web hosting market.</li>
-                <li>Reduce complexity and costs associated with deploying static websites.</li>
+                <li><FormattedMessage id="aboutus.goals.1" /></li>
+                <li><FormattedMessage id="aboutus.goals.2" /></li>
+                <li><FormattedMessage id="aboutus.goals.3" /></li>
               </ul>
             </CardContent>
           </Card>
@@ -346,11 +477,11 @@ export default function AboutUs() {
 
         {/* Team */}
         <section className="container mx-auto px-4 sm:px-6 py-12 text-center">
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold text-green-400 mb-6 ivory-title-glow ivory-pixel-font">
-            By Kursui Team
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold text-cyan-300 mb-6 ivory-title-glow ivory-pixel-font">
+            <FormattedMessage id="aboutus.team.title" />
           </h2>
           <p className="text-gray-300 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
-            We are a passionate team of developers dedicated to revolutionizing Web3 deployment with innovative solutions.
+            <FormattedMessage id="aboutus.team.description" />
           </p>
         </section>
 
@@ -358,7 +489,9 @@ export default function AboutUs() {
         <section className="container mx-auto px-4 sm:px-6 py-12">
           <Card className="bg-gray-800/70 border-cyan-500/30 backdrop-blur-sm ivory-web3-card">
             <CardHeader>
-              <CardTitle className="text-xl sm:text-2xl text-cyan-400">Contact Us</CardTitle>
+              <CardTitle className="text-xl sm:text-2xl text-cyan-400">
+                <FormattedMessage id="aboutus.contact.title" />
+              </CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col sm:flex-row justify-center gap-4">
               <Button
@@ -366,8 +499,8 @@ export default function AboutUs() {
                 className="border-cyan-500 text-cyan-400 hover:bg-cyan-500/20 text-sm sm:text-base"
                 asChild
               >
-                <a href="mailto:contact@ivory.com">
-                  <Mail className="mr-2 h-4 w-4" /> Email
+                <a href="mailto:tinkivory@gmail.com?subject=Ivory%20Inquiry&body=Hello,%20I%20have%20a%20question%20about%20Ivory%20project...">
+                  <Mail className="mr-2 h-4 w-4" /> tinkivory@gmail.com
                 </a>
               </Button>
               <Button
@@ -375,7 +508,7 @@ export default function AboutUs() {
                 className="border-cyan-500 text-cyan-400 hover:bg-cyan-500/20 text-sm sm:text-base"
                 asChild
               >
-                <a href="https://github.com/ivory" target="_blank" rel="noopener noreferrer">
+                <a href="https://github.com/Bonmek/ivory" target="_blank" rel="noopener noreferrer">
                   <span className="mr-2 h-4 w-4 inline-block align-middle">
                     {/* GitHub SVG from simpleicons.org */}
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
@@ -386,17 +519,19 @@ export default function AboutUs() {
                 </a>
               </Button>
               <Button
+              
                 variant="outline"
                 className="border-cyan-500 text-cyan-400 hover:bg-cyan-500/20 text-sm sm:text-base"
                 asChild
               >
-                <a href="https://twitter.com/ivory" target="_blank" rel="noopener noreferrer">
+                <a href="https://x.com/Ivory_officialz" target="_blank" rel="noopener noreferrer">
                   <span className="mr-2 h-4 w-4 inline-block align-middle">
                     {/* X (formerly Twitter) SVG icon */}
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M17.53 2.47a2.5 2.5 0 0 1 3.54 3.53l-5.16 5.17 5.16 5.16a2.5 2.5 0 0 1-3.54 3.54l-5.16-5.17-5.16 5.17a2.5 2.5 0 0 1-3.54-3.54l5.17-5.16-5.17-5.17A2.5 2.5 0 0 1 6.87 2.47l5.16 5.17 5.16-5.17z"/>
                     </svg>
                   </span>
+                  @Ivory_officialz
                 </a>
               </Button>
             </CardContent>
@@ -406,9 +541,11 @@ export default function AboutUs() {
         {/* Footer */}
         <footer className="container mx-auto px-4 sm:px-6 py-8 text-center text-gray-400">
           <Separator className="bg-cyan-500/30 mb-4" />
-          <p className="text-sm sm:text-base">© 2025 Ivory. All rights reserved.</p>
+          <p className="text-sm sm:text-base">
+            <FormattedMessage id="aboutus.footer.copyright" />
+          </p>
         </footer>
-      </div>
+      </main>
     </>
   );
 }
