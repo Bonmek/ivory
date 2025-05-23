@@ -22,7 +22,7 @@ import {
   inputDeleteBlobScheme,
   inputSetAttributesScheme,
   inputUpdateWriteBlobScheme,
-} from "./schemas/inputScheme";
+} from "./models/inputScheme";
 import { CloudTasksClient } from "@google-cloud/tasks";
 import { v4 as uuidv4 } from "uuid";
 import { TypeOf } from "zod";
