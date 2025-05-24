@@ -19,6 +19,8 @@ export interface Project {
   ownership?: number
   client_error_description?: string
   parentId?: string
+  showcase_url?: string
+  site_status?: number
 }
 
 export interface ProjectCardProps {

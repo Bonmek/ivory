@@ -355,6 +355,10 @@ export default function CreateWebsitePage() {
         is_build: showBuildOutputSettings ? '0' : '1',
       }
 
+      console.log('Attributes:', attributes)
+      console.log('Selected File:', selectedFile)
+      console.log('Selected Repo File:', selectedRepoFile)
+
       setDeployingState(DeployingState.Deploying)
 
       const response = await writeBlobAndRunJob({
@@ -518,6 +522,117 @@ export default function CreateWebsitePage() {
         const filteredProjects = metadata
           .map((meta, index) => transformMetadataToProject(meta, index))
           .filter((project: Project) => project.parentId === deployedObjectId);
+
+        if (filteredProjects.length > 0) {
+          if (filteredProjects[0].status === 1) {
+            setBuildingState(BuildingState.Built);
+            return true;
+          } else if (filteredProjects[0].status === 2) {
+            setBuildingState(BuildingState.Failed);
+            return true;
+          }
+        }
+      }
+      return false;
+    };
+
+    if (deployingState === DeployingState.Deployed &&
+      buildingState !== BuildingState.Built &&
+      buildingState !== BuildingState.Failed) {
+
+      refetch().then(() => {
+        checkStatus();
+      });
+
+      interval = setInterval(() => {
+        refetch().then(() => {
+          const shouldStop = checkStatus();
+          if (shouldStop && interval) {
+            clearInterval(interval);
+          }
+        });
+      }, 5000);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [deployingState, refetch, metadata, name, transformMetadataToProject, buildingState]);
+
+  useEffect(() => {
+    if (selectedFile) {
+      const fileReader = new FileReader()
+      fileReader.onload = async (e) => {
+        try {
+          const arrayBuffer = e.target?.result as ArrayBuffer
+          const zip = await JSZip.loadAsync(arrayBuffer)
+          const files: string[] = []
+
+          zip.forEach((relativePath: string, file: any) => {
+            if (!file.dir) {
+              files.push(relativePath)
+            }
+          })
+
+          // Convert flat file list to hierarchical structure
+          const structure: FileItem[] = []
+          const pathMap = new Map<string, FileItem>()
+
+          files.forEach(filePath => {
+            const parts = filePath.split('/')
+            let currentPath = ''
+            let currentParent = structure
+
+            parts.forEach((part, index) => {
+              if (!part) return
+              currentPath = currentPath ? `${currentPath}/${part}` : part
+              const isLastPart = index === parts.length - 1
+
+              if (!pathMap.has(currentPath)) {
+                const isFolder = !isLastPart
+                const newItem: FileItem = {
+                  name: part,
+                  isFolder,
+                  path: currentPath,
+                  children: []
+                }
+
+                currentParent.push(newItem)
+                pathMap.set(currentPath, newItem)
+
+                if (isFolder) {
+                  currentParent = newItem.children!
+                }
+              } else if (pathMap.get(currentPath)?.isFolder) {
+                currentParent = pathMap.get(currentPath)!.children!
+              }
+            })
+          })
+
+          setFileStructure(structure)
+        } catch (error) {
+          console.error('Error processing ZIP file:', error)
+          setFileErrors([intl.formatMessage({ id: 'createWebsite.invalidZipFile' })])
+        }
+      }
+
+      fileReader.readAsArrayBuffer(selectedFile)
+    } else {
+      setFileStructure([])
+    }
+  }, [selectedFile, intl])
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    const checkStatus = () => {
+      console.log('Deployed Object ID:', deployedObjectId);
+      if (metadata && deployedObjectId) {
+        const filteredProjects = metadata
+          .map((meta, index) => transformMetadataToProject(meta, index))
+          .filter((project: Project) => project.parentId === deployedObjectId);
+
+        console.log('Filtered projects:', filteredProjects);
 
         if (filteredProjects.length > 0) {
           if (filteredProjects[0].status === 1) {
