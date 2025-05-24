@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { AnimatePresence, motion } from 'framer-motion'
 import { CircleAlert, CirclePlus, Github, HelpCircle, Upload, Archive } from 'lucide-react'
+import { CircleAlert, CirclePlus, Github, HelpCircle, Upload, Archive } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
@@ -33,7 +34,7 @@ import {
 import { frameworks } from '@/constants/frameworks'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Helmet } from 'react-helmet'
-import { WebsiteAttributes, writeBlobAndRunJob } from '@/api/createWebsiteApi'
+import { previewWebsite, WebsiteAttributes, writeBlobAndRunJob } from '@/api/createWebsiteApi'
 import apiClient from '@/lib/axiosConfig'
 import { useQuery } from 'wagmi/query'
 import { PreviewSummary } from '@/components/CreateWebsite/PreviewSummary'
@@ -47,9 +48,12 @@ import { useSuiData } from '@/hooks/useSuiData'
 import { transformMetadataToProject } from '@/utils/metadataUtils'
 import { Project } from '@/types/project'
 import { useAuth } from '@/context/AuthContext'
+import Loading from '@/components/Loading'
 
 export default function CreateWebsitePage() {
   useTheme()
+  const { address } = useAuth()
+  const { metadata, isLoading, refetch } = useSuiData(address || '')
   const { address } = useAuth()
   const { metadata, isLoading, refetch } = useSuiData(address || '')
 
@@ -83,6 +87,7 @@ export default function CreateWebsitePage() {
       installCommand: '',
       outputDirectory: '',
       rootDirectory: '/',
+      rootDirectory: '/',
     })
 
   // State for advanced options
@@ -96,11 +101,13 @@ export default function CreateWebsitePage() {
   const [open, setOpen] = useState(false)
 
   // State for deploying
+  const [isLoadingPreview, setIsLoadingPreview] = useState<boolean>(false)
   const [deployingState, setDeployingState] = useState<DeployingState>(DeployingState.None)
   const [deployingResponse, setDeployingResponse] = useState<ApiResponse | null>(null)
   const [buildingState, setBuildingState] = useState<BuildingState>(BuildingState.None)
   const [deployedObjectId, setDeployedObjectId] = useState<string | null>(null)
   const [projectShowcaseUrl, setProjectShowcaseUrl] = useState<string | null>(null)
+  const [projectPreview, setProjectPreview] = useState<File>()
 
   // State for file upload
   const [uploadMethod, setUploadMethod] = useState<UploadMethod>(
@@ -117,10 +124,35 @@ export default function CreateWebsitePage() {
 
   // Validate name field
   const validateName = (value: string) => {
+    const filteredProjects = metadata
+      .map((meta, index) => transformMetadataToProject(meta, index) as Project)
+      .filter((project: Project) => project.name.toLowerCase() === value.trim().toLowerCase());
+
     const errors: string[] = []
+    // Check for required name
     if (!value.trim()) {
       errors.push(intl.formatMessage({ id: 'createWebsite.error.required' }))
+      setNameErrors(errors)
+      return false
     }
+
+    // Check for duplicate project name
+    if (filteredProjects.length > 0) {
+      errors.push(intl.formatMessage({ id: 'createWebsite.error.duplicateName' }))
+      setNameErrors(errors)
+      return false
+    }
+
+    // Check for maximum length
+    if (value.trim().length > 40) {
+      errors.push(intl.formatMessage({ id: 'createWebsite.error.maxLength' }, { max: 40 }))
+    }
+
+    // Only allow English letters (both cases), numbers, and spaces
+    if (!/^[a-zA-Z0-9 ]+$/.test(value)) {
+      errors.push(intl.formatMessage({ id: 'createWebsite.error.englishOnly' }))
+    }
+
     setNameErrors(errors)
     return errors.length === 0
   }
@@ -268,6 +300,7 @@ export default function CreateWebsitePage() {
 
       const zipBlob = new Blob([response.data], { type: 'application/zip' });
       const fileName = `${repo}.zip`;
+      const fileName = `${repo}.zip`;
 
       // Create a File object for internal app use
       const file = new File([zipBlob], fileName, { type: 'application/zip' });
@@ -283,9 +316,6 @@ export default function CreateWebsitePage() {
   };
 
   useEffect(() => {
-    console.log('User effect running');
-    console.log('REACT_APP_SERVER_URL:', process.env.REACT_APP_SERVER_URL);
-
     if (!process.env.REACT_APP_SERVER_URL) {
       console.error('REACT_APP_SERVER_URL environment variable is not set');
       setUser(null);
@@ -294,12 +324,10 @@ export default function CreateWebsitePage() {
     }
 
     const userEndpoint = `${process.env.REACT_APP_SERVER_URL}/api/user`;
-    console.log('User endpoint:', userEndpoint);
 
     apiClient
       .get(userEndpoint)
       .then((res) => {
-        console.log('User data received:', res.data);
         setUser(res.data.user);
         setDeployingState(DeployingState.None);
       })
@@ -400,22 +428,78 @@ export default function CreateWebsitePage() {
     }
   }
 
+  const startDate = new Date('2025-05-06T15:00:50.907Z');
+  const endDate = new Date('2025-05-20T15:00:50.907Z');
+  const todayDate = new Date().getTime();
+
+  const checkEndDate = () => {
+    let newEndDate = new Date(endDate);
+    while (startDate.getTime() < todayDate && todayDate > newEndDate.getTime()) {
+      newEndDate = new Date(newEndDate.getTime() + 14 * 24 * 60 * 60 * 1000);
+    }
+    return newEndDate;
+  }
+
+  const handlePreview = async () => {
+    if (!validateName(name) || !validateFile()) return
+
+    let rootDirectory = advancedOptions.rootDirectory
+    if (showBuildOutputSettings) {
+      rootDirectory = buildOutputSettings.rootDirectory
+    }
+    const attributes: WebsiteAttributes = {
+      'site-name': name,
+      owner: address!,
+      ownership: '0',
+      send_to: address!,
+      epochs: '1',
+      start_date: new Date(todayDate).toISOString(),
+      end_date: checkEndDate().toISOString(),
+      output_dir: showBuildOutputSettings ? buildOutputSettings.outputDirectory : '',
+      status: '0',
+      cache: advancedOptions.cacheControl,
+      root: rootDirectory || '/',
+      install_command: buildOutputSettings.installCommand || 'npm install',
+      build_command: buildOutputSettings.buildCommand || 'npm run build',
+      default_route: advancedOptions.defaultPath || '/index.html',
+      is_build: showBuildOutputSettings ? '0' : '1',
+    }
+
+    try {
+      setIsLoadingPreview(true)
+      const response = await previewWebsite({
+        file: uploadMethod === "upload" ? selectedFile! : selectedRepoFile!,
+        attributes,
+      })
+      setShowPreview(true);
+      setProjectPreview(response)
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setIsLoadingPreview(false)
+      return response
+    } catch (error) {
+      console.error('Error previewing site:', error)
+      setIsLoadingPreview(false)
+    }
+  }
+
   const handleClickDeploy = async () => {
     setOpen(false)
 
     let rootDirectory = advancedOptions.rootDirectory
-    if (showBuildOutputSettings && buildOutputSettings.outputDirectory) {
-      rootDirectory = buildOutputSettings.outputDirectory
+    if (showBuildOutputSettings) {
+      rootDirectory = buildOutputSettings.rootDirectory
     }
 
     try {
       const attributes: WebsiteAttributes = {
         'site-name': name,
         owner: address!,
+        owner: address!,
         ownership: '0',
         send_to: address!,
+        send_to: address!,
         epochs: '1',
-        start_date: todayDate.toString(),
+        start_date: new Date(todayDate).toISOString(),
         end_date: checkEndDate().toISOString(),
         output_dir: showBuildOutputSettings ? buildOutputSettings.outputDirectory : '',
         status: '0',
@@ -423,6 +507,8 @@ export default function CreateWebsitePage() {
         install_command: buildOutputSettings.installCommand || 'npm install',
         build_command: buildOutputSettings.buildCommand || 'npm run build',
         is_build: showBuildOutputSettings ? '0' : '1',
+        root: rootDirectory || '/',
+        default_route: advancedOptions.defaultPath || '/index.html',
         root: rootDirectory || '/',
         default_route: advancedOptions.defaultPath || '/index.html',
       }
@@ -434,6 +520,7 @@ export default function CreateWebsitePage() {
       setDeployingState(DeployingState.Deploying)
 
       const response = await writeBlobAndRunJob({
+        file: projectPreview,
         file: projectPreview,
         attributes,
       })
@@ -593,9 +680,19 @@ export default function CreateWebsitePage() {
       if (metadata && deployedObjectId) {
         const filteredProjects = metadata
           .map((meta, index) => transformMetadataToProject(meta, index) as Project)
+          .map((meta, index) => transformMetadataToProject(meta, index) as Project)
           .filter((project: Project) => project.parentId === deployedObjectId);
 
         if (filteredProjects.length > 0) {
+          const firstProject = filteredProjects[0];
+          if (firstProject.status === 1) {
+            const project = firstProject as Project;
+            if (project.showcase_url) {
+              setBuildingState(BuildingState.Built);
+              setProjectShowcaseUrl(project.showcase_url);
+              return true;
+            }
+          } else if (firstProject.status === 2) {
           const firstProject = filteredProjects[0];
           if (firstProject.status === 1) {
             const project = firstProject as Project;
@@ -609,6 +706,7 @@ export default function CreateWebsitePage() {
             return true;
           }
         }
+        return false;
         return false;
       }
       return false;
@@ -629,7 +727,7 @@ export default function CreateWebsitePage() {
             clearInterval(interval);
           }
         });
-      }, 5000);
+      }, 30000);
     }
 
     return () => {
@@ -637,116 +735,9 @@ export default function CreateWebsitePage() {
     };
   }, [deployingState, refetch, metadata, name, transformMetadataToProject, buildingState]);
 
-  useEffect(() => {
-    if (selectedFile) {
-      const fileReader = new FileReader()
-      fileReader.onload = async (e) => {
-        try {
-          const arrayBuffer = e.target?.result as ArrayBuffer
-          const zip = await JSZip.loadAsync(arrayBuffer)
-          const files: string[] = []
-
-          zip.forEach((relativePath: string, file: any) => {
-            if (!file.dir) {
-              files.push(relativePath)
-            }
-          })
-
-          // Convert flat file list to hierarchical structure
-          const structure: FileItem[] = []
-          const pathMap = new Map<string, FileItem>()
-
-          files.forEach(filePath => {
-            const parts = filePath.split('/')
-            let currentPath = ''
-            let currentParent = structure
-
-            parts.forEach((part, index) => {
-              if (!part) return
-              currentPath = currentPath ? `${currentPath}/${part}` : part
-              const isLastPart = index === parts.length - 1
-
-              if (!pathMap.has(currentPath)) {
-                const isFolder = !isLastPart
-                const newItem: FileItem = {
-                  name: part,
-                  isFolder,
-                  path: currentPath,
-                  children: []
-                }
-
-                currentParent.push(newItem)
-                pathMap.set(currentPath, newItem)
-
-                if (isFolder) {
-                  currentParent = newItem.children!
-                }
-              } else if (pathMap.get(currentPath)?.isFolder) {
-                currentParent = pathMap.get(currentPath)!.children!
-              }
-            })
-          })
-
-          setFileStructure(structure)
-        } catch (error) {
-          console.error('Error processing ZIP file:', error)
-          setFileErrors([intl.formatMessage({ id: 'createWebsite.invalidZipFile' })])
-        }
-      }
-
-      fileReader.readAsArrayBuffer(selectedFile)
-    } else {
-      setFileStructure([])
-    }
-  }, [selectedFile, intl])
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-
-    const checkStatus = () => {
-      console.log('Deployed Object ID:', deployedObjectId);
-      if (metadata && deployedObjectId) {
-        const filteredProjects = metadata
-          .map((meta, index) => transformMetadataToProject(meta, index))
-          .filter((project: Project) => project.parentId === deployedObjectId);
-
-        console.log('Filtered projects:', filteredProjects);
-
-        if (filteredProjects.length > 0) {
-          if (filteredProjects[0].status === 1) {
-            setBuildingState(BuildingState.Built);
-            return true;
-          } else if (filteredProjects[0].status === 2) {
-            setBuildingState(BuildingState.Failed);
-            return true;
-          }
-        }
-      }
-      return false;
-    };
-
-    if (deployingState === DeployingState.Deployed &&
-      buildingState !== BuildingState.Built &&
-      buildingState !== BuildingState.Failed) {
-
-      refetch().then(() => {
-        checkStatus();
-      });
-
-      interval = setInterval(() => {
-        refetch().then(() => {
-          const shouldStop = checkStatus();
-          if (shouldStop && interval) {
-            clearInterval(interval);
-          }
-        });
-      }, 5000);
-    }
-
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [deployingState, refetch, metadata, name, transformMetadataToProject, buildingState]);
+  if (isLoading || isLoadingPreview) {
+    return <Loading />
+  }
 
   return (
     <>
@@ -1010,20 +1001,21 @@ export default function CreateWebsitePage() {
                   />
 
                   <article className="flex flex-col gap-4">
-                    <BuildOutputSetting
+                    {<BuildOutputSetting
                       showBuildOutputSettings={showBuildOutputSettings}
                       setShowBuildOutputSettings={setShowBuildOutputSettings}
                       buildOutputSettings={buildOutputSettings}
                       setBuildOutputSettings={setBuildOutputSettings}
                       fileStructure={fileStructure}
                       githubContents={uploadMethod === UploadMethod.GitHub ? repoContents : []}
-                    />
+                    />}
 
                     <AdvancedOptions
                       advancedOptions={advancedOptions}
                       setAdvancedOptions={setAdvancedOptions}
                       fileStructure={fileStructure}
                       githubContents={uploadMethod === UploadMethod.GitHub ? repoContents : []}
+                      showBuildOutputSettings={showBuildOutputSettings}
                       showBuildOutputSettings={showBuildOutputSettings}
                     />
                   </article>
@@ -1057,11 +1049,7 @@ export default function CreateWebsitePage() {
                   </div>
                   <section className="pt-2 flex justify-end">
                     <Button
-                      onClick={() => {
-                        if (!validateName(name) || !validateFile()) return
-                        setShowPreview(true);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
+                      onClick={handlePreview}
                       className="bg-secondary-500 hover:bg-secondary-700 text-black p-6 rounded-md text-base transform transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-secondary-500/20"
                     >
                       <FormattedMessage id="createWebsite.createWebsite" />
@@ -1098,6 +1086,7 @@ export default function CreateWebsitePage() {
                 buildingState={buildingState}
                 projectShowcaseUrl={projectShowcaseUrl}
                 selectedBranch={selectedBranch}
+                projectPreview={projectPreview}
               />
             </motion.div>
           </>

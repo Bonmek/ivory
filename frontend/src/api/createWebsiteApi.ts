@@ -1,4 +1,3 @@
-import { buildOutputSettingsType } from '@/types/CreateWebstie/types';
 import axios from 'axios';
 
 export interface WebsiteAttributes {
@@ -31,7 +30,15 @@ export interface WriteBlobResponse {
   message?: string;
 }
 
-export const writeBlobAndRunJob = async (data: WriteBlobRequest): Promise<WriteBlobResponse> => {
+export interface PreviewWebsiteResponse {
+  data: ArrayBuffer;
+  headers: {
+    'content-type': string;
+    'content-disposition': string;
+  };
+}
+
+export const previewWebsite = async (data: WriteBlobRequest): Promise<File> => {
   const formData = new FormData();
 
   // Add file parameter if it exists
@@ -42,9 +49,40 @@ export const writeBlobAndRunJob = async (data: WriteBlobRequest): Promise<WriteB
     formData.append('file', data.file);
   }
 
-  // Add GitHub URL if it exists
-  if (data.githubUrl) {
-    formData.append('githubUrl', data.githubUrl);
+  // Always add attributes
+  formData.append('attributes', JSON.stringify(data.attributes));
+
+  try {
+    const response = await axios.post(
+      `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_PREVIEW_WEBSITE!}`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        responseType: 'arraybuffer',
+      }
+    );
+
+    return new File([
+      response.data,
+    ], 'preview.zip', {
+      type: response.headers['content-type'],
+    })
+  } catch (error) {
+    throw new Error('Failed to preview website: ' + (error as Error).message);
+  }
+};
+
+export const writeBlobAndRunJob = async (data: WriteBlobRequest): Promise<WriteBlobResponse> => {
+  const formData = new FormData();
+
+  // Add file parameter if it exists
+  if (data.file) {
+    if (!data.file.name.endsWith('.zip')) {
+      throw new Error('Only ZIP files are allowed');
+    }
+    formData.append('file', data.file);
   }
 
   // Always add attributes

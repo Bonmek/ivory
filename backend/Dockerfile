@@ -1,30 +1,42 @@
-FROM ubuntu:22.04
+# Stage 1: Build
+FROM node:20-alpine AS builder
 
-# Set the working directory
 WORKDIR /app
 
-# Install Node.js, npm, and curl
-RUN apt-get update && \
-    apt-get install -y curl && \
-    curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
-    apt-get install -y nodejs && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
 # Install pnpm
-RUN npm install -g pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# Copy package.json and pnpm-lock.yaml
+# Copy package files
 COPY package.json pnpm-lock.yaml ./
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile
 
-# Copy the rest of the application code
+# Copy source code
 COPY . .
 
-# Build the TypeScript code
-RUN pnpm build
+# Build the application
+RUN pnpm run build
+
+# Stage 2: Production
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+# Copy package files and install production dependencies
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --prod --frozen-lockfile
+
+# Copy built application from builder stage
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/ivory-project-457721-2d60ad88afc9.json ./
+
+# Add healthcheck
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:5000/health || exit 1
 
 # Expose the application port
 EXPOSE 5000
