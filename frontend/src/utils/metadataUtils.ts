@@ -46,7 +46,7 @@ export const transformMetadataToProject = (metadata: any, index: number) => {
     urlImg: '/walrus.png',
     description: metadataMap['description'] || '',
     status,
-    siteId: status === 1 ? metadataMap['site_id'] : '',
+    ...(status === 1 && metadataMap['site_id'] ? { siteId: metadataMap['site_id'] } : {}),
     suins: metadataMap['sui_ns'] || '',
     blobId: metadataMap['blobId'] || '',
     installCommand: metadataMap['install_command'] || '',
@@ -57,6 +57,8 @@ export const transformMetadataToProject = (metadata: any, index: number) => {
     ownership: parseInt(metadataMap['ownership'] || '0'),
     parentId: metadata.parentId || '',
     client_error_description: metadataMap['client_error_description'] || '',
+    showcase_url: metadataMap['showcase_url'] || '',
+    ...(metadataMap['site_status'] ? { site_status: parseInt(metadataMap['site_status']) } : {}),
   }
   return project
 } 
