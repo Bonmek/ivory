@@ -1,7 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { AnimatePresence, motion } from 'framer-motion'
 import { CircleAlert, CirclePlus, Github, HelpCircle, Upload, Archive } from 'lucide-react'
-import { CircleAlert, CirclePlus, Github, HelpCircle, Upload, Archive } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
@@ -54,8 +53,6 @@ export default function CreateWebsitePage() {
   useTheme()
   const { address } = useAuth()
   const { metadata, isLoading, refetch } = useSuiData(address || '')
-  const { address } = useAuth()
-  const { metadata, isLoading, refetch } = useSuiData(address || '')
 
   const intl = useIntl()
 
@@ -86,7 +83,6 @@ export default function CreateWebsitePage() {
       buildCommand: '',
       installCommand: '',
       outputDirectory: '',
-      rootDirectory: '/',
       rootDirectory: '/',
     })
 
@@ -300,7 +296,6 @@ export default function CreateWebsitePage() {
 
       const zipBlob = new Blob([response.data], { type: 'application/zip' });
       const fileName = `${repo}.zip`;
-      const fileName = `${repo}.zip`;
 
       // Create a File object for internal app use
       const file = new File([zipBlob], fileName, { type: 'application/zip' });
@@ -428,60 +423,6 @@ export default function CreateWebsitePage() {
     }
   }
 
-  const startDate = new Date('2025-05-06T15:00:50.907Z');
-  const endDate = new Date('2025-05-20T15:00:50.907Z');
-  const todayDate = new Date().getTime();
-
-  const checkEndDate = () => {
-    let newEndDate = new Date(endDate);
-    while (startDate.getTime() < todayDate && todayDate > newEndDate.getTime()) {
-      newEndDate = new Date(newEndDate.getTime() + 14 * 24 * 60 * 60 * 1000);
-    }
-    return newEndDate;
-  }
-
-  const handlePreview = async () => {
-    if (!validateName(name) || !validateFile()) return
-
-    let rootDirectory = advancedOptions.rootDirectory
-    if (showBuildOutputSettings) {
-      rootDirectory = buildOutputSettings.rootDirectory
-    }
-    const attributes: WebsiteAttributes = {
-      'site-name': name,
-      owner: address!,
-      ownership: '0',
-      send_to: address!,
-      epochs: '1',
-      start_date: new Date(todayDate).toISOString(),
-      end_date: checkEndDate().toISOString(),
-      output_dir: showBuildOutputSettings ? buildOutputSettings.outputDirectory : '',
-      status: '0',
-      cache: advancedOptions.cacheControl,
-      root: rootDirectory || '/',
-      install_command: buildOutputSettings.installCommand || 'npm install',
-      build_command: buildOutputSettings.buildCommand || 'npm run build',
-      default_route: advancedOptions.defaultPath || '/index.html',
-      is_build: showBuildOutputSettings ? '0' : '1',
-    }
-
-    try {
-      setIsLoadingPreview(true)
-      const response = await previewWebsite({
-        file: uploadMethod === "upload" ? selectedFile! : selectedRepoFile!,
-        attributes,
-      })
-      setShowPreview(true);
-      setProjectPreview(response)
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      setIsLoadingPreview(false)
-      return response
-    } catch (error) {
-      console.error('Error previewing site:', error)
-      setIsLoadingPreview(false)
-    }
-  }
-
   const handleClickDeploy = async () => {
     setOpen(false)
 
@@ -494,9 +435,7 @@ export default function CreateWebsitePage() {
       const attributes: WebsiteAttributes = {
         'site-name': name,
         owner: address!,
-        owner: address!,
         ownership: '0',
-        send_to: address!,
         send_to: address!,
         epochs: '1',
         start_date: new Date(todayDate).toISOString(),
@@ -509,8 +448,6 @@ export default function CreateWebsitePage() {
         is_build: showBuildOutputSettings ? '0' : '1',
         root: rootDirectory || '/',
         default_route: advancedOptions.defaultPath || '/index.html',
-        root: rootDirectory || '/',
-        default_route: advancedOptions.defaultPath || '/index.html',
       }
 
       console.log('Attributes:', attributes)
@@ -520,7 +457,6 @@ export default function CreateWebsitePage() {
       setDeployingState(DeployingState.Deploying)
 
       const response = await writeBlobAndRunJob({
-        file: projectPreview,
         file: projectPreview,
         attributes,
       })
@@ -680,19 +616,9 @@ export default function CreateWebsitePage() {
       if (metadata && deployedObjectId) {
         const filteredProjects = metadata
           .map((meta, index) => transformMetadataToProject(meta, index) as Project)
-          .map((meta, index) => transformMetadataToProject(meta, index) as Project)
           .filter((project: Project) => project.parentId === deployedObjectId);
 
         if (filteredProjects.length > 0) {
-          const firstProject = filteredProjects[0];
-          if (firstProject.status === 1) {
-            const project = firstProject as Project;
-            if (project.showcase_url) {
-              setBuildingState(BuildingState.Built);
-              setProjectShowcaseUrl(project.showcase_url);
-              return true;
-            }
-          } else if (firstProject.status === 2) {
           const firstProject = filteredProjects[0];
           if (firstProject.status === 1) {
             const project = firstProject as Project;
@@ -706,7 +632,6 @@ export default function CreateWebsitePage() {
             return true;
           }
         }
-        return false;
         return false;
       }
       return false;
@@ -1015,7 +940,6 @@ export default function CreateWebsitePage() {
                       setAdvancedOptions={setAdvancedOptions}
                       fileStructure={fileStructure}
                       githubContents={uploadMethod === UploadMethod.GitHub ? repoContents : []}
-                      showBuildOutputSettings={showBuildOutputSettings}
                       showBuildOutputSettings={showBuildOutputSettings}
                     />
                   </article>

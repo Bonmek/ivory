@@ -29,12 +29,10 @@ import { TypeOf } from "zod";
 
 dotenv.config();
 
-
 const app = express();
 app.use(express.json());
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "*",
     origin: process.env.FRONTEND_URL || "*",
     credentials: true,
     exposedHeaders: ["Content-Disposition", "Content-Length"],
@@ -220,121 +218,7 @@ app.post("/preview", upload.single("file"), async (req, res) => {
   let outputZipPath: string | null = null;
   let indexDir: string | null = null;
 
-// Add these helper functions at the top level
-async function containsJavaScriptFiles(dir: string): Promise<boolean> {
-  const files = await fs.readdir(dir);
-  for (const file of files) {
-    const fullPath = path.join(dir, file);
-    const stat = await fs.stat(fullPath);
-    if (stat.isDirectory()) {
-      if (await containsJavaScriptFiles(fullPath)) {
-        return true;
-      }
-    } else if (file.endsWith('.js') || file.endsWith('.jsx') || file.endsWith('.ts') || file.endsWith('.tsx')) {
-      return true;
-    }
-  }
-  return false;
-}
-
-async function detectBuildTool(buildDir: string): Promise<{ tool: string; configPath: string } | null> {
-  const configFiles = [
-    { tool: 'vite', patterns: ['vite.config.ts', 'vite.config.js'] },
-    { tool: 'webpack', patterns: ['webpack.config.js', 'webpack.config.ts'] },
-    { tool: 'rollup', patterns: ['rollup.config.js', 'rollup.config.ts'] }
-  ];
-
-  for (const { tool, patterns } of configFiles) {
-    for (const pattern of patterns) {
-      const configPath = path.join(buildDir, pattern);
-      if (await fs.pathExists(configPath)) {
-        return { tool, configPath };
-      }
-    }
-  }
-  return null;
-}
-
-async function modifyBuildConfig(configPath: string, tool: string, attributes_data: TypeOf<typeof inputWriteBlobScheme>): Promise<void> {
-  const content = await fs.readFile(configPath, 'utf-8');
-  let modifiedContent = content;
-
-  switch (tool) {
-    case 'vite':
-      // Add or modify base and build.outDir
-      if (!content.includes('base:')) {
-        modifiedContent = modifiedContent.replace(
-          /export default defineConfig\(\{/,
-          `export default defineConfig({\n  base: "./",\n  build: {\n    outDir: "${attributes_data.output_dir}",\n  },`
-        );
-      }
-      break;
-    case 'webpack':
-      // Add or modify output.path and output.publicPath
-      if (!content.includes('output:')) {
-        modifiedContent = modifiedContent.replace(
-          /module.exports = \{/,
-          'module.exports = {\n  output: {\n    path: path.resolve(__dirname, "dist"),\n    publicPath: "./",\n  },'
-        );
-      }
-      break;
-    case 'rollup':
-      // Add or modify output.dir and output.assetFileNames
-      if (!content.includes('output:')) {
-        modifiedContent = modifiedContent.replace(
-          /export default \{/,
-          'export default {\n  output: {\n    dir: "dist",\n    assetFileNames: "[name][extname]",\n  },'
-        );
-      }
-      break;
-  }
-
-  await fs.writeFile(configPath, modifiedContent, 'utf-8');
-}
-
-// Helper function to clean up files
-async function cleanupFiles(extractPath: string | null, uploadPath: string | null, outputPath: string | null) {
-  try {
-    await Promise.all([
-      extractPath ? fs.remove(extractPath) : Promise.resolve(),
-      uploadPath ? fs.remove(uploadPath) : Promise.resolve(),
-      outputPath ? fs.remove(outputPath) : Promise.resolve()
-    ]);
-  } catch (error) {
-    console.error("Error during cleanup:", error);
-  }
-}
-
-// Helper function to clean up all directories
-async function cleanupAllDirectories() {
-  try {
-    const dirs = ['outputs', 'temp', 'uploads'];
-    await Promise.all(
-      dirs.map(async dir => {
-        const dirPath = path.join(__dirname, dir);
-        if (await fs.pathExists(dirPath)) {
-          const files = await fs.readdir(dirPath);
-          await Promise.all(
-            files.map(file => fs.remove(path.join(dirPath, file)))
-          );
-          await fs.remove(dirPath);
-        }
-      })
-    );
-  } catch (error) {
-    console.error("Error cleaning up directories:", error);
-  }
-}
-
-app.post("/preview", upload.single("file"), async (req, res) => {
-  const startTime = performance.now();
-  console.log('Start processing:', new Date().toISOString());
-  let extractPath: string | null = null;
-  let outputZipPath: string | null = null;
-  let indexDir: string | null = null;
-
   if (!req.file) {
-    await cleanupAllDirectories();
     await cleanupAllDirectories();
     res.status(400).json({
       statusCode: 0,
@@ -353,16 +237,6 @@ app.post("/preview", upload.single("file"), async (req, res) => {
       .pipe(unzipper.Extract({ path: extractPath }))
       .promise();
     console.log(`File extraction took: ${(performance.now() - extractStart).toFixed(2)}ms`);
-  try {
-    const zipFile = req.file;
-    extractPath = path.join(__dirname, "temp", Date.now().toString());
-    
-    const extractStart = performance.now();
-    await fs
-      .createReadStream(zipFile.path)
-      .pipe(unzipper.Extract({ path: extractPath }))
-      .promise();
-    console.log(`File extraction took: ${(performance.now() - extractStart).toFixed(2)}ms`);
 
     const attributes = req.body.attributes
       ? typeof req.body.attributes === "string"
@@ -382,107 +256,6 @@ app.post("/preview", upload.single("file"), async (req, res) => {
         })),
       });
       return;
-    }
-    const attributes = req.body.attributes
-      ? typeof req.body.attributes === "string"
-        ? JSON.parse(req.body.attributes)
-        : req.body.attributes
-      : {};
-    console.log('Received attributes from frontend:', JSON.stringify(attributes, null, 2));
-    const attributes_data = inputWriteBlobScheme.safeParse(attributes);
-    if (!attributes_data.success) {
-      await cleanupFiles(extractPath, zipFile.path, null);
-      await cleanupAllDirectories();
-      res.status(400).json({
-        statusCode: 0,
-        errors: attributes_data.error.errors.map((err) => ({
-          error_message: err.message,
-          error_field: err.path.join("."),
-        })),
-      });
-      return;
-    }
-
-    if (attributes_data.data.is_build === "1") {
-      if (await containsJavaScriptFiles(extractPath)) {
-        await cleanupFiles(extractPath, zipFile.path, null);
-        await cleanupAllDirectories();
-        res.status(404).json({
-          statusCode: 0,
-          error: "JavaScript files found in the uploaded zip. Only static files are allowed when is_build is 1.",
-        });
-        return;
-      }
-      indexDir = await findIndexHtmlPath(extractPath);
-    } else if (attributes_data.data.is_build === "0") {
-      const buildDir = path.join(extractPath, attributes_data.data.root);
-      const packageJsonPath = path.join(buildDir, "package.json");
-      console.log('buildDir', buildDir);
-      console.log('packageJsonPath', packageJsonPath);
-
-      if (!await fs.pathExists(packageJsonPath)) {
-        await cleanupFiles(extractPath, zipFile.path, null);
-        await cleanupAllDirectories();
-        res.status(404).json({
-          statusCode: 0,
-          error: "package.json not found in specified root directory",
-        });
-        return;
-      }
-
-      try {
-        const buildTool = await detectBuildTool(buildDir);
-        if (buildTool) {
-          await modifyBuildConfig(buildTool.configPath, buildTool.tool, attributes_data.data);
-        }
-
-        const buildStart = performance.now();
-        await new Promise((resolve, reject) => {
-          const install = exec(attributes_data.data.install_command, { cwd: buildDir });
-          install.on('exit', (code) => {
-            if (code !== 0) {
-              reject(new Error(`Install failed with code ${code}`));
-              return;
-            }
-            console.log(`Install took: ${(performance.now() - buildStart).toFixed(2)}ms`);
-
-            const buildCommandStart = performance.now();
-            const build = exec(attributes_data.data.build_command, { cwd: buildDir });
-            build.on('exit', (code) => {
-              if (code !== 0) {
-                reject(new Error(`Build failed with code ${code}`));
-                return;
-              }
-              console.log(`Build took: ${(performance.now() - buildCommandStart).toFixed(2)}ms`);
-              resolve(true);
-            });
-          });
-        });
-
-        const distPath = path.join(buildDir, attributes_data.data.output_dir);
-        const indexPath = path.join(distPath, 'index.html');
-        
-        if (!await fs.pathExists(indexPath)) {
-          await cleanupFiles(extractPath, zipFile.path, null);
-          await cleanupAllDirectories();
-          res.status(404).json({
-            statusCode: 0,
-            error: "index.html not found in dist folder",
-          });
-          return;
-        }
-        
-        indexDir = distPath;
-      } catch (error) {
-        await cleanupFiles(extractPath, zipFile.path, null);
-        await cleanupAllDirectories();
-        console.error("Build process failed:", error);
-        res.status(500).json({
-          statusCode: 0,
-          error: "Build process failed",
-        });
-        return;
-      }
     }
 
     if (attributes_data.data.is_build === "1") {
@@ -668,17 +441,7 @@ app.post("/process-site", upload.single("file"), async (req, res) => {
     await fs.writeJson(path.join(extractPath, "ws-resources.json"), wsResources, {
       spaces: 2,
     });
-    await fs.writeJson(path.join(extractPath, "ws-resources.json"), wsResources, {
-      spaces: 2,
-    });
 
-    const outputZipPath = path.join(
-      __dirname,
-      "outputs",
-      `${uuidv4()}_${Date.now()}.zip`
-    );
-    await fs.ensureDir(path.dirname(outputZipPath));
-    const zip = new AdmZip();
     const outputZipPath = path.join(
       __dirname,
       "outputs",
@@ -700,61 +463,10 @@ app.post("/process-site", upload.single("file"), async (req, res) => {
         }
       }
     };
-    const addFilesToZip = async (dir: string, baseInZip = "") => {
-      const entries = await fs.readdir(dir);
-      for (const entry of entries) {
-        const fullPath = path.join(dir, entry);
-        const stat = await fs.stat(fullPath);
-        if (stat.isDirectory()) {
-          await addFilesToZip(fullPath, path.join(baseInZip, entry));
-        } else {
-          const fileContent = await fs.readFile(fullPath);
-          zip.addFile(path.join(baseInZip, entry), fileContent);
-        }
-      }
-    };
 
     await addFilesToZip(extractPath);
     zip.writeZip(outputZipPath);
-    await addFilesToZip(extractPath);
-    zip.writeZip(outputZipPath);
 
-    let new_blob_data;
-    let write_blob_attempts = 0;
-    const delay = 1000;
-    const max_attempts_write_blob = 2;
-    const max_attempts_set_status = 5;
-    const zipBuffer = await readFile(outputZipPath);
-    while (write_blob_attempts < max_attempts_write_blob) {
-      try {
-        new_blob_data = await walrusClient.writeBlob({
-          blob: zipBuffer,
-          deletable: true,
-          epochs: Number(attributes_data.data.epochs),
-          signer: keypair,
-          attributes: { ...attributes_data.data, forceId: uuidv4() },
-        });
-        console.log("wrote blob");
-        if (
-          new_blob_data.blobObject.certified_epoch ||
-          new_blob_data.blobObject.certified_epoch !== null
-        ) {
-          break;
-        }
-        write_blob_attempts++;
-        await new Promise((resolve) => setTimeout(resolve, delay));
-      } catch (error) {
-        await cleanupFiles(extractPath, zipFile.path, outputZipPath);
-        await cleanupAllDirectories();
-        res.status(502).json({
-          statusCode: 0,
-          error: {
-            error_message: "Failed to write blob to Walrus",
-            error_details: error,
-          },
-        });
-        return;
-      }
     let new_blob_data;
     let write_blob_attempts = 0;
     const delay = 1000;
@@ -831,45 +543,6 @@ app.post("/process-site", upload.single("file"), async (req, res) => {
         return;
       }
     }
-      if (write_blob_attempts === max_attempts_write_blob) {
-        let set_status_attempts = 0;
-        while (set_status_attempts < max_attempts_set_status) {
-          try {
-            await walrusClient.executeWriteBlobAttributesTransaction({
-              blobObjectId: new_blob_data.blobObject.id.id,
-              signer: keypair,
-              attributes: { status: "2" },
-            });
-            break;
-          } catch (error) {
-            set_status_attempts++;
-            if (set_status_attempts === max_attempts_set_status) {
-              await cleanupFiles(extractPath, zipFile.path, outputZipPath);
-              await cleanupAllDirectories();
-              if (error instanceof Error) {
-                res.status(502).json({
-                  statusCode: 0,
-                  error: {
-                    error_message:
-                      "Failed to change status code to 2 in blob attributes",
-                    error_details: error,
-                  },
-                });
-                return;
-              }
-            }
-            await new Promise((resolve) => setTimeout(resolve, delay));
-          }
-        }
-        await cleanupFiles(extractPath, zipFile.path, outputZipPath);
-        await cleanupAllDirectories();
-        res.status(504).json({
-          statusCode: 0,
-          error: "Certified epoch is null",
-        });
-        return;
-      }
-    }
 
     if (!new_blob_data) {
       await cleanupFiles(extractPath, zipFile.path, outputZipPath);
@@ -880,17 +553,7 @@ app.post("/process-site", upload.single("file"), async (req, res) => {
       });
       return;
     }
-    if (!new_blob_data) {
-      await cleanupFiles(extractPath, zipFile.path, outputZipPath);
-      await cleanupAllDirectories();
-      res.status(503).json({
-        statusCode: 0,
-        error: "WriteBlob success but data is undefined",
-      });
-      return;
-    }
 
-    const blobObjectId = new_blob_data.blobObject.id.id;
     const blobObjectId = new_blob_data.blobObject.id.id;
 
     try {
@@ -914,29 +577,7 @@ app.post("/process-site", upload.single("file"), async (req, res) => {
         return;
       }
     }
-    try {
-      await walrusClient.executeWriteBlobAttributesTransaction({
-        blobObjectId: blobObjectId,
-        signer: keypair,
-        attributes: { blobId: new_blob_data.blobId },
-      });
-    } catch (error) {
-      await cleanupFiles(extractPath, zipFile.path, outputZipPath);
-      await cleanupAllDirectories();
-      if (error instanceof Error) {
-        res.status(502).json({
-          statusCode: 0,
-          error: {
-            error_message:
-              "Failed to execute write blob attributes transaction to Walrus",
-            error_details: error,
-          },
-        });
-        return;
-      }
-    }
 
-    let check_blob_id;
     let check_blob_id;
 
     try {
@@ -955,32 +596,7 @@ app.post("/process-site", upload.single("file"), async (req, res) => {
       });
       return;
     }
-    try {
-      check_blob_id = await walrusClient.readBlobAttributes({
-        blobObjectId: blobObjectId,
-      });
-    } catch (error) {
-      await cleanupFiles(extractPath, zipFile.path, outputZipPath);
-      await cleanupAllDirectories();
-      res.status(502).json({
-        statusCode: 0,
-        error: {
-          error_message: "Failed to read blob attributes from Walrus",
-          error_details: error,
-        },
-      });
-      return;
-    }
 
-    if (!check_blob_id || !check_blob_id.blobId) {
-      await cleanupFiles(extractPath, zipFile.path, outputZipPath);
-      await cleanupAllDirectories();
-      res.status(502).json({
-        statusCode: 0,
-        error: "Failed to add blobId to attributes",
-      });
-      return;
-    }
     if (!check_blob_id || !check_blob_id.blobId) {
       await cleanupFiles(extractPath, zipFile.path, outputZipPath);
       await cleanupAllDirectories();
@@ -1026,58 +642,7 @@ app.post("/process-site", upload.single("file"), async (req, res) => {
       });
       return;
     }
-    let response;
-    try {
-      const payload = {
-        arg1: "publish",
-        arg2: blobObjectId,
-      };
 
-      [response] = await tasksClient.createTask({
-        parent,
-        task: {
-          httpRequest: {
-            httpMethod: "POST",
-            url: `https://${process.env.JOB_ID}.${process.env.REGION}.run.app`,
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: Buffer.from(JSON.stringify(payload)).toString("base64"),
-            oidcToken: {
-              serviceAccountEmail: process.env.SERVICE_ACCOUNT_EMAIL,
-            },
-          },
-        },
-      });
-    } catch (error) {
-      await cleanupFiles(extractPath, zipFile.path, outputZipPath);
-      await cleanupAllDirectories();
-      res.status(500).json({
-        statusCode: 0,
-        error: {
-          error_message: "Failed to create task",
-          error_details: error,
-        },
-      });
-      return;
-    }
-
-    await cleanupFiles(extractPath, zipFile.path, outputZipPath);
-    await cleanupAllDirectories();
-
-    if (response.name) {
-      res.status(200).json({
-        statusCode: 1,
-        objectId: blobObjectId,
-        taskName: `Created task ${response.name}`,
-      });
-    }
-  } catch {
-    await cleanupFiles(extractPath, zipFile.path, null);
-    await cleanupAllDirectories();
-    res.status(500).json({
-      statusCode: 0,
-      error: "Internal server error during site processing"
     await cleanupFiles(extractPath, zipFile.path, outputZipPath);
     await cleanupAllDirectories();
 
@@ -1256,13 +821,6 @@ app.put("/update-blob-n-run-job", upload.single("file"), async (req, res) => {
     });
     return;
   }
-  if (!indexDir) {
-    res.status(400).json({
-      statusCode: 0,
-      error: "index.html not found",
-    });
-    return;
-  }
   const wsResources = {
     headers: {},
     routes: {},
@@ -1426,7 +984,6 @@ app.put("/update-blob-n-run-job", upload.single("file"), async (req, res) => {
       blobObjectId: blobObjectId,
       signer: keypair,
       attributes: attributesUpdate,
-      attributes: attributesUpdate,
     });
   } catch (error) {
     if (error instanceof Error) {
@@ -1479,34 +1036,13 @@ app.put("/update-blob-n-run-job", upload.single("file"), async (req, res) => {
           oidcToken: {
             serviceAccountEmail: process.env.SERVICE_ACCOUNT_EMAIL,
           },
-    const payload = {
-      arg1: "publish",
-      arg2: blobObjectId,
-    };
-
-    [response] = await tasksClient.createTask({
-      parent,
-      task: {
-        httpRequest: {
-          httpMethod: "POST",
-          url: `https://${process.env.JOB_ID}.${process.env.REGION}.run.app`,
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: Buffer.from(JSON.stringify(payload)).toString("base64"),
-          oidcToken: {
-            serviceAccountEmail: process.env.SERVICE_ACCOUNT_EMAIL,
-          },
         },
-      },
-    });
       },
     });
   } catch (error) {
     res.status(500).json({
       statusCode: 0,
       error: {
-        error_message: "Failed to create task",
         error_message: "Failed to create task",
         error_details: error,
       },
@@ -1515,11 +1051,8 @@ app.put("/update-blob-n-run-job", upload.single("file"), async (req, res) => {
   }
 
   if (response.name) {
-  if (response.name) {
     res.status(200).json({
       statusCode: 1,
-      objectId: blobObjectId,
-      taskName: `Created task ${response.name}`,
       objectId: blobObjectId,
       taskName: `Created task ${response.name}`,
     });
@@ -1570,26 +1103,6 @@ app.delete("/delete-site", async (req, res) => {
     }
   }
 
-  try {
-    await walrusClient.executeWriteBlobAttributesTransaction({
-      blobObjectId: String(object_id),
-      signer: keypair,
-      attributes: { staus: "3" },
-    });
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(502).json({
-        statusCode: 0,
-        error: {
-          error_message:
-            "Failed to execute write blob attributes transaction to Walrus",
-          error_details: error,
-        },
-      });
-      return;
-    }
-  }
-
   let response;
   try {
     const payload = {
@@ -1610,34 +1123,13 @@ app.delete("/delete-site", async (req, res) => {
           oidcToken: {
             serviceAccountEmail: process.env.SERVICE_ACCOUNT_EMAIL,
           },
-    const payload = {
-      arg1: "delete_site",
-      arg2: object_id,
-    };
-
-    [response] = await tasksClient.createTask({
-      parent,
-      task: {
-        httpRequest: {
-          httpMethod: "POST",
-          url: `https://${process.env.JOB_ID}.${process.env.REGION}.run.app`,
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: Buffer.from(JSON.stringify(payload)).toString("base64"),
-          oidcToken: {
-            serviceAccountEmail: process.env.SERVICE_ACCOUNT_EMAIL,
-          },
         },
-      },
-    });
       },
     });
   } catch (error) {
     res.status(500).json({
       statusCode: 0,
       error: {
-        error_message: "Failed to create task",
         error_message: "Failed to create task",
         error_details: error,
       },
@@ -1646,11 +1138,8 @@ app.delete("/delete-site", async (req, res) => {
   }
 
   if (response.name) {
-
-  if (response.name) {
     res.status(200).json({
       statusCode: 1,
-      taskName: `Created task ${response.name}`,
       taskName: `Created task ${response.name}`,
     });
   }
@@ -1765,27 +1254,6 @@ app.delete("/return2zero", async (req, res) => {
         },
       },
     });
-    const payload = {
-      arg1: "get_site_id",
-      arg2: object_id,
-    };
-
-    [response] = await tasksClient.createTask({
-      parent,
-      task: {
-        httpRequest: {
-          httpMethod: "POST",
-          url: `https://${process.env.JOB_ID}.${process.env.REGION}.run.app`,
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: Buffer.from(JSON.stringify(payload)).toString("base64"),
-          oidcToken: {
-            serviceAccountEmail: process.env.SERVICE_ACCOUNT_EMAIL,
-          },
-        },
-      },
-    });
   } catch (error) {
     res.status(500).json({
       statusCode: 0,
@@ -1800,52 +1268,6 @@ app.delete("/return2zero", async (req, res) => {
   if (response.name) {
     res.status(200).json({
       statusCode: 1,
-      taskName: `Created task ${response.name}`,
-    });
-  }
-});
-
-app.delete("/return2zero", async (req, res) => {
-  let response;
-  try {
-    const payload = {
-      arg1: "set_zero",
-    };
-
-    [response] = await tasksClient.createTask({
-      parent,
-      task: {
-        httpRequest: {
-          httpMethod: "POST",
-          url: `https://${process.env.JOB_ID}.${process.env.REGION}.run.app`,
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: Buffer.from(JSON.stringify(payload)).toString("base64"),
-          oidcToken: {
-            serviceAccountEmail: process.env.SERVICE_ACCOUNT_EMAIL,
-          },
-        },
-      },
-    });
-  } catch (error) {
-    res.status(500).json({
-      statusCode: 0,
-      error: {
-        error_message: "Failed to create task",
-        error_message: "Failed to create task",
-        error_details: error,
-      },
-    });
-    return;
-  }
-
-  if (response.name) {
-
-  if (response.name) {
-    res.status(200).json({
-      statusCode: 1,
-      taskName: `Created task ${response.name}`,
       taskName: `Created task ${response.name}`,
     });
   }

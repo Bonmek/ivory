@@ -1,6 +1,5 @@
 import ThreeJSBackground from '@/components/ThreeJsBackground'
 import React, { useState, useEffect } from 'react'
-import React, { useState, useEffect } from 'react'
 import { Helmet } from 'react-helmet'
 import { useIntl, FormattedMessage } from 'react-intl'
 import { useInView } from 'react-intersection-observer'
@@ -82,7 +81,6 @@ function HowToUsePage() {
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 flex flex-col lg:flex-row p-4 sm:p-6 md:p-8 max-w-7xl mx-auto w-full">
       <div className="relative z-10 flex flex-col lg:flex-row p-4 sm:p-6 md:p-8 max-w-7xl mx-auto w-full">
         {/* Left Section */}
         <div className="w-full lg:w-3/4 lg:pr-8">
@@ -231,120 +229,6 @@ function HowToUsePage() {
                   <li className="flex items-center gap-2 bg-gray-800/70 rounded-lg px-3 py-2 border-l-4 border-red-400 shadow-sm">
                     <span className="text-red-400 text-xl">⚠️</span>
                     {formatMessage({ id: 'howtouse.securityTips.checkSettings' })}
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          <div className="my-8"></div>
-
-          {/* How to set your own domain */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-            <div className="w-full">
-              <h2
-                id="how-to-set-your-own-domain"
-                className="text-lg sm:text-xl font-semibold mt-6 mb-2"
-              >
-                How to set your own domain
-              </h2>
-              <div className="bg-gray-900 p-4 rounded-lg mb-6">
-                <ol className="list-decimal list-inside text-gray-300 space-y-3 text-sm sm:text-base">
-                  <li>
-                    <strong>Deploy your site</strong> on our platform (see steps
-                    above).
-                  </li>
-                  <li>
-                    Go to{' '}
-                    <a
-                      href="https://suins.io"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-cyan-400 underline"
-                    >
-                      suins.io
-                    </a>{' '}
-                    and purchase the SuiNS domain you want.
-                  </li>
-                  <li>
-                    Return to your dashboard and click{' '}
-                    <strong>Generate Site ID</strong> for your deployed site.
-                  </li>
-                  <li>
-                    Copy the generated <strong>Site ID</strong>. You can now:
-                    <ul className="list-disc ml-6 mt-2 space-y-1">
-                      <li>Bind the domain yourself on the SuiNS website</li>
-                      <li>
-                        Or click <strong>Link to SuiNS</strong> on our dashboard
-                        for a guided process
-                      </li>
-                    </ul>
-                  </li>
-                  <li>
-                    If you use <strong>Link to SuiNS</strong>, follow the
-                    prompts, pay the required fee, and complete the transaction.
-                  </li>
-                  <li>
-                    Once done, you will receive a new URL for your custom
-                    domain. Your site is now accessible via your SuiNS domain!
-                  </li>
-                </ol>
-              </div>
-            </div>
-          </div>
-
-          {/* Security Tips */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-            <div className="w-full">
-              <h2
-                id="security"
-                className="text-lg sm:text-xl font-semibold mt-6 mb-4 flex items-center gap-2 text-red-300 drop-shadow-lg"
-              >
-                <svg
-                  className="h-6 w-6 text-red-400 animate-pulse"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M12 9v2m0 4h.01M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z"
-                  />
-                </svg>
-                Security Tips
-              </h2>
-              <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 p-5 rounded-xl mb-6 border border-red-400/30 shadow-lg relative overflow-hidden">
-                <div className="absolute -top-4 -right-4 opacity-20 pointer-events-none select-none">
-                  <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
-                    <circle
-                      cx="40"
-                      cy="40"
-                      r="36"
-                      stroke="#f87171"
-                      strokeWidth="6"
-                      strokeDasharray="8 8"
-                    />
-                  </svg>
-                </div>
-                <ul className="text-gray-200 space-y-4 text-base sm:text-lg font-medium">
-                  <li className="flex items-center gap-2 bg-gray-800/70 rounded-lg px-3 py-2 border-l-4 border-red-400 shadow-sm">
-                    <span className="text-red-400 text-xl">⚠️</span>
-                    Double-check all addresses before binding to avoid mistakes
-                  </li>
-                  <li className="flex items-center gap-2 bg-gray-800/70 rounded-lg px-3 py-2 border-l-4 border-red-400 shadow-sm">
-                    <span className="text-red-400 text-xl">⚠️</span>
-                    Use a secure wallet and keep your recovery phrase safe
-                  </li>
-                  <li className="flex items-center gap-2 bg-gray-800/70 rounded-lg px-3 py-2 border-l-4 border-red-400 shadow-sm">
-                    <span className="text-red-400 text-xl">⚠️</span>
-                    Consider enabling two-factor authentication if supported
-                  </li>
-                  <li className="flex items-center gap-2 bg-gray-800/70 rounded-lg px-3 py-2 border-l-4 border-red-400 shadow-sm">
-                    <span className="text-red-400 text-xl">⚠️</span>
-                    Regularly check your domain settings to ensure they haven't
-                    been tampered with
                   </li>
                 </ul>
               </div>
