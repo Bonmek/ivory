@@ -71,9 +71,13 @@ const formatShortDate = (date: Date) => {
   })
 }
 
-const calculateDaysBetween = (date1: Date, date2: Date) => {
+const calculateTimeBetween = (date1: Date, date2: Date) => {
   const diffTime = Math.abs(date2.getTime() - date1.getTime())
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  const days = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+  const hours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+  const minutes = Math.floor((diffTime % (1000 * 60 * 60)) / (1000 * 60))
+  
+  return { days, hours, minutes, totalMs: diffTime }
 }
 
 const ProjectCard = memo(
@@ -86,7 +90,7 @@ const ProjectCard = memo(
     onRefetch,
   }: ProjectCardProps) => {
     const intl = useIntl()
-    const remainingDays = calculateDaysBetween(new Date(), project.expiredDate)
+    const remaining = calculateTimeBetween(new Date(), project.expiredDate)
     const [startDateOpen, setStartDateOpen] = useState(false)
     const [expiredDateOpen, setExpiredDateOpen] = useState(false)
     const [remainingOpen, setRemainingOpen] = useState(false)
@@ -185,6 +189,17 @@ const ProjectCard = memo(
             avatar: 'border-red-500/50',
             shadow: 'shadow-red-500/5',
           }
+        case 3:
+          return {
+            card: 'bg-primary-900/90 hover:bg-primary-900 border-gray-500/10 hover:border-gray-500/30',
+            text: 'text-gray-400',
+            badge: 'bg-gray-500/20 text-gray-300',
+            link: 'text-gray-300 hover:text-gray-400',
+            date: 'text-gray-300',
+            dropdown: 'text-gray-300 hover:text-white hover:bg-gray-500/20',
+            avatar: 'border-gray-500/50',
+            shadow: 'shadow-gray-500/5',
+          }
         default:
           return {
             card: 'bg-primary-900/90 hover:bg-primary-900 border-secondary-500/10 hover:border-secondary-500/30',
@@ -243,7 +258,7 @@ const ProjectCard = memo(
 
         // Get the NFT ID for the selected SUINS
         const selectedSuinsData = suins.find(
-          (s) => s.data?.content?.fields?.domain_name === finalSuins,
+          (s) => s.data?.content?.fields?.domain_name === selectedSuins,
         )
         if (!selectedSuinsData?.data?.objectId) {
           throw new Error('SUINS NFT not found')
@@ -262,10 +277,10 @@ const ProjectCard = memo(
           signAndExecuteTransactionBlock,
           process.env.REACT_APP_SUI_NETWORK as 'mainnet' | 'testnet',
         )
-        setOpen(false)
         const response = await apiClient.put(
-          `/set-attributes?object_id=${project.parentId}&sui_ns=${finalSuins}`,
+          `/set-attributes?object_id=${project.parentId}&sui_ns=${selectedSuins}`,
         )
+        setOpen(false)
         if (result.status === 'success') {
           toast.success('SUINS linked successfully', {
             className: 'bg-primary-900 border-secondary-500/20 text-white',
@@ -301,20 +316,21 @@ const ProjectCard = memo(
           `/delete-site?object_id=${project.parentId}`,
         )
         if (response.status === 200) {
-          toast.success(
-            <FormattedMessage id="projectCard.siteDeleted" />,
-            {
-              description: intl.formatMessage({ id: 'projectCard.siteDeletedDesc' }),
-              duration: 5000,
-            }
-          )
+          toast.success(<FormattedMessage id="projectCard.siteDeleted" />, {
+            description: intl.formatMessage({
+              id: 'projectCard.siteDeletedDesc',
+            }),
+            duration: 5000,
+          })
           setDeleteDialogOpen(false)
           onRefetch()
         }
       } catch (error: any) {
         console.error('Error deleting site:', error)
         toast.error(
-          error.response?.data?.message || <FormattedMessage id="projectCard.failedToDelete" />
+          error.response?.data?.message || (
+            <FormattedMessage id="projectCard.failedToDelete" />
+          ),
         )
       } finally {
         setIsDeleting(false)
@@ -525,13 +541,8 @@ const ProjectCard = memo(
                 >
                   {project.status === 2 ? (
                     <>
-                      <DropdownMenuItem className="focus:bg-primary-800">
-                        <RefreshCw className="mr-2 h-4 w-4" />
-                        <span>Re-deploy</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator className="bg-secondary-500/20" />
                       <DropdownMenuItem
-                        className="text-red-400 focus:text-red-400 focus:bg-primary-800"
+                        className="text-red-400 focus:text-red-400 focus:bg-primary-800 cursor-pointer"
                         onClick={() => setDeleteDialogOpen(true)}
                       >
                         <Trash className="mr-2 h-4 w-4" />
@@ -540,9 +551,15 @@ const ProjectCard = memo(
                     </>
                   ) : project.status === 0 ? (
                     <>
-                      <div className="px-4 py-2 text-yellow-400 flex items-center gap-2 text-sm">
-                        <Loader2 className="ml-1 h-3 w-3 text-yellow-300 animate-spin" />
-                        Deploying...
+                    </>
+                  ) : project.status === 3 ? (
+                    <>
+                      <div className="px-4 py-2 text-purple-400 flex items-center gap-2 text-sm">
+                        <Loader2 className="ml-1 h-3 w-3 text-purple-300 animate-spin" />
+                        <FormattedMessage
+                          id="projectCard.deleting"
+                          defaultMessage="Deleting project..."
+                        />
                       </div>
                     </>
                   ) : (
@@ -574,7 +591,7 @@ const ProjectCard = memo(
                       </DropdownMenuItem>
                       <DropdownMenuSeparator className="bg-secondary-500/20" />
                       <DropdownMenuItem
-                        className="text-red-400 focus:text-red-400 focus:bg-primary-800"
+                        className="text-red-400 focus:text-red-400 focus:bg-primary-800 cursor-pointer"
                         onClick={() => setDeleteDialogOpen(true)}
                       >
                         <Trash className="mr-2 h-4 w-4" />
@@ -584,6 +601,7 @@ const ProjectCard = memo(
                   )}
                 </DropdownMenuContent>
               </DropdownMenu>
+              )}
             </div>
 
             {/* Left: Project Image */}
@@ -594,7 +612,9 @@ const ProjectCard = memo(
                     ? '/images/walrus_building.png'
                     : project.status === 2
                       ? '/images/walrus_fail.png'
-                      : '/images/walrus.png'
+                      : project.status === 3
+                        ? '/images/walrus_fail.png'
+                        : '/images/walrus.png'
                 }
                 alt="project avatar"
                 className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border-2 ${colors.avatar} shadow transition-all duration-300 group-hover:scale-105`}
@@ -610,7 +630,19 @@ const ProjectCard = memo(
                 >
                   {project.name}
                 </div>
-                {project.status === 2 && project.client_error_description ? (
+                {project.status === 3 ? (
+                  <div
+                    className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${colors.badge} flex items-center gap-1`}
+                  >
+                    <FormattedMessage
+                      id="projectCard.deleting"
+                      defaultMessage="Deleting"
+                    />
+                    <span className="ml-1">
+                      <span className="inline-block w-2 h-2 bg-purple-300 rounded-full animate-pulse" />
+                    </span>
+                  </div>
+                ) : project.status === 2 && project.client_error_description ? (
                   <Popover open={errorOpen} onOpenChange={setErrorOpen}>
                     <PopoverTrigger asChild>
                       <div
@@ -619,7 +651,7 @@ const ProjectCard = memo(
                         onMouseLeave={() => setErrorOpen(false)}
                         title="Click to view error details"
                       >
-                        Failed
+                        <FormattedMessage id="projectCard.failed" />
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           viewBox="0 0 24 24"
@@ -660,7 +692,7 @@ const ProjectCard = memo(
                         </div>
                         <div className="flex-1">
                           <div className="text-sm font-medium text-red-400 mb-1">
-                            Deployment Failed
+                            <FormattedMessage id="projectCard.deploymentFailed" />
                           </div>
                           <div className="text-xs text-white/80 leading-relaxed">
                             {project.client_error_description}
@@ -677,7 +709,7 @@ const ProjectCard = memo(
                         onMouseEnter={() => setStatusOpen(true)}
                         onMouseLeave={() => setStatusOpen(false)}
                       >
-                        Building
+                        <FormattedMessage id="projectCard.building" />
                         <span className="ml-1">
                           <span className="inline-block w-2 h-2 bg-yellow-300 rounded-full animate-pulse" />
                         </span>
@@ -706,11 +738,10 @@ const ProjectCard = memo(
                         </div>
                         <div className="flex-1">
                           <div className="text-sm font-medium text-yellow-400 mb-1">
-                            Building in Progress
+                            <FormattedMessage id="projectCard.buildingInProgress" />
                           </div>
                           <div className="text-xs text-white/80 leading-relaxed">
-                            Your site is currently being built. This process may
-                            take a few minutes.
+                            <FormattedMessage id="projectCard.buildingDesc" />
                           </div>
                         </div>
                       </div>
@@ -720,7 +751,7 @@ const ProjectCard = memo(
                   <div
                     className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${colors.badge} flex items-center`}
                   >
-                    Active
+                    <FormattedMessage id="projectCard.active" />
                   </div>
                 )}
               </div>
@@ -815,7 +846,7 @@ const ProjectCard = memo(
               <div className="flex flex-row w-full gap-x-3 sm:gap-x-6 mt-auto min-h-[48px] opacity-80 group-hover:opacity-100 transition-opacity duration-200">
                 <div className="flex-1 min-w-0 flex flex-col justify-center">
                   <div className="text-[10px] text-white/50 font-medium truncate">
-                    Start date
+                    <FormattedMessage id="projectCard.startDate" />
                   </div>
                   <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
                     <PopoverTrigger asChild>
@@ -840,7 +871,7 @@ const ProjectCard = memo(
                 </div>
                 <div className="flex-1 min-w-0 flex flex-col justify-center border-l border-white/10 pl-2 sm:pl-3">
                   <div className="text-[10px] text-white/50 font-medium truncate">
-                    Expired date
+                    <FormattedMessage id="projectCard.expiredDate" />
                   </div>
                   <Popover
                     open={expiredDateOpen}
@@ -869,16 +900,16 @@ const ProjectCard = memo(
                 {project.status === 0 && (
                   <div className="flex-1 min-w-0 flex flex-col justify-center border-l border-white/10 pl-2 sm:pl-3">
                     <div className="text-[10px] text-white/50 font-medium truncate">
-                      Build Time
+                      <FormattedMessage id="projectCard.buildTime" />
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5 min-h-[20px]">
                       <Timer className="h-3.5 w-3.5 text-yellow-400" />
                       {buildTime === 0 ? (
-                        <span className="animate-pulse text-yellow-300 font-medium">
-                          Loading...
+                        <span className="animate-pulse font-medium text-yellow-300">
+                          <FormattedMessage id="projectCard.loading" />
                         </span>
                       ) : (
-                        <span className="text-sm text-yellow-300 font-medium">
+                        <span className="text-sm font-medium text-yellow-300">
                           {formatBuildTime(buildTime)}
                         </span>
                       )}
@@ -887,7 +918,7 @@ const ProjectCard = memo(
                 )}
                 <div className="flex-1 min-w-0 flex flex-col justify-center border-l border-white/10 pl-2 sm:pl-3">
                   <div className="text-[10px] text-white/50 font-medium truncate">
-                    Remaining
+                    <FormattedMessage id="projectCard.remaining" />
                   </div>
                   <Popover open={remainingOpen} onOpenChange={setRemainingOpen}>
                     <PopoverTrigger asChild>
@@ -896,7 +927,16 @@ const ProjectCard = memo(
                         onMouseEnter={() => setRemainingOpen(true)}
                         onMouseLeave={() => setRemainingOpen(false)}
                       >
-                        {remainingDays} days
+                        {remaining.days === 0 ? (
+                          <>
+                            {remaining.hours}h {remaining.minutes}m
+                          </>
+                        ) : (
+                          <>
+                            {remaining.days}{' '}
+                            <FormattedMessage id="projectCard.days" />
+                          </>
+                        )}
                       </div>
                     </PopoverTrigger>
                     <PopoverContent
@@ -905,7 +945,16 @@ const ProjectCard = memo(
                       onMouseLeave={() => setRemainingOpen(false)}
                     >
                       <div className="text-sm">
-                        Expires on {formatDate(project.expiredDate)}
+                        <FormattedMessage
+                          id="projectCard.expiresOn"
+                          values={{ date: formatDate(project.expiredDate) }}
+                          defaultMessage="Expires on {date}"
+                        />
+                        {remaining.days === 0 && (
+                          <div className="mt-1 text-xs text-secondary-300">
+                            {remaining.hours} hours and {remaining.minutes} minutes remaining
+                          </div>
+                        )}
                       </div>
                     </PopoverContent>
                   </Popover>
@@ -929,13 +978,13 @@ const ProjectCard = memo(
               <Button
                 variant="outline"
                 onClick={() => setDeleteDialogOpen(false)}
-                className="border-white/20 text-white hover:bg-white/10"
+                className="border-white/20 text-white hover:bg-white/10 cursor-pointer"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleDeleteSite}
-                className="bg-red-500 hover:bg-red-600 text-white"
+                className="bg-red-500 hover:bg-red-600 text-white ${isDeleting ? '' : 'cursor-pointer'}"
                 disabled={isDeleting}
               >
                 {isDeleting ? (

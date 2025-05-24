@@ -12,10 +12,11 @@ export interface WebsiteAttributes {
   status: '0' | '1';
   cache: string;
   root: string;
-  install_command: string;
-  build_command: string;
+  output_dir: string;
+  install_command?: string;
+  build_command?: string;
   default_route: string;
-  is_build: string;
+  is_build?: string;
 }
 
 export interface WriteBlobRequest {
