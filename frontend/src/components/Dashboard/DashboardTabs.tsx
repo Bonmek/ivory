@@ -35,7 +35,7 @@ const DashboardTabs = ({ activeTab, setActiveTab }: DashboardTabsProps) => {
         <TabsList className="grid w-full grid-cols-4 md:w-[500px] bg-primary-900/80 backdrop-blur-sm relative">
           <TabsTrigger
             value="all"
-            className="relative z-10 data-[state=active]:text-black flex items-center justify-center gap-1"
+            className="relative z-10 data-[state=active]:text-black flex items-center justify-center gap-1 cursor-pointer hover:opacity-90 transition-opacity"
           >
             {activeTab === 'all' && (
               <motion.div
@@ -55,7 +55,7 @@ const DashboardTabs = ({ activeTab, setActiveTab }: DashboardTabsProps) => {
           </TabsTrigger>
           <TabsTrigger
             value="building"
-            className="relative z-10 data-[state=active]:text-black flex items-center justify-center gap-1"
+            className="relative z-10 data-[state=active]:text-black flex items-center justify-center gap-1 cursor-pointer hover:opacity-90 transition-opacity"
           >
             {activeTab === 'building' && (
               <motion.div
@@ -75,7 +75,7 @@ const DashboardTabs = ({ activeTab, setActiveTab }: DashboardTabsProps) => {
           </TabsTrigger>
           <TabsTrigger
             value="active"
-            className="relative z-10 data-[state=active]:text-black flex items-center justify-center gap-1"
+            className="relative z-10 data-[state=active]:text-black flex items-center justify-center gap-1 cursor-pointer hover:opacity-90 transition-opacity"
           >
             {activeTab === 'active' && (
               <motion.div
@@ -95,7 +95,7 @@ const DashboardTabs = ({ activeTab, setActiveTab }: DashboardTabsProps) => {
           </TabsTrigger>
           <TabsTrigger
             value="failed"
-            className="relative z-10 data-[state=active]:text-black flex items-center justify-center gap-1"
+            className="relative z-10 data-[state=active]:text-black flex items-center justify-center gap-1 cursor-pointer hover:opacity-90 transition-opacity"
           >
             {activeTab === 'failed' && (
               <motion.div
