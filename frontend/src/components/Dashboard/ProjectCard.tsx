@@ -235,12 +235,16 @@ const ProjectCard = memo(
     }
 
     const handleLinkSuins = async () => {
-      const finalSuins = selectedSuins === 'other' ? otherSuins : selectedSuins
+      if (!selectedSuins) {
+        toast.error(<FormattedMessage id="projectCard.pleaseSelect" />)
+        return
+      }
 
-      if (!finalSuins) {
-        toast.error('Please select or enter a SUINS domain', {
-          className: 'bg-red-900 border-red-500/20 text-white',
-          description: 'Click the wallet button in the top right to connect',
+      if (!userAddress) {
+        toast.error(<FormattedMessage id="projectCard.connectWallet" />, {
+          description: intl.formatMessage({
+            id: 'projectCard.connectWalletDesc',
+          }),
         })
         return
       }
@@ -282,10 +286,10 @@ const ProjectCard = memo(
         )
         setOpen(false)
         if (result.status === 'success') {
-          toast.success('SUINS linked successfully', {
-            className: 'bg-primary-900 border-secondary-500/20 text-white',
-            description:
-              'Your SUINS domain has been linked to this project. It may take a few moments to update.',
+          toast.success(<FormattedMessage id="projectCard.suinsLinked" />, {
+            description: intl.formatMessage({
+              id: 'projectCard.suinsLinkedDesc',
+            }),
             duration: 5000,
           })
           if (result.status === 'success' && response.status === 200) {
@@ -294,12 +298,15 @@ const ProjectCard = memo(
         }
       } catch (error: any) {
         console.error('Error linking SUINS:', error)
-        toast.error(error.message || 'Failed to link SUINS', {
-          className: 'bg-red-900 border-red-500/20 text-white',
-          description:
-            'Please try again or contact support if the problem persists.',
-          duration: 5000,
-        })
+        toast.error(
+          error.message || <FormattedMessage id="projectCard.failedToLink" />,
+          {
+            description: intl.formatMessage({
+              id: 'projectCard.failedToLinkDesc',
+            }),
+            duration: 5000,
+          },
+        )
       } finally {
         setIsLinking(false)
       }
@@ -350,7 +357,6 @@ const ProjectCard = memo(
       setIsGenerating(true)
       try {
         await apiClient.put(`/add-site-id?object_id=${project.parentId}`)
-        console.log(project.parentId)
         toast.success('Site ID generated successfully', {
           description: 'Please wait a moment',
           duration: 5000,
@@ -384,7 +390,7 @@ const ProjectCard = memo(
                   <Dialog open={open} onOpenChange={setOpen}>
                     <DialogTrigger asChild>
                       <button
-                        className={`h-8 px-3 flex items-center justify-center rounded-full ${colors.dropdown} transition-all duration-200 hover:scale-110 active:scale-95`}
+                        className={`h-8 px-3 flex items-center justify-center rounded-full ${colors.dropdown} transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer`}
                       >
                         <Link className="h-4 w-4 mr-1.5" />
                         <span className="text-sm">Link SUINS</span>
@@ -439,18 +445,12 @@ const ProjectCard = memo(
                                         </SelectItem>
                                       )
                                     })}
-                                    <SelectItem
-                                      value="other"
-                                      className="hover:bg-primary-700"
-                                    >
-                                      Other
-                                    </SelectItem>
                                   </SelectContent>
                                 </Select>
                                 <Button
                                   onClick={handleRefreshSuins}
                                   variant="outline"
-                                  className="border-secondary-500/20 text-white hover:bg-primary-800"
+                                  className="border-secondary-500/20 text-white hover:bg-primary-800 ${isLoadingSuins || isRefreshing ? '' : 'cursor-pointer'}"
                                   disabled={isLoadingSuins || isRefreshing}
                                 >
                                   {isRefreshing ? (
@@ -461,32 +461,6 @@ const ProjectCard = memo(
                                 </Button>
                               </div>
 
-                              {selectedSuins === 'other' && (
-                                <div className="relative mt-2 group">
-                                  <Input
-                                    placeholder="Enter your domain name"
-                                    value={otherSuins}
-                                    onChange={(e) => {
-                                      const value = e.target.value.replace(
-                                        '.wal.app',
-                                        '',
-                                      )
-                                      setOtherSuins(value)
-                                    }}
-                                    className="bg-primary-800 border-secondary-500/20 text-white pr-[85px] transition-all duration-200 
-                                    placeholder:text-white/30 focus:border-secondary-500/50 focus:ring-1 focus:ring-secondary-500/50
-                                    group-hover:border-secondary-500/30"
-                                  />
-                                  <div
-                                    className="absolute right-0 top-1/2 -translate-y-1/2 px-3 h-full flex items-center
-                                  border-l border-secondary-500/20 text-secondary-400/70 select-none bg-secondary-500/5
-                                  text-sm font-medium transition-colors duration-200 group-hover:text-secondary-400/90
-                                  group-hover:border-secondary-500/30 group-hover:bg-secondary-500/10"
-                                  >
-                                    .wal.app
-                                  </div>
-                                </div>
-                              )}
                             </>
                           )}
                         </div>
@@ -494,12 +468,11 @@ const ProjectCard = memo(
                           <div className="flex gap-2">
                             <Button
                               onClick={() => handleLinkSuins()}
-                              className="bg-secondary-500 hover:bg-secondary-600 text-white flex-1 relative"
+                              className="bg-secondary-500 hover:bg-secondary-600 text-white flex-1 relative ${isLinking || isLoadingSuins || !selectedSuins ? '' : 'cursor-pointer'}"
                               disabled={
                                 isLinking ||
                                 isLoadingSuins ||
-                                !selectedSuins ||
-                                (selectedSuins === 'other' && !otherSuins)
+                                !selectedSuins
                               }
                             >
                               {isLinking ? (
@@ -525,16 +498,17 @@ const ProjectCard = memo(
                     </DialogContent>
                   </Dialog>
                 )}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    className={`h-8 w-8 flex items-center justify-center rounded-full ${colors.dropdown} transition-all duration-200 hover:scale-110 active:scale-95`}
-                    disabled={project.status === 0}
-                  >
-                    <MoreHorizontal className="h-5 w-5" />
-                    <span className="sr-only">Open menu</span>
-                  </button>
-                </DropdownMenuTrigger>
+              {project.status !== 0 && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className={`h-8 w-8 flex items-center justify-center rounded-full ${colors.dropdown} transition-all duration-200 hover:scale-110 active:scale-95 ${project.status === 3 ? '' : 'cursor-pointer'}`}
+                      disabled={project.status === 3}
+                    >
+                      <MoreHorizontal className="h-5 w-5" />
+                      <span className="sr-only">Open menu</span>
+                    </button>
+                  </DropdownMenuTrigger>
                 <DropdownMenuContent
                   align="end"
                   className="w-56 bg-primary-900 border-secondary-500/20 text-white backdrop-blur-sm"
@@ -564,30 +538,62 @@ const ProjectCard = memo(
                     </>
                   ) : (
                     <>
-                      <DropdownMenuItem className="focus:bg-primary-800">
-                        <RefreshCw className="mr-2 h-4 w-4" />
-                        <span>Update site</span>
+                      <DropdownMenuItem
+                        className="focus:bg-primary-800 opacity-60 cursor-not-allowed flex items-center justify-between"
+                        disabled
+                      >
+                        <div className="flex items-center">
+                          <RefreshCw className="mr-2 h-4 w-4" />
+                          <span>
+                            <FormattedMessage id="projectCard.updateSite" />
+                          </span>
+                        </div>
+                        <div className="ml-1 text-[9px] px-1 py-0 leading-tight rounded-sm bg-secondary-500/10 text-secondary-400/80 whitespace-nowrap">
+                          <FormattedMessage id="projectCard.comingSoon" />
+                        </div>
                       </DropdownMenuItem>
                       {!project.siteId && (
                         <DropdownMenuItem
-                          className="focus:bg-primary-800"
+                          className={`focus:bg-primary-800 ${project.site_status === 0 ? '' : 'cursor-pointer'}`}
                           onClick={() => setGenerateDialogOpen(true)}
                           disabled={project.site_status === 0}
                         >
                           <Key className="mr-2 h-4 w-4" />
-                          <span>Generate Site ID</span>
+                          <span>
+                            <FormattedMessage id="projectCard.generateSiteId" />
+                          </span>
                           {isGenerating && (
                             <Loader2 className="ml-2 h-4 w-4 animate-spin text-secondary-400" />
                           )}
                         </DropdownMenuItem>
                       )}
-                      <DropdownMenuItem className="focus:bg-primary-800">
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        <span>Extend site</span>
+                      <DropdownMenuItem
+                        className="focus:bg-primary-800 opacity-60 cursor-not-allowed flex items-center justify-between"
+                        disabled
+                      >
+                        <div className="flex items-center">
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          <span>
+                            <FormattedMessage id="projectCard.extendSite" />
+                          </span>
+                        </div>
+                        <div className="ml-1 text-[9px] px-1 py-0 leading-tight rounded-sm bg-secondary-500/10 text-secondary-400/80 whitespace-nowrap">
+                          <FormattedMessage id="projectCard.comingSoon" />
+                        </div>
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="focus:bg-primary-800">
-                        <Users className="mr-2 h-4 w-4" />
-                        <span>Transfer ownership</span>
+                      <DropdownMenuItem
+                        className="focus:bg-primary-800 opacity-60 cursor-not-allowed flex items-center justify-between"
+                        disabled
+                      >
+                        <div className="flex items-center">
+                          <Users className="mr-2 h-4 w-4" />
+                          <span>
+                            <FormattedMessage id="projectCard.transferOwnership" />
+                          </span>
+                        </div>
+                        <div className="ml-1 text-[9px] px-1 py-0 leading-tight rounded-sm bg-secondary-500/10 text-secondary-400/80 whitespace-nowrap">
+                          <FormattedMessage id="projectCard.comingSoon" />
+                        </div>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator className="bg-secondary-500/20" />
                       <DropdownMenuItem
@@ -763,7 +769,7 @@ const ProjectCard = memo(
                     href={`https://${project.suins?.endsWith('.sui') ? project.suins.slice(0, -4) : project.suins}.wal.app`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center h-[28px] hover:underline truncate transition-colors duration-200 text-secondary-200/80 hover:text-secondary-100/90 max-w-[340px]"
+                    className="flex items-center h-[28px] hover:underline truncate transition-colors duration-200 text-secondary-200/80 hover:text-secondary-100/90 max-w-[340px] cursor-pointer"
                   >
                     {project.suins?.endsWith('.sui')
                       ? project.suins.slice(0, -4)
@@ -778,7 +784,7 @@ const ProjectCard = memo(
                     href={`https://kursui.wal.app/${project.showcase_url}/index.html`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center h-[24px] hover:underline transition-colors duration-200 text-secondary-200/80 hover:text-secondary-100/90 max-w-[340px]"
+                    className="flex items-center h-[24px] hover:underline transition-colors duration-200 text-secondary-200/80 hover:text-secondary-100/90 max-w-[340px] cursor-pointer"
                     title={`https://kursui.wal.app/${project.showcase_url}/index.html`}
                   >
                     <span className="flex-shrink-0">https://</span>
@@ -801,7 +807,9 @@ const ProjectCard = memo(
                       style={{ minHeight: 28 }}
                     >
                       <Loader2 className="h-4 w-4 animate-spin text-yellow-300" />
-                      <span>Generating Site ID...</span>
+                      <span>
+                        <FormattedMessage id="projectCard.generatingSiteId" />
+                      </span>
                     </span>
                   ) : project.site_status === 2 ? (
                     <span
@@ -819,17 +827,21 @@ const ProjectCard = memo(
                         <line x1="15" y1="9" x2="9" y2="15" />
                         <line x1="9" y1="9" x2="15" y2="15" />
                       </svg>
-                      <span>Failed to generate Site ID</span>
+                      <span>
+                        <FormattedMessage id="projectCard.failedToGenerateSiteId" />
+                      </span>
                     </span>
-                  ) : project.siteId ? (
+                  ) : project.siteId && project.siteId.trim() !== '' ? (
                     <>
                       <span className="truncate mr-2 text-white/80">
-                        Site ID: {project.siteId.slice(0, 6)}...
-                        {project.siteId.slice(-4)}
+                        Site ID:{' '}
+                        {project.siteId && project.siteId.trim() !== ''
+                          ? `${project.siteId.slice(0, 6)}...${project.siteId.slice(-4)}`
+                          : 'N/A'}
                       </span>
                       <button
                         onClick={() => handleCopy(project.siteId!)}
-                        className="p-1 rounded-full hover:bg-white/10 transition-colors duration-200"
+                        className="p-1 rounded-full hover:bg-white/10 transition-colors duration-200 cursor-pointer"
                       >
                         {copied ? (
                           <Check className="h-3.5 w-3.5 text-green-400" />
@@ -1008,30 +1020,34 @@ const ProjectCard = memo(
           <DialogContent className="bg-primary-900 border-secondary-500/20 text-white">
             <DialogHeader>
               <DialogTitle className="text-secondary-400">
-                Generate Site ID
+                <FormattedMessage id="projectCard.generateSiteId" />
               </DialogTitle>
               <DialogDescription className="text-white/60">
-                Do you want to generate a new Site ID for this project?
+                <FormattedMessage id="projectCard.generateSiteIdDesc" />
               </DialogDescription>
             </DialogHeader>
             <div className="flex justify-end gap-3 mt-6">
               <Button
                 variant="outline"
                 onClick={() => setGenerateDialogOpen(false)}
-                className="border-white/20 text-white hover:bg-white/10"
+                className="border-white/20 text-white hover:bg-white/10 ${isGenerating ? '' : 'cursor-pointer'}"
                 disabled={isGenerating}
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleGenerateSiteId}
-                className="bg-secondary-500 hover:bg-secondary-600 text-white"
+                className="bg-secondary-500 hover:bg-secondary-600 text-white ${isGenerating ? '' : 'cursor-pointer'}"
                 disabled={isGenerating}
               >
                 {isGenerating ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                ) : null}
-                Generate
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    <FormattedMessage id="projectCard.generating" />
+                  </>
+                ) : (
+                  <FormattedMessage id="projectCard.generate" />
+                )}
               </Button>
             </div>
           </DialogContent>
