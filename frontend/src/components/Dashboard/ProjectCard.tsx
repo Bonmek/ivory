@@ -51,6 +51,7 @@ import {
 import { useSuiData } from '@/hooks/useSuiData'
 import apiClient from '@/lib/axiosConfig'
 import axios from 'axios'
+import { FormattedMessage, useIntl } from 'react-intl';
 import { ProjectCardProps } from '@/types/project'
 import { linkSuinsToSite } from '@/utils/suinsUtils'
 
