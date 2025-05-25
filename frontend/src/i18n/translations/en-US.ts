@@ -1,4 +1,38 @@
 export default {
+  // About Us
+  'aboutus.hero.text': 'Empowering the future with seamless static site deployment on {walrus} storage.',
+  'aboutus.project.definition': 'Ivory is a cutting-edge deployment platform designed to simplify static website hosting using Walrus storage. Our mission is to make Web hosting accessible, cost-effective, and efficient for developers worldwide.',
+  'aboutus.techstack.nextjs': 'Next.js: React framework for scalable web applications',
+  'aboutus.techstack.typescript': 'TypeScript: Type-safe JavaScript for robust code',
+  'aboutus.techstack.tailwind': 'Tailwind CSS: Utility-first CSS for rapid UI development',
+  'aboutus.techstack.shadcn': 'shadcn/ui: Accessible and customizable UI components',
+  'aboutus.techstack.sui': 'Sui Blockchain: High-performance layer-1 blockchain',
+  'aboutus.techstack.walrus': 'Walrus: Decentralized storage solution for static assets',
+  'aboutus.techstack.googlecloud': 'Google Cloud: Used for background job processing',
+  'aboutus.milestones.title': 'Milestones',
+  'aboutus.milestones.1': 'Project launched at Sui Overflow Hacker House 2025',
+  'aboutus.milestones.1.link': 'https://www.facebook.com/story.php?story_fbid=1001718711951432&id=100063399376995',
+  'aboutus.milestones.2': 'Continuous development leading to Sui Overflow 2025 submission',
+  'aboutus.milestones.2.link': 'https://sui.io/overflow',
+  'aboutus.milestones.3': 'Future: Implement update system, transfer ownership, and stability improvements',
+  'aboutus.milestones.4': 'Future: Implement service pricing structure',
+  'aboutus.milestones.5': 'Future: Add AI-powered static site generation',
+  'aboutus.milestones.6': 'Future: Provide API services and tool extensions',
+  'aboutus.milestones.7': 'Future: Enhance security measures with secret key and .env management',
+  'aboutus.milestones.note': 'Note: Future milestones are currently in planning phase',
+
+
+  'aboutus.goals.title': 'Our Goals',
+  'aboutus.goals.1': 'Increase user adoption on Sui and Walrus ecosystems.',
+  'aboutus.goals.2': 'Capture a significant share of the Web hosting market.',
+  'aboutus.goals.3': 'Reduce complexity and costs associated with deploying static websites.',
+  'aboutus.team.title': 'By Kursui Team',
+  'aboutus.team.description': 'We are a passionate team of developers dedicated to revolutionizing Web deployment with innovative solutions.',
+  'aboutus.contact.title': 'Contact Us',
+  'aboutus.contact.github': 'GitHub',
+  'aboutus.contact.twitter': 'Twitter',
+  'aboutus.footer.copyright': '© 2025 Ivory. All rights reserved.',
+  
   // Navigation
   'nav.home': 'Home',
   'nav.dashboard': 'Dashboard',
@@ -8,20 +42,20 @@ export default {
   'nav.logout': 'Logout',
   'nav.copy': 'Copy',
   'nav.copied': 'Copied!',
-
+  
   // Common actions
   'action.confirm': 'Confirm',
   'action.cancel': 'Cancel',
   'action.save': 'Save',
   'action.edit': 'Edit',
   'action.delete': 'Delete',
-
+  
   // Wallet
   'wallet.connect': 'Connect Wallet',
   'wallet.disconnect': 'Disconnect',
   'wallet.address': 'Wallet Address',
   'wallet.copyAddress': 'Copy Address',
-
+  
   // Checklist steps
   'checklist.confirm': 'Waiting for Confirmation',
   'checklist.deploy': 'Initializing',
@@ -29,13 +63,13 @@ export default {
   'checklist.done': 'Deployed',
   'checklist.failed': 'Failed',
   'createWebsite.redeploy': 'Redeploy',
-
+  
   // Messages
   'message.welcome': 'Welcome to Ivory',
   'message.loading': 'Loading...',
   'message.error': 'An error occurred',
   'message.success': 'Operation successful',
-
+  
   // Create Website
   'createWebsite.title': 'Create new project',
   'createWebsite.projectFiles': 'Project files',
@@ -49,7 +83,16 @@ export default {
   'createWebsite.browseFile': 'Browse file',
   'createWebsite.or': 'or',
   'createWebsite.name': 'Name',
-  'createWebsite.createWebsite': 'Next',
+  
+  // About Us sections
+  'aboutus.section.projectDefinition': 'Project Definition',
+  'aboutus.section.technologyStack': 'Technology Stack',
+  'aboutus.section.milestones': 'Milestones',
+  'aboutus.section.goals': 'Our Goals',
+  'aboutus.section.team': 'Team',
+  'aboutus.section.contact': 'Contact',
+
+  'createWebsite.createWebsite': 'Create website',
   'createWebsite.error.required': 'Project name is required',
   'createWebsite.error.zipFile': 'Please select a ZIP file',
   'createWebsite.error.githubRepo': 'Please select a repository',
@@ -183,6 +226,7 @@ export default {
   'createWebsite.preview.tipJsErrors': 'Check for JavaScript errors in the Console tab',
   'createWebsite.preview.buttonPreviewNotLoading': 'Preview not loading?',
   'createWebsite.preview.ariaLabel': 'Preview not loading? Click for help',
+  'createWebsite.preview.pathRecommendation': 'For best compatibility, we recommend using relative paths (starting with \'./\') for all local assets and links in your website.',
 
   // Homepage
   'homepage.hero.title1': 'Launch Your Site In Few Clicks',
@@ -194,7 +238,7 @@ export default {
   'homepage.hero.desc': 'Ivory is a no-code, low-cost platform for deploying static websites with Walrus. Enjoy high availability, censorship resistance, data integrity, and full ownership — all with free bandwidth and zero complexity.',
   'homepage.hero.deploy': 'Deploy Now',
   'homepage.hero.docs': 'Explore Docs',
-  'homepage.section.title': 'The future of Web3 development',
+  'homepage.section.title': 'The future of Web development',
   'homepage.feature.censorship': 'Censorship-Resistant',
   'homepage.feature.censorship.desc': "Stay online — always. Ivory sites are immune to takedown and centralized control thanks to Walrus's decentralized architecture.",
   'homepage.feature.secure': 'Secure & Ownable',
@@ -208,6 +252,7 @@ export default {
   'homepage.feature.bandwidth': 'Free Bandwidth',
   'homepage.feature.bandwidth.desc': 'Enjoy truly free hosting. Ivory serves your traffic at no cost — ideal for creators, devs, and indie projects.',
   'homepage.powered': 'Powered by',
+  'homepage.showcase': 'Showcase',
 
   // Dashboard
   'dashboard.title': 'Dashboard',
@@ -230,7 +275,7 @@ export default {
   'dashboard.refresh': 'Refresh data',
   'dashboard.lastRefresh': 'Last: {time}',
   'dashboard.createNew': 'Deploy Site',
-  
+
   // Beta Testing Limit Modal
   'dashboard.projectLimit.title': 'Beta Testing Limit',
   'dashboard.projectLimit.description': 'During our beta testing phase, we\'re limiting each wallet to one project per epoch to ensure everyone gets a chance to try the platform. Thank you for your understanding and participation!',
@@ -248,6 +293,35 @@ export default {
 
   // ProjectCard
   'projectCard.linkSuins': 'Link SUINS',
+
+  // How to Use
+  'howtouse.title': 'How to Use - Launch and Bind Sui NS',
+  'howtouse.section1.title': 'How to launch website with us',
+  'howtouse.section1.getStarted': 'Get Started',
+  'howtouse.section1.description1': 'When you launch your website through our platform, you will be able to deploy your static website and make it accessible from anywhere in the world.',
+  'howtouse.section1.description2': 'Our service is not designed to store .env files or secret keys, due to strict security policies. Therefore, our platform is ideal for public-facing sites like landing pages, documentation, or DApps that use a blockchain backend such as Sui, Ethereum, or Solana.',
+  'howtouse.section1.description3': 'You’ll only be charged for deployment, updates, and time extensions—there are no additional fees regardless of how much bandwidth your site uses. This means we offer free bandwidth for your project.',
+  'howtouse.section2.title': 'Project Setup',
+  'howtouse.section2.description': 'Once inside, the interface is split into two parts. On the left side, you can drop your static files or connect your GitHub account to choose a repository. On the right side, you’ll set your site name and configurations. If you haven’t built the site yet, we can handle that for you too. Once everything is set, just hit Deploy to launch.',
+  'howtouse.section3.title': 'Deployment Status',
+  'howtouse.section3.status.yellow': 'Yellow: Build in progress',
+  'howtouse.section3.status.green': 'Green: Build successful – your site is live',
+  'howtouse.section3.status.red': 'Red: Build failed',
+  'howtouse.section3.description': 'Once the status is green, your site is ready to connect to Suins, making it instantly accessible to your users. After the deployment is complete, the user receives a SHOWCASE_URL to access the website we have prepared via our DNS. From this point, the user can UPDATE or DELETE the site as desired. For those who want a separate site or wish to configure their own DNS, please refer to the next section for instructions.',
+  'howtouse.section4.title': 'How to set your own domain',
+  'howtouse.section4.step1': 'Deploy your site on our platform (see steps above).',
+  'howtouse.section4.step2': 'Go to suins.io and purchase the SuiNS domain you want.',
+  'howtouse.section4.step3': 'Return to your dashboard and click Generate Site ID for your deployed site.',
+  'howtouse.section4.step4': 'Copy the generated Site ID. You can now:',
+  'howtouse.section4.step4.option1': 'Bind the domain yourself on the SuiNS website',
+  'howtouse.section4.step4.option2': 'Or click Link to SuiNS on our dashboard for a guided process',
+  'howtouse.section4.step5': 'If you use Link to SuiNS, follow the prompts, pay the required fee, and complete the transaction.',
+  'howtouse.section4.step6': 'Once done, you will receive a new URL for your custom domain. Your site is now accessible via your SuiNS domain!',
+  'howtouse.section4.description': 'After clicking deploy, you’ll be redirected to your dashboard. There, you can monitor your deployment status:',
+  'howtouse.section4.status.yellow': 'Yellow: Build in progress',
+  'howtouse.section4.status.green': 'Green: Build successful – your site is live',
+  'howtouse.section4.status.red': 'Red: Build failed',
+  'howtouse.section4.description2': 'Once the status is green, your site is ready to connect to Suins, making it instantly accessible to your users. After the deployment is complete, the user receives a SHOWCASE_URL to access the website we have prepared via our DNS. From this point, the user can UPDATE or DELETE the site as desired. For those who want a separate site or wish to configure their own DNS, please refer to the next section for instructions.',
   'projectCard.initialSetup': '(initial setup)',
   'projectCard.dialogTitle': 'Link SUINS',
   'projectCard.dialogDescription': 'Select your SUINS name to link it with this project',
@@ -299,5 +373,17 @@ export default {
   'projectCard.generate': 'Generate',
   'projectCard.generatingSiteId': 'Generating Site ID...',
   'projectCard.failedToGenerateSiteId': 'Failed to generate Site ID',
-  'projectCard.comingSoon': 'Soon'
+  'projectCard.comingSoon': 'Soon',
+  // How to Use
+  'howtouse.securityTips.title': 'Security Tips',
+  'howtouse.securityTips.checkAddresses': 'Always verify wallet addresses before transactions',
+  'howtouse.securityTips.secureWallet': 'Use a secure wallet with hardware support',
+  'howtouse.securityTips.twoFactor': 'Enable two-factor authentication',
+  'howtouse.securityTips.checkSettings': 'Regularly review security settings',
+  
+  'howtouse.sidebar.title': 'How to Use',
+  'howtouse.sidebar.section1': 'Getting Started',
+  'howtouse.sidebar.section4': 'set your own domain',
+  'howtouse.backToTop': 'Back to Top',
+
 } as const;

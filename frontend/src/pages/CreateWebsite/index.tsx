@@ -450,6 +450,10 @@ export default function CreateWebsitePage() {
         default_route: advancedOptions.defaultPath || '/index.html',
       }
 
+      console.log('Attributes:', attributes)
+      console.log('Selected File:', selectedFile)
+      console.log('Selected Repo File:', selectedRepoFile)
+
       setDeployingState(DeployingState.Deploying)
 
       const response = await writeBlobAndRunJob({
@@ -648,7 +652,7 @@ export default function CreateWebsitePage() {
             clearInterval(interval);
           }
         });
-      }, 5000);
+      }, 30000);
     }
 
     return () => {
