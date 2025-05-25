@@ -13,7 +13,8 @@ const execAsync = promisify(exec);
 export class FileService {
     async extractZip(zipPath: string, extractPath: string) {
         await fs.ensureDir(extractPath);
-        await fs.createReadStream(zipPath)
+        await fs
+            .createReadStream(zipPath)
             .pipe(unzipper.Extract({ path: extractPath }))
             .promise();
     }
