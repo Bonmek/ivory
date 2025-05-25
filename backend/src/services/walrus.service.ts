@@ -28,18 +28,21 @@ export class WalrusService {
     }
 
     async writeBlob(blob: Buffer, attributes: TypeOf<typeof inputWriteBlobScheme>) {
+        const uuid = uuidv4();
+        console.log('writeBlob', attributes,uuid);
         return await this.walrusClient.writeBlob({
             blob,
             deletable: true,
             epochs: Number(attributes.epochs),
             signer: this.keypair,
-            attributes: { ...attributes, forceId: uuidv4() },
+            attributes: { ...attributes, uuid },
         });
     }
 
-    async executeWriteBlobAttributesTransaction(blobObjectId: string, attributes: TypeOf<typeof inputWriteBlobScheme>) {
+    async executeWriteBlobAttributesTransaction(blob_id: string, attributes: TypeOf<typeof inputWriteBlobScheme>) {
+        console.log('writeBlob', attributes,blob_id);
         return await this.walrusClient.executeWriteBlobAttributesTransaction({
-            blobObjectId,
+            blobObjectId: blob_id,
             signer: this.keypair,
             attributes,
         });

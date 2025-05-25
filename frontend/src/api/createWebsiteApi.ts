@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-export interface WebsiteAttributes {
+
+export interface PreviewSiteAttributes {
   'site-name': string;
   owner: string;
   ownership: '0' | '1';
@@ -8,7 +9,7 @@ export interface WebsiteAttributes {
   epochs: string;
   start_date: string;
   end_date: string;
-  status: '0' | '1';
+  status: '0' | '1' | '2' | '3';
   cache: string;
   root: string;
   output_dir: string;
@@ -18,9 +19,28 @@ export interface WebsiteAttributes {
   is_build?: string;
 }
 
-export interface WriteBlobRequest {
+export interface CreateSiteAttributes {
+  'site-name': string;
+  root: string;
+  owner: string;
+  ownership: '0' | '1';
+  send_to: string;
+  epochs: string;
+  status: '0' | '1' | '2' | '3';
+  cache: string;
+  start_date: string;
+  end_date: string;
+}
+
+export interface PreviewSiteRequest {
   file?: File;
-  attributes: WebsiteAttributes;
+  attributes: PreviewSiteAttributes;
+  githubUrl?: string;
+}
+
+export interface CreateSiteRequest {
+  file?: File;
+  attributes: CreateSiteAttributes;
   githubUrl?: string;
 }
 
@@ -38,7 +58,7 @@ export interface PreviewWebsiteResponse {
   };
 }
 
-export const previewWebsite = async (data: WriteBlobRequest): Promise<File> => {
+export const previewWebsite = async (data: PreviewSiteRequest): Promise<File> => {
   const formData = new FormData();
 
   // Add file parameter if it exists
@@ -74,7 +94,7 @@ export const previewWebsite = async (data: WriteBlobRequest): Promise<File> => {
   }
 };
 
-export const writeBlobAndRunJob = async (data: WriteBlobRequest): Promise<WriteBlobResponse> => {
+export const writeBlobAndRunJob = async (data: CreateSiteRequest): Promise<WriteBlobResponse> => {
   const formData = new FormData();
 
   // Add file parameter if it exists

@@ -33,7 +33,7 @@ import {
 import { frameworks } from '@/constants/frameworks'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Helmet } from 'react-helmet'
-import { previewWebsite, WebsiteAttributes, writeBlobAndRunJob } from '@/api/createWebsiteApi'
+import { previewWebsite, CreateSiteAttributes, PreviewSiteAttributes, writeBlobAndRunJob } from '@/api/createWebsiteApi'
 import apiClient from '@/lib/axiosConfig'
 import { useQuery } from 'wagmi/query'
 import { PreviewSummary } from '@/components/CreateWebsite/PreviewSummary'
@@ -388,7 +388,7 @@ export default function CreateWebsitePage() {
     if (showBuildOutputSettings) {
       rootDirectory = buildOutputSettings.rootDirectory
     }
-    const attributes: WebsiteAttributes = {
+    const attributes: PreviewSiteAttributes = {
       'site-name': name,
       owner: address!,
       ownership: '0',
@@ -432,7 +432,7 @@ export default function CreateWebsitePage() {
     }
 
     try {
-      const attributes: WebsiteAttributes = {
+      const attributes: CreateSiteAttributes = {
         'site-name': name,
         owner: address!,
         ownership: '0',
@@ -440,14 +440,9 @@ export default function CreateWebsitePage() {
         epochs: '1',
         start_date: new Date(todayDate).toISOString(),
         end_date: checkEndDate().toISOString(),
-        output_dir: showBuildOutputSettings ? buildOutputSettings.outputDirectory : '',
         status: '0',
         cache: advancedOptions.cacheControl,
-        install_command: buildOutputSettings.installCommand || 'npm install',
-        build_command: buildOutputSettings.buildCommand || 'npm run build',
-        is_build: showBuildOutputSettings ? '0' : '1',
         root: rootDirectory || '/',
-        default_route: advancedOptions.defaultPath || '/index.html',
       }
 
       console.log('Attributes:', attributes)
