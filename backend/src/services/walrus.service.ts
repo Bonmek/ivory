@@ -5,7 +5,7 @@ import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import config from '../config/config';
 import { TypeOf } from "zod";
 import { v4 as uuidv4 } from "uuid";
-import { inputSetDeleteErrorScheme, inputSetSiteStatusScheme, inputSetSuiNSScheme, inputWriteBlobScheme } from "../models/inputScheme";
+import { inputSetDeleteErrorScheme, inputSetSiteStatusScheme, inputSetSuiNameServiceScheme, inputWriteBlobScheme } from "../models/inputScheme";
 
 export class WalrusService {
     private walrusClient: WalrusClient;
@@ -61,7 +61,7 @@ export class WalrusService {
         });
     }
 
-    async addSuiNS(attributes: TypeOf<typeof inputSetSuiNSScheme>) {
+    async addSuiNS(attributes: TypeOf<typeof inputSetSuiNameServiceScheme>) {
         return await this.walrusClient.executeWriteBlobAttributesTransaction({
             blobObjectId: attributes.object_id,
             signer: this.keypair,

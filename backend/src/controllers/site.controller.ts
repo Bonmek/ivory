@@ -46,9 +46,10 @@ export class SiteController {
         }
     }
 
-    processSite = async (req: Request, res: Response) => {
+    createSite = async (req: Request, res: Response) => {
         try {
-            const result = await this.siteService.handleProcessSite(req);
+            console.log(req.body);
+            const result = await this.siteService.handleCreateSite(req);
             res.status(200).json({
                 statusCode: 1,
                 objectId: result.blobObjectId,

@@ -3,10 +3,11 @@ import { Request } from 'express';
 import { WalrusService } from './walrus.service';
 import { TaskService } from './task.service';
 import { FileService } from './file.service';
-import { inputWriteBlobScheme, inputSetAttributesScheme, inputDeleteBlobScheme } from '../models/inputScheme';
+import { inputWriteBlobScheme, inputSetAttributesScheme, inputDeleteBlobScheme, inputPreviewSiteScheme } from '../models/inputScheme';
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
 import fs from 'fs-extra';
+import { exec } from 'child_process';
 
 export class SiteService {
     private walrusService: WalrusService;
@@ -41,8 +42,7 @@ export class SiteService {
                     : req.body.attributes
                 : {};
 
-            console.log('Received attributes from frontend:', JSON.stringify(attributes, null, 2));
-            const attributes_data = inputWriteBlobScheme.safeParse(attributes);
+            const attributes_data = inputPreviewSiteScheme.safeParse(attributes);
 
             if (!attributes_data.success) {
                 await this.fileService.cleanupFiles(extractPath, zipFile.path, null);
@@ -54,7 +54,7 @@ export class SiteService {
                 if (await this.fileService.containsJavaScriptFiles(extractPath)) {
                     await this.fileService.cleanupFiles(extractPath, zipFile.path, null);
                     await this.fileService.cleanupAllDirectories();
-                    throw new Error("JavaScript files found in the uploaded zip. Only static files are allowed when is_build is 1.");
+                    throw new Error("JavaScript files found in the uploaded zip. Only static files are allowed.");
                 }
                 indexDir = await this.fileService.findIndexHtmlPath(extractPath);
             } else if (attributes_data.data.is_build === "0") {
@@ -73,8 +73,24 @@ export class SiteService {
                         await this.fileService.modifyBuildConfig(buildTool.configPath, buildTool.tool, attributes_data.data);
                     }
 
-                    await this.fileService.executeBuildCommand(attributes_data.data.install_command, buildDir);
-                    await this.fileService.executeBuildCommand(attributes_data.data.build_command, buildDir);
+                    await new Promise((resolve, reject) => {
+                        const install = exec(attributes_data.data.install_command, { cwd: buildDir });
+                        install.on('exit', (code) => {
+                            if (code !== 0) {
+                                reject(new Error(`Install failed with code ${code}`));
+                                return;
+                            }
+
+                            const build = exec(attributes_data.data.build_command, { cwd: buildDir });
+                            build.on('exit', (code) => {
+                                if (code !== 0) {
+                                    reject(new Error(`Build failed with code ${code}`));
+                                    return;
+                                }
+                                resolve(true);
+                            });
+                        })
+                    })
 
                     const distPath = path.join(buildDir, attributes_data.data.output_dir);
                     const indexPath = path.join(distPath, 'index.html');
@@ -99,16 +115,15 @@ export class SiteService {
                 throw new Error("index.html not found");
             }
 
-            const zipStart = performance.now();
-            outputZipPath = path.join(__dirname, "../outputs", `${uuidv4()}_${Date.now()}.zip`);
+            outputZipPath = path.join(__dirname, "../outputs", `${uuidv4()}}.zip`);
             await this.fileService.createZip(indexDir, outputZipPath);
-            console.log(`ZIP creation took: ${(performance.now() - zipStart).toFixed(2)}ms`);
 
             return {
                 extractPath,
                 outputZipPath,
                 indexDir
             };
+            
         } catch (error) {
             await this.fileService.cleanupFiles(extractPath, req.file?.path, outputZipPath);
             await this.fileService.cleanupAllDirectories();
@@ -116,7 +131,7 @@ export class SiteService {
         }
     }
 
-    async handleProcessSite(req: Request) {
+    async handleCreateSite(req: Request) {
         if (!req.file) {
             await this.fileService.cleanupAllDirectories();
             throw new Error("No file uploaded");
@@ -138,7 +153,7 @@ export class SiteService {
         const extractPath = path.join(__dirname, "../temp", attributes_data.data["site-name"]);
         try {
             await this.fileService.extractZip(zipFile.path, extractPath);
-
+            // console.log(attributes_data.data);
             const wsResources = {
                 headers: {},
                 routes: {},
@@ -162,7 +177,7 @@ export class SiteService {
             const zipBuffer = await fs.readFile(outputZipPath);
             const new_blob_data = await this.walrusService.writeBlob(zipBuffer, {
                 ...attributes_data.data,
-                forceId: uuidv4()
+                uuid: uuidv4()
             });
 
             if (!new_blob_data) {
@@ -173,7 +188,7 @@ export class SiteService {
 
             await this.walrusService.executeWriteBlobAttributesTransaction(
                 blobObjectId,
-                { ...attributes_data.data, blobId: new_blob_data.blobId }
+                { ...attributes_data.data, blob_id: new_blob_data.blobId }
             );
 
             const check_blob_id = await this.walrusService.readBlobAttributes(blobObjectId);

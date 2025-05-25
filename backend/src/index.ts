@@ -8,7 +8,7 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: process.env.FRONTEND_URL,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -18,7 +18,6 @@ app.use(express.json());
 // Routes
 app.use('/api', siteRoutes);
 app.use('/api/github', githubRoutes);
-
 
 app.listen(5000, () => {
   console.log('Server is running on port 5000');

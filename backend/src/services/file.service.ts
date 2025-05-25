@@ -6,7 +6,7 @@ import AdmZip from 'adm-zip';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { TypeOf } from 'zod';
-import { inputWriteBlobScheme } from '../models/inputScheme';
+import { inputPreviewSiteScheme, inputWriteBlobScheme } from '../models/inputScheme';
 
 const execAsync = promisify(exec);
 
@@ -58,7 +58,7 @@ export class FileService {
             const stat = await fs.stat(fullPath);
             if (stat.isDirectory()) {
                 if (await this.containsJavaScriptFiles(fullPath)) return true;
-            } else if (file.endsWith('.js')) {
+            } else if (file.endsWith('.js') || file.endsWith('.jsx') || file.endsWith('.ts') || file.endsWith('.tsx')) {
                 return true;
             }
         }
@@ -114,7 +114,7 @@ export class FileService {
     //=============================================================================//
 
     
-    async modifyBuildConfig(configPath: string, tool: string, attributes_data: TypeOf<typeof inputWriteBlobScheme>): Promise<void> {
+    async modifyBuildConfig(configPath: string, tool: string, attributes_data: TypeOf<typeof inputPreviewSiteScheme>): Promise<void> {
         const content = await fs.readFile(configPath, 'utf-8');
         let modifiedContent = content;
 
@@ -151,8 +151,8 @@ export class FileService {
         await fs.writeFile(configPath, modifiedContent, 'utf-8');
     }
     
-    async executeBuildCommand(command: string, cwd: string) {
-        await execAsync(command, { cwd });
+    async validateFile(configPath: string, tool: string, attributes_data: TypeOf<typeof inputPreviewSiteScheme>): Promise<void> {
+
     }
 }
 

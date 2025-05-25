@@ -13,7 +13,7 @@ router.get("/test", siteController.test);
 router.post("/preview-site", upload.single("file"), siteController.previewSite);
 
 // Create site
-router.post("/create-site", upload.single("file"), siteController.processSite);
+router.post("/create-site", upload.single("file"), siteController.createSite);
 
 // Set attributes
 router.put("/set-attributes", siteController.setAttributes);
