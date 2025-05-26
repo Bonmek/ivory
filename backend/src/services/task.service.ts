@@ -15,7 +15,12 @@ export class TaskService {
         );
     }
 
-    async createTask(payload: Record<string, string>) {
+    async createTask(method: string, blob_object_id : string) {
+        const payload = {
+            arg1: method,
+            arg2: blob_object_id,
+        };
+
         return await this.tasksClient.createTask({
             parent: this.parent,
             task: {

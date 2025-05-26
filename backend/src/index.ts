@@ -1,19 +1,32 @@
-// src/app.ts
 import express from 'express';
 import cors from 'cors';
 import siteRoutes from './routes/site.routes';
 import githubRoutes from './routes/github.routes';
+import session from 'express-session';
+import passport from 'passport';
+import path from 'path';
 
 const app = express();
-
-// Middleware
-app.use(cors({
-  origin: process.env.FRONTEND_URL,
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
 app.use(express.json());
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || "*",
+    credentials: true,
+    exposedHeaders: ["Content-Disposition", "Content-Length"],
+  })
+);
+
+app.use(
+  session({
+    secret: "session-secret",
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+
+app.use(express.static(path.join(__dirname, '../../frontend/dist')));
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Routes
 app.use('/api', siteRoutes);

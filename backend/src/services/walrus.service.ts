@@ -1,6 +1,6 @@
 // src/services/walrus.service.ts
 import { WalrusClient } from "@mysten/walrus";
-import { SuiClient } from '@mysten/sui/client';
+import { getFullnodeUrl, SuiClient } from '@mysten/sui/client';
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import config from '../config/config';
 import { TypeOf } from "zod";
@@ -14,7 +14,7 @@ export class WalrusService {
 
 
     constructor() {
-        const suiClient = new SuiClient({ url: config.blockchain.rpcUrl });
+        const suiClient = new SuiClient({ url: getFullnodeUrl("mainnet") });
         this.walrusClient = new WalrusClient({
             network: "mainnet",
             suiClient,
@@ -29,7 +29,7 @@ export class WalrusService {
 
     async writeBlob(blob: Buffer, attributes: TypeOf<typeof inputWriteBlobScheme>) {
         const uuid = uuidv4();
-        console.log('writeBlob', attributes,uuid);
+        console.log('writeBlob', attributes, uuid);
         return await this.walrusClient.writeBlob({
             blob,
             deletable: true,
@@ -39,12 +39,11 @@ export class WalrusService {
         });
     }
 
-    async executeWriteBlobAttributesTransaction(blob_id: string, attributes: TypeOf<typeof inputWriteBlobScheme>) {
-        console.log('writeBlob', attributes,blob_id);
+    async executeWriteBlobAttributesTransaction({ blobId, blobObjectId }: { blobId: string, blobObjectId: string }) {
         return await this.walrusClient.executeWriteBlobAttributesTransaction({
-            blobObjectId: blob_id,
+            blobObjectId: blobObjectId,
             signer: this.keypair,
-            attributes,
+            attributes: { blobId: blobId },
         });
     }
 
@@ -73,8 +72,9 @@ export class WalrusService {
     }
 
     async readBlobAttributes(blobObjectId: string) {
-        return await this.walrusClient.readBlobAttributes({
-            blobObjectId,
+        const resulte = await this.walrusClient.readBlobAttributes({
+            blobObjectId
         });
+        return resulte
     }
 }

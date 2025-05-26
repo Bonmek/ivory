@@ -156,7 +156,7 @@ export class SiteService {
             await this.fileService.cleanupAllDirectories();
             throw new Error(JSON.stringify(attributes_data.error.errors));
         }
-        console.log('attributes_data', attributes_data);
+
         const extractPath = path.join(__dirname, "../temp", attributes_data.data["site-name"]);
         try {
             await this.fileService.extractZip(zipFile.path, extractPath);
@@ -181,7 +181,7 @@ export class SiteService {
             const outputZipPath = path.join(
                 __dirname,
                 "../outputs",
-                `${uuidv4()}}.zip`
+                `${attributes_data.data["site-name"]}.zip`
             );
 
             await fs.ensureDir(path.dirname(outputZipPath));
@@ -206,6 +206,7 @@ export class SiteService {
 
 
             const zipBuffer = await fs.readFile(outputZipPath);
+
             const new_blob_data = await this.walrusService.writeBlob(zipBuffer, {
                 ...attributes_data.data
             });
@@ -214,23 +215,25 @@ export class SiteService {
                 throw new Error("WriteBlob success but data is undefined");
             }
 
+            const blob_id = new_blob_data.blobId;
             const blob_object_id = new_blob_data.blobObject.id.id;
 
-
             await this.walrusService.executeWriteBlobAttributesTransaction(
-                blob_object_id,
-                { ...attributes_data.data }
+                { blobId: blob_id, blobObjectId: blob_object_id }
             );
 
-            const check_blob_id = await this.walrusService.readBlobAttributes(blob_object_id);
-            if (!check_blob_id || !check_blob_id.blobId) {
+            let check_blob_id;
+            try {
+                check_blob_id = await this.walrusService.readBlobAttributes(blob_object_id);
+            } catch (error) {
                 throw new Error("Failed to add blobId to attributes");
             }
 
-            const [response] = await this.taskService.createTask({
-                arg1: "publish",
-                arg2: blob_object_id,
-            });
+            if (!check_blob_id || !check_blob_id.blobId) {
+                throw new Error("blobId or attributes is undefined");
+            }
+            // console.log('check_blob_id', check_blob_id);
+            const [response] = await this.taskService.createTask("publish", blob_object_id);
 
             await this.fileService.cleanupFiles(extractPath, zipFile.path, outputZipPath);
             await this.fileService.cleanupAllDirectories();
@@ -286,10 +289,7 @@ export class SiteService {
             { object_id: String(object_id), status: "3" }
         );
 
-        const [response] = await this.taskService.createTask({
-            arg1: "delete_site",
-            arg2: String(object_id),
-        });
+        const [response] = await this.taskService.createTask("delete_site", String(object_id));
 
         return {
             taskName: response.name
@@ -313,10 +313,7 @@ export class SiteService {
             { object_id: String(object_id), site_status: "0", status: "0" }
         );
 
-        const [response] = await this.taskService.createTask({
-            arg1: "get_site_id",
-            arg2: String(object_id),
-        });
+        const [response] = await this.taskService.createTask("get_site_id", String(object_id));
 
         return {
             taskName: response.name
