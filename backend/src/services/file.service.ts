@@ -3,12 +3,8 @@ import fs from 'fs-extra';
 import path from 'path';
 import unzipper from 'unzipper';
 import AdmZip from 'adm-zip';
-import { exec } from 'child_process';
-import { promisify } from 'util';
 import { TypeOf } from 'zod';
-import { inputPreviewSiteScheme, inputWriteBlobScheme } from '../models/inputScheme';
-
-const execAsync = promisify(exec);
+import { inputPreviewSiteScheme } from '../models/inputScheme';
 
 export class FileService {
     async extractZip(zipPath: string, extractPath: string) {
@@ -34,7 +30,7 @@ export class FileService {
 
     async cleanupAllDirectories() {
         try {
-            const dirs = ['outputs', 'temp', 'uploads'];
+            const dirs = ['outputs','outputs', 'temp', 'uploads'];
             await Promise.all(
                 dirs.map(async dir => {
                     const dirPath = path.join(__dirname, dir);
@@ -152,8 +148,8 @@ export class FileService {
         await fs.writeFile(configPath, modifiedContent, 'utf-8');
     }
     
-    async validateFile(configPath: string, tool: string, attributes_data: TypeOf<typeof inputPreviewSiteScheme>): Promise<void> {
+    // async validateFile(configPath: string, tool: string, attributes_data: TypeOf<typeof inputPreviewSiteScheme>): Promise<void> {
 
-    }
+    // }
 }
 

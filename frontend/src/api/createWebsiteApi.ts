@@ -109,13 +109,13 @@ export const writeBlobAndRunJob = async (data: CreateSiteRequest): Promise<Write
   formData.append('attributes', JSON.stringify(data.attributes));
 
   try {
-    const response = await axios.post(process.env.REACT_APP_SERVER_URL + process.env.REACT_APP_API_WRITE_BLOB_N_RUN_JOB!, formData, {
+    const response = await axios.post(process.env.REACT_APP_SERVER_URL + process.env.REACT_APP_API_CREATE_WEBSITE!, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     });
     return response.data;
   } catch (error) {
-    throw new Error('Failed to write blob and run job: ' + (error as Error).message);
+    throw new Error('Failed to create website: ' + (error as Error).message);
   }
 };

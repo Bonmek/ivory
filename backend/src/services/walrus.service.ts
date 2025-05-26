@@ -11,16 +11,13 @@ export class WalrusService {
     private walrusClient: WalrusClient;
     private keypair: Ed25519Keypair;
 
-
-
     constructor() {
         const suiClient = new SuiClient({ url: getFullnodeUrl("mainnet") });
         this.walrusClient = new WalrusClient({
             network: "mainnet",
             suiClient,
-            storageNodeClientOptions: {
+            storageNodeClientOptions: { 
                 timeout: config.blockchain.storageTimeout,
-                onError: (error) => console.log(error),
             },
         });
 
@@ -28,23 +25,32 @@ export class WalrusService {
     }
 
     async writeBlob(blob: Buffer, attributes: TypeOf<typeof inputWriteBlobScheme>) {
-        const uuid = uuidv4();
-        console.log('writeBlob', attributes, uuid);
-        return await this.walrusClient.writeBlob({
-            blob,
-            deletable: true,
-            epochs: Number(attributes.epochs),
-            signer: this.keypair,
-            attributes: { ...attributes, uuid },
-        });
+        try {
+            const uuid = uuidv4();
+            const result = await this.walrusClient.writeBlob({
+                blob,
+                deletable: true,
+                epochs: Number(attributes.epochs),
+                signer: this.keypair,
+                attributes: { ...attributes, uuid },
+            });
+            return result;
+        } catch {
+            return null;
+        }
     }
 
     async executeWriteBlobAttributesTransaction({ blobId, blobObjectId }: { blobId: string, blobObjectId: string }) {
-        return await this.walrusClient.executeWriteBlobAttributesTransaction({
-            blobObjectId: blobObjectId,
-            signer: this.keypair,
-            attributes: { blobId: blobId },
-        });
+        try {
+            await this.walrusClient.executeWriteBlobAttributesTransaction({
+                signer: this.keypair,
+                blobObjectId: blobObjectId,
+                attributes: { blobId: blobId },
+            });
+            return true;
+        } catch {
+            return false;
+        }
     }
 
     async setSiteStatus(attributes: TypeOf<typeof inputSetSiteStatusScheme>) {
@@ -72,9 +78,13 @@ export class WalrusService {
     }
 
     async readBlobAttributes(blobObjectId: string) {
-        const resulte = await this.walrusClient.readBlobAttributes({
-            blobObjectId
-        });
-        return resulte
+        try {
+            const result = await this.walrusClient.readBlobAttributes({
+                blobObjectId
+            });
+            return result;
+        } catch {
+            return null;
+        }
     }
 }

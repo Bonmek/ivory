@@ -11,17 +11,16 @@ export class TaskService {
         this.parent = this.tasksClient.queuePath(
             config.google.projectId,
             config.google.region,
-            config.google.jobId
+            config.google.cloudName
         );
     }
 
-    async createTask(method: string, blob_object_id : string) {
+    async createTask(method: string, blob_object_id: string) {
         const payload = {
             arg1: method,
             arg2: blob_object_id,
         };
-
-        return await this.tasksClient.createTask({
+        const result = await this.tasksClient.createTask({
             parent: this.parent,
             task: {
                 httpRequest: {
@@ -37,5 +36,7 @@ export class TaskService {
                 },
             },
         });
+        return result;
     }
+
 }

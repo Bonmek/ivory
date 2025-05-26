@@ -5,12 +5,13 @@ import githubRoutes from './routes/github.routes';
 import session from 'express-session';
 import passport from 'passport';
 import path from 'path';
+import config from './config/config';
 
 const app = express();
 app.use(express.json());
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "*",
+    origin: config.urls.frontend ,
     credentials: true,
     exposedHeaders: ["Content-Disposition", "Content-Length"],
   })

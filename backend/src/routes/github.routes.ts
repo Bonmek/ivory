@@ -2,6 +2,7 @@
 import { RequestHandler, Router } from 'express';
 import passport from 'passport';
 import { GitHubController } from '../controllers/github.controller';
+import config from '../config/config';
 
 const router = Router();
 const githubController = new GitHubController();
@@ -13,7 +14,7 @@ router.get(
     '/auth/github/callback',
     passport.authenticate('github', { failureRedirect: '/' }),
     (req, res) => {
-        res.redirect(`${process.env.FRONTEND_URL}/create-website?success=true`);
+        res.redirect(`${config.urls.frontend}/create-website?success=true`);
     }
 );
 
@@ -23,7 +24,7 @@ router.get('/auth/github/logout', (req, res) => {
             return res.status(500).json({ error: 'Logout failed' });
         }
         res.clearCookie('connect.sid', { path: '/' });
-        res.redirect(`${process.env.FRONTEND_URL}`);
+        res.redirect(`${config.urls.frontend}`);
     });
 });
 
