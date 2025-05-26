@@ -211,7 +211,7 @@ async function cleanupAllDirectories() {
   }
 }
 
-app.post("/preview", upload.single("file"), async (req, res) => {
+app.post("/api/preview-site", upload.single("file"), async (req, res) => {
   const startTime = performance.now();
   console.log('Start processing:', new Date().toISOString());
   let extractPath: string | null = null;
@@ -388,7 +388,7 @@ app.post("/preview", upload.single("file"), async (req, res) => {
   }
 });
 
-app.post("/process-site", upload.single("file"), async (req, res) => {
+app.post("/api/create-site", upload.single("file"), async (req, res) => {
   if (!req.file) {
     await cleanupAllDirectories();
     res.status(400).json({
@@ -663,7 +663,7 @@ app.post("/process-site", upload.single("file"), async (req, res) => {
   }
 });
 
-app.put("/set-attributes", async (req, res) => {
+app.put("/api/set-attributes", async (req, res) => {
   const object_id = req.query.object_id;
   const sui_ns = req.query.sui_ns;
 
@@ -721,7 +721,7 @@ app.put("/set-attributes", async (req, res) => {
   });
 });
 
-app.put("/update-blob-n-run-job", upload.single("file"), async (req, res) => {
+app.put("/api/update-blob-n-run-job", upload.single("file"), async (req, res) => {
   if (!req.file) {
     res.status(400).json({
       statusCode: 0,
@@ -1059,7 +1059,7 @@ app.put("/update-blob-n-run-job", upload.single("file"), async (req, res) => {
   }
 });
 
-app.delete("/delete-site", async (req, res) => {
+app.delete("/api/delete-site", async (req, res) => {
   const object_id = req.query.object_id;
 
   if (!object_id) {
@@ -1145,7 +1145,7 @@ app.delete("/delete-site", async (req, res) => {
   }
 });
 
-app.put("/add-site-id", async (req, res) => {
+app.put("/api/add-site-id", async (req, res) => {
   const object_id = req.query.object_id;
 
   if (!object_id) {
@@ -1231,7 +1231,7 @@ app.put("/add-site-id", async (req, res) => {
   }
 });
 
-app.delete("/return2zero", async (req, res) => {
+app.delete("/api/return2zero", async (req, res) => {
   let response;
   try {
     const payload = {
