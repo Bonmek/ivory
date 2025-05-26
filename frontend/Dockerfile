@@ -1,33 +1,36 @@
-# Stage 1: Build React App
-FROM node:20-alpine AS builder
+# Build stage
+FROM node:22-alpine AS build
+
+# Install Python and build tools for native dependencies
+RUN apk add --no-cache \
+    python3 \
+    make \
+    g++ \
+    py3-pip
+
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
 WORKDIR /app
 
-# Copy files
-COPY . .
-
-# Enable and setup pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# Copy package files first (for better caching)
+COPY package.json pnpm-lock.yaml ./
 
 # Install dependencies
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --shamefully-hoist
 
-# Build app
+# Copy source code (node_modules will be ignored by .dockerignore)
+COPY . .
+
+# Build the project
 RUN pnpm run build
 
-# Stage 2: Serve with nginx
-FROM nginx:alpine
+# Serve with static server
+FROM node:22-alpine
 
-# Copy build files to nginx's default public folder
-COPY --from=builder /app/dist /usr/share/nginx/html
+WORKDIR /app
+RUN npm install -g serve
+COPY --from=build /app/dist /app/dist
 
-# Copy custom nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# Add healthcheck
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:80/health || exit 1
-
-EXPOSE 80
-
-CMD ["nginx", "-g", "daemon off;"]
+EXPOSE 4173
+CMD ["serve", "-s", "dist", "-l", "4173"]

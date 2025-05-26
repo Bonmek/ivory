@@ -51,6 +51,7 @@ import {
 import { useSuiData } from '@/hooks/useSuiData'
 import apiClient from '@/lib/axiosConfig'
 import axios from 'axios'
+import { FormattedMessage, useIntl } from 'react-intl';
 import { ProjectCardProps } from '@/types/project'
 import { linkSuinsToSite } from '@/utils/suinsUtils'
 
@@ -282,7 +283,7 @@ const ProjectCard = memo(
           process.env.REACT_APP_SUI_NETWORK as 'mainnet' | 'testnet',
         )
         const response = await apiClient.put(
-          `/set-attributes?object_id=${project.parentId}&sui_ns=${selectedSuins}`,
+          `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_SET_ATTRIBUTES!}?object_id=${project.parentId}&sui_ns=${selectedSuins}`,
         )
         setOpen(false)
         if (result.status === 'success') {
@@ -320,7 +321,7 @@ const ProjectCard = memo(
       try {
         setIsDeleting(true)
         const response = await apiClient.delete(
-          `/delete-site?object_id=${project.parentId}`,
+          `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_DELETE_WEBSITE!}?object_id=${project.parentId}`,
         )
         if (response.status === 200) {
           toast.success(<FormattedMessage id="projectCard.siteDeleted" />, {
@@ -356,7 +357,7 @@ const ProjectCard = memo(
     const handleGenerateSiteId = async () => {
       setIsGenerating(true)
       try {
-        await apiClient.put(`/add-site-id?object_id=${project.parentId}`)
+        await apiClient.put(`${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_ADD_SITE_ID!}?object_id=${project.parentId}`)
         toast.success('Site ID generated successfully', {
           description: 'Please wait a moment',
           duration: 5000,
