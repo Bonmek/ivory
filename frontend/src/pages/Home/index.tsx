@@ -388,38 +388,10 @@ export default function HomePage() {
             </motion.h1>
             
             {/* Desktop version (hidden on smaller screens) */}
-          <div className="max-w-5xl mx-auto text-center z-10 relative px-4 overflow-hidden">
-            {/* Mobile-only text version (hidden on md screens and up) */}
-            <motion.h1 
-              className="md:hidden text-3xl sm:text-4xl font-bold mb-6 tracking-tight"
-              variants={itemVariants}
-              style={{
-                textShadow: '0 0 20px var(--tw-color-secondary-500, #97f0e5, 0.5)',
-                fontFamily: "'Pixelify Sans', sans-serif",
-                letterSpacing: '-0.02em',
-                lineHeight: '1.2',
-              }}
-            >
-              <div className="flex flex-wrap justify-center">
-                {intl.formatMessage({ id: 'homepage.hero.title1' }).split(' ').map((word, i) => (
-                  <span key={i} className="inline-block mx-1 bg-clip-text text-transparent bg-gradient-to-r from-secondary-400 to-secondary-600">
-                    {word}
-                  </span>
-                ))}
-              </div>
-              <div className="w-full"></div>
-              <motion.span className="text-white inline-block mt-2">
-                {heroLast}
-              </motion.span>
-            </motion.h1>
-            
-            {/* Desktop version (hidden on smaller screens) */}
             <motion.h1
               className="hidden md:block text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold mb-6 tracking-tight whitespace-nowrap"
-              className="hidden md:block text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold mb-6 tracking-tight whitespace-nowrap"
               variants={itemVariants}
               style={{
-                textShadow: '0 0 20px var(--tw-color-secondary-500, #97f0e5, 0.5)',
                 textShadow: '0 0 20px var(--tw-color-secondary-500, #97f0e5, 0.5)',
                 fontFamily: "'Pixelify Sans', sans-serif",
                 letterSpacing: '-0.02em',
@@ -443,15 +415,11 @@ export default function HomePage() {
                       }}
                     >
                       {char === ' ' ? <div className="inline-block w-3"></div> : char}
-                      {char === ' ' ? <div className="inline-block w-3"></div> : char}
                     </motion.span>
                   ))}
                   <span className="inline-block w-2" />
-                  <span className="inline-block w-2" />
                 </span>
               ))}
-              <div className="w-full"></div>
-              <motion.span className="text-white inline-block mt-2">
               <div className="w-full"></div>
               <motion.span className="text-white inline-block mt-2">
                 {heroLast.split('').map((char, index) => (
@@ -480,7 +448,6 @@ export default function HomePage() {
 
             <motion.p
               className="text-lg sm:text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto px-2"
-              className="text-lg sm:text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto px-2"
               variants={itemVariants}
               style={{
                 fontFamily: "'Pixelify Sans', sans-serif",
@@ -494,17 +461,14 @@ export default function HomePage() {
 
             <motion.div
               className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 justify-center w-full px-4 sm:px-0 group"
-              className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 justify-center w-full px-4 sm:px-0 group"
               variants={itemVariants}
             >
               <motion.button
-                className="font-pixel bg-gradient-to-r from-secondary-500 to-secondary-600 px-6 sm:px-8 py-3 sm:py-4 rounded-full text-base sm:text-lg font-medium relative w-full sm:w-auto"
                 className="font-pixel bg-gradient-to-r from-secondary-500 to-secondary-600 px-6 sm:px-8 py-3 sm:py-4 rounded-full text-base sm:text-lg font-medium relative w-full sm:w-auto"
                 whileHover={{
                   scale: 1.05,
                   textShadow: '0 0 8px rgb(255,255,255)',
                   filter: 'brightness(1.2)',
-                  boxShadow: '0 0 30px var(--tw-color-secondary-500, #97f0e5, 0.7)',
                   boxShadow: '0 0 30px var(--tw-color-secondary-500, #97f0e5, 0.7)',
                 }}
                 whileTap={{ scale: 0.95 }}
@@ -513,16 +477,13 @@ export default function HomePage() {
                 style={{
                   letterSpacing: '0.05em',
                   margin: '8px',
-                  margin: '8px',
                 }}
-                onClick={() => navigate('/dashboard')}
                 onClick={() => navigate('/dashboard')}
               >
                 <span className="text-black relative z-10">
                   <FormattedMessage id="homepage.hero.deploy" />
                 </span>
                 <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-secondary-600 to-secondary-700 rounded-full"
                   className="absolute inset-0 bg-gradient-to-r from-secondary-600 to-secondary-700 rounded-full"
                   animate={{
                     opacity: [0.5, 0.8, 0.5],
@@ -537,7 +498,6 @@ export default function HomePage() {
 
               <motion.button
                 className="font-pixel bg-white/10 backdrop-blur-sm border border-white/20 px-6 sm:px-8 py-3 sm:py-4 rounded-full text-base sm:text-lg font-medium w-full sm:w-auto relative"
-                className="font-pixel bg-white/10 backdrop-blur-sm border border-white/20 px-6 sm:px-8 py-3 sm:py-4 rounded-full text-base sm:text-lg font-medium w-full sm:w-auto relative"
                 whileHover={{
                   scale: 1.05,
                   textShadow: '0 0 8px rgb(255,255,255)',
@@ -547,9 +507,7 @@ export default function HomePage() {
                 style={{
                   letterSpacing: '0.05em',
                   margin: '8px',
-                  margin: '8px',
                 }}
-                onClick={() => window.open('https://kursui.wal.app/', '_blank')}
                 onClick={() => window.open('https://kursui.wal.app/', '_blank')}
               >
                 <span className="flex items-center justify-center gap-2">

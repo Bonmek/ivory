@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-export interface WebsiteAttributes {
+
+export interface PreviewSiteAttributes {
   'site-name': string;
   owner: string;
   ownership: '0' | '1';
@@ -8,7 +9,7 @@ export interface WebsiteAttributes {
   epochs: string;
   start_date: string;
   end_date: string;
-  status: '0' | '1';
+  status: '0' | '1' | '2' | '3';
   cache: string;
   root: string;
   output_dir: string;
@@ -18,9 +19,28 @@ export interface WebsiteAttributes {
   is_build?: string;
 }
 
-export interface WriteBlobRequest {
+export interface CreateSiteAttributes {
+  'site-name': string;
+  root: string;
+  owner: string;
+  ownership: '0' | '1';
+  send_to: string;
+  epochs: string;
+  status: '0' | '1' | '2' | '3';
+  cache: string;
+  start_date: string;
+  end_date: string;
+}
+
+export interface PreviewSiteRequest {
   file?: File;
-  attributes: WebsiteAttributes;
+  attributes: PreviewSiteAttributes;
+  githubUrl?: string;
+}
+
+export interface CreateSiteRequest {
+  file?: File;
+  attributes: CreateSiteAttributes;
   githubUrl?: string;
 }
 
@@ -38,7 +58,7 @@ export interface PreviewWebsiteResponse {
   };
 }
 
-export const previewWebsite = async (data: WriteBlobRequest): Promise<File> => {
+export const previewWebsite = async (data: PreviewSiteRequest): Promise<File> => {
   const formData = new FormData();
 
   // Add file parameter if it exists
@@ -74,7 +94,7 @@ export const previewWebsite = async (data: WriteBlobRequest): Promise<File> => {
   }
 };
 
-export const writeBlobAndRunJob = async (data: WriteBlobRequest): Promise<WriteBlobResponse> => {
+export const writeBlobAndRunJob = async (data: CreateSiteRequest): Promise<WriteBlobResponse> => {
   const formData = new FormData();
 
   // Add file parameter if it exists
@@ -89,13 +109,13 @@ export const writeBlobAndRunJob = async (data: WriteBlobRequest): Promise<WriteB
   formData.append('attributes', JSON.stringify(data.attributes));
 
   try {
-    const response = await axios.post(process.env.REACT_APP_SERVER_URL + process.env.REACT_APP_API_WRITE_BLOB_N_RUN_JOB!, formData, {
+    const response = await axios.post(process.env.REACT_APP_SERVER_URL + process.env.REACT_APP_API_CREATE_WEBSITE!, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     });
     return response.data;
   } catch (error) {
-    throw new Error('Failed to write blob and run job: ' + (error as Error).message);
+    throw new Error('Failed to create website: ' + (error as Error).message);
   }
 };
