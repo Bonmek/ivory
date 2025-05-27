@@ -144,8 +144,8 @@ export default function CreateWebsitePage() {
       errors.push(intl.formatMessage({ id: 'createWebsite.error.maxLength' }, { max: 40 }))
     }
 
-    // Only allow English letters (both cases), numbers, and spaces
-    if (!/^[a-zA-Z0-9 ]+$/.test(value)) {
+    // Allow English letters (both cases), numbers, hyphens, and underscores (no spaces)
+    if (!/^[a-zA-Z0-9_-]+$/.test(value)) {
       errors.push(intl.formatMessage({ id: 'createWebsite.error.englishOnly' }))
     }
 

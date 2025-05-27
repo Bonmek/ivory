@@ -32,7 +32,7 @@ export default {
   'aboutus.contact.github': 'GitHub',
   'aboutus.contact.twitter': 'Twitter',
   'aboutus.footer.copyright': '© 2025 Ivory. All rights reserved.',
-  
+
   // Navigation
   'nav.home': 'Home',
   'nav.dashboard': 'Dashboard',
@@ -42,20 +42,20 @@ export default {
   'nav.logout': 'Logout',
   'nav.copy': 'Copy',
   'nav.copied': 'Copied!',
-  
+
   // Common actions
   'action.confirm': 'Confirm',
   'action.cancel': 'Cancel',
   'action.save': 'Save',
   'action.edit': 'Edit',
   'action.delete': 'Delete',
-  
+
   // Wallet
   'wallet.connect': 'Connect Wallet',
   'wallet.disconnect': 'Disconnect',
   'wallet.address': 'Wallet Address',
   'wallet.copyAddress': 'Copy Address',
-  
+
   // Checklist steps
   'checklist.confirm': 'Waiting for Confirmation',
   'checklist.deploy': 'Initializing',
@@ -63,13 +63,13 @@ export default {
   'checklist.done': 'Deployed',
   'checklist.failed': 'Failed',
   'createWebsite.redeploy': 'Redeploy',
-  
+
   // Messages
   'message.welcome': 'Welcome to Ivory',
   'message.loading': 'Loading...',
   'message.error': 'An error occurred',
   'message.success': 'Operation successful',
-  
+
   // Create Website
   'createWebsite.title': 'Create new project',
   'createWebsite.projectFiles': 'Project files',
@@ -83,7 +83,7 @@ export default {
   'createWebsite.browseFile': 'Browse file',
   'createWebsite.or': 'or',
   'createWebsite.name': 'Name',
-  
+
   // About Us sections
   'aboutus.section.projectDefinition': 'Project Definition',
   'aboutus.section.technologyStack': 'Technology Stack',
@@ -201,7 +201,7 @@ export default {
   'createWebsite.expirationNotice': 'Your Site will expire on {expiryDate}',
 
   'createWebsite.error.maxLength': 'Maximum length is {max} characters',
-  'createWebsite.error.englishOnly': 'Only English letters, numbers, and spaces are allowed',
+  'createWebsite.error.englishOnly': 'Only English letters (a-z, A-Z), numbers (0-9), hyphens (-), and underscores (_) are allowed',
   'createWebsite.error.duplicateName': 'Project name already exists',
 
   'createWebsite.preview.issues.incorrectPaths': 'Incorrect paths',
@@ -380,7 +380,7 @@ export default {
   'howtouse.securityTips.secureWallet': 'Use a secure wallet with hardware support',
   'howtouse.securityTips.twoFactor': 'Enable two-factor authentication',
   'howtouse.securityTips.checkSettings': 'Regularly review security settings',
-  
+
   'howtouse.sidebar.title': 'How to Use',
   'howtouse.sidebar.section1': 'Getting Started',
   'howtouse.sidebar.section4': 'set your own domain',

@@ -28,7 +28,7 @@ export default {
   'aboutus.contact.github': 'GitHub',
   'aboutus.contact.twitter': 'Twitter',
   'aboutus.footer.copyright': '© 2025 Ivory. 保留所有权利。',
-  
+
   // Navigation
   'nav.home': '首页',
   'nav.dashboard': '仪表板',
@@ -38,20 +38,20 @@ export default {
   'nav.logout': '登出',
   'nav.copy': '复制',
   'nav.copied': '已复制！',
-  
+
   // Common actions
   'action.confirm': '确认',
   'action.cancel': '取消',
   'action.save': '保存',
   'action.edit': '编辑',
   'action.delete': '删除',
-  
+
   // Wallet
   'wallet.connect': '连接钱包',
   'wallet.disconnect': '断开连接',
   'wallet.address': '钱包地址',
   'wallet.copyAddress': '复制地址',
-  
+
   // Checklist steps
   'checklist.confirm': '等待确认',
   'checklist.deploy': '初始化',
@@ -59,13 +59,13 @@ export default {
   'checklist.done': '已部署',
   'checklist.failed': '失败',
   'createWebsite.redeploy': '重新部署',
-  
+
   // Messages
   'message.welcome': '欢迎来到Ivory',
   'message.loading': '加载中...',
   'message.error': '发生错误',
   'message.success': '操作成功',
-  
+
   // Create Website
   'createWebsite.title': '创建新项目',
   'createWebsite.projectFiles': '项目文件',
@@ -79,7 +79,7 @@ export default {
   'createWebsite.browseFile': '浏览文件',
   'createWebsite.or': '或',
   'createWebsite.name': '名称',
-  
+
   // About Us sections
   'aboutus.section.projectDefinition': '项目定义',
   'aboutus.section.technologyStack': '技术栈',
@@ -231,7 +231,7 @@ export default {
   'createWebsite.expirationNotice': '您的网站将在 {expiryDate} 过期',
 
   'createWebsite.error.maxLength': '最大长度为 {max} 个字符',
-  'createWebsite.error.englishOnly': '仅允许英文、数字和空格',
+  'createWebsite.error.englishOnly': '仅允许英文字母 (a-z, A-Z)、数字 (0-9)、连字符 (-) 和下划线 (_)，不允许空格',
   'createWebsite.error.duplicateName': '项目名称已存在',
 
   'createWebsite.preview.issues.incorrectPaths': '错误的路径',
@@ -281,7 +281,7 @@ export default {
   'howtouse.sidebar.title': '在本页',
   'howtouse.sidebar.section1': '如何通过我们部署网站',
   'howtouse.sidebar.section4': '如何设置自定义域名',
- 
+
   'homepage.hero.title5': '',
   'homepage.hero.title6': '随处可用',
   'homepage.hero.desc': 'Ivory 是一个无需编码、低成本的平台，使用 Walrus 部署静态网站。享受高可用性、抗审查、数据完整性和完全所有权——所有这些都带有免费带宽和零复杂性。',
