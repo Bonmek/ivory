@@ -39,7 +39,7 @@ def publish_walrus_site(object_id, showcase_obj_id, showcase_blob_id):
         print("🔹 STEP 2: Validate required blob attributes")
         required_attributes = [
             "site-name", "owner", "epochs",
-            "start_date", "end_date", "status", "blobId"
+            "start_date", "end_date", "status", "blobId", "type"
         ]
         missing = [attr for attr in required_attributes if attr not in attributes]
         if missing:
@@ -66,9 +66,16 @@ def publish_walrus_site(object_id, showcase_obj_id, showcase_blob_id):
 
         try:
             os.makedirs(site_name, exist_ok=True)
-            with zipfile.ZipFile(zip_filename, 'r') as zip_ref:
-                zip_ref.extractall(site_name)
-            print(f"✅ STEP 3.2 DONE: Extracted to ./{site_name}")
+            if attributes["type"] != ".zip" :
+                with zipfile.ZipFile(zip_filename, 'r') as zip_ref:
+                    zip_ref.extractall(site_name)
+                print(f"✅ STEP 3.2 DONE: Extracted to ./{site_name}")
+            else :
+                # ลบโฟลเดอร์เดิมถ้ามี
+                if os.path.isdir(site_name):
+                    shutil.rmtree(site_name)
+                shutil.move(zip_filename, site_name+ ".zip")
+                print(f"✅ STEP 3.2 DONE: Moved {zip_filename} to ./{site_name}")
         except Exception as e:
             client_error_description = "Failed to extract the site zip file."
             raise RuntimeError(f"STEP 3.2 Error: {str(e)}")
@@ -105,23 +112,43 @@ def publish_walrus_site(object_id, showcase_obj_id, showcase_blob_id):
         owner = attributes["owner"]
         showcase_root = showcase_site_name
         destination_dir = os.path.join(showcase_root, owner)
-        target_dir = os.path.join(destination_dir, site_name)
+        if attributes["type"] != ".zip" :
+            target_dir = os.path.join(destination_dir, site_name)
 
-        if not os.path.exists(site_name):
-            raise RuntimeError(f"Source folder '{site_name}' does not exist.")
-        
-        try:
-            os.makedirs(destination_dir, exist_ok=True)
+            if not os.path.exists(site_name):
+                raise RuntimeError(f"Source folder '{site_name}' does not exist.")
+            
+            try:
+                os.makedirs(destination_dir, exist_ok=True)
 
-            if os.path.exists(target_dir):
-                shutil.rmtree(target_dir)
+                if os.path.exists(target_dir):
+                    shutil.rmtree(target_dir)
 
-            shutil.move(site_name, target_dir)
+                shutil.move(site_name, target_dir)
 
-            print(f"✅ STEP 5 DONE: Moved {site_name} to {target_dir}")
-        except Exception as e:
-            client_error_description = "Failed to move static site into showcase structure."
-            raise RuntimeError(f"STEP 5 Error: {str(e)}")
+                print(f"✅ STEP 5 DONE: Moved {site_name} to {target_dir}")
+            except Exception as e:
+                client_error_description = "Failed to move static site into showcase structure."
+                raise RuntimeError(f"STEP 5 Error: {str(e)}")
+        else :
+            site_name = site_name + ".zip"
+            target_dir = os.path.join(destination_dir, site_name)
+
+            if not os.path.exists(site_name):
+                raise RuntimeError(f"Source folder '{site_name}' does not exist.")
+            
+            try:
+                os.makedirs(destination_dir, exist_ok=True)
+
+                if os.path.exists(target_dir):
+                    os.remove(target_dir)
+
+                shutil.move(site_name, target_dir)
+
+                print(f"✅ STEP 5 DONE: Moved {site_name} to {target_dir}")
+            except Exception as e:
+                client_error_description = "Failed to move static site into showcase structure."
+                raise RuntimeError(f"STEP 5 Error: {str(e)}")
         
         # STEP 6: UPDATE SITE
         print("🔹 STEP 6: Update site using site-builder CLI")
