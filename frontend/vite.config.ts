@@ -38,6 +38,19 @@ export default defineConfig({
   server: {
     host: true,
     port: 3000,
+    // Proxy configuration to solve CORS issues with Sui API
+    // This forwards requests from /api/sui to the actual Sui API endpoint
+    proxy: {
+      '/api/sui': {
+        // The actual target API we want to call
+        target: 'https://fullnode.mainnet.sui.io',
+        // Required for CORS - changes the Origin header to match the target URL
+        changeOrigin: true,
+        // Removes the /api/sui prefix when forwarding the request
+        rewrite: (path) => path.replace(/^\/api\/sui/, ''),
+        // Additional configuration for debugging and error handling
+      },
+    },
   },
   resolve: {
     alias: [
