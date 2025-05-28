@@ -48,6 +48,7 @@ import { transformMetadataToProject } from '@/utils/metadataUtils'
 import { Project } from '@/types/project'
 import { useAuth } from '@/context/AuthContext'
 import Loading from '@/components/Loading'
+import { Navigate } from 'react-router'
 
 export default function CreateWebsitePage() {
   useTheme()
@@ -657,6 +658,10 @@ export default function CreateWebsitePage() {
 
   if (isLoading || isLoadingPreview) {
     return <Loading />
+  }
+
+  if (metadata.length > 0) {
+    return <Navigate to="/dashboard?limitWarning=true" replace />
   }
 
   return (
