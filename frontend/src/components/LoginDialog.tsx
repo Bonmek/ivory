@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Separator } from './ui/separator'
 import { ConnectModal, useWalletKit } from '@mysten/wallet-kit'
 import { useAuth } from '@/context/AuthContext'
+import { useNavigate } from 'react-router-dom'
 
 function LoginDialog({
   open,
@@ -22,11 +23,24 @@ function LoginDialog({
   setOpen: (open: boolean) => void
 }) {
   const [openSuiLogin, setOpenSuiLogin] = useState(false)
-  const { login } = useAuth()
+  const { login, address } = useAuth()
+  const navigate = useNavigate()
+  const { isConnected } = useWalletKit()
+  
+  // Handle successful wallet connection
+  useEffect(() => {
+    if (isConnected && openSuiLogin) {
+      setOpenSuiLogin(false)
+      setOpen(false)
+      navigate('/dashboard')
+    }
+  }, [isConnected, openSuiLogin, setOpen, navigate])
 
   const handleConnectGoogle = async () => {
     try {
       await login({ authType: 'google' })
+      setOpen(false)
+      navigate('/dashboard')
     } catch (error) {
       console.error('Google login failed:', error)
     }
@@ -36,6 +50,8 @@ function LoginDialog({
   const handleConnectFacebook = async () => {
     try {
       await login({ authType: 'facebook' })
+      setOpen(false)
+      navigate('/dashboard')
     } catch (error) {
       console.error('Facebook login failed:', error)
     }

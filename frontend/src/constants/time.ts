@@ -16,3 +16,7 @@ export const LONG_EXPIRY_BUFFER = ONE_YEAR // 1 year
 // Time constants for UI display
 export const EXPIRING_SOON_THRESHOLD = TWO_WEEKS // 2 weeks
 export const RECENT_THRESHOLD = TWO_WEEKS // 2 weeks 
+
+// Set appropriate staleTime and cacheTime to reduce API calls
+export const STALE_TIME = 5 * 60 * 1000 // 5 minutes - data considered fresh
+export const CACHE_TIME = 10 * 60 * 1000 // 10 minutes - how long to keep in cache

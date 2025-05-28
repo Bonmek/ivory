@@ -17,8 +17,9 @@ import CustomCursor from '@/components/HomePage/CustomCursor'
 import LogoCarousel from '@/components/HomePage/LogoCarousel'
 import { Helmet } from 'react-helmet'
 import { useNavigate } from 'react-router'
-import Loading from '@/components/Loading'
 import { FormattedMessage, useIntl } from 'react-intl'
+import LoginDialog from '@/components/LoginDialog'
+import { useAuth } from '@/context/AuthContext'
 
 const floatingIconsVariants: Variants = {
   animate: {
@@ -121,6 +122,8 @@ export default function HomePage() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const { scrollYProgress } = useScroll()
   const intl = useIntl()
+  const { address } = useAuth()
+  const [loginDialogOpen, setLoginDialogOpen] = useState(false)
 
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
   const scale = useTransform(scrollYProgress, [0, 0.5], [1, 0.8])
@@ -478,7 +481,13 @@ export default function HomePage() {
                   letterSpacing: '0.05em',
                   margin: '8px',
                 }}
-                onClick={() => navigate('/dashboard')}
+                onClick={() => {
+                  if (address) {
+                    navigate('/dashboard')
+                  } else {
+                    setLoginDialogOpen(true)
+                  }
+                }}
               >
                 <span className="text-black relative z-10">
                   <FormattedMessage id="homepage.hero.deploy" />
@@ -625,6 +634,7 @@ export default function HomePage() {
           </div>
         </section>
       </div>
+      <LoginDialog open={loginDialogOpen} setOpen={setLoginDialogOpen} />
     </>
   )
 }

@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { suiService } from '@/service/suiService'
 import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import { CACHE_TIME, STALE_TIME } from '@/constants/time'
 
 /**
  * Custom hook for fetching and managing Sui blockchain data
@@ -10,10 +11,6 @@ import { useState } from 'react'
 export const useSuiData = (userAddress: string) => {
   const queryClient = useQueryClient()
   const [isManualRefetching, setIsManualRefetching] = useState(false)
-  
-  // Set appropriate staleTime and cacheTime to reduce API calls
-  const STALE_TIME = 5 * 60 * 1000 // 5 minutes - data considered fresh
-  const CACHE_TIME = 10 * 60 * 1000 // 10 minutes - how long to keep in cache
 
   // Fetch blobs using website owner's address
   const { data: blobs = [], isLoading: isLoadingBlobs, error: blobsError } = useQuery({
