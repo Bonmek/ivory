@@ -1,18 +1,10 @@
-import { DynamicFieldInfo, getFullnodeUrl, SuiClient } from '@mysten/sui/client'
+import { DynamicFieldInfo, SuiClient } from '@mysten/sui/client'
 
-const SUI_NETWORK = process.env.REACT_APP_SUI_NETWORK
-const BLOB_TYPE = process.env.REACT_APP_BLOB_TYPE
+const BLOB_TYPE = import.meta.env.VITE_BLOB_TYPE
+const SUI_API_PROXY = import.meta.env.VITE_SUI_API_PROXY || '/api/sui'
 
-// Use proxy URL for development environment to solve CORS issues
-// In production, we use the direct Sui API URL
 const getApiUrl = () => {
-  // In development mode, use the proxy URL to avoid CORS errors
-  if (process.env.NODE_ENV === 'development') {
-    return '/api/sui'
-  }
-  
-  // In production, use the actual Sui API URL
-  return getFullnodeUrl(SUI_NETWORK as 'mainnet' | 'testnet' | 'devnet' | 'localnet')
+  return SUI_API_PROXY
 }
 
 class SuiService {
