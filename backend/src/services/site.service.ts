@@ -226,7 +226,7 @@ export class SiteService {
       const blob_id = new_blob_data.blobId;
       const blob_object_id = new_blob_data.blobObject.id.id;
 
-      await this.walrusService.executeWriteBlobAttributesTransaction({
+      await this.walrusService.executeBlobId({
         blobId: blob_id,
         blobObjectId: blob_object_id,
       });
@@ -303,15 +303,7 @@ export class SiteService {
       throw new Error("Not found Site");
     }
 
-    const old_site_name = old_attributes["site-name"];
-    const old_site_id = old_attributes["site_id"];
-    const old_site_status = old_attributes["site_status"];
-
-    const extractPath = path.join(
-      __dirname,
-      "../temp",
-      attributes_data.data["site-name"]
-    );
+    const extractPath = path.join(__dirname, "../temp", uuidv4());
     try {
       await this.fileService.extractZip(zipFile.path, extractPath);
       await this.fileService.createWsResourcesFile(extractPath);
@@ -344,13 +336,30 @@ export class SiteService {
 
       const zipBuffer = await fs.readFile(outputZipPath);
 
+      const old_site_name = old_attributes["site-name"];
+      const old_site_id = old_attributes.site_id;
+
+      let attributesUpdate;
+      if (old_attributes.site_status && old_attributes.site_status !== null) {
+        attributesUpdate = {
+          site_status: "0",
+          status: "0",
+          "site-name": old_site_name,
+          site_id: old_site_id,
+        };
+      } else {
+        attributesUpdate = {
+          status: "0",
+          "site-name": old_site_name,
+          site_id: old_site_id,
+        };
+      }
+
       const updateBlobAttributes = {
-        ...{ site_status: old_site_status },
-        ...{ "site-name": old_site_name },
-        ...{ site_id: old_site_id },
+        ...attributesUpdate,
         ...updated_data,
       };
-      
+
       const new_blob_data = await this.walrusService.writeBlob(
         zipBuffer,
         updateBlobAttributes
@@ -360,12 +369,12 @@ export class SiteService {
         throw new Error("WriteBlob success but data is undefined");
       }
 
-      const blob_id = new_blob_data.blobId;
       const blob_object_id = new_blob_data.blobObject.id.id;
+      const blob_id = new_blob_data.blobId;
 
-      await this.walrusService.executeWriteBlobAttributesTransaction({
-        blobId: blob_id,
+      await this.walrusService.executeBlobId({
         blobObjectId: blob_object_id,
+        blobId: blob_id,
       });
 
       let check_blob_id;
@@ -378,6 +387,14 @@ export class SiteService {
       }
       if (!check_blob_id || !check_blob_id.blobId) {
         throw new Error("blobId or attributes is undefined");
+      }
+
+      const deleteResule = await this.walrusService.deleteBlobAttributes(
+        old_attributes.object_id
+      );
+
+      if (deleteResule == null|| !deleteResule) {
+        throw Error("Delete old blob not successful");
       }
 
       const [response] = await this.taskService.createTask(

@@ -67,6 +67,7 @@ export const inputPreviewSiteScheme = baseSiteScheme.extend({
 export const inputWriteBlobScheme = baseSiteScheme.extend({
   site_id: z.string().regex(/^0x[a-fA-F0-9]{64}$/).optional(),
   site_status: z.union([z.literal("0"), z.literal("1"), z.literal("2"), z.literal("3")]).optional(),
+  sui_ns: z.string().min(1).optional()
 }).superRefine((data, ctx) => {
   const start = Date.parse(data.start_date);
   const end = Date.parse(data.end_date);
@@ -84,6 +85,7 @@ export const inputUpdateSiteScheme = baseSiteScheme.extend({
   old_object_id: z.string().regex(/^0x[a-fA-F0-9]{64}$/),
   site_status:z.union([z.literal("0"), z.literal("1"), z.literal("2"), z.literal("3")]),
   site_id:  z.string().regex(/^0x[a-fA-F0-9]{64}$/),
+  sui_ns: z.string().min(1).optional()
 }).superRefine((data, ctx) => {
   const start = Date.parse(data.start_date);
   const end = Date.parse(data.end_date);
