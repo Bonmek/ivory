@@ -147,9 +147,28 @@ export class FileService {
 
         await fs.writeFile(configPath, modifiedContent, 'utf-8');
     }
-    
-    // async validateFile(configPath: string, tool: string, attributes_data: TypeOf<typeof inputPreviewSiteScheme>): Promise<void> {
 
-    // }
+    async createWsResourcesFile(extractPath: string): Promise<void> {
+        const wsResources = {
+            headers: {},
+            routes: {},
+            metadata: {
+                link: "https://subdomain.wal.app/",
+                image_url: "https://www.walrus.xyz/walrus-site",
+                description: "This is a walrus site.",
+                project_url: "https://github.com/MystenLabs/walrus-sites/",
+                creator: "MystenLabs",
+            },
+            ignore: ["/private/", "/secret.txt", "/images/tmp/*"],
+        };
+
+        await fs.writeJson(
+            path.join(extractPath, "ws-resources.json"),
+            wsResources,
+            {
+                spaces: 2,
+            }
+        );
+    }
 }
 

@@ -64,7 +64,34 @@ export const inputPreviewSiteScheme = baseSiteScheme.extend({
   }
 });
 
-export const inputWriteBlobScheme = baseSiteScheme
+export const inputCreateSiteScheme = baseSiteScheme.superRefine((data, ctx) => {
+  const start = Date.parse(data.start_date);
+  const end = Date.parse(data.end_date);
+
+  if (!isNaN(start) && !isNaN(end) && end <= start) {
+    ctx.addIssue({
+      path: ["end_date"],
+      code: z.ZodIssueCode.custom,
+      message: "end_date must be after start_date",
+    });
+  }
+});
+
+export const inputUpdateSiteScheme = baseSiteScheme.extend({
+  site_status: z.string().regex(/^0x[a-fA-F0-9]{64}$/),
+  site_id: z.string().regex(/^0x[a-fA-F0-9]{64}$/),
+}).superRefine((data, ctx) => {
+  const start = Date.parse(data.start_date);
+  const end = Date.parse(data.end_date);
+
+  if (!isNaN(start) && !isNaN(end) && end <= start) {
+    ctx.addIssue({
+      path: ["end_date"],
+      code: z.ZodIssueCode.custom,
+      message: "end_date must be after start_date",
+    });
+  }
+});
 
 // export const inputWriteBlobScheme = baseSiteScheme.extend({
 //   uuid: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i).nullable(),
