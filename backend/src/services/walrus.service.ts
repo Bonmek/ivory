@@ -32,7 +32,7 @@ export class WalrusService {
                 deletable: true,
                 epochs: Number(attributes.epochs),
                 signer: this.keypair,
-                attributes: { ...attributes, uuid },
+                attributes: { ...attributes, uuid, type:"site" },
             });
             return result;
         } catch {

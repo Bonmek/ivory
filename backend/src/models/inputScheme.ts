@@ -64,22 +64,9 @@ export const inputPreviewSiteScheme = baseSiteScheme.extend({
   }
 });
 
-export const inputCreateSiteScheme = baseSiteScheme.superRefine((data, ctx) => {
-  const start = Date.parse(data.start_date);
-  const end = Date.parse(data.end_date);
-
-  if (!isNaN(start) && !isNaN(end) && end <= start) {
-    ctx.addIssue({
-      path: ["end_date"],
-      code: z.ZodIssueCode.custom,
-      message: "end_date must be after start_date",
-    });
-  }
-});
-
-export const inputUpdateSiteScheme = baseSiteScheme.extend({
-  site_status: z.string().regex(/^0x[a-fA-F0-9]{64}$/),
-  site_id: z.string().regex(/^0x[a-fA-F0-9]{64}$/),
+export const inputWriteBlobScheme = baseSiteScheme.extend({
+  site_id: z.string().regex(/^0x[a-fA-F0-9]{64}$/).optional(),
+  site_status: z.union([z.literal("0"), z.literal("1"), z.literal("2"), z.literal("3")]).optional(),
 }).superRefine((data, ctx) => {
   const start = Date.parse(data.start_date);
   const end = Date.parse(data.end_date);
@@ -93,17 +80,20 @@ export const inputUpdateSiteScheme = baseSiteScheme.extend({
   }
 });
 
-// export const inputWriteBlobScheme = baseSiteScheme.extend({
-//   uuid: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i).nullable(),
-//   blob_id: z.string().regex(/^0x[a-fA-F0-9]{64}$/).nullable(),
-// }).superRefine((data, ctx) => {
-//   const start = Date.parse(data.start_date);
-//   const end = Date.parse(data.end_date);
-//   if (!isNaN(start) && !isNaN(end) && end <= start) {
-//     ctx.addIssue({
-//       path: ["end_date"],
-//       code: z.ZodIssueCode.custom,
-//       message: "end_date must be after start_date",
-//     });
-//   }
-// });
+export const inputUpdateSiteScheme = baseSiteScheme.extend({
+  old_object_id: z.string().regex(/^0x[a-fA-F0-9]{64}$/),
+  site_status:z.union([z.literal("0"), z.literal("1"), z.literal("2"), z.literal("3")]),
+  site_id:  z.string().regex(/^0x[a-fA-F0-9]{64}$/),
+}).superRefine((data, ctx) => {
+  const start = Date.parse(data.start_date);
+  const end = Date.parse(data.end_date);
+
+  if (!isNaN(start) && !isNaN(end) && end <= start) {
+    ctx.addIssue({
+      path: ["end_date"],
+      code: z.ZodIssueCode.custom,
+      message: "end_date must be after start_date",
+    });
+  }
+});
+

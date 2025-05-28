@@ -4,7 +4,7 @@ import { WalrusService } from "./walrus.service";
 import { TaskService } from "./task.service";
 import { FileService } from "./file.service";
 import {
-  inputCreateSiteScheme,
+  inputWriteBlobScheme,
   inputSetAttributesScheme,
   inputDeleteBlobScheme,
   inputPreviewSiteScheme,
@@ -172,7 +172,7 @@ export class SiteService {
       throw new Error("No attributes provided");
     }
 
-    const attributes_data = inputCreateSiteScheme.safeParse(attributes);
+    const attributes_data = inputWriteBlobScheme.safeParse(attributes);
 
     if (!attributes_data || !attributes_data.success) {
       throw new Error(JSON.stringify(attributes_data.error.errors));
@@ -289,6 +289,24 @@ export class SiteService {
       throw new Error(JSON.stringify(attributes_data.error.errors));
     }
 
+    const { old_object_id, ...updated_data } = attributes_data.data;
+
+    let old_attributes;
+    try {
+      old_attributes = await this.walrusService.readBlobAttributes(
+        old_object_id
+      );
+    } catch {
+      throw new Error("Failed to find site");
+    }
+    if (!old_attributes || !old_attributes.blobId) {
+      throw new Error("Not found Site");
+    }
+
+    const old_site_name = old_attributes["site-name"];
+    const old_site_id = old_attributes["site_id"];
+    const old_site_status = old_attributes["site_status"];
+
     const extractPath = path.join(
       __dirname,
       "../temp",
@@ -298,22 +316,10 @@ export class SiteService {
       await this.fileService.extractZip(zipFile.path, extractPath);
       await this.fileService.createWsResourcesFile(extractPath);
 
-      let check_blob_id2;
-      try {
-        check_blob_id2 = await this.walrusService.readBlobAttributes(
-          attributes_data.data.site_id
-        );
-      } catch {
-        throw new Error("Failed to add blobId to attributes");
-      }
-      if (!check_blob_id2 || !check_blob_id2.blobId) {
-        throw new Error("blobId or attributes is undefined");
-      }
-
       const outputZipPath = path.join(
         __dirname,
         "../outputs",
-        `${attributes_data.data["site-name"]}.zip`
+        `${uuidv4()}.zip`
       );
 
       await fs.ensureDir(path.dirname(outputZipPath));
@@ -338,9 +344,17 @@ export class SiteService {
 
       const zipBuffer = await fs.readFile(outputZipPath);
 
-      const new_blob_data = await this.walrusService.writeBlob(zipBuffer, {
-        ...attributes_data.data,
-      });
+      const updateBlobAttributes = {
+        ...{ site_status: old_site_status },
+        ...{ "site-name": old_site_name },
+        ...{ site_id: old_site_id },
+        ...updated_data,
+      };
+      
+      const new_blob_data = await this.walrusService.writeBlob(
+        zipBuffer,
+        updateBlobAttributes
+      );
 
       if (!new_blob_data || new_blob_data == null) {
         throw new Error("WriteBlob success but data is undefined");
