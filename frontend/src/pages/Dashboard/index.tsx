@@ -233,7 +233,7 @@ export default function Dashboard() {
 
           <DashboardTabs activeTab={activeTab} setActiveTab={setActiveTab} />
 
-          {isLoading ? (
+          {isLoading && allProjects.length === 0 ? (
             <div className="flex justify-center items-center min-h-[400px]">
               <Loading />
             </div>

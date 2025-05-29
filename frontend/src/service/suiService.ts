@@ -1,16 +1,18 @@
-import { DynamicFieldInfo, getFullnodeUrl, SuiClient } from '@mysten/sui/client'
+import { DynamicFieldInfo, SuiClient } from '@mysten/sui/client'
 
-const SUI_NETWORK = process.env.REACT_APP_SUI_NETWORK
-const BLOB_TYPE = process.env.REACT_APP_BLOB_TYPE
+const BLOB_TYPE = import.meta.env.VITE_BLOB_TYPE
+const SUI_API_PROXY = import.meta.env.VITE_SUI_API_PROXY || '/api/sui'
+
+const getApiUrl = () => {
+  return SUI_API_PROXY
+}
 
 class SuiService {
   private client: SuiClient
 
   constructor() {
     this.client = new SuiClient({
-      url: getFullnodeUrl(
-        SUI_NETWORK as 'mainnet' | 'testnet' | 'devnet' | 'localnet',
-      ),
+      url: getApiUrl(),
     })
   }
 
