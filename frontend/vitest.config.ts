@@ -5,7 +5,6 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   plugins: [
     EnvironmentPlugin([
-      'REACT_APP_TEXT',
       'REACT_APP_SERVER_URL',
       'REACT_APP_API_USER',
       'REACT_APP_API_REPOSITORIES',
