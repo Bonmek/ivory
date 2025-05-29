@@ -197,6 +197,19 @@ export default {
   'dashboard.empty.reset': '重置筛选器',
   'dashboard.empty.create': '创建新项目',
 
+  // 上传ZIP
+  'uploadZip.title': '上传ZIP文件',
+  'uploadZip.dragDrop': '拖放您的ZIP文件',
+  'uploadZip.clickToBrowse': '或点击浏览文件',
+  'uploadZip.maxFileSize': '最大文件大小：100MB',
+  'uploadZip.zipOnly': '仅限ZIP文件',
+  'uploadZip.uploading': '上传中...',
+  'uploadZip.upload': '上传',
+  'uploadZip.remove': '移除',
+  'uploadZip.uploadCompleted': '上传成功！',
+  'uploadZip.dropIt': '放手即可上传！',
+  'uploadZip.fastUpload': '快速上传',
+
   // ProjectCard
   'projectCard.linkSuins': '链接 SUINS',
   'projectCard.initialSetup': '(初始设置)',

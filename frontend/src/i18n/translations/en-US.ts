@@ -198,6 +198,19 @@ export default {
   'dashboard.empty.reset': 'Reset filters',
   'dashboard.empty.create': 'Create new project',
 
+  // Upload Zip
+  'uploadZip.title': 'Upload ZIP File',
+  'uploadZip.dragDrop': 'Drag & Drop Your ZIP',
+  'uploadZip.clickToBrowse': 'or click to browse files',
+  'uploadZip.maxFileSize': 'Maximum file size: 100MB',
+  'uploadZip.zipOnly': 'ZIP files only',
+  'uploadZip.uploading': 'Uploading...',
+  'uploadZip.upload': 'Upload',
+  'uploadZip.remove': 'Remove',
+  'uploadZip.uploadCompleted': 'Upload completed successfully!',
+  'uploadZip.dropIt': 'Drop it like it\'s hot!',
+  'uploadZip.fastUpload': 'Fast upload',
+
   // ProjectCard
   'projectCard.linkSuins': 'Link SUINS',
   'projectCard.initialSetup': '(initial setup)',

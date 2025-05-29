@@ -11,6 +11,7 @@ import HowToUsePage from './pages/Howtouse'
 import DashboardPage from './pages/Dashboard'
 import Callback from './pages/Callback'
 import EditWebsitePage from './pages/EditWebsite'
+import UploadZipPage from './pages/UploadZip'
 
 const router = createBrowserRouter([
   {
@@ -26,6 +27,16 @@ const router = createBrowserRouter([
     element: (
       <Layout>
         <CreateWebsitePage />
+      </Layout>
+    ),
+  },
+  {
+    path: '/upload-zip',
+    element: (
+      <Layout>
+        <ProtectedRoute>
+          <UploadZipPage />
+        </ProtectedRoute>
       </Layout>
     ),
   },
