@@ -27,7 +27,9 @@ const router = createBrowserRouter([
     path: '/create-website',
     element: (
       <Layout>
-        <CreateWebsitePage />
+        <ProtectedRoute>
+          <CreateWebsitePage />
+        </ProtectedRoute>
       </Layout>
     ),
   },
