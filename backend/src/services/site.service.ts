@@ -7,23 +7,41 @@ import {
   inputWriteBlobScheme,
   inputSetAttributesScheme,
   inputDeleteBlobScheme,
-  inputPreviewSiteScheme,
+  // inputPreviewSiteScheme,
 } from "../models/inputScheme";
 import { v4 as uuidv4 } from "uuid";
 import path from "path";
 import fs from "fs-extra";
 import { exec } from "child_process";
 import AdmZip from "adm-zip";
+import config from "../config/config";
+import { WalrusClient } from "@mysten/walrus";
+import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
+import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
 
 export class SiteService {
   private walrusService: WalrusService;
   private taskService: TaskService;
   private fileService: FileService;
+  private walrusClient: WalrusClient;
+  private keypair: Ed25519Keypair;
 
   constructor() {
     this.walrusService = new WalrusService();
     this.taskService = new TaskService();
     this.fileService = new FileService();
+
+    const suiClient = new SuiClient({ url: getFullnodeUrl("mainnet") });
+    this.walrusClient = new WalrusClient({
+      network: "mainnet",
+      suiClient,
+      storageNodeClientOptions: {
+        timeout: config.blockchain.storageTimeout,
+      },
+    });
+    const hex = process.env.SUI_HEX || "";
+    const secretKey = Uint8Array.from(Buffer.from(hex, "hex"));
+    this.keypair = Ed25519Keypair.fromSecretKey(secretKey);
   }
 
   async handlePreview(req: Request) {
@@ -48,7 +66,7 @@ export class SiteService {
           : req.body.attributes
         : {};
 
-      const attributes_data = inputPreviewSiteScheme.safeParse(attributes);
+      const attributes_data = inputWriteBlobScheme.safeParse(attributes);
 
       if (!attributes_data.success) {
         await this.fileService.cleanupFiles(extractPath, zipFile.path, null);
@@ -76,7 +94,7 @@ export class SiteService {
         }
 
         try {
-          const buildTool = await this.fileService.detectBuildTool(buildDir);
+          const buildTool = await this.fileService.detectBuildTool2(buildDir);
           if (buildTool) {
             await this.fileService.modifyBuildConfig(
               buildTool.configPath,
@@ -136,6 +154,7 @@ export class SiteService {
       }
 
       outputZipPath = path.join(__dirname, "../outputs", `${uuidv4()}}.zip`);
+      await fs.ensureDir(path.dirname(outputZipPath));
       await this.fileService.createZip(indexDir, outputZipPath);
 
       return {
@@ -161,6 +180,7 @@ export class SiteService {
     }
 
     const zipFile = req.file;
+
     const attributes = req.body.attributes
       ? typeof req.body.attributes === "string"
         ? JSON.parse(req.body.attributes)
@@ -232,34 +252,53 @@ export class SiteService {
       zip.writeZip(outputZipPath);
 
       const zipBuffer = await fs.readFile(outputZipPath);
-
-      const new_blob_data = await this.walrusService.writeBlob(zipBuffer, {
-        ...attributes_data.data,
-      });
+      const uuid = uuidv4();
+      let new_blob_data;
+      try {
+        new_blob_data = await this.walrusClient.writeBlob({
+          blob: zipBuffer,
+          deletable: true,
+          epochs: Number(attributes_data.data.epochs),
+          signer: this.keypair,
+          attributes: { ...attributes_data.data, uuid, type: "stie" },
+        });
+      } catch {
+        console.log("error");
+      }
 
       if (!new_blob_data || new_blob_data == null) {
+        await this.fileService.cleanupFiles(
+          extractPath,
+          zipFile.path,
+          outputZipPath
+        );
+        await this.fileService.cleanupAllDirectories();
         throw new Error("WriteBlob success but data is undefined");
       }
 
       const blob_id = new_blob_data.blobId;
       const blob_object_id = new_blob_data.blobObject.id.id;
-
-      await this.walrusService.executeWriteBlobAttributesTransaction({
-        blobId: blob_id,
-        blobObjectId: blob_object_id,
-      });
-
-      let check_blob_id;
       try {
-        check_blob_id = await this.walrusService.readBlobAttributes(
-          blob_object_id
-        );
+        await this.walrusClient.executeWriteBlobAttributesTransaction({
+          signer: this.keypair,
+          blobObjectId: blob_object_id,
+          attributes: { blobId: blob_id },
+        });
       } catch {
-        throw new Error("Failed to add blobId to attributes");
+        console.log("error excute")
       }
-      if (!check_blob_id || !check_blob_id.blobId) {
-        throw new Error("blobId or attributes is undefined");
-      }
+
+      // let check_blob_id;
+      // try {
+      //   check_blob_id = await this.walrusService.readBlobAttributes(
+      //     blob_object_id
+      //   );
+      // } catch {
+      //   throw new Error("Failed to add blobId to attributes");
+      // }
+      // if (!check_blob_id || !check_blob_id.blobId) {
+      //   throw new Error("blobId or attributes is undefined");
+      // }
 
       const [response] = await this.taskService.createTask(
         "publish",

@@ -21,15 +21,20 @@ export interface PreviewSiteAttributes {
 
 export interface CreateSiteAttributes {
   'site-name': string;
-  root: string;
   owner: string;
   ownership: '0' | '1';
   send_to: string;
   epochs: string;
-  status: '0' | '1' | '2' | '3';
-  cache: string;
   start_date: string;
   end_date: string;
+  status: '0' | '1' | '2' | '3';
+  cache: string;
+  root: string;
+  output_dir: string;
+  install_command?: string;
+  build_command?: string;
+  default_route: string;
+  is_build?: string;
 }
 
 export interface PreviewSiteRequest {

@@ -4,7 +4,9 @@ import path from 'path';
 import unzipper from 'unzipper';
 import AdmZip from 'adm-zip';
 import { TypeOf } from 'zod';
-import { inputPreviewSiteScheme } from '../models/inputScheme';
+import { 
+    // inputPreviewSiteScheme,
+     inputWriteBlobScheme } from '../models/inputScheme';
 
 export class FileService {
     async extractZip(zipPath: string, extractPath: string) {
@@ -111,7 +113,7 @@ export class FileService {
     //=============================================================================//
 
     
-    async modifyBuildConfig(configPath: string, tool: string, attributes_data: TypeOf<typeof inputPreviewSiteScheme>): Promise<void> {
+    async modifyBuildConfig(configPath: string, tool: string, attributes_data: TypeOf<typeof inputWriteBlobScheme>): Promise<void> {
         const content = await fs.readFile(configPath, 'utf-8');
         let modifiedContent = content;
 
