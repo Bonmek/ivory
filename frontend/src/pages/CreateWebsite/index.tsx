@@ -48,6 +48,7 @@ import { transformMetadataToProject } from '@/utils/metadataUtils'
 import { Project } from '@/types/project'
 import { useAuth } from '@/context/AuthContext'
 import Loading from '@/components/Loading'
+import { Navigate } from 'react-router'
 
 export default function CreateWebsitePage() {
   useTheme()
@@ -144,8 +145,8 @@ export default function CreateWebsitePage() {
       errors.push(intl.formatMessage({ id: 'createWebsite.error.maxLength' }, { max: 40 }))
     }
 
-    // Only allow English letters (both cases), numbers, and spaces
-    if (!/^[a-zA-Z0-9 ]+$/.test(value)) {
+    // Allow English letters (both cases), numbers, hyphens, and underscores (no spaces)
+    if (!/^[a-zA-Z0-9_-]+$/.test(value)) {
       errors.push(intl.formatMessage({ id: 'createWebsite.error.englishOnly' }))
     }
 
@@ -657,6 +658,10 @@ export default function CreateWebsitePage() {
 
   if (isLoading || isLoadingPreview) {
     return <Loading />
+  }
+
+  if (metadata.length > 0) {
+    return <Navigate to="/dashboard?limitWarning=true" replace />
   }
 
   return (
