@@ -1,8 +1,7 @@
 import { DynamicFieldInfo, SuiClient } from '@mysten/sui/client'
 
-const BLOB_TYPE = import.meta.env.VITE_BLOB_TYPE
 const SUI_API_PROXY = import.meta.env.VITE_SUI_API_PROXY || '/api/sui'
-
+const BLOB_TYPE = import.meta.env.REACT_APP_BLOB_TYPE
 const getApiUrl = () => {
   return SUI_API_PROXY
 }
