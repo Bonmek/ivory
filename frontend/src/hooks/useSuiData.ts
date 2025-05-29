@@ -133,19 +133,17 @@ export const useSuiData = (userAddress: string) => {
     retryDelay: calculateRetryDelay,
   })
 
-  // Filter metadata by owner address
+  // Filter metadata by owner address or member access
   const filteredMetadata = metadata.filter((meta) => {
     if (!meta?.content || meta.content.dataType !== 'moveObject') {
       return false
     }
+
     const fields = meta.content.fields as any
     const metadataFields =
       fields?.value?.fields?.metadata?.fields?.contents || []
-    const ownerEntry = metadataFields.find(
-      (entry: any) => entry.fields?.key === 'owner',
-    )
-    const owner = ownerEntry?.fields?.value
-    // Check for delete-attribute field
+
+    // Check for delete-attribute field first
     const deleteAttributeEntry = metadataFields.find(
       (entry: any) => entry.fields?.key === 'delete-attribute',
     )
@@ -153,7 +151,32 @@ export const useSuiData = (userAddress: string) => {
       return false // Skip if delete-attribute exists
     }
 
-    return owner === userAddress
+    // Check if user is the owner
+    const ownerEntry = metadataFields.find(
+      (entry: any) => entry.fields?.key === 'owner',
+    )
+    const owner = ownerEntry?.fields?.value
+    if (owner === userAddress) {
+      return true // Include if user is the owner
+    }
+
+    // Check if user is a member
+    const memberEntry = metadataFields.find(
+      (entry: any) => entry.fields?.key === 'member',
+    )
+    if (memberEntry?.fields?.value) {
+      const memberString = memberEntry.fields.value
+      const memberParts = memberString.split('|')
+
+      // Check if any member address matches the user's address
+      return memberParts.some((memberPart: string) => {
+        // Extract just the address part (removing the last 4 characters which are the role code)
+        const memberAddress = memberPart.substring(0, memberPart.length - 4)
+        return memberAddress === userAddress
+      })
+    }
+
+    return false // Not owner and not a member
   })
 
   // Error handling and detection
