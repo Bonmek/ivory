@@ -2,7 +2,36 @@ import { useQuery } from '@tanstack/react-query'
 import { suiService } from '@/service/suiService'
 import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { CACHE_TIME, STALE_TIME } from '@/constants/time'
+import {
+  CACHE_TIME,
+  STALE_TIME,
+  MAX_RETRIES_RATE_LIMIT,
+  MAX_RETRIES_OTHER_ERRORS,
+  RETRY_BASE_DELAY_MS,
+  MAX_RETRY_DELAY_MS,
+} from '@/constants/time'
+
+/**
+ * Handles retry logic for API requests
+ * @param failureCount Current number of retry attempts
+ * @param error Error object from the failed request
+ * @returns Boolean indicating whether to retry the request
+ */
+const handleRetryLogic = (failureCount: number, error: any): boolean => {
+  if (error?.message?.includes('too many requests')) {
+    return failureCount < MAX_RETRIES_RATE_LIMIT // Retry for rate limiting errors
+  }
+  return failureCount < MAX_RETRIES_OTHER_ERRORS // Retry for other errors
+}
+
+/**
+ * Calculates exponential backoff delay for retries
+ * @param attemptIndex Current retry attempt index
+ * @returns Delay in milliseconds before next retry
+ */
+const calculateRetryDelay = (attemptIndex: number): number => {
+  return Math.min(RETRY_BASE_DELAY_MS * 2 ** attemptIndex, MAX_RETRY_DELAY_MS) // Exponential backoff
+}
 
 /**
  * Custom hook for fetching and managing Sui blockchain data
@@ -13,7 +42,11 @@ export const useSuiData = (userAddress: string) => {
   const [isManualRefetching, setIsManualRefetching] = useState(false)
 
   // Fetch blobs using website owner's address
-  const { data: blobs = [], isLoading: isLoadingBlobs, error: blobsError } = useQuery({
+  const {
+    data: blobs = [],
+    isLoading: isLoadingBlobs,
+    error: blobsError,
+  } = useQuery({
     queryKey: ['blobs', process.env.REACT_APP_OWNER_ADDRESS || ''],
     queryFn: () =>
       suiService.getBlobs(process.env.REACT_APP_OWNER_ADDRESS || '', {
@@ -22,19 +55,18 @@ export const useSuiData = (userAddress: string) => {
     enabled: !!userAddress, // Only fetch if user is logged in
     staleTime: STALE_TIME,
     gcTime: CACHE_TIME,
-    // Smart retry logic - more retries for rate limiting errors
-    retry: (failureCount, error: any) => {
-      if (error?.message?.includes('too many requests')) {
-        return failureCount < 3  // Retry up to 3 times for rate limiting
-      }
-      return failureCount < 2    // Retry up to 2 times for other errors
-    },
-    // Exponential backoff - wait longer between each retry attempt (max 30 seconds)
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    // Use the shared retry logic function
+    retry: handleRetryLogic,
+    // Use the shared retry delay function
+    retryDelay: calculateRetryDelay,
   })
 
   // Fetch SUINS data
-  const { data: suins = [], isLoading: isLoadingSuins, error: suinsError } = useQuery({
+  const {
+    data: suins = [],
+    isLoading: isLoadingSuins,
+    error: suinsError,
+  } = useQuery({
     queryKey: ['suins', userAddress || ''],
     queryFn: () =>
       suiService.getBlobs(userAddress || '', {
@@ -43,17 +75,16 @@ export const useSuiData = (userAddress: string) => {
     enabled: !!userAddress, // Only fetch if user is logged in
     staleTime: STALE_TIME,
     gcTime: CACHE_TIME,
-    retry: (failureCount, error: any) => {
-      if (error?.message?.includes('too many requests')) {
-        return failureCount < 3
-      }
-      return failureCount < 2
-    },
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    retry: handleRetryLogic,
+    retryDelay: calculateRetryDelay,
   })
 
   // Fetch dynamic fields for each blob
-  const { data: dynamicFields = [], isLoading: isLoadingFields, error: fieldsError } = useQuery({
+  const {
+    data: dynamicFields = [],
+    isLoading: isLoadingFields,
+    error: fieldsError,
+  } = useQuery({
     queryKey: [
       'dynamicFields',
       blobs.map((blob) => blob.data?.objectId).filter(Boolean),
@@ -67,17 +98,16 @@ export const useSuiData = (userAddress: string) => {
     enabled: blobs.length > 0,
     staleTime: STALE_TIME,
     gcTime: CACHE_TIME,
-    retry: (failureCount, error: any) => {
-      if (error?.message?.includes('too many requests')) {
-        return failureCount < 3
-      }
-      return failureCount < 2
-    },
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    retry: handleRetryLogic,
+    retryDelay: calculateRetryDelay,
   })
 
   // Fetch metadata for each dynamic field
-  const { data: metadata = [], isLoading: isLoadingMetadata, error: metadataError } = useQuery({
+  const {
+    data: metadata = [],
+    isLoading: isLoadingMetadata,
+    error: metadataError,
+  } = useQuery({
     queryKey: [
       'metadata',
       dynamicFields.flatMap((fields) => fields.map((field) => field.objectId)),
@@ -99,13 +129,8 @@ export const useSuiData = (userAddress: string) => {
     enabled: dynamicFields.length > 0,
     staleTime: STALE_TIME,
     gcTime: CACHE_TIME,
-    retry: (failureCount, error: any) => {
-      if (error?.message?.includes('too many requests')) {
-        return failureCount < 3
-      }
-      return failureCount < 2
-    },
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    retry: handleRetryLogic,
+    retryDelay: calculateRetryDelay,
   })
 
   // Filter metadata by owner address
@@ -127,16 +152,15 @@ export const useSuiData = (userAddress: string) => {
     if (deleteAttributeEntry) {
       return false // Skip if delete-attribute exists
     }
-    
+
     return owner === userAddress
   })
 
-
-
   // Error handling and detection
   const hasError = blobsError || suinsError || fieldsError || metadataError
-  const errorMessage = hasError ? 
-    (blobsError || suinsError || fieldsError || metadataError)?.message : null
+  const errorMessage = hasError
+    ? (blobsError || suinsError || fieldsError || metadataError)?.message
+    : null
   // Specifically detect rate limiting errors for better UI feedback
   const isTooManyRequestsError = errorMessage?.includes('too many requests')
 
@@ -146,7 +170,7 @@ export const useSuiData = (userAddress: string) => {
    */
   const handleRefetch = async () => {
     if (isManualRefetching) return // Prevent multiple simultaneous refreshes
-    
+
     try {
       setIsManualRefetching(true) // Set loading state
       // Invalidate all relevant queries to trigger fresh data fetching
@@ -170,7 +194,7 @@ export const useSuiData = (userAddress: string) => {
    */
   const handleRefetchSuiNS = async () => {
     if (isManualRefetching) return // Prevent multiple refreshes
-    
+
     try {
       setIsManualRefetching(true)
       await queryClient.invalidateQueries({
@@ -195,7 +219,11 @@ export const useSuiData = (userAddress: string) => {
     isLoadingSuins,
     isLoadingFields,
     isLoadingMetadata,
-    isLoading: isLoadingBlobs || isLoadingFields || isLoadingMetadata || isManualRefetching,
+    isLoading:
+      isLoadingBlobs ||
+      isLoadingFields ||
+      isLoadingMetadata ||
+      isManualRefetching,
     isRefetching: isManualRefetching,
     // Error states
     hasError,
