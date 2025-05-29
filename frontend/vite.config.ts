@@ -35,17 +35,6 @@ export default defineConfig({
     ]),
   ],
   publicDir: 'public',
-  server: {
-    host: true,
-    port: 3000,
-    proxy: {
-      '/api/sui': {
-        target: 'https://fullnode.mainnet.sui.io',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/sui/, ''),
-      },
-    },
-  },
   resolve: {
     alias: [
       {
