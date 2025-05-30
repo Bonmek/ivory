@@ -15,6 +15,9 @@ router.post("/preview-site", upload.single("file"), siteController.previewSite);
 // Create site
 router.post("/create-site", upload.single("file"), siteController.createSite);
 
+// Update site
+router.post("/update-site", upload.single("file"), siteController.updateSite);
+
 // Set attributes
 router.put("/set-attributes", siteController.setAttributes);
 

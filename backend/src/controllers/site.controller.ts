@@ -64,6 +64,21 @@ export class SiteController {
         }
     }
 
+    updateSite = async (req: Request, res: Response) => {
+        try {
+            const result = await this.siteService.handleUpdateSite(req);
+            res.status(200).json({
+                statusCode: 1,
+                objectId: result.blob_object_id,    
+            });
+        } catch {
+            res.status(500).json({
+                statusCode: 0,
+                error: "Internal server error during site processing"
+            });
+        }
+    }
+
     setAttributes = async (req: Request, res: Response) => {
         try {
             await this.siteService.handleSetAttributes(req);

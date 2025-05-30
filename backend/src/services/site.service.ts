@@ -2,10 +2,11 @@ import { Request } from "express";
 import { TaskService } from "./task.service";
 import { FileService } from "./file.service";
 import {
-  inputWriteBlobScheme,
+  inputCreateSiteScheme,
   inputSetAttributesScheme,
   inputDeleteBlobScheme,
   inputPreviewSiteScheme,
+  inputUpdateSiteScheme,
 } from "../models/inputScheme";
 import { v4 as uuidv4 } from "uuid";
 import path from "path";
@@ -187,7 +188,7 @@ export class SiteService {
       throw new Error("No attributes provided");
     }
 
-    const attributes_data = inputWriteBlobScheme.safeParse(attributes);
+    const attributes_data = inputCreateSiteScheme.safeParse(attributes);
 
     if (!attributes_data || !attributes_data.success) {
       throw new Error(JSON.stringify(attributes_data.error.errors));
@@ -280,6 +281,197 @@ export class SiteService {
           blobObjectId: blob_object_id,
           attributes: {
             ...attributes_data.data,
+            blobId: blob_id,
+            type: "stie",
+          },
+        });
+      } catch {
+        console.log("error excute");
+      }
+
+      let check_blob_id;
+      try {
+        check_blob_id = await this.walrusClient.readBlobAttributes({
+          blobObjectId: blob_object_id,
+        });
+      } catch {
+        throw new Error("Failed to add blobId to attributes");
+      }
+      if (!check_blob_id || !check_blob_id.blobId) {
+        throw new Error("blobId or attributes is undefined");
+      }
+
+      const [response] = await this.taskService.createTask(
+        "publish",
+        blob_object_id
+      );
+
+      await this.fileService.cleanupFiles(
+        extractPath,
+        zipFile.path,
+        outputZipPath
+      );
+      await this.fileService.cleanupAllDirectories();
+
+      return {
+        blob_object_id,
+        taskName: response.name,
+      };
+    } catch (error) {
+      await this.fileService.cleanupFiles(extractPath, zipFile.path, null);
+      await this.fileService.cleanupAllDirectories();
+      throw error;
+    }
+  }
+
+  async handleUpdateSite(req: Request) {
+    if (!req.file) {
+      await this.fileService.cleanupAllDirectories();
+      throw new Error("No file uploaded");
+    }
+
+    const zipFile = req.file;
+
+    const attributes = req.body.attributes
+      ? typeof req.body.attributes === "string"
+        ? JSON.parse(req.body.attributes)
+        : req.body.attributes
+      : null;
+
+    if (!attributes) {
+      throw new Error("No attributes provided");
+    }
+
+    const attributes_data = inputUpdateSiteScheme.safeParse(attributes);
+    if (!attributes_data || !attributes_data.success) {
+      throw new Error(JSON.stringify(attributes_data.error.errors));
+    }
+    const { old_object_id, ...updated_data } = attributes_data.data;
+
+    let old_attributes;
+    try {
+      old_attributes = await this.walrusClient.readBlobAttributes({
+        blobObjectId: old_object_id,
+      });
+    } catch {
+      throw new Error("Failed to add blobId to attributes");
+    }
+    if (!old_attributes || !old_attributes.blobId) {
+      throw new Error("blobId or attributes is undefined");
+    }
+
+    const old_site_name = old_attributes["site-name"];
+    const old_site_id = old_attributes.site_id;
+
+    const extractPath = path.join(
+      __dirname,
+      "../temp",
+      attributes_data.data["site-name"]
+    );
+    try {
+      await this.fileService.extractZip(zipFile.path, extractPath);
+      const wsResources = {
+        headers: {},
+        routes: {},
+        metadata: {
+          link: "https://subdomain.wal.app/",
+          image_url: "https://www.walrus.xyz/walrus-site",
+          description: "This is a walrus site.",
+          project_url: "https://github.com/MystenLabs/walrus-sites/",
+          creator: "MystenLabs",
+        },
+        ignore: ["/private/", "/secret.txt", "/images/tmp/*"],
+      };
+
+      await fs.writeJson(
+        path.join(extractPath, "ws-resources.json"),
+        wsResources,
+        {
+          spaces: 2,
+        }
+      );
+
+      const outputZipPath = path.join(
+        __dirname,
+        "../outputs",
+        `${attributes_data.data["site-name"]}.zip`
+      );
+
+      await fs.ensureDir(path.dirname(outputZipPath));
+      const zip = new AdmZip();
+
+      const addFilesToZip = async (dir: string, baseInZip = "") => {
+        const entries = await fs.readdir(dir);
+        for (const entry of entries) {
+          const fullPath = path.join(dir, entry);
+          const stat = await fs.stat(fullPath);
+          if (stat.isDirectory()) {
+            await addFilesToZip(fullPath, path.join(baseInZip, entry));
+          } else {
+            const fileContent = await fs.readFile(fullPath);
+            zip.addFile(path.join(baseInZip, entry), fileContent);
+          }
+        }
+      };
+
+      await addFilesToZip(extractPath);
+      zip.writeZip(outputZipPath);
+
+      const zipBuffer = await fs.readFile(outputZipPath);
+      const uuid = uuidv4();
+
+      let new_blob_data;
+      try {
+        new_blob_data = await this.walrusClient.writeBlob({
+          blob: zipBuffer,
+          deletable: true,
+          epochs: Number(updated_data.epochs),
+          signer: this.keypair,
+          attributes: { uuid },
+        });
+      } catch {
+        console.log("error");
+      }
+
+      if (!new_blob_data || new_blob_data == null) {
+        await this.fileService.cleanupFiles(
+          extractPath,
+          zipFile.path,
+          outputZipPath
+        );
+        await this.fileService.cleanupAllDirectories();
+        throw new Error("WriteBlob success but data is undefined");
+      }
+
+      let attributesUpdate;
+      if (old_attributes.site_status && old_attributes.site_status !== null) {
+        attributesUpdate = {
+          site_status: "0",
+          status: "0",
+          "site-name": old_site_name,
+          site_id: old_site_id,
+        };
+      } else {
+        attributesUpdate = {
+          status: "0",
+          "site-name": old_site_name,
+          site_id: old_site_id,
+        };
+      }
+
+      const updateBlobAttributes = {
+        ...attributesUpdate,
+        ...updated_data,
+      };
+
+      const blob_id = new_blob_data.blobId;
+      const blob_object_id = new_blob_data.blobObject.id.id;
+      try {
+        await this.walrusClient.executeWriteBlobAttributesTransaction({
+          signer: this.keypair,
+          blobObjectId: blob_object_id,
+          attributes: {
+            ...updateBlobAttributes,
             blobId: blob_id,
             type: "stie",
           },
