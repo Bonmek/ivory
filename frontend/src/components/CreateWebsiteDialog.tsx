@@ -11,8 +11,9 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Separator } from './ui/separator'
-import { ConnectModal, useWalletKit } from '@mysten/wallet-kit'
+import { ConnectModal } from '@mysten/wallet-kit'
 import { WriteBlobResponse } from '@/api/createWebsiteApi'
+import { useAuth } from '@/context/AuthContext'
 
 function CreateWebsiteDialog({
   open,
@@ -24,7 +25,7 @@ function CreateWebsiteDialog({
   handleClickDeploy: () => Promise<WriteBlobResponse>
 }) {
   const [openSuiLogin, setOpenSuiLogin] = useState(false)
-  const { currentAccount } = useWalletKit()
+  const { address } = useAuth()
 
   return (
     <>
@@ -39,12 +40,12 @@ function CreateWebsiteDialog({
           </div>
           <DialogHeader>
             <DialogTitle className="text-2xl text-center font-bold mb-2 font-pixel">
-              {currentAccount?.address
+              {address
                 ? 'Create New Website'
                 : 'Connect Wallet to Continue'}
             </DialogTitle>
           </DialogHeader>
-          {!currentAccount?.address ? (
+          {!address ? (
             <article className="flex flex-col items-center justify-center">
               <Button
                 variant="secondary"

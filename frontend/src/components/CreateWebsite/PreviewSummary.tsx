@@ -87,7 +87,7 @@ StatusMotionCard.displayName = "StatusMotionCard";
 import { Card, CardContent } from "@/components/ui/card";
 import { buildOutputSettingsType, advancedOptionsType } from "@/types/CreateWebstie/types";
 import { frameworks } from "@/constants/frameworks";
-import { Check, AlertCircle, Info, Sparkles, RefreshCw, X } from "lucide-react";
+import { Check, AlertCircle, Info, Sparkles, RefreshCw, X, GitBranch, Upload, Folder, Cpu, UploadCloud, Terminal, FolderOpen, Package, Shield, FileText, FolderInput } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormattedMessage } from 'react-intl';
 import { useIntl } from 'react-intl';
@@ -95,6 +95,7 @@ import { DeployingState, BuildingState } from "@/types/CreateWebstie/enums";
 import { Link, useNavigate } from "react-router";
 import { useRef, useEffect, useState } from 'react';
 import { ApiResponse } from "@/types/CreateWebstie/types";
+import PreviewWebsite from "./PreviewWebsite";
 
 interface PreviewSummaryProps {
   name: string;
@@ -104,12 +105,15 @@ interface PreviewSummaryProps {
   uploadMethod: string;
   selectedFile?: File | null;
   setOpen: (open: boolean) => void;
+  selectedBranch?: string;
   setShowPreview: (showPreview: boolean) => void;
+  projectPreview?: File;
   selectedRepoFile?: File | null;
   showBuildOutputSettings: boolean;
   deployingState: DeployingState;
   deployingResponse: ApiResponse | null;
   buildingState: BuildingState;
+  projectShowcaseUrl: string | null;
 }
 
 const sectionVariants = {
@@ -197,10 +201,10 @@ const StatusChecklist: React.FC<{ deployingState: DeployingState, buildingState:
   ];
   return (
     <div className="w-full mb-4">
-      <div className="w-full px-2">
-
+      <div className="w-full px-1 sm:px-2">
         <ul
-          className="w-full flex flex-row items-center justify-center gap-0 px-4 py-4 bg-gradient-to-r from-primary-900/70 via-primary-800/80 to-primary-900/70 dark:from-gray-900/80 dark:via-gray-800/90 dark:to-gray-900/80 rounded-2xl shadow-lg border-2 border-muted/30"
+          className="w-full flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2 sm:gap-0 px-2 sm:px-4 py-3 sm:py-4 bg-gradient-to-r from-primary-900/70 via-primary-800/80 to-primary-900/70 dark:from-gray-900/80 dark:via-gray-800/90 dark:to-gray-900/80 rounded-2xl shadow-lg border-2 border-muted/30 overflow-x-auto scrollbar-thin scrollbar-thumb-primary-700 scrollbar-track-transparent"
+          style={{ WebkitOverflowScrolling: 'touch' }}
         >
           {steps.map((step, i) => (
             <>
@@ -210,7 +214,7 @@ const StatusChecklist: React.FC<{ deployingState: DeployingState, buildingState:
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.08 }}
                 className={
-                  "flex items-center gap-3 px-5 py-2 rounded-xl transition-all duration-200 " +
+                  "flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-2 rounded-xl transition-all duration-200 min-w-[190px] sm:min-w-[0] " +
                   (step.status === 'failed'
                     ? 'bg-red-100/40 dark:bg-red-900/40 shadow-md shadow-red-200/30 dark:shadow-red-900/40'
                     : step.status === 'done'
@@ -221,32 +225,34 @@ const StatusChecklist: React.FC<{ deployingState: DeployingState, buildingState:
                 }
                 tabIndex={0}
               >
+
                 {step.status === 'done' && (step.key === 'done'
-                  ? <span className="w-6 h-6 flex items-center justify-center bg-green-200 dark:bg-green-900 rounded-full p-1 shadow"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-green-600"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m7 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></span>
-                  : <Check className="w-6 h-6 text-green-500 bg-green-100 dark:bg-green-900 rounded-full p-1 shadow" />)}
+                  ? <span className="w-6 h-6 sm:w-6 sm:h-6 flex items-center justify-center bg-green-200 dark:bg-green-900 rounded-full p-1 shadow"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 sm:w-5 sm:h-5 text-green-600"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m7 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></span>
+                  : <Check className="w-6 h-6 sm:w-6 sm:h-6 text-green-500 bg-green-100 dark:bg-green-900 rounded-full p-1 shadow" />)}
                 {step.status === 'failed' && (
-                  <span className="w-6 h-6 flex items-center justify-center bg-red-100 dark:bg-red-900 rounded-full p-1 shadow "><X className="w-5 h-5 text-red-500" /></span>
+                  <span className="w-6 h-6 sm:w-6 sm:h-6 flex items-center justify-center bg-red-100 dark:bg-red-900 rounded-full p-1 shadow "><X className="w-5 h-5 sm:w-5 sm:h-5 text-red-500" /></span>
                 )}
                 {step.status === 'in-progress' && (step.key === 'confirm'
-                  ? <span className="w-6 h-6 flex items-center justify-center bg-yellow-50 dark:bg-yellow-900 rounded-full p-1 shadow animate-pulse"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-yellow-500"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l2 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></span>
-                  : <RefreshCw className="w-6 h-6 text-yellow-400 bg-yellow-50 dark:bg-yellow-900 rounded-full p-1 animate-spin shadow" />)}
+                  ? <span className="w-6 h-6 sm:w-6 sm:h-6 flex items-center justify-center bg-yellow-50 dark:bg-yellow-900 rounded-full p-1 shadow animate-pulse"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 sm:w-5 sm:h-5 text-yellow-500"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l2 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></span>
+                  : <RefreshCw className="w-6 h-6 sm:w-6 sm:h-6 text-yellow-400 bg-yellow-50 dark:bg-yellow-900 rounded-full p-1 animate-spin shadow" />)}
                 {step.status === 'pending' && (step.key === 'done'
-                  ? <span className="w-6 h-6 flex items-center justify-center bg-gray-200 dark:bg-gray-800 rounded-full p-1 shadow"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-gray-400 dark:text-gray-600"><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" fill="none" /></svg></span>
-                  : <span className="inline-block w-5 h-5 rounded-full border-2 border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800" />)}
+                  ? <span className="w-6 h-6 sm:w-6 sm:h-6 flex items-center justify-center bg-gray-200 dark:bg-gray-800 rounded-full p-1 shadow"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 sm:w-5 sm:h-5 text-gray-400 dark:text-gray-600"><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" fill="none" /></svg></span>
+                  : <span className="inline-block w-5 h-5 sm:w-5 sm:h-5 rounded-full border-2 border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800" />)}
                 <span className={
-                  step.status === 'done'
+                  'ml-2 text-xs sm:text-sm md:text-base ' +
+                  (step.status === 'done'
                     ? 'text-green-600 dark:text-green-300 font-semibold'
                     : step.status === 'in-progress'
                       ? 'text-yellow-500 dark:text-yellow-300 font-semibold'
-                      : 'text-gray-400 dark:text-gray-500'
+                      : 'text-gray-400 dark:text-gray-500')
                 }>
                   {step.label}
                 </span>
               </motion.li>
               {/* Divider/progress bar except after last item */}
               {i < steps.length - 1 && (
-                <span className="h-6 w-8 flex items-center justify-center">
-                  <span className="block w-full h-1 rounded-full bg-gradient-to-r from-primary-600 via-primary-400 to-primary-600 dark:from-primary-900 dark:via-primary-700 dark:to-primary-900 opacity-70 mx-0.5" />
+                <span className="h-4 w-full sm:w-8 flex items-center justify-center">
+                  <span className="block w-full h-0.5 sm:h-1 rounded-full bg-gradient-to-r from-primary-600 via-primary-400 to-primary-600 dark:from-primary-900 dark:via-primary-700 dark:to-primary-900 opacity-70 mx-0.5" />
                 </span>
               )}
             </>
@@ -264,37 +270,37 @@ export const PreviewSummary: React.FC<PreviewSummaryProps> = ({
   advancedOptions,
   uploadMethod,
   selectedFile,
+  projectShowcaseUrl,
   deployingState,
   setOpen,
+  selectedBranch,
   setShowPreview,
   selectedRepoFile,
   showBuildOutputSettings,
+  projectPreview,
   deployingResponse,
   buildingState,
 }) => {
+  const prevShowPreviewRef = React.useRef(true);
   const intl = useIntl();
-  const deployStatusRef = useRef<HTMLDivElement>(null);
+  const deployStatusRef = React.useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
-  // Countdown logic for redirect
-  const [countdown, setCountdown] = useState(10);
-  const showCountdown = deployingState === DeployingState.Deployed && buildingState === BuildingState.Built;
-
-  useEffect(() => {
-    if (showCountdown) {
-      setCountdown(10);
-    }
-  }, [showCountdown]);
-
-  useEffect(() => {
-    if (!showCountdown) return;
-    if (countdown <= 0) {
-      navigate('/dashboard');
-      return;
-    }
-    const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
-    return () => clearTimeout(timer);
-  }, [countdown, showCountdown, navigate]);
+  const handleContinueEditing = () => {
+    setShowPreview(false);
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+        document.documentElement.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+      }, 100);
+    });
+  };
 
   useEffect(() => {
     if (deployingState === DeployingState.Deploying && deployStatusRef.current) {
@@ -350,29 +356,31 @@ export const PreviewSummary: React.FC<PreviewSummaryProps> = ({
                   ariaLive="polite"
                 />
               );
-              const countdownCard = (countdown < 10) ? (
+              const ShowcaseCard = (
                 <StatusMotionCard
-                  key="built-countdown"
-                  icon={<Check className="w-5 h-5 text-green-400" />}
+                  ref={deployStatusRef}
+                  key="built"
+                  icon={<Check className="w-6 h-6 text-green-400" />}
                   color="green"
-                  title={<FormattedMessage id="createWebsite.redirecting" defaultMessage="Redirecting to dashboard..." />}
-                  description={
-                    <span>
-                      <FormattedMessage id="createWebsite.redirectIn" defaultMessage="You will be redirected in {seconds} seconds." values={{ seconds: countdown }} />
-                    </span>
-                  }
+                  title={<FormattedMessage id="createWebsite.deployed" defaultMessage="Deployed successfully!" />}
+                  description={<FormattedMessage
+                    id="createWebsite.showcaseUrl"
+                    defaultMessage="Showcase URL: {showcaseUrl}"
+                    values={{
+                      showcaseUrl: (
+                        <Link
+                          to={`https://kursui.wal.app/${projectShowcaseUrl}/index.html`}
+                          className="font-medium underline underline-offset-2 hover:text-green-600 transition-colors duration-300"
+                        >
+                          Click here to view
+                        </Link>
+                      )
+                    }}
+                  />}
                   ariaLive="polite"
-                >
-                  <Button
-                    variant="outline"
-                    className="mt-2 w-fit"
-                    onClick={() => navigate('/dashboard')}
-                  >
-                    <FormattedMessage id="createWebsite.goNow" defaultMessage="Go now" />
-                  </Button>
-                </StatusMotionCard>
-              ) : null;
-              return <>{successCard}{countdownCard}</>;
+                />
+              )
+              return <>{successCard}{ShowcaseCard}</>;
             }
             if (deployingState === DeployingState.Deploying) {
               return (
@@ -456,6 +464,8 @@ export const PreviewSummary: React.FC<PreviewSummaryProps> = ({
         </p>
       </article>
 
+      <PreviewWebsite projectPreview={projectPreview!} />
+
       <Card className="w-full border-2 border-muted/30 bg-primary-800 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 mb-4">
         <CardContent className="space-y-12 pb-2 px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -477,48 +487,103 @@ export const PreviewSummary: React.FC<PreviewSummaryProps> = ({
                       </h3>
                     </div>
                     <div className="space-y-3 text-sm">
-                      {[
-                        { label: intl.formatMessage({ id: "createWebsite.previewProjectName" }), value: name },
-                        {
-                          label: intl.formatMessage({ id: "createWebsite.previewFramework" }),
-                          value: framework?.name || intl.formatMessage({ id: "createWebsite.previewNotSelected" }),
-                        },
-                        { label: intl.formatMessage({ id: "createWebsite.previewUploadMethod" }), value: uploadMethod },
-                      ].map(({ label, value }, idx) => (
-                        <motion.div
-                          key={idx}
-                          variants={itemVariants}
-                          initial="hidden"
-                          animate="visible"
-                          custom={idx}
-                          className="flex flex-col gap-2 py-2 px-3 bg-gray-800 rounded-lg hover:bg-gray-900 transition-colors"
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="text-muted-foreground font-medium">{label}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-green-400">•</span>
-                            <span className="font-semibold text-gray-100 ml-1">{value}</span>
-                          </div>
-                        </motion.div>
-                      ))}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        {[
+                          {
+                            label: intl.formatMessage({ id: "createWebsite.name" }),
+                            value: name,
+                            icon: <Folder className="w-4 h-4 text-blue-400" />,
+                            color: 'blue'
+                          },
+                          {
+                            label: intl.formatMessage({ id: "createWebsite.previewFramework" }),
+                            value: framework?.name || intl.formatMessage({ id: "createWebsite.previewNotSelected" }),
+                            icon: <Cpu className="w-4 h-4 text-purple-400" />,
+                            color: 'purple'
+                          },
+                          {
+                            label: intl.formatMessage({ id: "createWebsite.previewUploadMethod" }),
+                            value: uploadMethod.charAt(0).toUpperCase() + uploadMethod.slice(1),
+                            icon: <UploadCloud className="w-4 h-4 text-green-400" />,
+                            color: 'green'
+                          },
+                        ].map(({ label, value, icon, color }, idx) => (
+                          <motion.div
+                            key={idx}
+                            variants={itemVariants}
+                            initial="hidden"
+                            animate="visible"
+                            custom={idx}
+                            className={`group flex flex-col gap-3 p-4 bg-gray-800/80 rounded-xl border border-gray-700/50 hover:border-${color}-500/30 hover:bg-gray-800 transition-all duration-300`}
+                          >
+                            <div className="flex items-center gap-2">
+                              {React.cloneElement(icon, { className: `w-4 h-4 text-${color}-400 group-hover:text-${color}-300 transition-colors` })}
+                              <span className="text-xs font-medium text-gray-300 group-hover:text-gray-100 transition-colors">
+                                {label}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 pl-1">
+                              <span className={`text-sm font-semibold text-gray-100 truncate`}>
+                                {value}
+                              </span>
+                            </div>
+                            <div className={`h-0.5 w-8 mt-1 rounded-full bg-gradient-to-r from-${color}-500/50 to-transparent transition-all duration-300 group-hover:w-12`}></div>
+                          </motion.div>
+                        ))}
+                      </div>
                       {(uploadMethod === "upload" && selectedFile) && (
                         <motion.div
                           variants={itemVariants}
                           initial="hidden"
                           animate="visible"
                           custom={3}
-                          className="flex flex-col gap-2 py-2 px-3 bg-gray-800 rounded-lg hover:bg-gray-900 transition-colors"
+                          className="flex flex-col gap-3 p-4 bg-gray-800/80 rounded-xl border border-gray-700/50 hover:border-purple-500/30 hover:bg-gray-800 transition-all duration-300 group"
                         >
                           <div className="flex items-center gap-2">
-                            <span className="text-muted-foreground font-medium">
+                            <Upload className="w-4 h-4 text-gray-400 group-hover:text-purple-400 transition-colors" />
+                            <span className="text-sm font-medium text-gray-300 group-hover:text-purple-100 transition-colors">
                               <FormattedMessage id="createWebsite.previewSelectedFile" />
                             </span>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-2">
-                              <span className="text-green-400">•</span>
-                              <span className="font-semibold text-gray-100 ml-1">{selectedFile.name}</span>
+
+                          <div className="flex flex-col gap-2 pl-1">
+                            <div className="flex items-center gap-2 group-hover:translate-x-1 transition-transform">
+                              <div className="flex items-center gap-2 bg-gray-700/50 px-2.5 py-1.5 rounded-lg w-full">
+                                <span className="relative flex h-2 w-2">
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                                  <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
+                                </span>
+                                <span className="font-mono text-sm font-medium text-gray-100 truncate">
+                                  {selectedFile.name}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2 text-xs text-gray-400 mt-1 pl-1">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-gray-500">Size:</span>
+                                <span className="font-medium text-gray-300">
+                                  {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-gray-500">Type:</span>
+                                <span className="font-medium text-gray-300">
+                                  {selectedFile.type || 'Unknown'}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-gray-500">Last Modified:</span>
+                                <span className="font-medium text-gray-300">
+                                  {new Date(selectedFile.lastModified).toLocaleDateString()}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-gray-500">Extension:</span>
+                                <span className="font-mono font-medium text-blue-300">
+                                  {selectedFile.name.split('.').pop()?.toUpperCase()}
+                                </span>
+                              </div>
                             </div>
                           </div>
                         </motion.div>
@@ -529,18 +594,43 @@ export const PreviewSummary: React.FC<PreviewSummaryProps> = ({
                           initial="hidden"
                           animate="visible"
                           custom={4}
-                          className="flex flex-col gap-2 py-2 px-3 bg-gray-800 rounded-lg hover:bg-gray-900 transition-colors"
+                          className="flex flex-col gap-3 p-4 bg-gray-800/80 rounded-xl border border-gray-700/50 hover:border-blue-500/30 hover:bg-gray-800 transition-all duration-300 group"
                         >
                           <div className="flex items-center gap-2">
-                            <span className="text-muted-foreground font-medium">
+                            <GitBranch className="w-4 h-4 text-gray-400 group-hover:text-blue-400 transition-colors" />
+                            <span className="text-sm font-medium text-gray-300 group-hover:text-blue-100 transition-colors">
                               <FormattedMessage id="createWebsite.previewSelectedRepository" />
                             </span>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-2">
-                              <span className="text-green-400">•</span>
-                              <span className="font-semibold text-gray-100 ml-1">{selectedRepoFile.name.replace(/\.zip$/, '')}</span>
+
+                          <div className="flex flex-col gap-2 pl-1">
+                            <div className="flex items-center gap-2 group-hover:translate-x-1 transition-transform">
+                              <div className="flex items-center gap-2 bg-gray-700/50 px-2.5 py-1.5 rounded-lg w-full">
+                                <span className="relative flex h-2 w-2">
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                                </span>
+                                <span className="font-mono text-sm font-semibold text-gray-100 truncate">
+                                  {selectedRepoFile.name.replace(/\.zip$/, '')}
+                                </span>
+                              </div>
                             </div>
+
+                            {selectedBranch && (
+                              <div className="flex items-center gap-2 group-hover:translate-x-1 transition-transform delay-75">
+                                <div className="flex items-center gap-2 bg-gray-700/30 px-2.5 py-1.5 rounded-lg w-full border border-gray-600/30">
+                                  <span className="relative flex h-2 w-2">
+                                    <span className="absolute inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                                  </span>
+                                  <span className="text-xs font-medium text-gray-300">
+                                    <FormattedMessage id="createWebsite.previewSelectedBranch" defaultMessage="Branch" />
+                                  </span>
+                                  <span className="text-xs font-semibold text-blue-300 ml-1 bg-blue-900/30 px-1.5 py-0.5 rounded">
+                                    {selectedBranch}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </motion.div>
                       )}
@@ -550,56 +640,83 @@ export const PreviewSummary: React.FC<PreviewSummaryProps> = ({
 
                 {i === 1 && showBuildOutputSettings && (
                   <>
-                    <div className="flex items-center gap-2 border-l-4 border-orange-500 pl-3">
-                      <AlertCircle className="h-5 w-5 text-orange-500 hover:scale-110 transition-transform" />
+                    <div className="flex items-center gap-2 border-l-4 border-orange-500 pl-3 mb-4">
+                      <AlertCircle className="h-5 w-5 text-orange-500 hover:scale-110 transition-transform -ml-0.5" />
                       <h3 className="text-lg font-semibold text-foreground tracking-tight">
                         <FormattedMessage id="createWebsite.previewBuildSettings" />
                       </h3>
                     </div>
-                    <div className="space-y-3 text-sm">
+                    <div className="space-y-3">
                       {Object.values(buildOutputSettings).every(v => !v) ? (
                         <motion.div
                           variants={itemVariants}
                           initial="hidden"
                           animate="visible"
                           custom={0}
-                          className="flex flex-col gap-2 py-2 px-3 bg-gray-800 rounded-lg hover:bg-gray-900 transition-colors"
+                          className="flex items-center gap-4 p-4 bg-gray-800/80 rounded-xl border border-gray-700/50 hover:border-orange-500/30 hover:bg-gray-800 transition-all duration-300"
                         >
-                          <div className="flex items-center gap-2">
-                            <span className="text-muted-foreground font-medium">
-                              <FormattedMessage id="createWebsite.previewStatus" />
-                            </span>
+                          <div className="flex-shrink-0 p-2 bg-orange-500/10 rounded-lg">
+                            <AlertCircle className="w-5 h-5 text-orange-400" />
                           </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-red-400">•</span>
-                            <span className="font-semibold text-gray-100 ml-1">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-300">
+                              <FormattedMessage id="createWebsite.previewStatus" />
+                            </p>
+                            <p className="text-sm font-semibold text-orange-300 truncate">
                               <FormattedMessage id="createWebsite.previewNotBuilt" />
-                            </span>
+                            </p>
                           </div>
                         </motion.div>
                       ) : (
-                        [
-                          { label: intl.formatMessage({ id: "createWebsite.previewBuildCommand" }), value: buildOutputSettings.buildCommand },
-                          { label: intl.formatMessage({ id: "createWebsite.previewInstallCommand" }), value: buildOutputSettings.installCommand },
-                          { label: intl.formatMessage({ id: "createWebsite.previewOutputDirectory" }), value: buildOutputSettings.outputDirectory },
-                        ].map(({ label, value }, idx) => (
-                          <motion.div
-                            key={idx}
-                            variants={itemVariants}
-                            initial="hidden"
-                            animate="visible"
-                            custom={idx}
-                            className="flex flex-col gap-2 py-2 px-3 bg-gray-800 rounded-lg hover:bg-gray-900 transition-colors"
-                          >
-                            <div className="flex items-center gap-2">
-                              <span className="text-muted-foreground font-medium">{label}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-green-400">•</span>
-                              <span className="font-semibold text-gray-100 ml-1">{value || intl.formatMessage({ id: "createWebsite.previewNotSet" })}</span>
-                            </div>
-                          </motion.div>
-                        ))
+                        <motion.div
+                          variants={itemVariants}
+                          initial="hidden"
+                          animate="visible"
+                          className="bg-gray-800/80 rounded-xl border border-gray-700/50 overflow-hidden"
+                        >
+                          <div className="divide-y divide-gray-700/50">
+                            {[
+                              {
+                                label: intl.formatMessage({ id: "createWebsite.previewBuildCommand" }),
+                                value: buildOutputSettings.buildCommand,
+                                icon: <Terminal className="w-4 h-4" />,
+                                color: 'text-blue-400 bg-blue-500/10',
+                                hoverColor: 'hover:bg-blue-500/5'
+                              },
+                              {
+                                label: intl.formatMessage({ id: "createWebsite.previewInstallCommand" }),
+                                value: buildOutputSettings.installCommand,
+                                icon: <Package className="w-4 h-4" />,
+                                color: 'text-purple-400 bg-purple-500/10',
+                                hoverColor: 'hover:bg-purple-500/5'
+                              },
+                              {
+                                label: intl.formatMessage({ id: "createWebsite.previewOutputDirectory" }),
+                                value: buildOutputSettings.outputDirectory,
+                                icon: <FolderOpen className="w-4 h-4" />,
+                                color: 'text-green-400 bg-green-500/10',
+                                hoverColor: 'hover:bg-green-500/5'
+                              },
+                            ].map(({ label, value, icon, color, hoverColor }, idx) => (
+                              <div
+                                key={idx}
+                                className={`group flex items-start p-4 transition-colors duration-200 ${hoverColor}`}
+                              >
+                                <div className={`flex-shrink-0 p-1.5 rounded-lg ${color} mr-3 mt-0.5`}>
+                                  {icon}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-medium text-gray-400 mb-1">
+                                    {label}
+                                  </p>
+                                  <p className={`text-sm font-mono font-medium text-gray-100 truncate ${!value ? 'text-gray-500 italic' : ''}`}>
+                                    {value || intl.formatMessage({ id: "createWebsite.previewNotSet" })}
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </motion.div>
                       )}
                     </div>
                   </>
@@ -607,36 +724,61 @@ export const PreviewSummary: React.FC<PreviewSummaryProps> = ({
 
                 {i === 2 && (
                   <>
-                    <div className="flex items-center gap-2 border-l-4 border-purple-500 pl-3">
+                    <div className="flex items-center gap-2 border-l-4 border-purple-500 pl-3 mb-4">
                       <Info className="h-5 w-5 text-purple-500 hover:scale-110 transition-transform -ml-0.5" />
                       <h3 className="text-lg font-semibold text-foreground tracking-tight">
                         <FormattedMessage id="createWebsite.previewAdvancedSettings" />
                       </h3>
                     </div>
-                    <div className="space-y-3 text-sm">
-                      {[
-                        { label: intl.formatMessage({ id: "createWebsite.previewCacheControl" }), value: `${advancedOptions.cacheControl} day(s)` },
-                        { label: intl.formatMessage({ id: "createWebsite.previewDefaultPath" }), value: advancedOptions.defaultPath },
-                        { label: intl.formatMessage({ id: "createWebsite.previewRootDirectory" }), value: advancedOptions.rootDirectory },
-                      ].map(({ label, value }, idx) => (
-                        <motion.div
-                          key={idx}
-                          variants={itemVariants}
-                          initial="hidden"
-                          animate="visible"
-                          custom={idx}
-                          className="flex flex-col gap-2 py-2 px-3 bg-gray-800 rounded-lg hover:bg-gray-900 transition-colors"
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="text-muted-foreground font-medium">{label}</span>
+                    <motion.div
+                      variants={itemVariants}
+                      initial="hidden"
+                      animate="visible"
+                      className="bg-gray-800/80 rounded-xl border border-gray-700/50 overflow-hidden"
+                    >
+                      <div className="divide-y divide-gray-700/50">
+                        {[
+                          {
+                            label: intl.formatMessage({ id: "createWebsite.previewCacheControl" }),
+                            value: `${advancedOptions.cacheControl} day(s)`,
+                            icon: <Shield className="w-4 h-4" />,
+                            color: 'text-purple-400 bg-purple-500/10',
+                            hoverColor: 'hover:bg-purple-500/5'
+                          },
+                          {
+                            label: intl.formatMessage({ id: "createWebsite.previewDefaultPath" }),
+                            value: advancedOptions.defaultPath,
+                            icon: <FileText className="w-4 h-4" />,
+                            color: 'text-blue-400 bg-blue-500/10',
+                            hoverColor: 'hover:bg-blue-500/5'
+                          },
+                          {
+                            label: intl.formatMessage({ id: "createWebsite.previewRootDirectory" }),
+                            value: advancedOptions.rootDirectory,
+                            icon: <FolderInput className="w-4 h-4" />,
+                            color: 'text-green-400 bg-green-500/10',
+                            hoverColor: 'hover:bg-green-500/5'
+                          },
+                        ].map(({ label, value, icon, color, hoverColor }, idx) => (
+                          <div
+                            key={idx}
+                            className={`group flex items-start p-4 transition-colors duration-200 ${hoverColor}`}
+                          >
+                            <div className={`flex-shrink-0 p-1.5 rounded-lg ${color} mr-3 mt-0.5`}>
+                              {icon}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium text-gray-400 mb-1">
+                                {label}
+                              </p>
+                              <p className={`text-sm font-medium text-gray-100 truncate ${!value ? 'text-gray-500 italic' : ''}`}>
+                                {value || intl.formatMessage({ id: "createWebsite.previewNotSet" })}
+                              </p>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-green-400">•</span>
-                            <span className="font-semibold text-gray-100 ml-1">{value || intl.formatMessage({ id: "createWebsite.previewNotSet" })}</span>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    </motion.div>
                   </>
                 )}
               </motion.div>
@@ -650,7 +792,7 @@ export const PreviewSummary: React.FC<PreviewSummaryProps> = ({
         <div className="flex justify-end gap-4 mt-8">
           <Button
             className="bg-accent hover:bg-accentHover text-accentForeground p-6 rounded-md text-base font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-accent/20"
-            onClick={() => { setShowPreview(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+            onClick={handleContinueEditing}
           >
             <FormattedMessage
               id="createWebsite.continueEditing"

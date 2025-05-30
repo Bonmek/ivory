@@ -8,6 +8,11 @@ import EnvironmentPlugin from 'vite-plugin-environment'
 export default defineConfig({
   build: {
     sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks: undefined,
+      },
+    },
   },
   plugins: [
     react(),
@@ -17,21 +22,36 @@ export default defineConfig({
       'REACT_APP_API_USER',
       'REACT_APP_API_REPOSITORIES',
       'REACT_APP_API_GITHUB_AUTH',
-      'REACT_APP_API_WRITE_BLOB_N_RUN_JOB',
       'REACT_APP_SUI_NETWORK',
       'REACT_APP_BLOB_TYPE',
       'REACT_APP_OWNER_ADDRESS',
       'REACT_APP_SUINS_TYPE',
+      'REACT_APP_API_PREVIEW_WEBSITE',
+      'REACT_APP_API_CREATE_WEBSITE',
+      'REACT_APP_API_PREVIEW_WEBSITE',
+      'REACT_APP_API_DELETE_WEBSITE',
+      'REACT_APP_API_SET_ATTRIBUTES',
+      'REACT_APP_API_ADD_SITE_ID',
     ]),
   ],
   publicDir: 'public',
   server: {
     host: true,
     port: 3000,
+    proxy: {
+      '/api/sui': {
+        target: 'https://fullnode.mainnet.sui.io',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/sui/, ''),
+      },
+    },
   },
   resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
+    alias: [
+      {
+        find: '@',
+        replacement: path.resolve(__dirname, './src'),
+      },
+    ],
   },
 })

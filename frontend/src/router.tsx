@@ -12,6 +12,9 @@ import DashboardPage from './pages/Dashboard'
 import Callback from './pages/Callback'
 import EditWebsitePage from './pages/EditWebsite'
 import UploadZipPage from './pages/UploadZip'
+// import EditWebsitePage from './pages/EditWebsite'
+import AboutUs from './pages/AboutUs'
+
 
 const router = createBrowserRouter([
   {
@@ -26,7 +29,9 @@ const router = createBrowserRouter([
     path: '/create-website',
     element: (
       <Layout>
-        <CreateWebsitePage />
+        <ProtectedRoute>
+          <CreateWebsitePage />
+        </ProtectedRoute>
       </Layout>
     ),
   },
@@ -48,14 +53,22 @@ const router = createBrowserRouter([
       </Layout>
     ),
   },
-  {
-    path: '/edit-website',
-    element: (
-      <Layout>
-        <EditWebsitePage />
-      </Layout>
-    ),
-  },
+  // {
+  //   path: '/edit-website',
+  //   element: (
+  //     <Layout>
+  //       <EditWebsitePage />
+  //     </Layout>
+  //   ),
+  // },
+  // {
+  //   path: '/edit-website/:id',
+  //   element: (
+  //     <Layout>
+  //       <EditWebsitePage />
+  //     </Layout>
+  //   ),
+  // },
   {
     path: '/dashboard',
     element: (
@@ -63,6 +76,14 @@ const router = createBrowserRouter([
         <ProtectedRoute>
           <Dashboard />
         </ProtectedRoute>
+      </Layout>
+    ),
+  },
+  {
+    path: '/about',
+    element: (
+      <Layout>
+        <AboutUs />
       </Layout>
     ),
   },

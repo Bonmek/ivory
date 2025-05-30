@@ -1,0 +1,7 @@
+node_modules
+dist
+*.log
+.env
+*.ts
+*.md
+ivory-project-457721-2d60ad88afc9.json
