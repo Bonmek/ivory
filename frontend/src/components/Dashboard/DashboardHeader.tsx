@@ -42,45 +42,52 @@ import {
 import { FormattedMessage, useIntl } from 'react-intl'
 import { useState, useEffect } from 'react'
 
-// Define the CSS for the pulse animation
+// Define the CSS for the animations
 const pulseAnimationStyle = `
   @keyframes pulse-slow {
     0% { opacity: 0.3; }
     50% { opacity: 0.6; }
     100% { opacity: 0.3; }
   }
+
+  @keyframes flow-right {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  @keyframes flow-left {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+  }
+
+  @keyframes flow-down {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100%); }
+  }
+
+  @keyframes flow-up {
+    0% { transform: translateY(100%); }
+    100% { transform: translateY(-100%); }
+  }
+
+  .animate-flow-right {
+    animation: flow-right 3s linear infinite;
+  }
+
+  .animate-flow-left {
+    animation: flow-left 3s linear infinite;
+  }
+
+  .animate-flow-down {
+    animation: flow-down 3s linear infinite;
+  }
+
+  .animate-flow-up {
+    animation: flow-up 3s linear infinite;
+  }
+
   .animate-pulse-slow {
     animation: pulse-slow 2s ease-in-out infinite;
-  }
-
-  @keyframes border-flow {
-    0%, 100% {
-      background-position: 0% 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
-  }
-
-  .border-flow-button {
-    position: relative;
-    background: transparent;
-  }
-
-  .border-flow-button:before {
-    content: '';
-    position: absolute;
-    inset: -1px;
-    z-index: -1;
-    background: linear-gradient(
-      90deg,
-      rgb(59, 130, 246, 0.3),
-      rgb(16, 185, 129, 0.3),
-      rgb(59, 130, 246, 0.3)
-    );
-    background-size: 200% 100%;
-    animation: border-flow 2s linear infinite;
-    border-radius: 6px;
   }
 `;
 
@@ -299,10 +306,26 @@ const DashboardHeader = ({
               }
             }}
             variant="outline"
-            className="border-flow-button bg-primary-900/80 text-white font-medium flex items-center gap-1.5 border-secondary-500/20 hover:bg-secondary-500/10 cursor-pointer transition-all duration-200 transform hover:scale-105 group"
+            className="w-full sm:w-auto bg-primary-800 text-white font-medium flex items-center gap-1.5 border-secondary-500/40 hover:bg-primary-700 hover:border-secondary-500 cursor-pointer shadow-lg shadow-secondary-500/20 ring-2 ring-secondary-500/20 hover:ring-secondary-500/50 transition-all duration-200 transform hover:scale-105 relative overflow-hidden group"
           >
-            <PlusCircle className="h-4 w-4 text-secondary-500 relative z-10 group-hover:rotate-90 transition-transform duration-300" />
-            <span className="relative z-10 hidden sm:inline">
+            {/* Inner pulse animations */}
+            <div className="absolute inset-0 bg-secondary-500/10 animate-pulse-slow rounded-md pointer-events-none"></div>
+            <div className="absolute -inset-1 bg-secondary-500/5 blur-sm animate-pulse-slow rounded-md pointer-events-none"></div>
+            
+            {/* Flowing animation elements */}
+            <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-secondary-500/70 to-transparent animate-flow-right pointer-events-none"></div>
+            <div className="absolute bottom-0 right-0 w-full h-0.5 bg-gradient-to-r from-transparent via-secondary-500/70 to-transparent animate-flow-left pointer-events-none"></div>
+            <div className="absolute left-0 top-0 w-0.5 h-full bg-gradient-to-b from-transparent via-secondary-500/70 to-transparent animate-flow-down pointer-events-none"></div>
+            <div className="absolute right-0 bottom-0 w-0.5 h-full bg-gradient-to-b from-transparent via-secondary-500/70 to-transparent animate-flow-up pointer-events-none"></div>
+            
+            {/* Corner glows */}
+            <div className="absolute top-0 left-0 w-2 h-2 bg-secondary-500/40 rounded-full blur-sm animate-pulse-slow pointer-events-none"></div>
+            <div className="absolute top-0 right-0 w-2 h-2 bg-secondary-500/40 rounded-full blur-sm animate-pulse-slow pointer-events-none"></div>
+            <div className="absolute bottom-0 left-0 w-2 h-2 bg-secondary-500/40 rounded-full blur-sm animate-pulse-slow pointer-events-none"></div>
+            <div className="absolute bottom-0 right-0 w-2 h-2 bg-secondary-500/40 rounded-full blur-sm animate-pulse-slow pointer-events-none"></div>
+            
+            <PlusCircle className="h-4 w-4 text-secondary-500 relative z-10" />
+            <span className="relative z-10">
               <FormattedMessage
                 id="dashboard.createNew"
                 defaultMessage="Deploy Site"
