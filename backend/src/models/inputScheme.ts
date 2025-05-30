@@ -21,7 +21,7 @@ export const inputSetSuiNameServiceScheme = z.object({
 
 export const inputGrantAccessScheme = z.object({
   object_id: z.string().regex(/^0x[a-fA-F0-9]{64}$/),
-  member: z
+  member_address_n_access: z
     .string()
     .regex(
       /^(0x[a-fA-F0-9]{64}[01]{4})(\|0x[a-fA-F0-9]{64}[01]{4})*$/,

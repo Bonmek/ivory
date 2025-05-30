@@ -445,16 +445,16 @@ export class SiteService {
         throw new Error("WriteBlob success but data is undefined");
       }
 
-      let attributesUpdate;
+      let old_attributes_data;
       if (old_attributes.site_status && old_attributes.site_status !== null) {
-        attributesUpdate = {
+        old_attributes_data = {
           site_status: "0",
           status: "0",
           "site-name": old_site_name,
           site_id: old_site_id,
         };
       } else {
-        attributesUpdate = {
+        old_attributes_data = {
           status: "0",
           "site-name": old_site_name,
           site_id: old_site_id,
@@ -462,7 +462,7 @@ export class SiteService {
       }
 
       const updateBlobAttributes = {
-        ...attributesUpdate,
+        ...old_attributes_data,
         ...updated_data,
       };
 
@@ -545,15 +545,15 @@ export class SiteService {
 
   async handleGrantAccess(req: Request) {
     const object_id = req.query.object_id;
-    const new_owner_address = req.query.new_owner_address;
+    const member_address_n_access = req.query.member_address_n_access;
 
-    if (!object_id || !new_owner_address) {
+    if (!object_id || !member_address_n_access) {
       throw new Error("Object ID and SuiNS are required in query parameters");
     }
 
     const attributes_data = inputGrantAccessScheme.safeParse({
       object_id,
-      new_owner_address,
+      member_address_n_access,
     });
 
     if (!attributes_data.success) {
@@ -564,7 +564,7 @@ export class SiteService {
       blobObjectId: attributes_data.data.object_id,
       signer: this.keypair,
       attributes: {
-        member: attributes_data.data.member,
+        member: attributes_data.data.member_address_n_access,
       },
     });
   }
