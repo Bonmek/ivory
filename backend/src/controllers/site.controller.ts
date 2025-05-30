@@ -97,6 +97,24 @@ export class SiteController {
         }
     }
 
+    grantAccess = async (req: Request, res: Response) => {
+        try {
+            await this.siteService.handleGrantAccess(req);
+            res.status(200).json({
+                statusCode: 1,
+                message: "grant access to blob attributes successfully",
+            });
+        } catch (error) {
+            res.status(502).json({
+                statusCode: 0,
+                error: {
+                    error_message: "Failed to grant access to blob attributes",
+                    error_details: error,
+                },
+            });
+        }
+    }
+
     setAttributes = async (req: Request, res: Response) => {
         try {
             await this.siteService.handleSetAttributes(req);

@@ -8,6 +8,7 @@ import {
   inputPreviewSiteScheme,
   inputUpdateSiteScheme,
   inputTransferOwnerScheme,
+  inputGrantAccessScheme,
 } from "../models/inputScheme";
 import { v4 as uuidv4 } from "uuid";
 import path from "path";
@@ -541,6 +542,33 @@ export class SiteService {
       },
     });
   }
+
+  async handleGrantAccess(req: Request) {
+    const object_id = req.query.object_id;
+    const new_owner_address = req.query.new_owner_address;
+
+    if (!object_id || !new_owner_address) {
+      throw new Error("Object ID and SuiNS are required in query parameters");
+    }
+
+    const attributes_data = inputGrantAccessScheme.safeParse({
+      object_id,
+      new_owner_address,
+    });
+
+    if (!attributes_data.success) {
+      throw new Error(JSON.stringify(attributes_data.error.errors));
+    }
+
+    await this.walrusClient.executeWriteBlobAttributesTransaction({
+      blobObjectId: attributes_data.data.object_id,
+      signer: this.keypair,
+      attributes: {
+        member: attributes_data.data.member,
+      },
+    });
+  }
+
 
   async handleSetAttributes(req: Request) {
     const object_id = req.query.object_id;
