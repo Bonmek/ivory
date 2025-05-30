@@ -1,378 +1,243 @@
-// import { useMemo, useState } from 'react';
-// import { Button } from '@/components/ui/button';
-// import { Input } from '@/components/ui/input';
-// import {
-//   Select,
-//   SelectContent,
-//   SelectItem,
-//   SelectTrigger,
-//   SelectValue,
-// } from '@/components/ui/select';
-// import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-// import { Upload, X, Edit2, Save } from 'lucide-react';
-// import { useDropzone } from 'react-dropzone';
-// import { useSuiData } from '@/hooks/useSuiData';
-// import { useAuth } from '@/context/AuthContext';
-// import { transformMetadataToProject } from '@/utils/metadataUtils';
-// import { Project } from '@/types/project';
-// import {
-//   Dialog,
-//   DialogContent,
-//   DialogHeader,
-//   DialogTitle,
-// } from '@/components/ui/dialog';
-// import { useParams } from 'react-router';
+import React, { useState } from 'react'
+import { useSuiData } from '@/hooks/useSuiData'
+import { useAuth } from '@/context/AuthContext'
+import { Navigate, useParams } from 'react-router-dom'
+import Loading from '@/components/Loading'
+import { SuiParsedData } from '@mysten/sui/client'
+import { Button } from '@/components/ui/button'
+import { motion } from 'framer-motion'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Pencil } from 'lucide-react'
 
-// // Editable Project Fields Component
-// const EditableProjectFields = ({ project, onUpdate }: { project: Project; onUpdate: (project: Project) => void }) => {
-//   const [isEditing, setIsEditing] = useState(false);
-//   const [installCommand, setInstallCommand] = useState(project.installCommand);
-//   const [buildCommand, setBuildCommand] = useState(project.buildCommand);
-//   const [defaultRoute, setDefaultRoute] = useState(project.defaultRoute);
+type WithFields = { fields: Record<string, unknown> };
 
-//   const handleSave = () => {
-//     onUpdate({
-//       ...project,
-//       installCommand,
-//       buildCommand,
-//       defaultRoute,
-//     });
-//     setIsEditing(false);
-//   };
+const hasFields = (data: unknown): data is WithFields => {
+    return !!data && typeof data === 'object' && 'fields' in data;
+}
 
-//   const handleCancel = () => {
-//     setInstallCommand(project.installCommand);
-//     setBuildCommand(project.buildCommand);
-//     setDefaultRoute(project.defaultRoute);
-//     setIsEditing(false);
-//   };
+type ProjectContents = Record<string, string>
 
-//   if (isEditing) {
-//     return (
-//       <div className="space-y-3 py-2">
-//         <div className="flex items-center gap-3">
-//           <label className="w-20 text-sm text-cyan-300 font-medium">Install:</label>
-//           <Input
-//             value={installCommand}
-//             onChange={(e) => setInstallCommand(e.target.value)}
-//             className="h-9 bg-gray-700/30 border-cyan-500/30 text-cyan-100 placeholder-cyan-400/50 focus:ring-2 focus:ring-cyan-500 rounded-md"
-//           />
-//         </div>
-//         <div className="flex items-center gap-3">
-//           <label className="w-20 text-sm text-cyan-300 font-medium">Build:</label>
-//           <Input
-//             value={buildCommand}
-//             onChange={(e) => setBuildCommand(e.target.value)}
-//             className="h-9 bg-gray-700/30 border-cyan-500/30 text-cyan-100 placeholder-cyan-400/50 focus:ring-2 focus:ring-cyan-500 rounded-md"
-//           />
-//         </div>
-//         <div className="flex items-center gap-3">
-//           <label className="w-20 text-sm text-cyan-300 font-medium">Route:</label>
-//           <Input
-//             value={defaultRoute}
-//             onChange={(e) => setDefaultRoute(e.target.value)}
-//             className="h-9 bg-gray-700/30 border-cyan-500/30 text-cyan-100 placeholder-cyan-400/50 focus:ring-2 focus:ring-cyan-500 rounded-md"
-//           />
-//         </div>
-//         <div className="flex justify-end gap-3 mt-3">
-//           <Button
-//             size="sm"
-//             variant="outline"
-//             onClick={handleCancel}
-//             className="h-9 border-red-500/50 hover:bg-red-500/20 text-red-300 rounded-md"
-//           >
-//             <X size={16} className="mr-1" />
-//             Cancel
-//           </Button>
-//           <Button
-//             size="sm"
-//             onClick={handleSave}
-//             className="h-9 bg-cyan-600 hover:bg-cyan-500 text-cyan-50 rounded-md"
-//           >
-//             <Save size={16} className="mr-1" />
-//             Save
-//           </Button>
-//         </div>
-//       </div>
-//     );
-//   }
+interface EditDialogProps {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    fieldName: string;
+    fieldValue: string;
+    onSave: (value: string) => void;
+}
 
-//   return (
-//     <div className="space-y-2">
-//       <div className="flex items-center justify-between group">
-//         <div className="space-y-1">
-//           <div className="flex items-center">
-//             <span className="text-sm text-cyan-300 w-20 font-medium">Install:</span>
-//             <span className="text-cyan-100">{project.installCommand}</span>
-//           </div>
-//           <div className="flex items-center">
-//             <span className="text-sm text-cyan-300 w-20 font-medium">Build:</span>
-//             <span className="text-cyan-100">{project.buildCommand}</span>
-//           </div>
-//           <div className="flex items-center">
-//             <span className="text-sm text-cyan-300 w-20 font-medium">Route:</span>
-//             <span className="text-cyan-100">{project.defaultRoute}</span>
-//           </div>
-//         </div>
-//         <Button
-//           size="sm"
-//           variant="ghost"
-//           onClick={() => setIsEditing(true)}
-//           className="opacity-0 group-hover:opacity-100 h-9 text-cyan-300 hover:text-cyan-100 hover:bg-cyan-600/20 rounded-md"
-//         >
-//           <Edit2 size={16} />
-//         </Button>
-//       </div>
-//     </div>
-//   );
-// };
+const EditDialog: React.FC<EditDialogProps> = ({
+    open,
+    onOpenChange,
+    fieldName,
+    fieldValue,
+    onSave,
+}) => {
+    const [value, setValue] = useState(fieldValue);
+    const [isSaving, setIsSaving] = useState(false);
 
-// // Main App Component
-// function App() {
-//   const [name, setName] = useState('');
-//   const [framework, setFramework] = useState('React');
-//   const [installCmd, setInstallCmd] = useState('pnpm install');
-//   const [buildCmd, setBuildCmd] = useState('pnpm build');
-//   const [outputDir, setOutputDir] = useState('dist');
-//   const [rootDir, setRootDir] = useState('/');
-//   const [cacheControl, setCacheControl] = useState('default');
-//   const [previewOpen, setPreviewOpen] = useState(false);
-//   const [previewUrl, setPreviewUrl] = useState('');
+    const handleSave = () => {
+        setIsSaving(true);
+        try {
+            onSave(value);
+            onOpenChange(false);
+        } catch (error) {
+            console.error('Failed to save:', error);
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
-//   const { address }: any = useAuth();
-//   const { metadata, isLoading, refetch } = useSuiData(
-//     '0x18a4c45a96c15d62b82b341f18738125bf875fee86057d88589a183700601a1c',
-//   );
-//   const { id } = useParams();
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="sm:max-w-[425px] bg-primary-900 border-secondary-500/20">
+                <DialogHeader>
+                    <DialogTitle className="text-white">Edit {fieldName.replace(/_/g, ' ')}</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="field-value" className="text-right text-white">
+                            Value
+                        </Label>
+                        <Input
+                            id="field-value"
+                            value={value}
+                            onChange={(e) => setValue(e.target.value)}
+                            className="col-span-3 bg-primary-800 border-secondary-500/30 text-white"
+                            autoFocus
+                        />
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => onOpenChange(false)}
+                        className="border-secondary-500/30 text-white"
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        type="submit"
+                        onClick={handleSave}
+                        disabled={isSaving}
+                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                        {isSaving ? 'Saving...' : 'Save changes'}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+};
 
-//   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-//     accept: { 'application/zip': ['.zip'] },
-//     onDrop: (acceptedFiles) => {
-//       console.log('Uploaded files:', acceptedFiles);
-//       // Handle file upload logic here
-//     },
-//   });
+function EditWebsitePage() {
+    const { address } = useAuth()
+    const { metadata, isLoading } = useSuiData(address || '')
+    const params = useParams()
+    const project = metadata?.find((meta) => meta.parentId === params.id)
+    const [editingField, setEditingField] = useState<{ key: string; value: string } | null>(null)
+    const [projectContents, setProjectContents] = useState<ProjectContents | null>(null)
 
-//   const [searchQuery, setSearchQuery] = useState('');
-//   const [date, setDate] = useState(undefined);
-//   const formatDate = (date: Date) => {
-//     return date.toLocaleDateString('en-GB', {
-//       year: 'numeric',
-//       month: '2-digit',
-//       day: '2-digit',
-//     });
-//   };
+    React.useEffect(() => {
+        if (!project?.content) {
+            setProjectContents(null)
+            return
+        }
 
-//   const filteredProjects = useMemo(() => {
-//     const projects = metadata
-//       ? metadata.map((meta, index) => transformMetadataToProject(meta, index)).filter((project) => project.parentId === parseInt(id))
-//       : [];
-//     if (!projects || projects.length === 0) return [];
-//     let filtered = projects.filter((project) => {
-//       const matchesSearch =
-//         project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-//         project.url.toLowerCase().includes(searchQuery.toLowerCase());
+        const content = project.content as SuiParsedData
+        if (content.dataType !== 'moveObject') {
+            setProjectContents(null)
+            return
+        }
 
-//       const matchesDate =
-//         !date ||
-//         formatDate(project.startDate) === formatDate(date) ||
-//         formatDate(project.expiredDate) === formatDate(date);
+        const value = hasFields(content) ? content.fields.value : null
+        const valueFields = value && hasFields(value) ? value.fields : null
+        const metadataFields = valueFields && hasFields(valueFields.metadata) ? valueFields.metadata.fields : null
 
-//       return matchesSearch && matchesDate;
-//     });
+        const entries = metadataFields?.contents
+        if (!Array.isArray(entries)) {
+            setProjectContents(null)
+            return
+        }
 
-//     return filtered;
-//   }, [searchQuery, date, metadata, id]);
+        const mapped: ProjectContents = {}
+        for (const entry of entries) {
+            if (hasFields(entry)) {
+                const key = entry.fields?.key
+                const value = entry.fields?.value
+                if (typeof key === 'string' && typeof value === 'string') {
+                    mapped[key] = value
+                }
+            }
+        }
+        setProjectContents(mapped)
+    }, [project])
 
-//   const handleUpdateProject = (updatedProject: Project) => {
-//     console.log('Updating project:', updatedProject);
-//     alert(`Project ${updatedProject.name} would be updated with:
-//     - Install Command: ${updatedProject.installCommand}
-//     - Build Command: ${updatedProject.buildCommand}
-//     - Default Route: ${updatedProject.defaultRoute}`);
-//   };
+    console.log('Mapped project contents:', projectContents)
 
-//   const handlePreview = (url: string) => {
-//     setPreviewUrl(url);
-//     setPreviewOpen(true);
-//   };
+    if (isLoading) {
+        return <Loading />
+    }
 
-//   return (
-//     <div className="min-h-screen p-6 md:p-8 lg:p-10">
-//       <CardHeader className="mb-6">
-//         <CardTitle className="text-3xl font-bold text-cyan-400 font-sans tracking-tight font-pixel">
-//           Edit Project
-//         </CardTitle>
-//       </CardHeader>
-//       <Card className="bg-gray-900/80 backdrop-blur-md border border-cyan-500/30 shadow-xl shadow-cyan-500/10 rounded-xl overflow-hidden">
-//         <CardContent className="p-6 md:p-8">
-//           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-//             {/* Site Preview Section */}
+    if (!project) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 text-center">
+                <div className="bg-primary-900/50 border border-secondary-500/20 rounded-xl p-8 max-w-md w-full">
+                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-500/10 mb-4">
+                        <svg className="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                    <h2 className="text-xl font-semibold text-white mb-2">Project Not Found</h2>
+                    <p className="text-secondary-300 mb-6">The project you're looking for doesn't exist or you don't have permission to view it.</p>
+                    <Button
+                        variant="outline"
+                        className="w-full bg-primary-800 hover:bg-primary-700 border-secondary-500/30 text-white hover:text-white"
+                        onClick={() => window.history.back()}
+                    >
+                        Go Back
+                    </Button>
+                </div>
+            </div>
+        )
+    }
 
-//             {/* Project Settings Section */}
-//             <div className="space-y-6 lg:col-span-2">
-//               {/* File Upload Section */}
-//               <Card className="bg-gray-800/50 border-cyan-500/30 rounded-lg transition-all duration-300 hover:shadow-cyan-500/20">
-//                 <CardHeader className="border-b border-cyan-500/20">
-//                   <CardTitle className="text-lg text-cyan-300 font-medium">
-//                     Upload Project Files
-//                   </CardTitle>
-//                 </CardHeader>
-//                 <CardContent className="p-6">
-//                   <div
-//                     {...getRootProps()}
-//                     className={`border-2 border-dashed border-cyan-500/50 rounded-lg p-6 text-center transition-all duration-300 ${
-//                       isDragActive ? 'bg-cyan-500/10' : 'bg-gray-700/30'
-//                     }`}
-//                   >
-//                     <input {...getInputProps()} />
-//                     <Upload className="mx-auto h-12 w-12 text-cyan-400" />
-//                     <p className="mt-2 text-cyan-100">
-//                       {isDragActive
-//                         ? 'Drop the .zip file here'
-//                         : 'Drag & drop a .zip file here, or click to select'}
-//                     </p>
-//                     <p className="text-sm text-cyan-400/70">Only .zip files are accepted</p>
-//                   </div>
-//                 </CardContent>
-//               </Card>
+    return (
+        <div className="p-8 max-w-6xl mx-auto">
+            <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="text-center mb-12"
+            >
+                <h1 className="text-5xl font-bold text-white mb-3">
+                    {projectContents?.["site-name"]}
+                </h1>
+            </motion.div>
 
-//               {/* Project Configuration */}
-//               <Card className="bg-gray-800/50 border-cyan-500/30 rounded-lg transition-all duration-300 hover:shadow-cyan-500/20">
-//                 <CardHeader className="border-b border-cyan-500/20">
-//                   <CardTitle className="text-lg text-cyan-300 font-medium">
-//                     Project Configuration
-//                   </CardTitle>
-//                 </CardHeader>
-//                 <CardContent className="p-6">
-//                   <div className="mb-4">
-//                     <Input
-//                       placeholder="Search projects..."
-//                       value={searchQuery}
-//                       onChange={(e) => setSearchQuery(e.target.value)}
-//                       className="bg-gray-700/30 border-cyan-500/30 text-cyan-100 placeholder-cyan-400/50 focus:ring-2 focus:ring-cyan-500 rounded-md"
-//                     />
-//                   </div>
-//                   {isLoading ? (
-//                     <div className="text-cyan-400/70 animate-pulse">Loading projects...</div>
-//                   ) : filteredProjects.length > 0 ? (
-//                     filteredProjects.map((project, index) => (
-//                       <div
-//                         key={index}
-//                         className="bg-gray-700/30 border border-cyan-500/30 text-cyan-100 p-4 rounded-lg mb-4 transition-all duration-200 hover:bg-gray-700/50"
-//                       >
-//                         <h3 className="text-cyan-200 font-medium mb-3">{project.name}</h3>
-//                         <EditableProjectFields project={project} onUpdate={handleUpdateProject} />
-//                       </div>
-//                     ))
-//                   ) : (
-//                     <div className="bg-gray-700/30 border-cyan-500/30 text-cyan-100 p-4 rounded-lg text-center">
-//                       No projects available
-//                     </div>
-//                   )}
-//                 </CardContent>
-//               </Card>
+            {projectContents ? (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+                >
+                    {Object.entries(projectContents).map(([key, value]) => (
+                        <motion.div
+                            key={key}
+                            whileHover={{ scale: 1.02 }}
+                            className="group rounded-2xl bg-primary-800 p-6 border border-secondary-500/10 shadow-md transition"
+                        >
+                            <div className="mb-2 text-xs uppercase text-secondary-400 tracking-wider font-medium">
+                                {key.replace(/_/g, ' ')}
+                            </div>
+                            <div className="flex items-start justify-between gap-2">
+                                <p className="text-white text-base font-medium truncate w-full" title={value}>
+                                    {value || <em className="text-secondary-500 italic">Not specified</em>}
+                                </p>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="text-secondary-400 hover:text-white rounded-full"
+                                    onClick={() => setEditingField({ key, value })}
+                                >
+                                    <Pencil className="w-4 h-4" />
+                                </Button>
+                            </div>
+                        </motion.div>
+                    ))}
+                </motion.div>
+            ) : (
+                <div className="text-center py-12 border-2 border-dashed border-secondary-500/30 rounded-2xl bg-primary-900/40">
+                    <svg className="mx-auto h-12 w-12 text-secondary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <h3 className="mt-4 text-xl font-semibold text-white">No project contents available</h3>
+                    <p className="text-secondary-400">Add some content to get started</p>
+                </div>
+            )}
 
-//               {/* Framework and Build Settings */}
-//               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-//                 {/* Framework Selection */}
-//                 <Card className="bg-gray-800/50 border-cyan-500/30 rounded-lg transition-all duration-300 hover:shadow-cyan-500/20">
-//                   <CardHeader className="border-b border-cyan-500/20">
-//                     <CardTitle className="text-lg text-cyan-300 font-medium">
-//                       Framework
-//                     </CardTitle>
-//                   </CardHeader>
-//                   <CardContent className="p-6">
-//                     <Select value={framework} onValueChange={setFramework}>
-//                       <SelectTrigger className="bg-gray-700/30 border-cyan-500/30 text-cyan-100 focus:ring-2 focus:ring-cyan-500 rounded-md">
-//                         <SelectValue placeholder="Select Framework" />
-//                       </SelectTrigger>
-//                       <SelectContent className="bg-gray-800 border-cyan-500/30 text-cyan-100 rounded-md">
-//                         <SelectItem value="React">React</SelectItem>
-//                         <SelectItem value="Vue">Vue</SelectItem>
-//                         <SelectItem value="Node">Node</SelectItem>
-//                       </SelectContent>
-//                     </Select>
-//                   </CardContent>
-//                 </Card>
+            {editingField && (
+                <EditDialog
+                    open={!!editingField}
+                    onOpenChange={(open) => !open && setEditingField(null)}
+                    fieldName={editingField.key}
+                    fieldValue={editingField.value}
+                    onSave={(newValue) => {
+                        if (projectContents) {
+                            const updatedContents = { ...projectContents, [editingField.key]: newValue };
+                            console.log(`Updating ${editingField.key} to:`, newValue);
+                            setProjectContents(updatedContents); // Update local state
+                            setEditingField(null);
+                        }
+                    }}
+                />
+            )}
+        </div>
+    );
 
-//                 {/* Build and Output Settings */}
-//                 <Card className="bg-gray-800/50 border-cyan-500/30 rounded-lg transition-all duration-300 hover:shadow-cyan-500/20">
-//                   <CardHeader className="border-b border-cyan-500/20">
-//                     <CardTitle className="text-lg text-cyan-300 font-medium">
-//                       Build Settings
-//                     </CardTitle>
-//                   </CardHeader>
-//                   <CardContent className="p-6 space-y-4">
-//                     <Input
-//                       placeholder="Install Command (e.g., pnpm install)"
-//                       value={installCmd}
-//                       onChange={(e) => setInstallCmd(e.target.value)}
-//                       className="bg-gray-700/30 border-cyan-500/30 text-cyan-100 placeholder-cyan-400/50 focus:ring-2 focus:ring-cyan-500 rounded-md"
-//                     />
-//                     <Input
-//                       placeholder="Build Command (e.g., pnpm build)"
-//                       value={buildCmd}
-//                       onChange={(e) => setBuildCmd(e.target.value)}
-//                       className="bg-gray-700/30 border-cyan-500/30 text-cyan-100 placeholder-cyan-400/50 focus:ring-2 focus:ring-cyan-500 rounded-md"
-//                     />
-//                     <Input
-//                       placeholder="Output Directory (e.g., dist)"
-//                       value={outputDir}
-//                       onChange={(e) => setOutputDir(e.target.value)}
-//                       className="bg-gray-700/30 border-cyan-500/30 text-cyan-100 placeholder-cyan-400/50 focus:ring-2 focus:ring-cyan-500 rounded-md"
-//                     />
-//                   </CardContent>
-//                 </Card>
-//               </div>
-//             </div>
+}
 
-//             {/* Advanced Options */}
-//             <Card className="bg-gray-800/50 border-cyan-500/30 rounded-lg transition-all duration-300 hover:shadow-cyan-500/20">
-//               <CardHeader className="border-b border-cyan-500/20">
-//                 <CardTitle className="text-lg text-cyan-300 font-edium">
-//                   Advanced Options
-//                 </CardTitle>
-//               </CardHeader>
-//               <CardContent className="p-6 space-y-4">
-//                 <Input
-//                   placeholder="Root Directory (e.g., /)"
-//                   value={rootDir}
-//                   onChange={(e) => setRootDir(e.target.value)}
-//                   className="bg-gray-700/30 border-cyan-500/30 text-cyan-100 placeholder-cyan-400/50 focus:ring-2 focus:ring-cyan-500 rounded-md"
-//                 />
-//                 <Select value={cacheControl} onValueChange={setCacheControl}>
-//                   <SelectTrigger className="bg-gray-700/30 border-cyan-500/30 text-cyan-100 focus:ring-2 focus:ring-cyan-500 rounded-md">
-//                     <SelectValue placeholder="Select Cache Control" />
-//                   </SelectTrigger>
-//                   <SelectContent className="bg-gray-800 border-cyan-500/30 text-cyan-100 rounded-md">
-//                     <SelectItem value="default">Default</SelectItem>
-//                     <SelectItem value="no-cache">No Cache</SelectItem>
-//                   </SelectContent>
-//                 </Select>
-//               </CardContent>
-//             </Card>
-//           </div>
-//         </CardContent>
-//       </Card>
-
-//       {/* Preview Dialog */}
-//       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-//         <DialogContent className="bg-gray-900/90 border-cyan-500/30 text-cyan-100 max-w-5xl rounded-xl">
-//           <DialogHeader>
-//             <DialogTitle className="text-cyan-300 text-xl font-medium">Site Preview</DialogTitle>
-//           </DialogHeader>
-//           <div className="mt-4">
-//             <iframe
-//               src={previewUrl}
-//               className="w-full h-[70vh] border border-cyan-500/30 rounded-lg"
-//               title="Site Preview"
-//             />
-//           </div>
-//         </DialogContent>
-//       </Dialog>
-//     </div>
-//   );
-// }
-
-// export default App;
+export default EditWebsitePage
