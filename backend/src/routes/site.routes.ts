@@ -16,7 +16,7 @@ router.post("/preview-site", upload.single("file"), siteController.previewSite);
 router.post("/create-site", upload.single("file"), siteController.createSite);
 
 // Update site
-router.post("/update-site", upload.single("file"), siteController.updateSite);
+router.put("/update-site", upload.single("file"), siteController.updateSite);
 
 // transfer owner
 router.put("/transfer-owner", siteController.transferOwner);
@@ -27,10 +27,11 @@ router.put("/grant-access", siteController.grantAccess);
 // Set attributes
 router.put("/set-attributes", siteController.setAttributes);
 
+// Add site ID
+router.put("/add-site-id", siteController.addSiteId);
+
 // Delete site
 router.delete("/delete-site", siteController.deleteSite);
 
-// Add site ID
-router.put("/add-site-id", siteController.addSiteId);
 
 export default router;
