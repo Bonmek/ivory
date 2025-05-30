@@ -79,6 +79,24 @@ export class SiteController {
         }
     }
 
+    transferOwner = async (req: Request, res: Response) => {
+        try {
+            await this.siteService.handleTransferOwner(req);
+            res.status(200).json({
+                statusCode: 1,
+                message: "Change owner to blob attributes successfully",
+            });
+        } catch (error) {
+            res.status(502).json({
+                statusCode: 0,
+                error: {
+                    error_message: "Failed to change owner to blob attributes",
+                    error_details: error,
+                },
+            });
+        }
+    }
+
     setAttributes = async (req: Request, res: Response) => {
         try {
             await this.siteService.handleSetAttributes(req);

@@ -11,6 +11,12 @@ export const inputSetAttributesScheme = z
     sui_ns: z.string().min(1),
   })
 
+  export const inputTransferOwnerScheme = z
+  .object({
+    object_id: z.string().regex(/^0x[a-fA-F0-9]{64}$/),
+    new_owner_address: z.string().regex(/^0x[a-fA-F0-9]{64}$/),
+  })
+
 export const inputSetSuiNameServiceScheme = z.object({
   object_id: z.string().regex(/^0x[a-fA-F0-9]{64}$/),
   sui_ns: z.string().regex(/^0x[a-fA-F0-9]{64}$/)

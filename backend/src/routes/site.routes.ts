@@ -18,6 +18,9 @@ router.post("/create-site", upload.single("file"), siteController.createSite);
 // Update site
 router.post("/update-site", upload.single("file"), siteController.updateSite);
 
+// transfer owner
+router.put("/transfer-owner", siteController.transferOwner);
+
 // Set attributes
 router.put("/set-attributes", siteController.setAttributes);
 
