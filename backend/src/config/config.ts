@@ -31,7 +31,7 @@ interface Config {
 
 const config: Config = {
   port: Number(process.env.BACKEND_PORT) || 5000,
-  suiHex: process.env.SUI_HEX || "",
+  suiHex: process.env.SUI_Hex || "",
   blockchain: {
     rpcUrl: process.env.SUI_RPC_URL || process.env.CONTRIBUTIONDAO_URL || "",
     network: process.env.SUI_NETWORK || "mainnet",
