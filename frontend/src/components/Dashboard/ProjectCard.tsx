@@ -585,7 +585,7 @@ const ProjectCard = memo(
                               <DropdownMenuItem
                                 className="focus:bg-primary-800 cursor-pointer group"
                                 onClick={() =>
-                                  navigate(`/update/${project.parentId}`)
+                                  navigate(`/edit-website/${project.parentId}`)
                                 }
                               >
                                 <div className="flex items-center w-full">
