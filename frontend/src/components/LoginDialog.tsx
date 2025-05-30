@@ -108,22 +108,6 @@ function LoginDialog({
                 Login with Google
               </span>
             </Button>
-            {/* Facebook Login Button */}
-            {/* <Button
-              variant="secondary"
-              className="w-full h-16 flex items-center justify-start space-x-3 bg-blue-600/90 shadow-lg p-4 mb-4 rounded-xl transition-all duration-200 hover:scale-105 hover:brightness-110 focus-visible:ring-4 focus-visible:ring-blue-400 group"
-              type="button"
-              onClick={() => handleConnectFacebook()}
-            >
-              <img
-                src="https://upload.wikimedia.org/wikipedia/commons/6/6c/Facebook_Logo_2023.png"
-                className="w-10 h-10 rounded-full transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110"
-                alt="Facebook Logo"
-              />
-              <span className="text-lg font-bold tracking-wide text-white">
-                Login with Facebook
-              </span>
-            </Button> */}
             <div
               className="w-full h-16 flex items-center justify-start space-x-3 bg-blue-600/60 shadow-inner p-4 mb-4 rounded-xl opacity-60 cursor-not-allowed select-none"
             >
