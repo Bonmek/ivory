@@ -34,21 +34,42 @@ const calculateDaysBetween = (date1: Date, date2: Date) => {
 
 function getPageList(current: number, total: number) {
   const pages: (number | string)[] = []
-  if (total <= 5) {
-    for (let i = 1; i <= total; i++) pages.push(i)
-  } else {
-    if (current > 2) pages.push(1)
-    if (current > 3) pages.push('...')
-    for (
-      let i = Math.max(2, current - 1);
-      i <= Math.min(total - 1, current + 1);
-      i++
-    ) {
+  
+  // Always show first page
+  pages.push(1)
+  
+  if (total <= 7) {
+    // If total pages is 7 or less, show all pages
+    for (let i = 2; i <= total; i++) {
       pages.push(i)
     }
-    if (current < total - 2) pages.push('...')
-    if (current < total - 1) pages.push(total)
+  } else {
+    // If current page is near the start
+    if (current <= 4) {
+      for (let i = 2; i <= 5; i++) {
+        pages.push(i)
+      }
+      pages.push('...')
+      pages.push(total)
+    }
+    // If current page is near the end
+    else if (current >= total - 3) {
+      pages.push('...')
+      for (let i = total - 4; i <= total; i++) {
+        pages.push(i)
+      }
+    }
+    // If current page is in the middle
+    else {
+      pages.push('...')
+      for (let i = current - 1; i <= current + 1; i++) {
+        pages.push(i)
+      }
+      pages.push('...')
+      pages.push(total)
+    }
   }
+  
   return pages
 }
 
@@ -73,8 +94,6 @@ export default function Dashboard() {
       ? metadata.map((meta, index) => transformMetadataToProject(meta, index))
       : []
   }, [metadata])
-  console.log(metadata)
-  console.log(allProjects)
 
   const filteredProjects = useMemo(() => {
     const projects = [...allProjects]
@@ -291,7 +310,7 @@ export default function Dashboard() {
                       <button
                         onClick={() => handlePageChange(currentPage - 1)}
                         disabled={currentPage === 1}
-                        className="px-3 py-1.5 rounded-lg bg-primary-700 text-white disabled:opacity-50 hover:bg-primary-600 transition-colors duration-200"
+                        className="px-3 py-1.5 rounded-lg bg-primary-700 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary-600 active:scale-95 transition-all duration-200 cursor-pointer"
                       >
                         <FormattedMessage id="dashboard.pagination.previous" />
                       </button>
@@ -301,12 +320,13 @@ export default function Dashboard() {
                           onClick={() =>
                             typeof page === 'number' && handlePageChange(page)
                           }
-                          className={`px-3 py-1.5 rounded-lg transition-colors duration-200 ${
+                          disabled={page === '...'}
+                          className={`px-3 py-1.5 rounded-lg transition-all duration-200 ${
                             page === currentPage
-                              ? 'bg-secondary-500 text-black'
+                              ? 'bg-secondary-500 text-black font-medium scale-105'
                               : page === '...'
                                 ? 'bg-transparent text-white cursor-default'
-                                : 'bg-primary-700 text-white hover:bg-primary-600'
+                                : 'bg-primary-700 text-white hover:bg-primary-600 active:scale-95 cursor-pointer'
                           }`}
                         >
                           {page}
@@ -315,7 +335,7 @@ export default function Dashboard() {
                       <button
                         onClick={() => handlePageChange(currentPage + 1)}
                         disabled={currentPage === totalPages}
-                        className="px-3 py-1.5 rounded-lg bg-primary-700 text-white disabled:opacity-50 hover:bg-primary-600 transition-colors duration-200"
+                        className="px-3 py-1.5 rounded-lg bg-primary-700 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary-600 active:scale-95 transition-all duration-200 cursor-pointer"
                       >
                         <FormattedMessage id="dashboard.pagination.next" />
                       </button>

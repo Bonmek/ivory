@@ -1,3 +1,22 @@
+export interface MemberPermissions {
+  update: boolean
+  delete: boolean
+  generateSite: boolean
+  setSuins: boolean
+}
+
+export interface ProjectMember {
+  address: string
+  permissions: MemberPermissions
+}
+
+export enum ProjectStatus {
+  BUILDING = 0,
+  ACTIVE = 1,
+  FAILED = 2,
+  DELETING = 3
+}
+
 export interface Project {
   id: number
   name: string
@@ -7,7 +26,7 @@ export interface Project {
   color: string
   urlImg: string
   description?: string
-  status: number
+  status: ProjectStatus
   siteId?: string
   suins?: string
   blobId?: string
@@ -17,10 +36,13 @@ export interface Project {
   isBuild?: boolean
   epochs?: number
   ownership?: number
-  client_error_description?: string
   parentId?: string
+  client_error_description?: string
   showcase_url?: string
   site_status?: number
+  memberString?: string
+  members?: ProjectMember[]
+  owner: string
 }
 
 export interface ProjectCardProps {
@@ -28,6 +50,6 @@ export interface ProjectCardProps {
   index: number
   onHoverStart: (id: number) => void
   onHoverEnd: () => void
-  userAddress: string
+  userAddress?: string
   onRefetch: () => Promise<void>
 }
