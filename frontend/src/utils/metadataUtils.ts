@@ -90,6 +90,7 @@ export const transformMetadataToProject = (metadata: any, index: number) => {
       color: '#97f0e5',
       urlImg: '/walrus.png',
       status: 0,
+      owner: '',
     }
   }
 
@@ -153,8 +154,9 @@ export const transformMetadataToProject = (metadata: any, index: number) => {
     ...(metadataMap['site_status']
       ? { site_status: parseInt(metadataMap['site_status']) }
       : {}),
-    memberString: metadataMap['member'] || '', // Keep the original string for reference
-    members, // Store the parsed members array directly
+    memberString: metadataMap['member'] || '',
+    members,
+    owner: metadataMap['owner'] || '',
   }
   return project
 }

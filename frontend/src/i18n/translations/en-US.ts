@@ -276,6 +276,11 @@ export default {
   'dashboard.lastRefresh': 'Last: {time}',
   'dashboard.createNew': 'Deploy Site',
 
+  // Refresh states
+  'dashboard.refresh.loading': 'Refreshing data...',
+  'dashboard.refresh.cooldown': 'Please wait {time} before refreshing',
+  'dashboard.refresh.ready': 'Refresh data',
+
   // Beta Testing Limit Modal
   'dashboard.projectLimit.title': 'Beta Testing Limit',
   'dashboard.projectLimit.description': 'During our beta testing phase, we\'re limiting each wallet to one project per epoch to ensure everyone gets a chance to try the platform. Thank you for your understanding and participation!',
@@ -385,5 +390,45 @@ export default {
   'howtouse.sidebar.section1': 'Getting Started',
   'howtouse.sidebar.section4': 'set your own domain',
   'howtouse.backToTop': 'Back to Top',
+
+  // Member Management
+  'projectCard.manageMembers': 'Manage Members',
+  'projectCard.manageMembers.title': 'Manage Members',
+  'projectCard.manageMembers.description': 'Add or remove members and manage their permissions',
+  'projectCard.manageMembers.addMember': 'Add Member',
+  'projectCard.manageMembers.memberAddress': 'Member Address',
+  'projectCard.manageMembers.permissions': 'Permissions',
+  'projectCard.manageMembers.enterAddress': 'Enter member address',
+  'projectCard.manageMembers.invalidAddress': 'Invalid address format',
+  'projectCard.manageMembers.addressExists': 'Member already exists',
+  'projectCard.manageMembers.permissionUpdate': 'Update',
+  'projectCard.manageMembers.permissionDelete': 'Delete',
+  'projectCard.manageMembers.permissionGenerateSite': 'Generate Site',
+  'projectCard.manageMembers.permissionSetSuins': 'Set SUINS',
+  'projectCard.manageMembers.removeMember': 'Remove Member',
+  'projectCard.manageMembers.removeConfirm': 'Are you sure you want to remove this member?',
+  'projectCard.manageMembers.memberAdded': 'Member added successfully',
+  'projectCard.manageMembers.memberRemoved': 'Member removed successfully',
+  'projectCard.manageMembers.permissionsUpdated': 'Permissions updated successfully',
+  'projectCard.manageMembers.ownerNote': 'You are the owner of this project',
+  'projectCard.manageMembers.selectAll': 'Select All',
+  'projectCard.manageMembers.currentMembers': 'Current Members',
+  'projectCard.manageMembers.membersCount': 'members',
+  'projectCard.manageMembers.noMembers': 'No members yet',
+  'projectCard.manageMembers.memberPermissions': 'Member Permissions',
+
+  // Transfer Ownership Dialog
+  'projectCard.transferOwnership.enterAddress': 'Enter wallet address',
+  'projectCard.transferOwnership.title': 'Transfer Project Ownership',
+  'projectCard.transferOwnership.description': 'Transfer ownership of this project to another wallet address',
+  'projectCard.transferOwnership.currentOwner': 'Current Owner',
+  'projectCard.transferOwnership.newOwner': 'New Owner',
+  'projectCard.transferOwnership.transfer': 'Transfer',
+  'projectCard.transferOwnership.transferring': 'Transferring...',
+  'projectCard.transferOwnership.success': 'Ownership transferred successfully',
+  'projectCard.transferOwnership.error': 'Failed to transfer ownership',
+  'projectCard.transferOwnership.invalidAddress': 'Invalid wallet address',
+  'projectCard.transferOwnership.confirm': 'Are you sure you want to transfer ownership?',
+  'projectCard.transferOwnership.warning': 'This action cannot be undone. You will lose all control over this project.'
 
 } as const;
