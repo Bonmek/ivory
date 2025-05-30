@@ -55,7 +55,12 @@ import {
 import { useSuiData } from '@/hooks/useSuiData'
 import apiClient from '@/lib/axiosConfig'
 import { FormattedMessage, useIntl } from 'react-intl'
-import { Project, ProjectCardProps, MemberPermissions, ProjectStatus } from '@/types/project'
+import {
+  Project,
+  ProjectCardProps,
+  MemberPermissions,
+  ProjectStatus,
+} from '@/types/project'
 import { linkSuinsToSite } from '@/utils/suinsUtils'
 import { ManageMembersModal } from './ManageMembersModal'
 import { DeleteConfirmationDialog } from './DeleteConfirmationDialog'
@@ -519,8 +524,10 @@ const ProjectCard = memo(
               {project.status !== ProjectStatus.BUILDING && (
                 <>
                   {/* Show dropdown if user has any permissions or is owner */}
-                  {((project.status === ProjectStatus.ACTIVE && (project.owner === userAddress || userPermissions)) ||
-                    (project.status === ProjectStatus.FAILED && userPermissions?.delete) ||
+                  {((project.status === ProjectStatus.ACTIVE &&
+                    (project.owner === userAddress || userPermissions)) ||
+                    (project.status === ProjectStatus.FAILED &&
+                      userPermissions?.delete) ||
                     project.status === ProjectStatus.DELETING) && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -544,6 +551,7 @@ const ProjectCard = memo(
                                 <DropdownMenuItem
                                   className="focus:bg-primary-800 cursor-pointer group"
                                   onClick={() => setTransferOwnershipOpen(true)}
+                                  disabled={true}
                                 >
                                   <div className="flex items-center w-full">
                                     <div className="relative">
@@ -557,6 +565,7 @@ const ProjectCard = memo(
                                 <DropdownMenuItem
                                   className="focus:bg-primary-800 cursor-pointer group"
                                   onClick={() => setManageMembersOpen(true)}
+                                  disabled={true}
                                 >
                                   <div className="flex items-center w-full">
                                     <div className="relative">
@@ -570,12 +579,14 @@ const ProjectCard = memo(
                                 <DropdownMenuSeparator className="bg-secondary-500/20" />
                               </>
                             )}
-                            
+
                             {/* Member permissions */}
                             {userPermissions?.update && (
                               <DropdownMenuItem
                                 className="focus:bg-primary-800 cursor-pointer group"
-                                onClick={() => navigate(`/update/${project.parentId}`)}
+                                onClick={() =>
+                                  navigate(`/update/${project.parentId}`)
+                                }
                               >
                                 <div className="flex items-center w-full">
                                   <RefreshCw className="mr-2 h-4 w-4 group-hover:rotate-180 transition-transform duration-300" />
@@ -585,19 +596,20 @@ const ProjectCard = memo(
                                 </div>
                               </DropdownMenuItem>
                             )}
-                            {userPermissions?.generateSite && !project.siteId && (
-                              <DropdownMenuItem
-                                className="focus:bg-primary-800 cursor-pointer group"
-                                onClick={() => setGenerateDialogOpen(true)}
-                              >
-                                <div className="flex items-center w-full">
-                                  <Key className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
-                                  <span>
-                                    <FormattedMessage id="projectCard.generateSiteId" />
-                                  </span>
-                                </div>
-                              </DropdownMenuItem>
-                            )}
+                            {userPermissions?.generateSite &&
+                              !project.siteId && (
+                                <DropdownMenuItem
+                                  className="focus:bg-primary-800 cursor-pointer group"
+                                  onClick={() => setGenerateDialogOpen(true)}
+                                >
+                                  <div className="flex items-center w-full">
+                                    <Key className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
+                                    <span>
+                                      <FormattedMessage id="projectCard.generateSiteId" />
+                                    </span>
+                                  </div>
+                                </DropdownMenuItem>
+                              )}
                             <DropdownMenuItem
                               className="focus:bg-primary-800 cursor-pointer group relative"
                               onClick={() => {}}
@@ -629,20 +641,21 @@ const ProjectCard = memo(
                             )}
                           </>
                         )}
-                        
+
                         {/* Failed status actions */}
-                        {project.status === ProjectStatus.FAILED && userPermissions?.delete && (
-                          <DropdownMenuItem
-                            className="text-red-400 focus:text-red-400 focus:bg-primary-800 cursor-pointer group"
-                            onClick={() => setDeleteDialogOpen(true)}
-                          >
-                            <div className="flex items-center w-full">
-                              <Trash className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
-                              <span>Delete site</span>
-                            </div>
-                          </DropdownMenuItem>
-                        )}
-                        
+                        {project.status === ProjectStatus.FAILED &&
+                          userPermissions?.delete && (
+                            <DropdownMenuItem
+                              className="text-red-400 focus:text-red-400 focus:bg-primary-800 cursor-pointer group"
+                              onClick={() => setDeleteDialogOpen(true)}
+                            >
+                              <div className="flex items-center w-full">
+                                <Trash className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
+                                <span>Delete site</span>
+                              </div>
+                            </DropdownMenuItem>
+                          )}
+
                         {/* Deleting status indicator */}
                         {project.status === ProjectStatus.DELETING && (
                           <div className="px-4 py-2 text-purple-400 flex items-center gap-2 text-sm">
