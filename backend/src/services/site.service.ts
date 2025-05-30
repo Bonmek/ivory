@@ -7,6 +7,7 @@ import {
   inputWriteBlobScheme,
   inputSetAttributesScheme,
   inputDeleteBlobScheme,
+  inputPreviewSiteScheme,
   // inputPreviewSiteScheme,
 } from "../models/inputScheme";
 import { v4 as uuidv4 } from "uuid";
@@ -66,7 +67,7 @@ export class SiteService {
           : req.body.attributes
         : {};
 
-      const attributes_data = inputWriteBlobScheme.safeParse(attributes);
+      const attributes_data = inputPreviewSiteScheme.safeParse(attributes);
 
       if (!attributes_data.success) {
         await this.fileService.cleanupFiles(extractPath, zipFile.path, null);

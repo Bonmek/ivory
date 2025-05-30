@@ -513,16 +513,9 @@ export default function CreateWebsitePage() {
         epochs: '1',
         start_date: new Date(todayDate).toISOString(),
         end_date: checkEndDate().toISOString(),
-        output_dir: showBuildOutputSettings
-          ? buildOutputSettings.outputDirectory
-          : '',
         status: '0',
         cache: advancedOptions.cacheControl,
-        root: rootDirectory || '/',
-        install_command: buildOutputSettings.installCommand || 'npm install',
-        build_command: buildOutputSettings.buildCommand || 'npm run build',
-        default_route: advancedOptions.defaultPath || '/index.html',
-        is_build: showBuildOutputSettings ? '0' : '1',
+        root: rootDirectory || '/'
       }
 
       console.log('Attributes:', attributes)
