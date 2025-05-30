@@ -1,6 +1,4 @@
-// src/services/site.service.ts
 import { Request } from "express";
-import { WalrusService } from "./walrus.service";
 import { TaskService } from "./task.service";
 import { FileService } from "./file.service";
 import {
@@ -8,7 +6,6 @@ import {
   inputSetAttributesScheme,
   inputDeleteBlobScheme,
   inputPreviewSiteScheme,
-  // inputPreviewSiteScheme,
 } from "../models/inputScheme";
 import { v4 as uuidv4 } from "uuid";
 import path from "path";
@@ -21,14 +18,12 @@ import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
 
 export class SiteService {
-  private walrusService: WalrusService;
   private taskService: TaskService;
   private fileService: FileService;
   private walrusClient: WalrusClient;
   private keypair: Ed25519Keypair;
 
   constructor() {
-    this.walrusService = new WalrusService();
     this.taskService = new TaskService();
     this.fileService = new FileService();
 
@@ -261,7 +256,7 @@ export class SiteService {
           deletable: true,
           epochs: Number(attributes_data.data.epochs),
           signer: this.keypair,
-          attributes: { ...attributes_data.data, uuid, type: "stie" },
+          attributes: { uuid },
         });
       } catch {
         console.log("error");
@@ -283,23 +278,27 @@ export class SiteService {
         await this.walrusClient.executeWriteBlobAttributesTransaction({
           signer: this.keypair,
           blobObjectId: blob_object_id,
-          attributes: { blobId: blob_id },
+          attributes: {
+            ...attributes_data.data,
+            blobId: blob_id,
+            type: "stie",
+          },
         });
       } catch {
-        console.log("error excute")
+        console.log("error excute");
       }
 
-      // let check_blob_id;
-      // try {
-      //   check_blob_id = await this.walrusService.readBlobAttributes(
-      //     blob_object_id
-      //   );
-      // } catch {
-      //   throw new Error("Failed to add blobId to attributes");
-      // }
-      // if (!check_blob_id || !check_blob_id.blobId) {
-      //   throw new Error("blobId or attributes is undefined");
-      // }
+      let check_blob_id;
+      try {
+        check_blob_id = await this.walrusClient.readBlobAttributes({
+          blobObjectId: blob_object_id,
+        });
+      } catch {
+        throw new Error("Failed to add blobId to attributes");
+      }
+      if (!check_blob_id || !check_blob_id.blobId) {
+        throw new Error("blobId or attributes is undefined");
+      }
 
       const [response] = await this.taskService.createTask(
         "publish",
@@ -341,9 +340,12 @@ export class SiteService {
       throw new Error(JSON.stringify(attributes_data.error.errors));
     }
 
-    await this.walrusService.addSuiNS({
-      object_id: attributes_data.data.object_id,
-      sui_ns: attributes_data.data.sui_ns,
+    await this.walrusClient.executeWriteBlobAttributesTransaction({
+      blobObjectId: attributes_data.data.object_id,
+      signer: this.keypair,
+      attributes: {
+        sui_ns: attributes_data.data.sui_ns,
+      },
     });
   }
 
@@ -360,9 +362,10 @@ export class SiteService {
       throw new Error(JSON.stringify(attributes_data.error.errors));
     }
 
-    await this.walrusService.setDeleteError({
-      object_id: String(object_id),
-      status: "3",
+    await this.walrusClient.executeWriteBlobAttributesTransaction({
+      blobObjectId: attributes_data.data.object_id,
+      signer: this.keypair,
+      attributes: { status: "3" },
     });
 
     const [response] = await this.taskService.createTask(
@@ -388,15 +391,15 @@ export class SiteService {
       throw new Error(JSON.stringify(attributes_data.error.errors));
     }
 
-    await this.walrusService.setSiteStatus({
-      object_id: String(object_id),
-      site_status: "0",
-      status: "0",
+    await this.walrusClient.executeWriteBlobAttributesTransaction({
+      blobObjectId: attributes_data.data.object_id,
+      signer: this.keypair,
+      attributes: { site_status: "0", status: "0" },
     });
 
     const [response] = await this.taskService.createTask(
       "get_site_id",
-      String(object_id)
+      attributes_data.data.object_id
     );
 
     return {
