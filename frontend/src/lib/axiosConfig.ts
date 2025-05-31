@@ -5,7 +5,7 @@ const axiosConfig = {
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: false,
+  withCredentials: true,
 }
 
 const apiClient = axios.create(axiosConfig)
