@@ -23,16 +23,12 @@ export const inputGrantAccessScheme = z.object({
   object_id: z.string().regex(/^0x[a-fA-F0-9]{64}$/),
   member_address_n_access: z
     .string()
-    .regex(
-      /^(0x[a-fA-F0-9]{64}[01]{4})(\|0x[a-fA-F0-9]{64}[01]{4})*$/,
-      {
-        message:
-          "Invalid format for member — every address must have a 4-bit binary suffix, and no final |binary is allowed.",
-      }
-    ),
+    .regex(/^(0x[a-fA-F0-9]{64}[01]{4})(\|0x[a-fA-F0-9]{64}[01]{4})*$/, {
+      message:
+        "Invalid format for member — every address must have a 4-bit binary suffix, and no final |binary is allowed.",
+    }),
 });
 
-//Use when error occurs and we need to delete the blob
 export const inputSetDeleteErrorScheme = z.object({
   object_id: z.string().regex(/^0x[a-fA-F0-9]{64}$/),
   status: z.literal("3"),
@@ -92,17 +88,52 @@ export const inputPreviewSiteScheme = baseSiteScheme
     }
   });
 
-export const inputCreateSiteScheme = baseSiteScheme;
+export const inputCreateSiteScheme = baseSiteScheme.superRefine((data, ctx) => {
+  const start = Date.parse(data.start_date);
+  const end = Date.parse(data.end_date);
+
+  if (!isNaN(start) && !isNaN(end) && end <= start) {
+    ctx.addIssue({
+      path: ["end_date"],
+      code: z.ZodIssueCode.custom,
+      message: "end_date must be after start_date",
+    });
+  }
+});
 
 export const inputUpdateSiteScheme = baseSiteScheme
   .extend({
     old_object_id: z.string().regex(/^0x[a-fA-F0-9]{64}$/),
-    site_status: z.union([
-      z.literal("0"),
-      z.literal("1"),
-      z.literal("2"),
-      z.literal("3"),
-    ]),
+    site_status: z
+      .union([z.literal("0"), z.literal("1"), z.literal("2"), z.literal("3")])
+      .optional(),
+    site_id: z
+      .string()
+      .regex(/^0x[a-fA-F0-9]{64}$/)
+      .optional(),
+    sui_ns: z.string().min(1).optional(),
+  })
+  .superRefine((data, ctx) => {
+    const start = Date.parse(data.start_date);
+    const end = Date.parse(data.end_date);
+
+    if (!isNaN(start) && !isNaN(end) && end <= start) {
+      ctx.addIssue({
+        path: ["end_date"],
+        code: z.ZodIssueCode.custom,
+        message: "end_date must be after start_date",
+      });
+    }
+  });
+
+
+  export const inputUpdateAttributesScheme = baseSiteScheme
+  .extend({
+    blobId: z.string().regex(/^[A-Za-z0-9_-]{43}$/),
+    object_id: z.string().regex(/^0x[a-fA-F0-9]{64}$/),
+    site_status: z
+      .union([z.literal("0"), z.literal("1"), z.literal("2"), z.literal("3")])
+      .optional(),
     site_id: z
       .string()
       .regex(/^0x[a-fA-F0-9]{64}$/)

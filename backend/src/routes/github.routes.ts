@@ -6,7 +6,6 @@ import AdmZip from "adm-zip";
 import archiver from "archiver";
 import stream from "stream";
 
-// Extend Request interface for authenticated user
 export interface AuthenticatedRequest extends Request {
   user?: GitHubProfile;
 }
