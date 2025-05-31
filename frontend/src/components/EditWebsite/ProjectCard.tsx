@@ -15,7 +15,6 @@ interface ProjectCardProps {
     fieldKey: string;
     value: string;
     index: number;
-    onEdit: (key: string, value: string) => void;
 }
 
 const cardVariants: Variants = {
@@ -50,9 +49,9 @@ const iconVariants = {
     }
 };
 
-export const ProjectCard = ({ fieldKey, value, index, onEdit }: ProjectCardProps) => {
-    const [isHovered, setIsHovered] = useState(false);
+export const ProjectCard = ({ fieldKey, value, index }: ProjectCardProps) => {
     const formattedKey = fieldKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    const isHovered = false; // Removed hover state since we don't need it anymore
 
     const getIcon = (key: string): ReactNode => {
         const iconMap: Record<string, ReactNode> = {
@@ -170,13 +169,8 @@ export const ProjectCard = ({ fieldKey, value, index, onEdit }: ProjectCardProps
         );
     };
 
-    const iconBgGradient = isHovered
-        ? 'from-secondary-400/30 to-secondary-600/30'
-        : 'from-secondary-500/15 to-secondary-600/15';
-
-    const cardBgGradient = isHovered
-        ? 'from-primary-700/80 to-primary-800/80'
-        : 'from-primary-800/70 to-primary-900/70';
+    const iconBgGradient = 'from-secondary-500/15 to-secondary-600/15';
+    const cardBgGradient = 'from-primary-800/70 to-primary-900/70';
 
     return (
         <motion.div
@@ -185,8 +179,7 @@ export const ProjectCard = ({ fieldKey, value, index, onEdit }: ProjectCardProps
             animate="visible"
             whileHover="hover"
             variants={cardVariants}
-            onHoverStart={() => setIsHovered(true)}
-            onHoverEnd={() => setIsHovered(false)}
+
             className={cn(
                 "group relative overflow-hidden rounded-2xl p-5 sm:p-6 border backdrop-blur-lg",
                 "transition-all duration-500 h-full",
@@ -250,9 +243,7 @@ export const ProjectCard = ({ fieldKey, value, index, onEdit }: ProjectCardProps
                                 className={cn(
                                     "text-base sm:text-lg font-semibold mb-1 break-words tracking-tight",
                                     "bg-clip-text transition-all duration-300",
-                                    isHovered
-                                        ? "bg-gradient-to-r from-secondary-300 to-secondary-400 text-transparent"
-                                        : "text-white"
+                                    "text-white"
                                 )}
                                 initial={false}
                                 animate={{
@@ -272,40 +263,7 @@ export const ProjectCard = ({ fieldKey, value, index, onEdit }: ProjectCardProps
                             </div>
                         </div>
                     </div>
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{
-                            opacity: isHovered ? 1 : 0.7,
-                            scale: isHovered ? 1.1 : 1,
-                            x: isHovered ? [0, -2, 0] : 0
-                        }}
-                        transition={{
-                            opacity: { duration: 0.2 },
-                            scale: { duration: 0.2 },
-                            x: {
-                                duration: 0.8,
-                                ease: 'easeInOut',
-                                repeat: isHovered ? Infinity : 0,
-                                repeatType: 'reverse'
-                            }
-                        }}
-                    >
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className={cn(
-                                "rounded-full transition-all duration-300",
-                                "text-secondary-400 hover:text-white hover:bg-secondary-500/20",
-                                "sm:opacity-0 group-hover:opacity-100"
-                            )}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onEdit(fieldKey, value);
-                            }}
-                        >
-                            <Pencil className="w-4 h-4" />
-                        </Button>
-                    </motion.div>
+
                 </div>
 
                 <div className="mt-auto pt-2">
@@ -356,6 +314,39 @@ export const ProjectCard = ({ fieldKey, value, index, onEdit }: ProjectCardProps
                                                     </Tooltip>
                                                 </TooltipProvider>
                                             );
+                                        } else if (['start_date', 'end_date'].includes(fieldKey) && value) {
+                                            try {
+                                                const date = new Date(value);
+                                                // Format for English locale
+                                                const options: Intl.DateTimeFormatOptions = {
+                                                    year: 'numeric',
+                                                    month: 'long',
+                                                    day: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit',
+                                                    hour12: true,
+                                                    timeZone: 'Asia/Bangkok'
+                                                };
+                                                
+                                                const formattedDate = date.toLocaleDateString('en-US', options);
+                                                const time = date.toLocaleTimeString('en-US', { 
+                                                    hour: '2-digit', 
+                                                    minute: '2-digit',
+                                                    hour12: true,
+                                                    timeZone: 'Asia/Bangkok'
+                                                });
+                                                
+                                                // Format: May 30, 2024 at 1:23 PM
+                                                return (
+                                                    <div className="flex flex-col">
+                                                        <span>{formattedDate}</span>
+                                                        <span className="text-sm text-muted-foreground">at {time}</span>
+                                                    </div>
+                                                );
+                                            } catch (e) {
+                                                console.error('Error formatting date:', e);
+                                                return value;
+                                            }
                                         }
                                         return value;
                                     })()}

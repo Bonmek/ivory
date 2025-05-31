@@ -8,8 +8,9 @@ import { Button } from '@/components/ui/button'
 import { motion } from 'framer-motion'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { Pencil, ExternalLink, Globe, Copy, Check, Eye, EyeOff, Layout } from 'lucide-react'
+import { Pencil, ExternalLink, Globe, Copy, Check, Eye, EyeOff, Layout, XCircle, CheckCircle, X, Edit3 } from 'lucide-react'
 import ProjectCard from '@/components/EditWebsite/ProjectCard'
+import { handleUpdateSite, UpdateSiteAttributes } from '@/api/editWebsiteApi'
 
 type WithFields = { fields: Record<string, unknown> };
 
@@ -19,56 +20,81 @@ const hasFields = (data: unknown): data is WithFields => {
 
 type ProjectContents = Record<string, string>
 
-interface EditDialogProps {
+
+
+interface EditAllFieldsDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    fieldName: string;
-    fieldValue: string;
-    onSave: (value: string) => void;
+    fields: Record<string, string>;
+    isSaving?: boolean;
+    onSave: (fields: Record<string, string>) => void | Promise<void>;
 }
 
-const EditDialog: React.FC<EditDialogProps> = ({
+const EditAllFieldsDialog: React.FC<EditAllFieldsDialogProps> = ({
     open,
     onOpenChange,
-    fieldName,
-    fieldValue,
+    fields,
+    isSaving = false,
     onSave,
 }) => {
-    const [value, setValue] = useState(fieldValue);
-    const [isSaving, setIsSaving] = useState(false);
+    const [editedFields, setEditedFields] = useState<Record<string, string>>({});
+    const [isInternalSaving, setIsInternalSaving] = useState(false);
 
-    const handleSave = () => {
-        setIsSaving(true);
+    useEffect(() => {
+        if (open) {
+            setEditedFields({ ...fields });
+        }
+    }, [open, fields]);
+
+    const handleFieldChange = (key: string, value: string) => {
+        setEditedFields(prev => ({
+            ...prev,
+            [key]: value
+        }));
+    };
+
+    const handleSave = async () => {
+        setIsInternalSaving(true);
         try {
-            onSave(value);
+            await onSave(editedFields);
             onOpenChange(false);
         } catch (error) {
             console.error('Failed to save:', error);
         } finally {
-            setIsSaving(false);
+            setIsInternalSaving(false);
         }
     };
 
+    const isLoading = isSaving || isInternalSaving;
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[500px] bg-primary-900 border border-secondary-500/30 shadow-2xl">
+            <DialogContent className="max-w-2xl bg-primary-900 border border-secondary-500/30 shadow-2xl max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle className="text-white text-xl font-pixel font-semibold flex items-center gap-2">
-                        <Pencil className="w-5 h-5 text-secondary-400" />
-                        Edit {fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                        <Edit3 className="w-5 h-5 text-secondary-400" />
+                        Edit All Fields
                     </DialogTitle>
                 </DialogHeader>
-                <div className="grid gap-6 ">
-                    <Input
-                        id="field-value"
-                        value={value}
-                        onChange={(e) => setValue(e.target.value)}
-                        className="bg-primary-800 border-secondary-500/30 text-white placeholder-secondary-500 focus:border-secondary-400 focus:ring-secondary-400/20"
-                        placeholder="Enter value..."
-                        autoFocus
-                    />
+                <div className="space-y-4 py-2 pr-1">
+                    {Object.entries(editedFields).map(([key, value]) => (
+                        <div key={key} className="space-y-2">
+                            <label
+                                htmlFor={`field-${key}`}
+                                className="block text-sm font-medium text-secondary-300"
+                            >
+                                {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                            </label>
+                            <Input
+                                id={`field-${key}`}
+                                value={value}
+                                onChange={(e) => handleFieldChange(key, e.target.value)}
+                                className="bg-primary-800 border-secondary-500/30 text-white placeholder-secondary-500 focus:border-secondary-400 focus:ring-secondary-400/20 w-full"
+                            />
+                        </div>
+                    ))}
                 </div>
-                <DialogFooter className="gap-2">
+                <DialogFooter className="gap-2 bg-primary-900">
                     <Button
                         type="button"
                         variant="outline"
@@ -80,10 +106,18 @@ const EditDialog: React.FC<EditDialogProps> = ({
                     <Button
                         type="submit"
                         onClick={handleSave}
-                        disabled={isSaving}
-                        className="bg-secondary-700 hover:bg-secondary-800 text-white shadow-lg"
+                        disabled={isLoading}
+                        className="bg-secondary-700 hover:bg-secondary-800 text-white shadow-lg flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                     >
-                        {isSaving ? 'Saving...' : 'Save Changes'}
+                        {isLoading ? (
+                            <>
+                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Saving...
+                            </>
+                        ) : 'Save All Changes'}
                     </Button>
                 </DialogFooter>
             </DialogContent>
@@ -93,14 +127,27 @@ const EditDialog: React.FC<EditDialogProps> = ({
 
 function EditWebsitePage() {
     const { address } = useAuth()
-    const { metadata, isLoading } = useSuiData(address || '')
+    const { metadata, isLoading, refetch } = useSuiData(address || '')
     const params = useParams()
     const project = metadata?.find((meta) => meta.parentId === params.id)
-    const [editingField, setEditingField] = useState<{ key: string; value: string } | null>(null)
     const [projectContents, setProjectContents] = useState<ProjectContents | null>(null)
     const [copiedUrl, setCopiedUrl] = useState(false)
     const [showPreview, setShowPreview] = useState(true)
     const [isContentLoading, setIsContentLoading] = useState(true)
+    const [isUpdating, setIsUpdating] = useState(false)
+    const [updateError, setUpdateError] = useState<string | null>(null)
+    const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+    const [isEditAllDialogOpen, setIsEditAllDialogOpen] = useState(false)
+
+    // Auto-hide toast after 5 seconds
+    useEffect(() => {
+        if (toast) {
+            const timer = setTimeout(() => {
+                setToast(null);
+            }, 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [toast]);
 
     React.useEffect(() => {
         if (!project?.content) {
@@ -144,6 +191,52 @@ function EditWebsitePage() {
     const fullShowcaseUrl = showcaseUrl ? `https://kursui.wal.app/${showcaseUrl}/index.html` : null
 
     console.log(projectContents)
+
+
+
+    const handleSaveAllFields = async (updatedFields: Record<string, string>) => {
+        if (!project?.parentId) return;
+
+        setIsUpdating(true);
+        setUpdateError(null);
+
+        try {
+            const result = await handleUpdateSite({
+                attributes: updatedFields
+            });
+
+            if (result.success) {
+                // Update local state immediately for better UX
+                setProjectContents(prev => ({
+                    ...prev,
+                    ...updatedFields
+                } as ProjectContents));
+
+                // Show success toast
+                setToast({
+                    type: 'success',
+                    message: 'All fields updated successfully'
+                });
+            } else {
+                const errorMsg = result.message || 'Failed to update fields';
+                setUpdateError(errorMsg);
+                setToast({
+                    type: 'error',
+                    message: `Failed to update fields: ${errorMsg}`
+                });
+            }
+        } catch (error) {
+            console.error('Error updating fields:', error);
+            const errorMsg = error instanceof Error ? error.message : 'An unexpected error occurred';
+            setUpdateError(errorMsg);
+            setToast({
+                type: 'error',
+                message: `Failed to update fields: ${errorMsg}`
+            });
+        } finally {
+            setIsUpdating(false);
+        }
+    };
 
     const handleCopyUrl = async () => {
         if (fullShowcaseUrl) {
@@ -240,295 +333,328 @@ function EditWebsitePage() {
                     className="mb-8"
                 >
                     <div className="text-left">
-                        <div className="inline-flex items-center gap-3 mb-2">
-                            <Layout className="w-8 h-8 text-secondary-400" />
-                            <h1 className="text-2xl font-pixel sm:text-3xl md:text-4xl font-bold text-white">
-                                {projectContents?.["site-name"] || "Website Editor"}
-                            </h1>
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div className=" flex-col sm:flex-row items-center gap-3">
+                                <div className='flex flex-row gap-3 mb-1'>
+                                    <Layout className="w-8 h-8 text-secondary-400" />
+                                    <h1 className="text-2xl font-pixel sm:text-3xl md:text-4xl font-bold text-white">
+                                        {projectContents?.["site-name"] || "Website Editor"}
+                                    </h1>
+                                </div>
+                                <p className="text-secondary-400 text-sm sm:text-base">
+                                    Manage your website's content and configuration
+                                </p>
+                            </div>
+                            <Button
+                                onClick={() => setIsEditAllDialogOpen(true)}
+                                variant="outline"
+                                className="bg-secondary-700/50 hover:bg-secondary-600/70 border-secondary-500/30 text-white hover:text-white flex items-center gap-2"
+                            >
+                                <Edit3 className="w-4 h-4" />
+                                Edit All Fields
+                            </Button>
                         </div>
-                        <p className="text-secondary-400 text-sm sm:text-base">
-                            Manage your website's content and configuration
-                        </p>
+
                     </div>
                 </motion.div>
 
                 {/* Website Preview Section */}
-                {fullShowcaseUrl && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2, duration: 0.6 }}
-                        className="mb-12"
-                    >
-                        <div className="bg-primary-900/50 border border-secondary-500/20 rounded-2xl overflow-hidden shadow-2xl">
-                            {/* Preview Header */}
-                            <div className="bg-primary-800/80 border-b border-secondary-500/20 p-4">
-                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-2 bg-secondary-500/20 rounded-lg">
-                                            <Globe className="w-5 h-5 text-secondary-400" />
+                {
+                    fullShowcaseUrl && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2, duration: 0.6 }}
+                            className="mb-12"
+                        >
+                            <div className="bg-primary-900/50 border border-secondary-500/20 rounded-2xl overflow-hidden shadow-2xl">
+                                {/* Preview Header */}
+                                <div className="bg-primary-800/80 border-b border-secondary-500/20 p-4">
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 bg-secondary-500/20 rounded-lg">
+                                                <Globe className="w-5 h-5 text-secondary-400" />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-white font-semibold">Live Website Preview</h3>
+                                                <p className="text-secondary-400 text-sm">{fullShowcaseUrl}</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <h3 className="text-white font-semibold">Live Website Preview</h3>
-                                            <p className="text-secondary-400 text-sm">{fullShowcaseUrl}</p>
+                                        <div className="flex items-center gap-2 flex-wrap justify-end">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => setShowPreview(!showPreview)}
+                                                className="border-secondary-500/30 text-secondary-300 hover:bg-primary-700"
+                                            >
+                                                {showPreview ? (
+                                                    <>
+                                                        <EyeOff className="w-4 h-4 mr-2" />
+                                                        Hide
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Eye className="w-4 h-4 mr-2" />
+                                                        Show
+                                                    </>
+                                                )}
+                                            </Button>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={handleCopyUrl}
+                                                className="border-secondary-500/30 text-secondary-300 hover:bg-primary-700"
+                                            >
+                                                {copiedUrl ? (
+                                                    <>
+                                                        <Check className="w-4 h-4 mr-2" />
+                                                        Copied!
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Copy className="w-4 h-4 mr-2" />
+                                                        Copy URL
+                                                    </>
+                                                )}
+                                            </Button>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => window.open(fullShowcaseUrl, '_blank')}
+                                                className="border-secondary-500/30 text-secondary-300 hover:bg-primary-700"
+                                            >
+                                                <ExternalLink className="w-4 h-4 mr-2" />
+                                                Open
+                                            </Button>
                                         </div>
-                                    </div>
-                                    <div className="flex items-center gap-2 flex-wrap justify-end">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => setShowPreview(!showPreview)}
-                                            className="border-secondary-500/30 text-secondary-300 hover:bg-primary-700"
-                                        >
-                                            {showPreview ? (
-                                                <>
-                                                    <EyeOff className="w-4 h-4 mr-2" />
-                                                    Hide
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Eye className="w-4 h-4 mr-2" />
-                                                    Show
-                                                </>
-                                            )}
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={handleCopyUrl}
-                                            className="border-secondary-500/30 text-secondary-300 hover:bg-primary-700"
-                                        >
-                                            {copiedUrl ? (
-                                                <>
-                                                    <Check className="w-4 h-4 mr-2" />
-                                                    Copied!
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Copy className="w-4 h-4 mr-2" />
-                                                    Copy URL
-                                                </>
-                                            )}
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => window.open(fullShowcaseUrl, '_blank')}
-                                            className="border-secondary-500/30 text-secondary-300 hover:bg-primary-700"
-                                        >
-                                            <ExternalLink className="w-4 h-4 mr-2" />
-                                            Open
-                                        </Button>
                                     </div>
                                 </div>
-                            </div>
 
-                            {/* Preview iFrame */}
-                            {showPreview && (
-                                <motion.div
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: 'auto' }}
-                                    exit={{ opacity: 0, height: 0 }}
-                                    transition={{ duration: 0.3 }}
-                                    className="relative"
-                                >
-                                    <div className="aspect-video bg-primary-800 relative overflow-hidden w-full">
-                                        <iframe
-                                            src={fullShowcaseUrl}
-                                            className="w-full h-full border-0"
-                                            title="Website Preview"
-                                            loading="lazy"
-                                            sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-                                        />
-                                        <div className="absolute inset-0 pointer-events-none border border-secondary-500/10 rounded-b-2xl" />
-                                    </div>
-                                </motion.div>
-                            )}
-                        </div>
-                    </motion.div>
-                )}
+                                {/* Preview iFrame */}
+                                {showPreview && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        transition={{ duration: 0.3 }}
+                                        className="relative"
+                                    >
+                                        <div className="aspect-video bg-primary-800 relative overflow-hidden w-full">
+                                            <iframe
+                                                src={fullShowcaseUrl}
+                                                className="w-full h-full border-0"
+                                                title="Website Preview"
+                                                loading="lazy"
+                                                sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                                            />
+                                            <div className="absolute inset-0 pointer-events-none border border-secondary-500/10 rounded-b-2xl" />
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </div>
+                        </motion.div>
+                    )
+                }
 
                 {/* Content Grid */}
-                {projectContents ? (
-                    <div className="space-y-10">
-                        {/* Basic Information Section */}
-                        <motion.section
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.4 }}
-                            className="space-y-5"
-                        >
-                            <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                                <span className="w-1 h-6 bg-secondary-500 rounded-full"></span>
-                                Basic Information
-                            </h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-7">
-                                {Object.entries(projectContents)
-                                    .filter(([key]) => ['site-name', 'type', 'blobId', 'status'].includes(key))
-                                    .map(([key, value], index) => (
-                                        <ProjectCard
-                                            key={key}
-                                            fieldKey={key}
-                                            value={value}
-                                            index={index}
-                                            onEdit={(key, value) => setEditingField({ key, value })}
-                                        />
-                                    ))}
-                            </div>
-                        </motion.section>
+                {
+                    projectContents ? (
+                        <div className="space-y-10">
+                            {/* Basic Information Section */}
+                            <motion.section
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.4 }}
+                                className="space-y-5"
+                            >
+                                <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+                                    <span className="w-1 h-6 bg-secondary-500 rounded-full"></span>
+                                    Basic Information
+                                </h2>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-7">
+                                    {Object.entries(projectContents)
+                                        .filter(([key]) => ['site-name', 'type', 'blobId', 'status'].includes(key))
+                                        .map(([key, value], index) => (
+                                            <ProjectCard
+                                                key={key}
+                                                fieldKey={key}
+                                                value={value}
+                                                index={index}
+                                            />
+                                        ))}
+                                </div>
+                            </motion.section>
 
-                        {/* Config Section */}
-                        <motion.section
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.4, delay: 0.1 }}
-                            className="space-y-5"
-                        >
-                            <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                                <span className="w-1 h-6 bg-blue-500 rounded-full"></span>
-                                Config
-                            </h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-7">
-                                {Object.entries(projectContents)
-                                    .filter(([key]) => ['cache', 'root'].includes(key))
-                                    .map(([key, value], index) => (
-                                        <ProjectCard
-                                            key={key}
-                                            fieldKey={key}
-                                            value={value}
-                                            index={index}
-                                            onEdit={(key, value) => setEditingField({ key, value })}
-                                        />
-                                    ))}
-                            </div>
-                        </motion.section>
+                            {/* Config Section */}
+                            <motion.section
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.4, delay: 0.1 }}
+                                className="space-y-5"
+                            >
+                                <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+                                    <span className="w-1 h-6 bg-blue-500 rounded-full"></span>
+                                    Config
+                                </h2>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-7">
+                                    {Object.entries(projectContents)
+                                        .filter(([key]) => ['cache', 'root'].includes(key))
+                                        .map(([key, value], index) => (
+                                            <ProjectCard
+                                                key={key}
+                                                fieldKey={key}
+                                                value={value}
+                                                index={index}
+                                            />
+                                        ))}
+                                </div>
+                            </motion.section>
 
-                        {/* Owner Detail Section */}
-                        <motion.section
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.4, delay: 0.2 }}
-                            className="space-y-5"
-                        >
-                            <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                                <span className="w-1 h-6 bg-green-500 rounded-full"></span>
-                                Owner Detail
-                            </h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-7">
-                                {Object.entries(projectContents)
-                                    .filter(([key]) => ['ownership', 'owner', 'send_to'].includes(key))
-                                    .map(([key, value], index) => (
-                                        <ProjectCard
-                                            key={key}
-                                            fieldKey={key}
-                                            value={value}
-                                            index={index}
-                                            onEdit={(key, value) => setEditingField({ key, value })}
-                                        />
-                                    ))}
-                            </div>
-                        </motion.section>
+                            {/* Owner Detail Section */}
+                            <motion.section
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.4, delay: 0.2 }}
+                                className="space-y-5"
+                            >
+                                <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+                                    <span className="w-1 h-6 bg-green-500 rounded-full"></span>
+                                    Owner Detail
+                                </h2>
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-7">
+                                    {Object.entries(projectContents)
+                                        .filter(([key]) => ['ownership', 'owner', 'send_to'].includes(key))
+                                        .map(([key, value], index) => (
+                                            <ProjectCard
+                                                key={key}
+                                                fieldKey={key}
+                                                value={value}
+                                                index={index}
+                                            />
+                                        ))}
+                                </div>
+                            </motion.section>
 
-                        {/* Epochs Detail Section */}
-                        <motion.section
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.4, delay: 0.3 }}
-                            className="space-y-5"
-                        >
-                            <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                                <span className="w-1 h-6 bg-purple-500 rounded-full"></span>
-                                Epochs Detail
-                            </h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-7">
-                                {Object.entries(projectContents)
-                                    .filter(([key]) => ['epochs', 'start_date', 'end_date'].includes(key))
-                                    .map(([key, value], index) => (
-                                        <ProjectCard
-                                            key={key}
-                                            fieldKey={key}
-                                            value={value}
-                                            index={index}
-                                            onEdit={(key, value) => setEditingField({ key, value })}
-                                        />
-                                    ))}
-                            </div>
-                        </motion.section>
+                            {/* Epochs Detail Section */}
+                            <motion.section
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.4, delay: 0.3 }}
+                                className="space-y-5"
+                            >
+                                <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+                                    <span className="w-1 h-6 bg-purple-500 rounded-full"></span>
+                                    Epochs Detail
+                                </h2>
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-7">
+                                    {Object.entries(projectContents)
+                                        .filter(([key]) => ['epochs', 'start_date', 'end_date'].includes(key))
+                                        .map(([key, value], index) => (
+                                            <ProjectCard
+                                                key={key}
+                                                fieldKey={key}
+                                                value={value}
+                                                index={index}
+                                            />
+                                        ))}
+                                </div>
+                            </motion.section>
 
-                        {/* Other Fields Section */}
-                        {Object.entries(projectContents).some(([key]) =>
-                            !['showcase_url', 'client_error_description', 'uuid',
-                                'site-name', 'type', 'blobId', 'status',
-                                'cache', 'root', 'ownership', 'owner', 'send_to',
-                                'epochs', 'start_date', 'end_date'].includes(key)
-                        ) && (
-                                <motion.section
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.4, delay: 0.4 }}
-                                    className="space-y-5"
-                                >
-                                    <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                                        <span className="w-1 h-6 bg-gray-500 rounded-full"></span>
-                                        Additional Information
-                                    </h2>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-7">
-                                        {Object.entries(projectContents)
-                                            .filter(([key]) => ![
-                                                'showcase_url', 'client_error_description', 'uuid',
-                                                'site-name', 'type', 'blobId', 'status',
-                                                'cache', 'root', 'ownership', 'owner', 'send_to',
-                                                'epochs', 'start_date', 'end_date'
-                                            ].includes(key))
-                                            .map(([key, value], index) => (
-                                                <ProjectCard
-                                                    key={key}
-                                                    fieldKey={key}
-                                                    value={value}
-                                                    index={index}
-                                                    onEdit={(key, value) => setEditingField({ key, value })}
-                                                />
-                                            ))}
-                                    </div>
-                                </motion.section>
-                            )}
-                    </div>
-                ) : (
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.4, duration: 0.6 }}
-                        className="text-center py-16 border-2 border-dashed border-secondary-500/30 rounded-2xl bg-primary-800/30"
-                    >
-                        <div className="mx-auto w-16 h-16 bg-primary-700/50 rounded-full flex items-center justify-center mb-6">
-                            <svg className="w-8 h-8 text-secondary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
+                            {/* Other Fields Section */}
+                            {Object.entries(projectContents).some(([key]) =>
+                                !['showcase_url', 'client_error_description', 'uuid',
+                                    'site-name', 'type', 'blobId', 'status',
+                                    'cache', 'root', 'ownership', 'owner', 'send_to',
+                                    'epochs', 'start_date', 'end_date'].includes(key)
+                            ) && (
+                                    <motion.section
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.4, delay: 0.4 }}
+                                        className="space-y-5"
+                                    >
+                                        <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+                                            <span className="w-1 h-6 bg-gray-500 rounded-full"></span>
+                                            Additional Information
+                                        </h2>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-7">
+                                            {Object.entries(projectContents)
+                                                .filter(([key]) => ![
+                                                    'showcase_url', 'client_error_description', 'uuid',
+                                                    'site-name', 'type', 'blobId', 'status',
+                                                    'cache', 'root', 'ownership', 'owner', 'send_to',
+                                                    'epochs', 'start_date', 'end_date'
+                                                ].includes(key))
+                                                .map(([key, value], index) => (
+                                                    <ProjectCard
+                                                        key={key}
+                                                        fieldKey={key}
+                                                        value={value}
+                                                        index={index}
+                                                    />
+                                                ))}
+                                        </div>
+                                    </motion.section>
+                                )}
                         </div>
-                        <h3 className="text-2xl font-semibold text-white mb-2">No Content Available</h3>
-                        <p className="text-secondary-400 text-lg">Add some content to get started with your website</p>
-                    </motion.div>
-                )}
+                    ) : (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.4, duration: 0.6 }}
+                            className="text-center py-16 border-2 border-dashed border-secondary-500/30 rounded-2xl bg-primary-800/30"
+                        >
+                            <div className="mx-auto w-16 h-16 bg-primary-700/50 rounded-full flex items-center justify-center mb-6">
+                                <svg className="w-8 h-8 text-secondary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-2xl font-semibold text-white mb-2">No Content Available</h3>
+                            <p className="text-secondary-400 text-lg">Add some content to get started with your website</p>
+                        </motion.div>
+                    )
+                }
 
-                {editingField && (
-                    <EditDialog
-                        open={!!editingField}
-                        onOpenChange={(open) => !open && setEditingField(null)}
-                        fieldName={editingField.key}
-                        fieldValue={editingField.value}
-                        onSave={(newValue) => {
-                            if (projectContents) {
-                                const updatedContents = { ...projectContents, [editingField.key]: newValue };
-                                console.log(`Updating ${editingField.key} to:`, newValue);
-                                setProjectContents(updatedContents);
-                                setEditingField(null);
-                            }
-                        }}
-                    />
-                )}
-            </div>
-        </div>
-    );
+
+
+                <EditAllFieldsDialog
+                    open={isEditAllDialogOpen}
+                    onOpenChange={setIsEditAllDialogOpen}
+                    fields={projectContents || {}}
+                    isSaving={isUpdating}
+                    onSave={handleSaveAllFields}
+                />
+            </div >
+
+            {/* Toast Notification */}
+            {
+                toast && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 50 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 50 }}
+                        className={`fixed bottom-6 right-6 z-50 flex items-center p-4 rounded-lg shadow-lg ${toast.type === 'success'
+                            ? 'bg-green-600/90 border border-green-500/30'
+                            : 'bg-red-600/90 border border-red-500/30'
+                            }`}
+                    >
+                        {toast.type === 'success' ? (
+                            <CheckCircle className="w-5 h-5 text-white mr-3 flex-shrink-0" />
+                        ) : (
+                            <XCircle className="w-5 h-5 text-white mr-3 flex-shrink-0" />
+                        )}
+                        <p className="text-white text-sm">{toast.message}</p>
+                        <button
+                            onClick={() => setToast(null)}
+                            className="ml-4 text-white/70 hover:text-white focus:outline-none"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    </motion.div>
+                )
+            }
+        </div >
+    )
 }
 
 export default EditWebsitePage
