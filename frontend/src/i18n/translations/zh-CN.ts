@@ -28,7 +28,7 @@ export default {
   'aboutus.contact.github': 'GitHub',
   'aboutus.contact.twitter': 'Twitter',
   'aboutus.footer.copyright': '© 2025 Ivory. 保留所有权利。',
-  
+
   // Navigation
   'nav.home': '首页',
   'nav.dashboard': '仪表板',
@@ -38,20 +38,20 @@ export default {
   'nav.logout': '登出',
   'nav.copy': '复制',
   'nav.copied': '已复制！',
-  
+
   // Common actions
   'action.confirm': '确认',
   'action.cancel': '取消',
   'action.save': '保存',
   'action.edit': '编辑',
   'action.delete': '删除',
-  
+
   // Wallet
   'wallet.connect': '连接钱包',
   'wallet.disconnect': '断开连接',
   'wallet.address': '钱包地址',
   'wallet.copyAddress': '复制地址',
-  
+
   // Checklist steps
   'checklist.confirm': '等待确认',
   'checklist.deploy': '初始化',
@@ -59,13 +59,13 @@ export default {
   'checklist.done': '已部署',
   'checklist.failed': '失败',
   'createWebsite.redeploy': '重新部署',
-  
+
   // Messages
   'message.welcome': '欢迎来到Ivory',
   'message.loading': '加载中...',
   'message.error': '发生错误',
   'message.success': '操作成功',
-  
+
   // Create Website
   'createWebsite.title': '创建新项目',
   'createWebsite.projectFiles': '项目文件',
@@ -79,7 +79,7 @@ export default {
   'createWebsite.browseFile': '浏览文件',
   'createWebsite.or': '或',
   'createWebsite.name': '名称',
-  
+
   // About Us sections
   'aboutus.section.projectDefinition': '项目定义',
   'aboutus.section.technologyStack': '技术栈',
@@ -231,7 +231,7 @@ export default {
   'createWebsite.expirationNotice': '您的网站将在 {expiryDate} 过期',
 
   'createWebsite.error.maxLength': '最大长度为 {max} 个字符',
-  'createWebsite.error.englishOnly': '仅允许英文、数字和空格',
+  'createWebsite.error.englishOnly': '仅允许英文字母 (a-z, A-Z)、数字 (0-9)、连字符 (-) 和下划线 (_)，不允许空格',
   'createWebsite.error.duplicateName': '项目名称已存在',
 
   'createWebsite.preview.issues.incorrectPaths': '错误的路径',
@@ -281,7 +281,7 @@ export default {
   'howtouse.sidebar.title': '在本页',
   'howtouse.sidebar.section1': '如何通过我们部署网站',
   'howtouse.sidebar.section4': '如何设置自定义域名',
- 
+
   'homepage.hero.title5': '',
   'homepage.hero.title6': '随处可用',
   'homepage.hero.desc': 'Ivory 是一个无需编码、低成本的平台，使用 Walrus 部署静态网站。享受高可用性、抗审查、数据完整性和完全所有权——所有这些都带有免费带宽和零复杂性。',
@@ -324,6 +324,11 @@ export default {
   'dashboard.refresh': '刷新数据',
   'dashboard.lastRefresh': '上次: {time}',
   'dashboard.createNew': '部署站点',
+
+  // Refresh states
+  'dashboard.refresh.loading': '正在刷新数据...',
+  'dashboard.refresh.cooldown': '请等待 {time} 后再刷新',
+  'dashboard.refresh.ready': '刷新数据',
 
   // Beta Testing Limit Modal
   'dashboard.projectLimit.title': '测试阶段限制',
@@ -370,8 +375,8 @@ export default {
   'projectCard.openMenu': '打开菜单',
   'projectCard.redeploy': '重新部署',
   'projectCard.deploying': '正在部署...',
-  'projectCard.transferOwnership': '转移所有权',
-  'projectCard.extendSite': '延长网站',
+  'projectCard.transferOwnership': '转让所有权',
+  'projectCard.extendSite': '延长网站期限',
   'projectCard.updateSite': '更新网站',
   'projectCard.siteId': '网站 ID',
   'projectCard.startDate': '开始日期',
@@ -393,5 +398,47 @@ export default {
   'projectCard.generate': '生成',
   'projectCard.generatingSiteId': '正在生成站点 ID...',
   'projectCard.failedToGenerateSiteId': '生成站点 ID 失败',
-  'projectCard.comingSoon': '即将'
+  'projectCard.comingSoon': '即将',
+
+  // Member Management
+  'projectCard.manageMembers': '管理成员',
+  'projectCard.manageMembers.title': '管理项目成员',
+  'projectCard.manageMembers.description': '添加或删除成员并管理其权限',
+  'projectCard.manageMembers.addMember': '添加成员',
+  'projectCard.manageMembers.memberAddress': '成员地址',
+  'projectCard.manageMembers.permissions': '权限',
+  'projectCard.manageMembers.noMembers': '尚未添加成员',
+  'projectCard.manageMembers.enterAddress': '输入钱包地址',
+  'projectCard.manageMembers.invalidAddress': '无效的钱包地址',
+  'projectCard.manageMembers.addressExists': '成员已存在',
+  'projectCard.manageMembers.permissionUpdate': '可以更新网站',
+  'projectCard.manageMembers.permissionDelete': '可以删除网站',
+  'projectCard.manageMembers.permissionGenerateSite': '可以生成网站ID',
+  'projectCard.manageMembers.permissionSetSuins': '可以设置SUINS',
+  'projectCard.manageMembers.removeMember': '删除成员',
+  'projectCard.manageMembers.removeConfirm': '您确定要删除此成员吗？',
+  'projectCard.manageMembers.memberAdded': '成员添加成功',
+  'projectCard.manageMembers.memberRemoved': '成员删除成功',
+  'projectCard.manageMembers.permissionsUpdated': '权限更新成功',
+  'projectCard.manageMembers.ownerNote': '您是此项目的所有者',
+  'projectCard.manageMembers.memberPermissions': '成员权限',
+
+  // Common
+  'common.error.unknown': '发生意外错误，请重试',
+  'common.error.network': '网络错误，请检查您的连接',
+  'common.error.server': '服务器错误，请稍后重试',
+
+  // Transfer Ownership Dialog
+  'projectCard.transferOwnership.enterAddress': '输入钱包地址',
+  'projectCard.transferOwnership.title': '转让项目所有权',
+  'projectCard.transferOwnership.description': '将此项目的所有权转让给另一个钱包地址',
+  'projectCard.transferOwnership.currentOwner': '当前所有者',
+  'projectCard.transferOwnership.newOwner': '新所有者',
+  'projectCard.transferOwnership.transfer': '转让',
+  'projectCard.transferOwnership.transferring': '转让中...',
+  'projectCard.transferOwnership.success': '所有权转让成功',
+  'projectCard.transferOwnership.error': '转让所有权失败',
+  'projectCard.transferOwnership.invalidAddress': '无效的钱包地址',
+  'projectCard.transferOwnership.confirm': '您确定要转让所有权吗？',
+  'projectCard.transferOwnership.warning': '此操作无法撤消。您将失去对此项目的所有控制权。'
 } as const;

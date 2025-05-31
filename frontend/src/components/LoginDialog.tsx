@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Separator } from './ui/separator'
 import { ConnectModal, useWalletKit } from '@mysten/wallet-kit'
 import { useAuth } from '@/context/AuthContext'
+import { useNavigate } from 'react-router-dom'
 
 function LoginDialog({
   open,
@@ -22,11 +23,24 @@ function LoginDialog({
   setOpen: (open: boolean) => void
 }) {
   const [openSuiLogin, setOpenSuiLogin] = useState(false)
-  const { login } = useAuth()
+  const { login, address } = useAuth()
+  const navigate = useNavigate()
+  const { isConnected } = useWalletKit()
+  
+  // Handle successful wallet connection
+  useEffect(() => {
+    if (isConnected && openSuiLogin) {
+      setOpenSuiLogin(false)
+      setOpen(false)
+      navigate('/dashboard')
+    }
+  }, [isConnected, openSuiLogin, setOpen, navigate])
 
   const handleConnectGoogle = async () => {
     try {
       await login({ authType: 'google' })
+      setOpen(false)
+      navigate('/dashboard')
     } catch (error) {
       console.error('Google login failed:', error)
     }
@@ -36,6 +50,8 @@ function LoginDialog({
   const handleConnectFacebook = async () => {
     try {
       await login({ authType: 'facebook' })
+      setOpen(false)
+      navigate('/dashboard')
     } catch (error) {
       console.error('Facebook login failed:', error)
     }
@@ -92,22 +108,19 @@ function LoginDialog({
                 Login with Google
               </span>
             </Button>
-            {/* Facebook Login Button */}
-            <Button
-              variant="secondary"
-              className="w-full h-16 flex items-center justify-start space-x-3 bg-blue-600/90 shadow-lg p-4 mb-4 rounded-xl transition-all duration-200 hover:scale-105 hover:brightness-110 focus-visible:ring-4 focus-visible:ring-blue-400 group"
-              type="button"
-              onClick={() => handleConnectFacebook()}
+            <div
+              className="w-full h-16 flex items-center justify-start space-x-3 bg-blue-600/60 shadow-inner p-4 mb-4 rounded-xl opacity-60 cursor-not-allowed select-none"
             >
               <img
                 src="https://upload.wikimedia.org/wikipedia/commons/6/6c/Facebook_Logo_2023.png"
-                className="w-10 h-10 rounded-full transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110"
+                className="w-10 h-10 rounded-full opacity-80"
                 alt="Facebook Logo"
               />
               <span className="text-lg font-bold tracking-wide text-white">
-                Login with Facebook
+                Coming Soon
               </span>
-            </Button>
+            </div>
+
           </article>
           <DialogFooter></DialogFooter>
         </DialogContent>

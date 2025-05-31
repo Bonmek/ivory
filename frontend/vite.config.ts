@@ -17,7 +17,6 @@ export default defineConfig({
   plugins: [
     react(),
     EnvironmentPlugin([
-      'REACT_APP_TEXT',
       'REACT_APP_SERVER_URL',
       'REACT_APP_API_USER',
       'REACT_APP_API_REPOSITORIES',
@@ -32,13 +31,10 @@ export default defineConfig({
       'REACT_APP_API_DELETE_WEBSITE',
       'REACT_APP_API_SET_ATTRIBUTES',
       'REACT_APP_API_ADD_SITE_ID',
+      
     ]),
   ],
   publicDir: 'public',
-  server: {
-    host: true,
-    port: 3000,
-  },
   resolve: {
     alias: [
       {

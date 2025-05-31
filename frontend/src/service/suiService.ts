@@ -14,6 +14,7 @@ class SuiService {
     })
   }
 
+
   async getBlobs(address: string, filter?: { StructType: string }) {
     try {
       let allData: any[] = []

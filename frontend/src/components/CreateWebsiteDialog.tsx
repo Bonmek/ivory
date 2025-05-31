@@ -11,8 +11,9 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Separator } from './ui/separator'
-import { ConnectModal, useWalletKit } from '@mysten/wallet-kit'
+import { ConnectModal } from '@mysten/wallet-kit'
 import { WriteBlobResponse } from '@/api/createWebsiteApi'
+import { useAuth } from '@/context/AuthContext'
 
 function CreateWebsiteDialog({
   open,
@@ -24,7 +25,7 @@ function CreateWebsiteDialog({
   handleClickDeploy: () => Promise<WriteBlobResponse>
 }) {
   const [openSuiLogin, setOpenSuiLogin] = useState(false)
-  const { currentAccount } = useWalletKit()
+  const { address } = useAuth()
 
   return (
     <>
@@ -39,12 +40,12 @@ function CreateWebsiteDialog({
           </div>
           <DialogHeader>
             <DialogTitle className="text-2xl text-center font-bold mb-2 font-pixel">
-              {currentAccount?.address
+              {address
                 ? 'Create New Website'
                 : 'Connect Wallet to Continue'}
             </DialogTitle>
           </DialogHeader>
-          {!currentAccount?.address ? (
+          {!address ? (
             <article className="flex flex-col items-center justify-center">
               <Button
                 variant="secondary"
@@ -83,20 +84,18 @@ function CreateWebsiteDialog({
                   Login with Google
                 </span>
               </Button>
-              <Button
-                variant="secondary"
-                className="w-full h-16 flex items-center justify-start space-x-3 bg-blue-600/90 shadow-lg p-4 mb-4 rounded-xl transition-all duration-200 hover:scale-105 hover:brightness-110 focus-visible:ring-4 focus-visible:ring-blue-400 group"
-                type="button"
-              >
-                <img
-                  src="https://upload.wikimedia.org/wikipedia/commons/6/6c/Facebook_Logo_2023.png"
-                  className="w-10 h-10 rounded-full transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110"
-                  alt="Facebook Logo"
-                />
-                <span className="text-lg font-bold tracking-wide text-white">
-                  Login with Facebook
-                </span>
-              </Button>
+            <div
+              className="w-full h-16 flex items-center justify-start space-x-3 bg-blue-600/60 shadow-inner p-4 mb-4 rounded-xl opacity-60 cursor-not-allowed select-none"
+            >
+              <img
+                src="https://upload.wikimedia.org/wikipedia/commons/6/6c/Facebook_Logo_2023.png"
+                className="w-10 h-10 rounded-full opacity-80"
+                alt="Facebook Logo"
+              />
+              <span className="text-lg font-bold tracking-wide text-white">
+                Coming Soon
+              </span>
+            </div>
             </article>
           ) : (
             <article className="flex flex-col items-center justify-center">

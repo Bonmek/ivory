@@ -3,9 +3,9 @@ FROM ubuntu:22.04
 # Set the working directory
 WORKDIR /app
 
-# Install Node.js, npm, and curl
+# Install Node.js, npm, curl, and other dependencies
 RUN apt-get update && \
-    apt-get install -y curl && \
+    apt-get install -y curl bash sed && \
     curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
     apt-get install -y nodejs && \
     apt-get clean && \
@@ -14,20 +14,22 @@ RUN apt-get update && \
 # Install pnpm
 RUN npm install -g pnpm
 
-# Copy package.json and pnpm-lock.yaml
+# Copy package.json and lock file
 COPY package.json pnpm-lock.yaml ./
-
-# Install dependencies
 RUN pnpm install
 
-# Copy the rest of the application code
+# Copy rest of the source code
 COPY . .
 
-# Build the application
+# Copy environment replacement script
+COPY env.sh /app/env.sh
+RUN chmod +x /app/env.sh
+
+# Build the app (make sure .env.production uses placeholders like __API_URL__)
 RUN pnpm run build
 
-# Expose the application port
+# Expose port
 EXPOSE 5000
 
-# Command to run the application
-CMD ["pnpm", "start"]
+# Start app with environment variable replacement
+CMD ["sh", "-c", "/app/env.sh && pnpm start"]
