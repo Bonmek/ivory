@@ -1,9 +1,14 @@
 import { MemberPermissions } from '@/types/project'
 
 /**
- * แยก member string ในรูปแบบ "address|access" เป็น object
- * @param memberString string ในรูปแบบ "0x1234...|0001"
- * @returns object ที่มี address และ permissions
+ * Parses a member string in the format "address|access" where:
+ * - address: Wallet address (e.g. "0x1234...")
+ * - access: 4-bit permission string where each bit represents:
+ *   [3] update (0/1)
+ *   [2] delete (0/1)
+ *   [1] generateSite (0/1)
+ *   [0] setSuins (0/1)
+ * Example: "0x1234...|1001" (has update and setSuins permissions)
  */
 export const parseMemberString = (memberString: string): { 
   address: string
@@ -11,7 +16,7 @@ export const parseMemberString = (memberString: string): {
 } => {
   const [address, accessBits] = memberString.split('|')
   
-  // แปลง access bits เป็น permissions object
+  // Convert access bits to permissions object
   const permissions: MemberPermissions = {
     update: accessBits[3] === '1',
     delete: accessBits[2] === '1',
@@ -23,9 +28,9 @@ export const parseMemberString = (memberString: string): {
 }
 
 /**
- * แปลง permissions object เป็น access bits string
- * @param permissions MemberPermissions object
- * @returns string เช่น "0001"
+ * Converts permissions object to 4-bit access string
+ * Each bit position represents a permission:
+ * [3] update, [2] delete, [1] generateSite, [0] setSuins
  */
 export const permissionsToAccessBits = (permissions: MemberPermissions): string => {
   const bits = [
@@ -38,10 +43,8 @@ export const permissionsToAccessBits = (permissions: MemberPermissions): string 
 }
 
 /**
- * สร้าง member string สำหรับส่งไป API
- * @param address wallet address
- * @param permissions MemberPermissions object
- * @returns string ในรูปแบบ "address|accessBits"
+ * Creates a member string for API in format "address|accessBits"
+ * Example: "0x1234...|1001" (has update and setSuins permissions)
  */
 export const createMemberString = (address: string, permissions: MemberPermissions): string => {
   const accessBits = permissionsToAccessBits(permissions)
@@ -49,19 +52,65 @@ export const createMemberString = (address: string, permissions: MemberPermissio
 }
 
 /**
- * แปลง array ของ member strings เป็น string เดียวสำหรับส่ง API
- * @param members array ของ member strings
- * @returns string ที่รวม members ด้วย comma
+ * Joins multiple member strings with commas for API submission
+ * Example: "0x123|1001,0x456|0011,0x789|1111"
  */
 export const joinMemberStrings = (members: string[]): string => {
   return members.join(',')
 }
 
 /**
- * แยก member string ที่มาจาก API เป็น array
- * @param memberString string ที่มี members คั่นด้วย comma
- * @returns array ของ member strings
+ * Splits comma-separated member string from API into array
+ * Example: "0x123|1001,0x456|0011" -> ["0x123|1001", "0x456|0011"]
  */
 export const splitMemberString = (memberString: string): string[] => {
   return memberString.split(',').filter(Boolean)
+}
+
+/**
+ * Creates a member string for API in format:
+ * "address1permission|address2permission|address3permission"
+ * Example: "0x1234...1111|0x5678...1011"
+ * where each permission is 4 bits representing:
+ * [3] update (0/1)
+ * [2] delete (0/1)
+ * [1] generateSite (0/1)
+ * [0] setSuins (0/1)
+ */
+export const createMemberStrings = (members: { address: string, permissions: MemberPermissions }[]): string => {
+  return members.map(member => {
+    const bits = [
+      member.permissions.update ? '1' : '0',
+      member.permissions.delete ? '1' : '0',
+      member.permissions.generateSite ? '1' : '0',
+      member.permissions.setSuins ? '1' : '0'
+    ].join('')
+    
+    return `${member.address}${bits}`
+  }).join('|')
+}
+
+/**
+ * Parse member strings from API response
+ * Format: "address1permission|address2permission"
+ * Example: "0x1234...1111|0x5678...1011"
+ */
+export const parseMemberStrings = (memberString: string): {
+  address: string
+  permissions: MemberPermissions
+}[] => {
+  return memberString.split('|').map(member => {
+    const address = member.slice(0, -4)
+    const bits = member.slice(-4)
+    
+    return {
+      address,
+      permissions: {
+        update: bits[0] === '1',
+        delete: bits[1] === '1',
+        generateSite: bits[2] === '1',
+        setSuins: bits[3] === '1'
+      }
+    }
+  })
 } 

@@ -78,6 +78,7 @@ import {
 } from '@/utils/projectUtils'
 import { useNavigate } from 'react-router'
 import { createMemberString, joinMemberStrings } from '@/utils/memberUtils'
+import { createMemberStrings } from '@/utils/memberUtils'
 
 const ProjectCard = memo(
   ({
@@ -307,17 +308,15 @@ const ProjectCard = memo(
       try {
         setIsAddingMember(true)
 
-        const newMemberString = createMemberString(address, permissions)
+        const allMembers = [
+          ...(project.members || []),
+          { address, permissions },
+        ]
 
-        const existingMemberStrings =
-          project.members?.map((member) =>
-            createMemberString(member.address, member.permissions),
-          ) || []
-        const allMemberStrings = [...existingMemberStrings, newMemberString]
-        const memberParam = joinMemberStrings(allMemberStrings)
+        const memberString = createMemberStrings(allMembers)
 
         await apiClient.put(
-          `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_GRANT_ACCESS!}?object_id=${project.parentId}&member_address_n_access=${memberParam}`,
+          `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_GRANT_ACCESS!}?object_id=${project.parentId}&member_address_n_access=${memberString}`,
         )
 
         toast.success(
@@ -338,17 +337,14 @@ const ProjectCard = memo(
       try {
         setIsRemovingMember(true)
 
-        const remainingMemberStrings =
-          project.members
-            ?.filter((member) => member.address !== addressToRemove)
-            .map((member) =>
-              createMemberString(member.address, member.permissions),
-            ) || []
+        const remainingMembers =
+          project.members?.filter(
+            (member) => member.address !== addressToRemove,
+          ) || []
 
-        const memberParam = joinMemberStrings(remainingMemberStrings)
-
+        const memberString = createMemberStrings(remainingMembers)
         await apiClient.put(
-          `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_GRANT_ACCESS!}?object_id=${project.parentId}&member_address_n_access=${memberParam}`,
+          `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_GRANT_ACCESS!}?object_id=${project.parentId}&member_address_n_access=${memberString}`,
         )
 
         toast.success(
@@ -372,17 +368,17 @@ const ProjectCard = memo(
       try {
         setIsUpdatingPermissions(true)
 
-        const updatedMemberStrings =
-          project.members?.map((member) => {
-            if (member.address === addressToUpdate) {
-              return createMemberString(member.address, newPermissions)
-            }
-            return createMemberString(member.address, member.permissions)
-          }) || []
+        const updatedMembers =
+          project.members?.map((member) =>
+            member.address === addressToUpdate
+              ? { ...member, permissions: newPermissions }
+              : member,
+          ) || []
 
-        const memberParam = joinMemberStrings(updatedMemberStrings)
+        const memberString = createMemberStrings(updatedMembers)
+
         await apiClient.put(
-          `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_GRANT_ACCESS!}?object_id=${project.parentId}&member_address_n_access=${memberParam}`,
+          `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_GRANT_ACCESS!}?object_id=${project.parentId}&member_address_n_access=${memberString}`,
         )
 
         toast.success(
