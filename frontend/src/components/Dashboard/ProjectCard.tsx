@@ -159,6 +159,12 @@ const ProjectCard = memo(
     const colors = getStatusColor(project.status)
     const userPermissions = getUserPermissions(userAddress, project)
 
+    // Helper function for delay and refetch
+    const delayAndRefetch = async () => {
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      onRefetch()
+    }
+
     const handleCopy = async (text: string) => {
       try {
         await navigator.clipboard.writeText(text)
@@ -191,7 +197,6 @@ const ProjectCard = memo(
       try {
         setIsLinking(true)
 
-        // Get the NFT ID for the selected SUINS
         const selectedSuinsData = suins.find(
           (s) => s.data?.content?.fields?.domain_name === selectedSuins,
         )
@@ -218,7 +223,7 @@ const ProjectCard = memo(
             duration: 5000,
           })
           if (result.status === 'success' && response.status === 200) {
-            onRefetch()
+            await delayAndRefetch()
           }
         }
       } catch (error: any) {
@@ -255,9 +260,7 @@ const ProjectCard = memo(
             duration: 5000,
           })
           setDeleteDialogOpen(false)
-          if (onRefetch) {
-            await onRefetch()
-          }
+          await delayAndRefetch()
         }
       } catch (error: any) {
         console.error('Error deleting site:', error)
@@ -291,9 +294,7 @@ const ProjectCard = memo(
           duration: 5000,
         })
         setGenerateDialogOpen(false)
-        if (onRefetch) {
-          await onRefetch()
-        }
+        await delayAndRefetch()
       } catch (error: any) {
         toast.error(error?.message || 'Failed to generate Site ID')
       } finally {
@@ -322,7 +323,8 @@ const ProjectCard = memo(
         toast.success(
           intl.formatMessage({ id: 'projectCard.manageMembers.memberAdded' }),
         )
-        onRefetch()
+
+        await delayAndRefetch()
       } catch (error: any) {
         console.error('Error adding member:', error)
         toast.error(
@@ -343,6 +345,7 @@ const ProjectCard = memo(
           ) || []
 
         const memberString = createMemberStrings(remainingMembers)
+
         await apiClient.put(
           `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_GRANT_ACCESS!}?object_id=${project.parentId}&member_address_n_access=${memberString}`,
         )
@@ -350,7 +353,8 @@ const ProjectCard = memo(
         toast.success(
           intl.formatMessage({ id: 'projectCard.manageMembers.memberRemoved' }),
         )
-        onRefetch()
+
+        await delayAndRefetch()
       } catch (error: any) {
         console.error('Error removing member:', error)
         toast.error(
@@ -386,7 +390,8 @@ const ProjectCard = memo(
             id: 'projectCard.manageMembers.permissionsUpdated',
           }),
         )
-        onRefetch()
+
+        await delayAndRefetch()
       } catch (error: any) {
         console.error('Error updating permissions:', error)
         toast.error(
@@ -409,9 +414,7 @@ const ProjectCard = memo(
           description: 'Please wait a moment for the changes to take effect',
           duration: 5000,
         })
-        if (onRefetch) {
-          await onRefetch()
-        }
+        await delayAndRefetch()
         return Promise.resolve()
       } catch (error: any) {
         toast.error(error?.message || 'Failed to transfer ownership')
@@ -1101,6 +1104,7 @@ const ProjectCard = memo(
           isAddingMember={isAddingMember}
           isRemovingMember={isRemovingMember}
           isUpdatingPermissions={isUpdatingPermissions}
+          onRefetch={delayAndRefetch}
         />
 
         <RemoveMemberDialog

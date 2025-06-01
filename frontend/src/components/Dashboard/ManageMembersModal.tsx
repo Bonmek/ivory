@@ -12,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
-import { Users, UserPlus, Shield, X, Loader2, ChevronDown, ChevronUp, ListChecks, CheckCircle2 } from 'lucide-react'
+import { Users, UserPlus, X, Loader2, ChevronDown, ChevronUp, ListChecks, CheckCircle2, RefreshCw, Copy, Check } from 'lucide-react'
 import { MemberPermissions, ProjectMember } from '@/types/project'
 import {
   Tooltip,
@@ -32,6 +32,7 @@ interface ManageMembersModalProps {
   isAddingMember?: boolean
   isRemovingMember?: boolean
   isUpdatingPermissions?: boolean
+  onRefetch: () => Promise<void>
 }
 
 export function ManageMembersModal({
@@ -45,6 +46,7 @@ export function ManageMembersModal({
   isAddingMember = false,
   isRemovingMember = false,
   isUpdatingPermissions = false,
+  onRefetch,
 }: ManageMembersModalProps) {
   const intl = useIntl()
   const [members, setMembers] = useState(initialMembers || [])
@@ -59,6 +61,7 @@ export function ManageMembersModal({
   })
   const [removingMember, setRemovingMember] = useState<string | null>(null)
   const [expandedMember, setExpandedMember] = useState<string | null>(null)
+  const [copiedAddress, setCopiedAddress] = useState<string | null>(null)
 
   useEffect(() => {
     if (initialMembers) {
@@ -136,6 +139,20 @@ export function ManageMembersModal({
       ...permissions,
       [field]: value,
     })
+  }
+
+  const handleCopyAddress = async (address: string) => {
+    try {
+      await navigator.clipboard.writeText(address)
+      setCopiedAddress(address)
+      toast.success(intl.formatMessage({ id: 'projectCard.copyToClipboard' }))
+      setTimeout(() => {
+        setCopiedAddress(null)
+      }, 2000)
+    } catch (err) {
+      console.error('Failed to copy address: ', err)
+      toast.error(intl.formatMessage({ id: 'projectCard.failedToCopy' }))
+    }
   }
 
   return (
@@ -287,18 +304,28 @@ export function ManageMembersModal({
             {members && members.length > 0 && (
               <>
                 <Separator className="bg-secondary-500/20" />
-                <div className="space-y-4 max-h-[400px] overflow-y-auto">
-                  <h3 className="text-sm font-medium text-white/80 flex items-center gap-2 sticky top-0 bg-primary-900 py-2">
-                    <Shield className="h-4 w-4" />
-                    <span>
-                      <FormattedMessage id="projectCard.manageMembers.currentMembers" />
-                    </span>
-                    <span className="text-xs text-secondary-400">
-                      ({members.length} <FormattedMessage id="projectCard.manageMembers.membersCount" />)
-                    </span>
-                  </h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between bg-primary-900 py-2">
+                    <h3 className="text-sm font-medium text-white/80 flex items-center gap-2">
+                      <UserPlus className="h-4 w-4 text-secondary-400" />
+                      <span>
+                        <FormattedMessage id="projectCard.manageMembers.currentMembers" />
+                      </span>
+                      <span className="text-xs text-secondary-400">
+                        ({members.length} <FormattedMessage id="projectCard.manageMembers.membersCount" />)
+                      </span>
+                    </h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={onRefetch}
+                      className="text-xs text-secondary-400 hover:text-secondary-300 hover:bg-secondary-500/10 px-2 h-7 rounded-md transition-colors duration-200"
+                    >
+                      <RefreshCw className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 -mr-2">
                     {members.map((member) => (
                       <div
                         key={member.address}
@@ -323,6 +350,18 @@ export function ManageMembersModal({
                                 </TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleCopyAddress(member.address)}
+                              className="text-secondary-400 hover:text-secondary-300 hover:bg-secondary-500/10 h-7 w-7 p-0 ml-1"
+                            >
+                              {copiedAddress === member.address ? (
+                                <Check className="h-3.5 w-3.5 text-green-400" />
+                              ) : (
+                                <Copy className="h-3.5 w-3.5" />
+                              )}
+                            </Button>
                           </div>
                           <div className="flex items-center gap-2">
                             <Button
