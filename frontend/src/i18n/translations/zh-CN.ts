@@ -422,6 +422,7 @@ export default {
   'projectCard.manageMembers.permissionsUpdated': '权限更新成功',
   'projectCard.manageMembers.ownerNote': '您是此项目的所有者',
   'projectCard.manageMembers.memberPermissions': '成员权限',
+  'projectCard.manageMembers.applyChanges': '应用更改',
 
   // Project Types
   'projectCard.type.site': '网站',

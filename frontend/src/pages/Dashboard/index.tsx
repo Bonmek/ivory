@@ -89,6 +89,7 @@ export default function Dashboard() {
       ? metadata.map((meta, index) => transformMetadataToProject(meta, index))
       : []
   }, [metadata])
+  console.log(allProjects)
 
   const filteredProjects = useMemo(() => {
     const projects = [...allProjects]

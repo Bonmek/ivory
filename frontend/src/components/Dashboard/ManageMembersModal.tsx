@@ -12,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
-import { Users, UserPlus, X, Loader2, ChevronDown, ChevronUp, ListChecks, CheckCircle2, RefreshCw, Copy, Check } from 'lucide-react'
+import { Users, UserPlus, X, Loader2, ChevronDown, ChevronUp, ListChecks, CheckCircle2, RefreshCw, Copy, Check, Save } from 'lucide-react'
 import { MemberPermissions, ProjectMember } from '@/types/project'
 import {
   Tooltip,
@@ -62,10 +62,15 @@ export function ManageMembersModal({
   const [removingMember, setRemovingMember] = useState<string | null>(null)
   const [expandedMember, setExpandedMember] = useState<string | null>(null)
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null)
+  const [pendingPermissions, setPendingPermissions] = useState<{[key: string]: MemberPermissions}>({})
+  const [hasChanges, setHasChanges] = useState<{[key: string]: boolean}>({})
 
   useEffect(() => {
     if (initialMembers) {
       setMembers(initialMembers)
+      // Reset pending permissions when members change
+      setPendingPermissions({})
+      setHasChanges({})
     }
   }, [initialMembers])
 
@@ -125,22 +130,6 @@ export function ManageMembersModal({
     }
   }
 
-  const handleSelectAllPermissions = (address: string, checked: boolean) => {
-    onUpdatePermissions(address, {
-      update: checked,
-      delete: checked,
-      generateSite: checked,
-      setSuins: checked,
-    })
-  }
-
-  const handleUpdateSinglePermission = (address: string, permissions: MemberPermissions, field: keyof MemberPermissions, value: boolean) => {
-    onUpdatePermissions(address, {
-      ...permissions,
-      [field]: value,
-    })
-  }
-
   const handleCopyAddress = async (address: string) => {
     try {
       await navigator.clipboard.writeText(address)
@@ -153,6 +142,59 @@ export function ManageMembersModal({
       console.error('Failed to copy address: ', err)
       toast.error(intl.formatMessage({ id: 'projectCard.failedToCopy' }))
     }
+  }
+
+  const handlePermissionChange = (address: string, field: keyof MemberPermissions, value: boolean) => {
+    setPendingPermissions(prev => ({
+      ...prev,
+      [address]: {
+        ...(prev[address] || members.find(m => m.address === address)?.permissions || {}),
+        [field]: value
+      }
+    }))
+    setHasChanges(prev => ({
+      ...prev,
+      [address]: true
+    }))
+  }
+
+  const handleSavePermissions = async (address: string) => {
+    if (!pendingPermissions[address]) return
+
+    try {
+      await onUpdatePermissions(address, pendingPermissions[address])
+      setHasChanges(prev => ({
+        ...prev,
+        [address]: false
+      }))
+    } catch (error) {
+      setPendingPermissions(prev => ({
+        ...prev,
+        [address]: members.find(m => m.address === address)?.permissions || {
+          update: false,
+          delete: false,
+          generateSite: false,
+          setSuins: false
+        }
+      }))
+    }
+  }
+
+  const handleSelectAllPermissions = (address: string, checked: boolean) => {
+    const newPermissions = {
+      update: checked,
+      delete: checked,
+      generateSite: checked,
+      setSuins: checked,
+    }
+    setPendingPermissions(prev => ({
+      ...prev,
+      [address]: newPermissions
+    }))
+    setHasChanges(prev => ({
+      ...prev,
+      [address]: true
+    }))
   }
 
   return (
@@ -398,81 +440,57 @@ export function ManageMembersModal({
                               <span className="text-xs text-secondary-400">
                                 <FormattedMessage id="projectCard.manageMembers.memberPermissions" />
                               </span>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleSelectAllPermissions(member.address, true)}
-                                className="text-xs text-secondary-400 hover:text-secondary-300 hover:bg-secondary-500/10 px-3 h-7 rounded-md border border-secondary-500/20 transition-colors duration-200 flex items-center gap-1 cursor-pointer"
-                              >
-                                <ListChecks className="h-4 w-4" />
-                                <FormattedMessage id="projectCard.manageMembers.selectAll" />
-                              </Button>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleSelectAllPermissions(member.address, true)}
+                                  className="text-xs text-secondary-400 hover:text-secondary-300 hover:bg-secondary-500/10 px-3 h-7 rounded-md border border-secondary-500/20 transition-colors duration-200 flex items-center gap-1"
+                                >
+                                  <ListChecks className="h-4 w-4" />
+                                  <FormattedMessage id="projectCard.manageMembers.selectAll" />
+                                </Button>
+                                {hasChanges[member.address] && (
+                                  <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={() => handleSavePermissions(member.address)}
+                                    disabled={isUpdatingPermissions}
+                                    className="text-xs px-3 h-7 bg-secondary-500 hover:bg-secondary-600 text-white flex items-center gap-1"
+                                  >
+                                    {isUpdatingPermissions ? (
+                                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                    ) : (
+                                      <Save className="h-3.5 w-3.5" />
+                                    )}
+                                    <FormattedMessage id="projectCard.manageMembers.applyChanges" />
+                                  </Button>
+                                )}
+                              </div>
                             </div>
                             <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-                              <label className="flex items-center space-x-2 text-sm">
-                                <input
-                                  type="checkbox"
-                                  checked={member.permissions.update}
-                                  onChange={(e) => handleUpdateSinglePermission(
-                                    member.address,
-                                    member.permissions,
-                                    'update',
-                                    e.target.checked
-                                  )}
-                                  className="rounded border-secondary-500/20 bg-primary-900 h-3.5 w-3.5"
-                                />
-                                <span className="text-white/80">
-                                  <FormattedMessage id="projectCard.manageMembers.permissionUpdate" />
-                                </span>
-                              </label>
-                              <label className="flex items-center space-x-2 text-sm">
-                                <input
-                                  type="checkbox"
-                                  checked={member.permissions.delete}
-                                  onChange={(e) => handleUpdateSinglePermission(
-                                    member.address,
-                                    member.permissions,
-                                    'delete',
-                                    e.target.checked
-                                  )}
-                                  className="rounded border-secondary-500/20 bg-primary-900 h-3.5 w-3.5"
-                                />
-                                <span className="text-white/80">
-                                  <FormattedMessage id="projectCard.manageMembers.permissionDelete" />
-                                </span>
-                              </label>
-                              <label className="flex items-center space-x-2 text-sm">
-                                <input
-                                  type="checkbox"
-                                  checked={member.permissions.generateSite}
-                                  onChange={(e) => handleUpdateSinglePermission(
-                                    member.address,
-                                    member.permissions,
-                                    'generateSite',
-                                    e.target.checked
-                                  )}
-                                  className="rounded border-secondary-500/20 bg-primary-900 h-3.5 w-3.5"
-                                />
-                                <span className="text-white/80">
-                                  <FormattedMessage id="projectCard.manageMembers.permissionGenerateSite" />
-                                </span>
-                              </label>
-                              <label className="flex items-center space-x-2 text-sm">
-                                <input
-                                  type="checkbox"
-                                  checked={member.permissions.setSuins}
-                                  onChange={(e) => handleUpdateSinglePermission(
-                                    member.address,
-                                    member.permissions,
-                                    'setSuins',
-                                    e.target.checked
-                                  )}
-                                  className="rounded border-secondary-500/20 bg-primary-900 h-3.5 w-3.5"
-                                />
-                                <span className="text-white/80">
-                                  <FormattedMessage id="projectCard.manageMembers.permissionSetSuins" />
-                                </span>
-                              </label>
+                              {Object.entries({
+                                update: "projectCard.manageMembers.permissionUpdate",
+                                delete: "projectCard.manageMembers.permissionDelete",
+                                generateSite: "projectCard.manageMembers.permissionGenerateSite",
+                                setSuins: "projectCard.manageMembers.permissionSetSuins"
+                              }).map(([permission, label]) => (
+                                <label key={permission} className="flex items-center space-x-2 text-sm">
+                                  <input
+                                    type="checkbox"
+                                    checked={pendingPermissions[member.address]?.[permission as keyof MemberPermissions] ?? member.permissions[permission as keyof MemberPermissions]}
+                                    onChange={(e) => handlePermissionChange(
+                                      member.address,
+                                      permission as keyof MemberPermissions,
+                                      e.target.checked
+                                    )}
+                                    className="rounded border-secondary-500/20 bg-primary-900 h-3.5 w-3.5"
+                                  />
+                                  <span className="text-white/80">
+                                    <FormattedMessage id={label} />
+                                  </span>
+                                </label>
+                              ))}
                             </div>
                           </div>
                         )}

@@ -14,17 +14,14 @@ export const parseMemberInfo = (memberString: string): SingleMemberInfo[] => {
         const address = memberPart.substring(0, memberPart.length - 4)
         const roleCode = memberPart.substring(memberPart.length - 4)
 
-        const roleNum = parseInt(roleCode, 10)
-        const permissions = {
-          update: (roleNum & 1000) === 1000,
-          delete: (roleNum & 100) === 100,
-          generateSite: (roleNum & 10) === 10,
-          setSuins: (roleNum & 1) === 1,
-        }
-
         return {
           address,
-          permissions,
+          permissions: {
+            update: roleCode[0] === '1',
+            delete: roleCode[1] === '1',
+            generateSite: roleCode[2] === '1',
+            setSuins: roleCode[3] === '1'
+          }
         }
       })
       .filter((member) => member.address) // Filter out any invalid members

@@ -32,26 +32,26 @@ const EmptyState = ({ onReset }: EmptyStateProps) => {
       {/* Content */}
       <div className="max-w-[280px]">
         <h3 className="text-lg font-medium text-white mb-2">
-          <FormattedMessage id="dashboard.empty.title" />
+        <FormattedMessage id="dashboard.empty.title" />
         </h3>
         
         <p className="text-sm text-secondary-300/80 mb-6">
-          <FormattedMessage id="dashboard.empty.description" />
-        </p>
+        <FormattedMessage id="dashboard.empty.description" />
+      </p>
 
         <motion.div
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
-          <Button
-            onClick={onReset}
+        <Button
+          onClick={onReset}
             variant="outline"
             className="bg-secondary-500/10 hover:bg-secondary-500/20 text-secondary-400 hover:text-secondary-300 border-secondary-500/20"
-          >
+        >
             <RefreshCw className="h-4 w-4 mr-2" />
-            <FormattedMessage id="dashboard.empty.reset" />
-          </Button>
-        </motion.div>
+          <FormattedMessage id="dashboard.empty.reset" />
+        </Button>
+      </motion.div>
       </div>
     </motion.div>
   )

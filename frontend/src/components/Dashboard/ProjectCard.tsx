@@ -159,7 +159,6 @@ const ProjectCard = memo(
     const colors = getStatusColor(project.status)
     const userPermissions = getUserPermissions(userAddress, project)
 
-    // Helper function for delay and refetch
     const delayAndRefetch = async () => {
       await new Promise((resolve) => setTimeout(resolve, 500))
       onRefetch()
@@ -315,7 +314,6 @@ const ProjectCard = memo(
         ]
 
         const memberString = createMemberStrings(allMembers)
-
         await apiClient.put(
           `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_GRANT_ACCESS!}?object_id=${project.parentId}&member_address_n_access=${memberString}`,
         )
@@ -380,7 +378,7 @@ const ProjectCard = memo(
           ) || []
 
         const memberString = createMemberStrings(updatedMembers)
-
+        console.log(memberString)
         await apiClient.put(
           `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_GRANT_ACCESS!}?object_id=${project.parentId}&member_address_n_access=${memberString}`,
         )

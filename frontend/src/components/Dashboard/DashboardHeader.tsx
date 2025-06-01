@@ -16,6 +16,7 @@ import {
   Globe,
   Archive,
   LayoutGrid,
+  Upload,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -273,295 +274,335 @@ const DashboardHeader = ({
             damping: 15,
           }}
         >
-          <motion.div className="relative flex-shrink-0 search-container">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setSearchExpanded(true)}
-              className="md:hidden h-9 w-9 bg-primary-900/80 border-secondary-500/20 text-white hover:bg-secondary-500/10 cursor-pointer"
-            >
-              <Search className="h-4 w-4 text-secondary-400" />
-            </Button>
-
-            <motion.div
-              className="relative hidden md:flex"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-secondary-400 z-10 pointer-events-none" />
-              <Input
-                type="search"
-                placeholder={intl.formatMessage({ id: 'dashboard.search' })}
-                className="w-[200px] md:w-[250px] pl-10 bg-primary-900/80 border-secondary-500/20 text-white placeholder:text-secondary-400 backdrop-blur-sm text-sm h-9"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </motion.div>
-          </motion.div>
-
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="flex-shrink-0"
-          >
-            <Button
-              onClick={() => {
-                if (hasProjects) {
-                  setShowLimitWarning(true)
-                } else {
-                  window.location.href = '/create-website'
-                }
-              }}
-              variant="outline"
-              className="w-full sm:w-auto bg-primary-800 text-white font-medium flex items-center gap-1.5 border-secondary-500/40 hover:bg-primary-700 hover:border-secondary-500 cursor-pointer shadow-lg shadow-secondary-500/20 ring-2 ring-secondary-500/20 hover:ring-secondary-500/50 transition-all duration-200 transform hover:scale-105 relative overflow-hidden group"
-            >
-              {/* Inner pulse animations */}
-              <div className="absolute inset-0 bg-secondary-500/10 animate-pulse-slow rounded-md pointer-events-none"></div>
-              <div className="absolute -inset-1 bg-secondary-500/5 blur-sm animate-pulse-slow rounded-md pointer-events-none"></div>
-
-              {/* Flowing animation elements */}
-              <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-secondary-500/70 to-transparent animate-flow-right pointer-events-none"></div>
-              <div className="absolute bottom-0 right-0 w-full h-0.5 bg-gradient-to-r from-transparent via-secondary-500/70 to-transparent animate-flow-left pointer-events-none"></div>
-              <div className="absolute left-0 top-0 w-0.5 h-full bg-gradient-to-b from-transparent via-secondary-500/70 to-transparent animate-flow-down pointer-events-none"></div>
-              <div className="absolute right-0 bottom-0 w-0.5 h-full bg-gradient-to-b from-transparent via-secondary-500/70 to-transparent animate-flow-up pointer-events-none"></div>
-
-              {/* Corner glows */}
-              <div className="absolute top-0 left-0 w-2 h-2 bg-secondary-500/40 rounded-full blur-sm animate-pulse-slow pointer-events-none"></div>
-              <div className="absolute top-0 right-0 w-2 h-2 bg-secondary-500/40 rounded-full blur-sm animate-pulse-slow pointer-events-none"></div>
-              <div className="absolute bottom-0 left-0 w-2 h-2 bg-secondary-500/40 rounded-full blur-sm animate-pulse-slow pointer-events-none"></div>
-              <div className="absolute bottom-0 right-0 w-2 h-2 bg-secondary-500/40 rounded-full blur-sm animate-pulse-slow pointer-events-none"></div>
-
-              <PlusCircle className="h-4 w-4 text-secondary-500 relative z-10" />
-              <span className="relative z-10">
-                <FormattedMessage
-                  id="dashboard.createNew"
-                  defaultMessage="Deploy Site"
-                />
-              </span>
-            </Button>
-          </motion.div>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <motion.div
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.97 }}
+          <div className="flex items-center space-x-2">
+            <motion.div className="relative flex-shrink-0 search-container">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setSearchExpanded(true)}
+                className="md:hidden h-9 w-9 bg-primary-900/80 border-secondary-500/20 text-white hover:bg-secondary-500/10 cursor-pointer"
               >
+                <Search className="h-4 w-4 text-secondary-400" />
+              </Button>
+
+              <motion.div
+                className="relative hidden md:flex"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-secondary-400 z-10 pointer-events-none" />
+                <Input
+                  type="search"
+                  placeholder={intl.formatMessage({ id: 'dashboard.search' })}
+                  className="w-[200px] md:w-[250px] pl-10 bg-primary-900/80 border-secondary-500/20 text-white placeholder:text-secondary-400 backdrop-blur-sm text-sm h-9"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </motion.div>
+            </motion.div>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
                 <Button
                   variant="outline"
-                  className="bg-primary-900/80 border-secondary-500/20 text-white hover:bg-secondary-500/10 hover:text-secondary-500 h-9 w-9 cursor-pointer flex-shrink-0"
-                  title="Actions"
+                  className="w-full sm:w-auto bg-primary-800 text-white font-medium flex items-center gap-1.5 border-secondary-500/40 hover:bg-primary-700 hover:border-secondary-500 cursor-pointer shadow-lg shadow-secondary-500/20 ring-2 ring-secondary-500/20 hover:ring-secondary-500/50 transition-all duration-200 transform hover:scale-105 relative overflow-hidden group"
                 >
-                  <SlidersHorizontal className="h-4 w-4" />
-                </Button>
-              </motion.div>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="bg-primary-900 border-secondary-500/20 text-white backdrop-blur-sm min-w-[220px]"
-            >
-              {/* Project Type Filter - Now visible for all screen sizes */}
-              <DropdownMenuLabel className="text-secondary-400 text-xs flex items-center gap-2">
-                <Filter className="h-3.5 w-3.5" />
-                <FormattedMessage
-                  id="dashboard.filter.projectType"
-                  defaultMessage="Project Type"
-                />
-              </DropdownMenuLabel>
-              <DropdownMenuGroup>
-                <DropdownMenuItem
-                  onClick={() => setProjectType('all')}
-                  className={`cursor-pointer ${projectType === 'all' ? 'bg-secondary-500/10 text-secondary-500 font-bold' : ''}`}
-                >
-                  <LayoutGrid className="h-4 w-4 mr-2" />
-                  <FormattedMessage
-                    id="dashboard.filter.all"
-                    defaultMessage="All Projects"
-                  />
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setProjectType('site')}
-                  className={`cursor-pointer ${projectType === 'site' ? 'bg-secondary-500/10 text-secondary-500 font-bold' : ''}`}
-                >
-                  <Globe className="h-4 w-4 mr-2" />
-                  <FormattedMessage
-                    id="dashboard.filter.sites"
-                    defaultMessage="Websites Only"
-                  />
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setProjectType('.zip')}
-                  className={`cursor-pointer ${projectType === '.zip' ? 'bg-secondary-500/10 text-secondary-500 font-bold' : ''}`}
-                >
-                  <Archive className="h-4 w-4 mr-2" />
-                  <FormattedMessage
-                    id="dashboard.filter.zips"
-                    defaultMessage="ZIP Files Only"
-                  />
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-
-              {/* Sort Options */}
-              <DropdownMenuLabel className="text-secondary-400 text-xs flex items-center gap-2">
-                <SlidersHorizontal className="h-3.5 w-3.5" />
-                <FormattedMessage
-                  id="dashboard.sort.title"
-                  defaultMessage="Sort By"
-                />
-              </DropdownMenuLabel>
-              <DropdownMenuGroup>
-                <DropdownMenuItem
-                  onClick={() => setSortType('latest')}
-                  className={`cursor-pointer ${sortType === 'latest' ? 'bg-secondary-500/10 text-secondary-500 font-bold' : ''}`}
-                >
-                  <Filter className="h-4 w-4 mr-2" />
-                  <FormattedMessage id="dashboard.sort.latest" />
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setSortType('name-az')}
-                  className={`cursor-pointer ${sortType === 'name-az' ? 'bg-secondary-500/10 text-secondary-500 font-bold' : ''}`}
-                >
-                  <Filter className="h-4 w-4 mr-2" />
-                  <FormattedMessage id="dashboard.sort.nameAZ" />
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setSortType('name-za')}
-                  className={`cursor-pointer ${sortType === 'name-za' ? 'bg-secondary-500/10 text-secondary-500 font-bold' : ''}`}
-                >
-                  <Filter className="h-4 w-4 mr-2" />
-                  <FormattedMessage id="dashboard.sort.nameZA" />
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setSortType('remaining-low')}
-                  className={`cursor-pointer ${sortType === 'remaining-low' ? 'bg-secondary-500/10 text-secondary-500 font-bold' : ''}`}
-                >
-                  <Filter className="h-4 w-4 mr-2" />
-                  <FormattedMessage id="dashboard.sort.remainingLow" />
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setSortType('remaining-high')}
-                  className={`cursor-pointer ${sortType === 'remaining-high' ? 'bg-secondary-500/10 text-secondary-500 font-bold' : ''}`}
-                >
-                  <Filter className="h-4 w-4 mr-2" />
-                  <FormattedMessage id="dashboard.sort.remainingHigh" />
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-
-              <div className="md:hidden">
-                <DropdownMenuSeparator />
-
-                <DropdownMenuItem
-                  onClick={handleRefresh}
-                  disabled={isRefreshing || isInCooldown}
-                  className="md:hidden cursor-pointer relative overflow-hidden"
-                >
-                  <RefreshCw
-                    className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`}
-                  />
-                  <FormattedMessage
-                    id="dashboard.refresh"
-                    defaultMessage="Refresh Data"
-                  />
-                  {isInCooldown && (
-                    <span className="text-xs text-secondary-400 ml-auto">
-                      {formatCooldownTime(cooldownSeconds)}
-                    </span>
-                  )}
-                  {lastRefreshTime && !isInCooldown && (
-                    <span className="text-xs text-secondary-400 ml-auto">
-                      {lastRefreshTime.toLocaleTimeString(undefined, {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </span>
-                  )}
-                </DropdownMenuItem>
-              </div>
-
-              {/* Clear Filters Option */}
-              {(date || searchQuery) && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => {
-                      setSearchQuery('')
-                      setDate(undefined)
-                    }}
-                    className="cursor-pointer"
-                  >
+                  {/* Inner pulse animations */}
+                  <div className="absolute inset-0 bg-secondary-500/10 animate-pulse-slow rounded-md pointer-events-none"></div>
+                  <div className="absolute -inset-1 bg-secondary-500/5 blur-sm animate-pulse-slow rounded-md pointer-events-none"></div>
+                  
+                  {/* Flowing animation elements */}
+                  <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-secondary-500/70 to-transparent animate-flow-right pointer-events-none"></div>
+                  <div className="absolute bottom-0 right-0 w-full h-0.5 bg-gradient-to-r from-transparent via-secondary-500/70 to-transparent animate-flow-left pointer-events-none"></div>
+                  <div className="absolute left-0 top-0 w-0.5 h-full bg-gradient-to-b from-transparent via-secondary-500/70 to-transparent animate-flow-down pointer-events-none"></div>
+                  <div className="absolute right-0 bottom-0 w-0.5 h-full bg-gradient-to-b from-transparent via-secondary-500/70 to-transparent animate-flow-up pointer-events-none"></div>
+                  
+                  {/* Corner glows */}
+                  <div className="absolute top-0 left-0 w-2 h-2 bg-secondary-500/40 rounded-full blur-sm animate-pulse-slow pointer-events-none"></div>
+                  <div className="absolute top-0 right-0 w-2 h-2 bg-secondary-500/40 rounded-full blur-sm animate-pulse-slow pointer-events-none"></div>
+                  <div className="absolute bottom-0 left-0 w-2 h-2 bg-secondary-500/40 rounded-full blur-sm animate-pulse-slow pointer-events-none"></div>
+                  <div className="absolute bottom-0 right-0 w-2 h-2 bg-secondary-500/40 rounded-full blur-sm animate-pulse-slow pointer-events-none"></div>
+                  
+                  <PlusCircle className="h-4 w-4 text-secondary-500 relative z-10" />
+                  <span className="relative z-10">
                     <FormattedMessage
-                      id="dashboard.clearFilters"
-                      defaultMessage="Clear Filters"
+                      id="dashboard.createProject"
+                      defaultMessage="Create Project"
+                    />
+                  </span>
+                  <ChevronDown className="h-4 w-4 text-secondary-500 ml-1 relative z-10" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent 
+                align="end" 
+                className="w-56 bg-primary-900/95 backdrop-blur-sm border-secondary-500/20 text-white"
+              >
+                <DropdownMenuItem 
+                  onClick={() => {
+                    if (hasProjects) {
+                      setShowLimitWarning(true)
+                    } else {
+                      window.location.href = '/create-website'
+                    }
+                  }}
+                  className="focus:bg-primary-800 cursor-pointer group"
+                >
+                  <div className="flex items-center gap-2 w-full">
+                    <Globe className="h-4 w-4 text-secondary-500 group-hover:text-secondary-400 transition-colors" />
+                    <span className="group-hover:translate-x-0.5 transition-transform duration-200">
+                      <FormattedMessage
+                        id="dashboard.deploySite"
+                        defaultMessage="Deploy Site"
+                      />
+                    </span>
+                  </div>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem 
+                  onClick={() => {
+                    if (hasProjects) {
+                      setShowLimitWarning(true)
+                    } else {
+                      window.location.href = '/upload-zip'
+                    }
+                  }}
+                  className="focus:bg-primary-800 cursor-pointer group"
+                >
+                  <div className="flex items-center gap-2 w-full">
+                    <Upload className="h-4 w-4 text-secondary-500 group-hover:text-secondary-400 transition-colors" />
+                    <span className="group-hover:translate-x-0.5 transition-transform duration-200">
+                      <FormattedMessage
+                        id="dashboard.uploadZip"
+                        defaultMessage="Upload ZIP"
+                      />
+                    </span>
+                  </div>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <motion.div
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  <Button
+                    variant="outline"
+                    className="bg-primary-900/80 border-secondary-500/20 text-white hover:bg-secondary-500/10 hover:text-secondary-500 h-9 w-9 cursor-pointer flex-shrink-0"
+                    title="Actions"
+                  >
+                    <SlidersHorizontal className="h-4 w-4" />
+                  </Button>
+                </motion.div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="bg-primary-900 border-secondary-500/20 text-white backdrop-blur-sm min-w-[220px]"
+              >
+                {/* Project Type Filter - Now visible for all screen sizes */}
+                <DropdownMenuLabel className="text-secondary-400 text-xs flex items-center gap-2">
+                  <Filter className="h-3.5 w-3.5" />
+                  <FormattedMessage
+                    id="dashboard.filter.projectType"
+                    defaultMessage="Project Type"
+                  />
+                </DropdownMenuLabel>
+                <DropdownMenuGroup>
+                  <DropdownMenuItem
+                    onClick={() => setProjectType('all')}
+                    className={`cursor-pointer ${projectType === 'all' ? 'bg-secondary-500/10 text-secondary-500 font-bold' : ''}`}
+                  >
+                    <LayoutGrid className="h-4 w-4 mr-2" />
+                    <FormattedMessage
+                      id="dashboard.filter.all"
+                      defaultMessage="All Projects"
                     />
                   </DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+                  <DropdownMenuItem
+                    onClick={() => setProjectType('site')}
+                    className={`cursor-pointer ${projectType === 'site' ? 'bg-secondary-500/10 text-secondary-500 font-bold' : ''}`}
+                  >
+                    <Globe className="h-4 w-4 mr-2" />
+                    <FormattedMessage
+                      id="dashboard.filter.sites"
+                      defaultMessage="Websites Only"
+                    />
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setProjectType('.zip')}
+                    className={`cursor-pointer ${projectType === '.zip' ? 'bg-secondary-500/10 text-secondary-500 font-bold' : ''}`}
+                  >
+                    <Archive className="h-4 w-4 mr-2" />
+                    <FormattedMessage
+                      id="dashboard.filter.zips"
+                      defaultMessage="ZIP Files Only"
+                    />
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
 
-          <div className="hidden md:flex items-center gap-2">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={handleRefresh}
-                      disabled={isRefreshing || isInCooldown}
-                      className={`h-9 w-9 cursor-pointer relative overflow-hidden
-                      ${isInCooldown ? 'bg-primary-800/50' : ''}
-                      ${isRefreshing ? 'bg-secondary-500/10' : ''}
-                    `}
+                {/* Sort Options */}
+                <DropdownMenuLabel className="text-secondary-400 text-xs flex items-center gap-2">
+                  <SlidersHorizontal className="h-3.5 w-3.5" />
+                  <FormattedMessage
+                    id="dashboard.sort.title"
+                    defaultMessage="Sort By"
+                  />
+                </DropdownMenuLabel>
+                <DropdownMenuGroup>
+                  <DropdownMenuItem
+                    onClick={() => setSortType('latest')}
+                    className={`cursor-pointer ${sortType === 'latest' ? 'bg-secondary-500/10 text-secondary-500 font-bold' : ''}`}
+                  >
+                    <Filter className="h-4 w-4 mr-2" />
+                    <FormattedMessage id="dashboard.sort.latest" />
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setSortType('name-az')}
+                    className={`cursor-pointer ${sortType === 'name-az' ? 'bg-secondary-500/10 text-secondary-500 font-bold' : ''}`}
+                  >
+                    <Filter className="h-4 w-4 mr-2" />
+                    <FormattedMessage id="dashboard.sort.nameAZ" />
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setSortType('name-za')}
+                    className={`cursor-pointer ${sortType === 'name-za' ? 'bg-secondary-500/10 text-secondary-500 font-bold' : ''}`}
+                  >
+                    <Filter className="h-4 w-4 mr-2" />
+                    <FormattedMessage id="dashboard.sort.nameZA" />
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setSortType('remaining-low')}
+                    className={`cursor-pointer ${sortType === 'remaining-low' ? 'bg-secondary-500/10 text-secondary-500 font-bold' : ''}`}
+                  >
+                    <Filter className="h-4 w-4 mr-2" />
+                    <FormattedMessage id="dashboard.sort.remainingLow" />
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setSortType('remaining-high')}
+                    className={`cursor-pointer ${sortType === 'remaining-high' ? 'bg-secondary-500/10 text-secondary-500 font-bold' : ''}`}
+                  >
+                    <Filter className="h-4 w-4 mr-2" />
+                    <FormattedMessage id="dashboard.sort.remainingHigh" />
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+
+                <div className="md:hidden">
+                  <DropdownMenuSeparator />
+
+                  <DropdownMenuItem
+                    onClick={handleRefresh}
+                    disabled={isRefreshing || isInCooldown}
+                    className="md:hidden cursor-pointer relative overflow-hidden"
+                  >
+                    <RefreshCw
+                      className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`}
+                    />
+                    <FormattedMessage
+                      id="dashboard.refresh"
+                      defaultMessage="Refresh Data"
+                    />
+                    {isInCooldown && (
+                      <span className="text-xs text-secondary-400 ml-auto">
+                        {formatCooldownTime(cooldownSeconds)}
+                      </span>
+                    )}
+                    {lastRefreshTime && !isInCooldown && (
+                      <span className="text-xs text-secondary-400 ml-auto">
+                        {lastRefreshTime.toLocaleTimeString(undefined, {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </span>
+                    )}
+                  </DropdownMenuItem>
+                </div>
+
+                {/* Clear Filters Option */}
+                {(date || searchQuery) && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setSearchQuery('')
+                        setDate(undefined)
+                      }}
+                      className="cursor-pointer"
                     >
-                      <RefreshCw
-                        className={`h-4 w-4 transition-all duration-200
-                        ${isRefreshing ? 'animate-spin text-secondary-400' : ''}
-                        ${isInCooldown ? 'text-secondary-600' : ''}
-                      `}
+                      <FormattedMessage
+                        id="dashboard.clearFilters"
+                        defaultMessage="Clear Filters"
                       />
-                      {isInCooldown && (
-                        <div
-                          className="absolute bottom-0 left-0 h-1 bg-secondary-500/30"
-                          style={{
-                            width: `${(cooldownSeconds / COOLDOWN_PERIOD) * 100}%`,
-                            transition: 'width 1s linear',
-                          }}
-                        />
-                      )}
-                    </Button>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent
-                  side="bottom"
-                  className="bg-primary-900/95 border-secondary-500/20 text-white text-xs"
-                >
-                  {getTooltipMessage()}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            {lastRefreshTime && !isInCooldown && (
-              <span className="text-xs text-secondary-400">
-                {intl.formatMessage(
-                  {
-                    id: 'dashboard.lastRefresh',
-                    defaultMessage: 'Last: {time}',
-                  },
-                  {
-                    time: lastRefreshTime.toLocaleTimeString(undefined, {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    }),
-                  },
+                    </DropdownMenuItem>
+                  </>
                 )}
-              </span>
-            )}
-            {isInCooldown && (
-              <span className="text-xs text-secondary-400">
-                {formatCooldownTime(cooldownSeconds)}
-              </span>
-            )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <div className="hidden md:flex items-center gap-2">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={handleRefresh}
+                        disabled={isRefreshing || isInCooldown}
+                        className={`h-9 w-9 cursor-pointer relative overflow-hidden
+                        ${isInCooldown ? 'bg-primary-800/50' : ''}
+                        ${isRefreshing ? 'bg-secondary-500/10' : ''}
+                      `}
+                      >
+                        <RefreshCw
+                          className={`h-4 w-4 transition-all duration-200
+                          ${isRefreshing ? 'animate-spin text-secondary-400' : ''}
+                          ${isInCooldown ? 'text-secondary-600' : ''}
+                        `}
+                        />
+                        {isInCooldown && (
+                          <div
+                            className="absolute bottom-0 left-0 h-1 bg-secondary-500/30"
+                            style={{
+                              width: `${(cooldownSeconds / COOLDOWN_PERIOD) * 100}%`,
+                              transition: 'width 1s linear',
+                            }}
+                          />
+                        )}
+                      </Button>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="bottom"
+                    className="bg-primary-900/95 border-secondary-500/20 text-white text-xs"
+                  >
+                    {getTooltipMessage()}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              {lastRefreshTime && !isInCooldown && (
+                <span className="text-xs text-secondary-400">
+                  {intl.formatMessage(
+                    {
+                      id: 'dashboard.lastRefresh',
+                      defaultMessage: 'Last: {time}',
+                    },
+                    {
+                      time: lastRefreshTime.toLocaleTimeString(undefined, {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      }),
+                    },
+                  )}
+                </span>
+              )}
+              {isInCooldown && (
+                <span className="text-xs text-secondary-400">
+                  {formatCooldownTime(cooldownSeconds)}
+                </span>
+              )}
+            </div>
           </div>
         </motion.div>
       </motion.div>
@@ -576,11 +617,11 @@ const DashboardHeader = ({
             <div className="absolute left-12 top-6 w-3 h-3 rounded-full bg-amber-400/30 blur-sm"></div>
             <div className="relative flex items-center gap-2.5">
               <div className="bg-white/20 backdrop-blur-sm p-1.5 rounded-full flex items-center justify-center border border-white/30">
-                <img
-                  src="/images/logos/Ivory.png"
-                  alt="Ivory Logo"
-                  className="h-4 w-4 object-contain"
-                />
+              <img
+                src="/images/logos/Ivory.png"
+                alt="Ivory Logo"
+                className="h-4 w-4 object-contain"
+              />
               </div>
               <div>
                 <h2 className="text-white font-bold text-sm tracking-wide">
@@ -593,7 +634,7 @@ const DashboardHeader = ({
               </div>
             </div>
           </div>
-
+          
           <div className="px-3.5 py-3 bg-gradient-to-b from-primary-800 to-primary-900">
             <div className="space-y-3">
               {/* Important message first */}
@@ -605,8 +646,8 @@ const DashboardHeader = ({
                   <FormattedMessage
                     id="dashboard.projectLimit.deleteInfo"
                     defaultMessage="If you encounter issues, you can"
-                  />{' '}
-                  <TooltipProvider>
+                />{' '}
+                <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <span className="text-amber-400 font-semibold cursor-help border-b border-dashed border-amber-400/50">
@@ -623,14 +664,14 @@ const DashboardHeader = ({
                         />
                       </TooltipContent>
                     </Tooltip>
-                  </TooltipProvider>{' '}
+                </TooltipProvider>{' '}
                   <FormattedMessage
                     id="dashboard.projectLimit.createNew"
                     defaultMessage="and create a new one"
                   />
                 </p>
               </div>
-
+              
               {/* Key points with icons */}
               <div className="grid grid-cols-2 gap-2.5 mt-1">
                 <div className="flex gap-2 items-center bg-primary-800/50 rounded-lg p-2 border border-secondary-800">
@@ -655,14 +696,14 @@ const DashboardHeader = ({
                           />
                         </TooltipContent>
                       </Tooltip>
-                    </TooltipProvider>{' '}
+                  </TooltipProvider>{' '}
                     <FormattedMessage
                       id="dashboard.projectLimit.duringBeta"
                       defaultMessage="during beta testing"
                     />
                   </p>
                 </div>
-
+                
                 <div className="flex gap-2 items-center bg-primary-800/50 rounded-lg p-2 border border-secondary-800">
                   <div className="bg-amber-500 p-1.5 rounded-full flex-shrink-0 flex items-center justify-center">
                     <Clock className="h-3 w-3 text-white" />
@@ -671,10 +712,10 @@ const DashboardHeader = ({
                     <FormattedMessage
                       id="dashboard.projectLimit.limitRefreshes"
                       defaultMessage="Limit refreshes each"
-                    />{' '}
-                    <a
-                      href="https://docs.wal.app/print.html"
-                      target="_blank"
+                  />{' '}
+                    <a 
+                      href="https://docs.wal.app/print.html" 
+                      target="_blank" 
                       rel="noopener noreferrer"
                       className="font-medium text-amber-400 cursor-pointer border-b border-dashed border-amber-400/50 hover:text-amber-300 transition-colors"
                       onClick={(e) => e.stopPropagation()}
@@ -683,7 +724,7 @@ const DashboardHeader = ({
                         id="dashboard.projectLimit.epoch"
                         defaultMessage="epoch"
                       />
-                    </a>{' '}
+                  </a>{' '}
                     <FormattedMessage
                       id="dashboard.projectLimit.fairAccess"
                       defaultMessage="to ensure fair access"
@@ -691,7 +732,7 @@ const DashboardHeader = ({
                   </p>
                 </div>
               </div>
-
+              
               <div className="bg-primary-800/30 rounded-lg p-2.5 text-xs text-secondary-300 border border-secondary-800/50">
                 <p className="leading-relaxed">
                   <FormattedMessage
@@ -702,7 +743,7 @@ const DashboardHeader = ({
               </div>
             </div>
           </div>
-
+          
           <DialogFooter className="px-3.5 pb-3.5 pt-0 bg-primary-900">
             <Button
               variant="default"
