@@ -423,6 +423,10 @@ export default {
   'projectCard.manageMembers.ownerNote': '您是此项目的所有者',
   'projectCard.manageMembers.memberPermissions': '成员权限',
 
+  // Project Types
+  'projectCard.type.site': '网站',
+  'projectCard.type.zip': '压缩文件',
+
   // Common
   'common.error.unknown': '发生意外错误，请重试',
   'common.error.network': '网络错误，请检查您的连接',

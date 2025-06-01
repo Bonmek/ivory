@@ -417,6 +417,10 @@ export default {
   'projectCard.manageMembers.noMembers': 'No members yet',
   'projectCard.manageMembers.memberPermissions': 'Member Permissions',
 
+  // Project Types
+  'projectCard.type.site': 'Website',
+  'projectCard.type.zip': 'ZIP File',
+
   // Transfer Ownership Dialog
   'projectCard.transferOwnership.enterAddress': 'Enter wallet address',
   'projectCard.transferOwnership.title': 'Transfer Project Ownership',
@@ -429,6 +433,12 @@ export default {
   'projectCard.transferOwnership.error': 'Failed to transfer ownership',
   'projectCard.transferOwnership.invalidAddress': 'Invalid wallet address',
   'projectCard.transferOwnership.confirm': 'Are you sure you want to transfer ownership?',
-  'projectCard.transferOwnership.warning': 'This action cannot be undone. You will lose all control over this project.'
+  'projectCard.transferOwnership.warning': 'This action cannot be undone. You will lose all control over this project.',
+
+  // Project Type Filters
+  'dashboard.filter.projectType': 'Project Type',
+  'dashboard.filter.all': 'All Projects',
+  'dashboard.filter.sites': 'Websites Only',
+  'dashboard.filter.zips': 'ZIP Files Only'
 
 } as const;

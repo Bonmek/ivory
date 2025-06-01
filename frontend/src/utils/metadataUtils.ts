@@ -1,5 +1,6 @@
 import { DEFAULT_EXPIRY_BUFFER } from '@/constants/time'
 import { MetadataMap, MemberInfo, SingleMemberInfo } from '@/types/metadata'
+import { ProjectType } from '@/types/project'
 
 export const parseMemberInfo = (memberString: string): SingleMemberInfo[] => {
   if (!memberString) return []
@@ -90,6 +91,7 @@ export const transformMetadataToProject = (metadata: any, index: number) => {
       color: '#97f0e5',
       urlImg: '/walrus.png',
       status: 0,
+      type: ProjectType.SITE,
       owner: '',
     }
   }
@@ -137,6 +139,7 @@ export const transformMetadataToProject = (metadata: any, index: number) => {
     urlImg: '/walrus.png',
     description: metadataMap['description'] || '',
     status,
+    type: (metadataMap['type'] as ProjectType) || ProjectType.SITE,
     ...(status === 1 && metadataMap['site_id']
       ? { siteId: metadataMap['site_id'] }
       : {}),

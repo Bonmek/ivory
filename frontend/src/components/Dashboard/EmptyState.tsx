@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { Blocks } from 'lucide-react'
+import { Blocks, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { FormattedMessage } from 'react-intl'
 
@@ -10,52 +10,49 @@ interface EmptyStateProps {
 const EmptyState = ({ onReset }: EmptyStateProps) => {
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="flex flex-col items-center justify-center rounded-lg border border-secondary-500/20 border-dashed p-8 text-center mt-8 bg-primary-900/50 backdrop-blur-sm"
+      className="flex flex-col items-center justify-center rounded-xl border border-secondary-500/20 p-8 text-center mt-8 bg-primary-900/50"
     >
+      {/* Icon */}
       <motion.div
         animate={{
-          y: [0, -10, 0],
-          opacity: [0.7, 1, 0.7],
+          scale: [1, 1.05, 1],
         }}
         transition={{
-          duration: 3,
-          repeat: Number.POSITIVE_INFINITY,
-          ease: 'easeInOut',
+          duration: 4,
+          repeat: Infinity,
+          ease: "easeInOut",
         }}
       >
         <Blocks className="h-12 w-12 text-secondary-400 mb-4" />
       </motion.div>
-      <motion.h3
-        className="mt-2 text-lg font-semibold text-white"
-        animate={{
-          textShadow: [
-            '0 0 0px rgba(255, 255, 255, 0)',
-            '0 0 10px rgba(255, 255, 255, 0.5)',
-            '0 0 0px rgba(255, 255, 255, 0)',
-          ],
-        }}
-        transition={{
-          duration: 3,
-          repeat: Number.POSITIVE_INFINITY,
-          ease: 'easeInOut',
-        }}
-      >
-        <FormattedMessage id="dashboard.empty.title" />
-      </motion.h3>
-      <p className="mb-4 mt-1 text-sm text-secondary-300">
-        <FormattedMessage id="dashboard.empty.description" />
-      </p>
-      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-        <Button
-          onClick={onReset}
-          className="bg-secondary-500 hover:bg-secondary-600 text-primary-900"
+
+      {/* Content */}
+      <div className="max-w-[280px]">
+        <h3 className="text-lg font-medium text-white mb-2">
+          <FormattedMessage id="dashboard.empty.title" />
+        </h3>
+        
+        <p className="text-sm text-secondary-300/80 mb-6">
+          <FormattedMessage id="dashboard.empty.description" />
+        </p>
+
+        <motion.div
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
-          <FormattedMessage id="dashboard.empty.reset" />
-        </Button>
-      </motion.div>
+          <Button
+            onClick={onReset}
+            variant="outline"
+            className="bg-secondary-500/10 hover:bg-secondary-500/20 text-secondary-400 hover:text-secondary-300 border-secondary-500/20"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            <FormattedMessage id="dashboard.empty.reset" />
+          </Button>
+        </motion.div>
+      </div>
     </motion.div>
   )
 }

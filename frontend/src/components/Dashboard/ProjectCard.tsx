@@ -60,6 +60,7 @@ import {
   ProjectCardProps,
   MemberPermissions,
   ProjectStatus,
+  ProjectType,
 } from '@/types/project'
 import { linkSuinsToSite } from '@/utils/suinsUtils'
 import { ManageMembersModal } from './ManageMembersModal'
@@ -76,6 +77,7 @@ import {
   getUserPermissions,
 } from '@/utils/projectUtils'
 import { useNavigate } from 'react-router'
+import { createMemberString, joinMemberStrings } from '@/utils/memberUtils'
 
 const ProjectCard = memo(
   ({
@@ -298,48 +300,29 @@ const ProjectCard = memo(
       }
     }
 
-    const handleAddMember = async () => {
-      if (!newMemberAddress) {
-        toast.error(
-          intl.formatMessage({ id: 'projectCard.manageMembers.enterAddress' }),
-        )
-        return
-      }
-
-      if (
-        !newMemberAddress.startsWith('0x') ||
-        newMemberAddress.length !== 66
-      ) {
-        toast.error(
-          intl.formatMessage({
-            id: 'projectCard.manageMembers.invalidAddress',
-          }),
-        )
-        return
-      }
-
-      if (
-        project.members?.some((member) => member.address === newMemberAddress)
-      ) {
-        toast.error(
-          intl.formatMessage({ id: 'projectCard.manageMembers.addressExists' }),
-        )
-        return
-      }
-
+    const handleAddMember = async (
+      address: string,
+      permissions: MemberPermissions,
+    ) => {
       try {
         setIsAddingMember(true)
-        // TODO: Add API call to add member
+
+        const newMemberString = createMemberString(address, permissions)
+
+        const existingMemberStrings =
+          project.members?.map((member) =>
+            createMemberString(member.address, member.permissions),
+          ) || []
+        const allMemberStrings = [...existingMemberStrings, newMemberString]
+        const memberParam = joinMemberStrings(allMemberStrings)
+
+        await apiClient.put(
+          `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_GRANT_ACCESS!}?object_id=${project.parentId}&member_address_n_access=${memberParam}`,
+        )
+
         toast.success(
           intl.formatMessage({ id: 'projectCard.manageMembers.memberAdded' }),
         )
-        setNewMemberAddress('')
-        setNewMemberPermissions({
-          update: false,
-          delete: false,
-          generateSite: false,
-          setSuins: false,
-        })
         onRefetch()
       } catch (error: any) {
         console.error('Error adding member:', error)
@@ -351,17 +334,27 @@ const ProjectCard = memo(
       }
     }
 
-    const handleRemoveMember = async (address: string): Promise<void> => {
+    const handleRemoveMember = async (addressToRemove: string) => {
       try {
         setIsRemovingMember(true)
-        // TODO: Add API call to remove member
+
+        const remainingMemberStrings =
+          project.members
+            ?.filter((member) => member.address !== addressToRemove)
+            .map((member) =>
+              createMemberString(member.address, member.permissions),
+            ) || []
+
+        const memberParam = joinMemberStrings(remainingMemberStrings)
+
+        await apiClient.put(
+          `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_GRANT_ACCESS!}?object_id=${project.parentId}&member_address_n_access=${memberParam}`,
+        )
+
         toast.success(
           intl.formatMessage({ id: 'projectCard.manageMembers.memberRemoved' }),
         )
-        setRemovingMember(null)
-        if (onRefetch) {
-          await onRefetch()
-        }
+        onRefetch()
       } catch (error: any) {
         console.error('Error removing member:', error)
         toast.error(
@@ -372,13 +365,26 @@ const ProjectCard = memo(
       }
     }
 
-    const handleUpdatePermissions = async (
-      address: string,
-      permissions: MemberPermissions,
+    const handleUpdateMemberPermissions = async (
+      addressToUpdate: string,
+      newPermissions: MemberPermissions,
     ) => {
       try {
         setIsUpdatingPermissions(true)
-        // TODO: Add API call to update permissions
+
+        const updatedMemberStrings =
+          project.members?.map((member) => {
+            if (member.address === addressToUpdate) {
+              return createMemberString(member.address, newPermissions)
+            }
+            return createMemberString(member.address, member.permissions)
+          }) || []
+
+        const memberParam = joinMemberStrings(updatedMemberStrings)
+        await apiClient.put(
+          `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_GRANT_ACCESS!}?object_id=${project.parentId}&member_address_n_access=${memberParam}`,
+        )
+
         toast.success(
           intl.formatMessage({
             id: 'projectCard.manageMembers.permissionsUpdated',
@@ -392,6 +398,28 @@ const ProjectCard = memo(
         )
       } finally {
         setIsUpdatingPermissions(false)
+      }
+    }
+
+    const handleTransferOwnership = async (
+      objectId: string,
+      newOwnerAddress: string,
+    ): Promise<void> => {
+      try {
+        await apiClient.put(
+          `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_TRANSFER_OWNER!}?object_id=${objectId}&new_owner_address=${newOwnerAddress}`,
+        )
+        toast.success('Ownership transferred successfully', {
+          description: 'Please wait a moment for the changes to take effect',
+          duration: 5000,
+        })
+        if (onRefetch) {
+          await onRefetch()
+        }
+        return Promise.resolve()
+      } catch (error: any) {
+        toast.error(error?.message || 'Failed to transfer ownership')
+        return Promise.reject(error)
       }
     }
 
@@ -551,7 +579,6 @@ const ProjectCard = memo(
                                 <DropdownMenuItem
                                   className="focus:bg-primary-800 cursor-pointer group"
                                   onClick={() => setTransferOwnershipOpen(true)}
-                                  disabled={true}
                                 >
                                   <div className="flex items-center w-full">
                                     <div className="relative">
@@ -565,7 +592,6 @@ const ProjectCard = memo(
                                 <DropdownMenuItem
                                   className="focus:bg-primary-800 cursor-pointer group"
                                   onClick={() => setManageMembersOpen(true)}
-                                  disabled={true}
                                 >
                                   <div className="flex items-center w-full">
                                     <div className="relative">
@@ -683,10 +709,16 @@ const ProjectCard = memo(
                       ? '/images/walrus_fail.png'
                       : project.status === 3
                         ? '/images/walrus_fail.png'
-                        : '/images/walrus.png'
+                        : project.type === ProjectType.ZIP
+                          ? '/images/zip.png'
+                          : '/images/walrus.png'
                 }
                 alt="project avatar"
-                className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border-2 ${colors.avatar} shadow transition-all duration-300 group-hover:scale-105`}
+                className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full ${
+                  project.type === ProjectType.ZIP
+                    ? 'p-3 sm:p-2 object-contain'
+                    : 'object-cover'
+                } border-2 ${colors.avatar} shadow transition-all duration-300 group-hover:scale-105`}
               />
             </div>
 
@@ -699,6 +731,11 @@ const ProjectCard = memo(
                 >
                   {project.name}
                 </div>
+                {project.type === ProjectType.ZIP && (
+                  <div className="px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-blue-500/20 text-blue-300 border border-blue-500/20">
+                    <FormattedMessage id="projectCard.type.zip" />
+                  </div>
+                )}
                 {project.status === 3 ? (
                   <div
                     className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${colors.badge} flex items-center gap-1`}
@@ -1056,13 +1093,18 @@ const ProjectCard = memo(
           onConfirm={handleGenerateSiteId}
         />
 
-        {/* Manage Members Modal */}
+        {/* Manage Members Dialog */}
         <ManageMembersModal
           open={manageMembersOpen}
           onOpenChange={setManageMembersOpen}
           projectId={project.parentId || ''}
           members={project.members}
-          onRefetch={onRefetch}
+          onAddMember={handleAddMember}
+          onRemoveMember={handleRemoveMember}
+          onUpdatePermissions={handleUpdateMemberPermissions}
+          isAddingMember={isAddingMember}
+          isRemovingMember={isRemovingMember}
+          isUpdatingPermissions={isUpdatingPermissions}
         />
 
         <RemoveMemberDialog
@@ -1083,6 +1125,7 @@ const ProjectCard = memo(
           projectId={project.parentId || ''}
           currentOwner={project.owner}
           onRefetch={onRefetch}
+          onTransferOwnership={handleTransferOwnership}
         />
 
         <Toaster />

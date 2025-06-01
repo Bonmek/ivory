@@ -10,8 +10,15 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { UserCog, Loader2, ArrowRight, ShieldAlert } from 'lucide-react'
+import {
+  UserCog,
+  Loader2,
+  ArrowRight,
+  ShieldAlert,
+  CheckCircle2,
+} from 'lucide-react'
 import { motion } from 'framer-motion'
+import { isValidSuiAddress } from '@mysten/sui.js/utils'
 
 interface TransferOwnershipDialogProps {
   open: boolean
@@ -19,6 +26,10 @@ interface TransferOwnershipDialogProps {
   projectId?: string
   currentOwner: string
   onRefetch: () => Promise<void>
+  onTransferOwnership: (
+    objectId: string,
+    newOwnerAddress: string,
+  ) => Promise<void>
 }
 
 export function TransferOwnershipDialog({
@@ -27,42 +38,59 @@ export function TransferOwnershipDialog({
   projectId,
   currentOwner,
   onRefetch,
+  onTransferOwnership,
 }: TransferOwnershipDialogProps) {
   const intl = useIntl()
   const [newOwnerAddress, setNewOwnerAddress] = useState('')
   const [isTransferring, setIsTransferring] = useState(false)
+  const [addressError, setAddressError] = useState<string | null>(null)
+  const [isValidAddress, setIsValidAddress] = useState(false)
 
-  const handleTransferOwnership = async () => {
-    if (!newOwnerAddress) {
-      toast.error(
-        intl.formatMessage({ id: 'projectCard.transferOwnership.enterAddress' }),
-      )
+  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const address = e.target.value
+    setNewOwnerAddress(address)
+
+    if (address) {
+      if (isValidSuiAddress(address)) {
+        setAddressError(null)
+        setIsValidAddress(true)
+      } else {
+        setAddressError(
+          intl.formatMessage({
+            id: 'projectCard.transferOwnership.invalidAddress',
+          }),
+        )
+        setIsValidAddress(false)
+      }
+    } else {
+      setAddressError(null)
+      setIsValidAddress(false)
+    }
+  }
+
+  const [showConfirm, setShowConfirm] = useState(false)
+
+  const handleTransferClick = () => {
+    if (!newOwnerAddress || !isValidAddress) {
       return
     }
+    setShowConfirm(true)
+  }
 
-    if (!newOwnerAddress.startsWith('0x') || newOwnerAddress.length !== 66) {
-      toast.error(
-        intl.formatMessage({ id: 'projectCard.transferOwnership.invalidAddress' }),
-      )
-      return
-    }
+  const handleConfirmTransfer = async () => {
+    if (!projectId || !newOwnerAddress) return
 
     try {
       setIsTransferring(true)
-      // TODO: Add API call to transfer ownership
-      toast.success(
-        intl.formatMessage({ id: 'projectCard.transferOwnership.success' }),
-      )
+      await onTransferOwnership(projectId, newOwnerAddress)
       setNewOwnerAddress('')
       onOpenChange(false)
-      onRefetch()
-    } catch (error: any) {
-      console.error('Error transferring ownership:', error)
-      toast.error(
-        error?.message || intl.formatMessage({ id: 'common.error.unknown' }),
-      )
+    } catch (error) {
+      // Error is already handled in ProjectCard
+      console.error('Error in transfer:', error)
     } finally {
       setIsTransferring(false)
+      setShowConfirm(false)
     }
   }
 
@@ -72,14 +100,14 @@ export function TransferOwnershipDialog({
         <DialogHeader>
           <DialogTitle className="text-secondary-400 flex items-center gap-2">
             <UserCog className="h-5 w-5" />
-            <FormattedMessage 
-              id="projectCard.transferOwnership.title" 
+            <FormattedMessage
+              id="projectCard.transferOwnership.title"
               defaultMessage="Transfer Ownership"
             />
           </DialogTitle>
           <DialogDescription className="text-white/60">
-            <FormattedMessage 
-              id="projectCard.transferOwnership.description" 
+            <FormattedMessage
+              id="projectCard.transferOwnership.description"
               defaultMessage="Transfer project ownership to another wallet address"
             />
           </DialogDescription>
@@ -87,54 +115,31 @@ export function TransferOwnershipDialog({
 
         <div className="space-y-6 py-4">
           {/* Transfer Animation */}
-          <div className="relative flex items-center justify-center py-6">
-            <div 
-              className="w-12 h-12 rounded-full bg-secondary-500/20 border-2 border-secondary-500 flex items-center justify-center relative"
-            >
-              <motion.div
-                className="absolute inset-0 rounded-full bg-secondary-500/10"
-                animate={{ 
-                  opacity: [0.2, 0.4, 0.2]
-                }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-              />
-              <UserCog className="h-6 w-6 text-secondary-400 relative z-10" />
+          <div className="relative flex items-center justify-center py-4">
+            <div className="w-10 h-10 rounded-lg bg-primary-800 border border-secondary-500/20 flex items-center justify-center">
+              <UserCog className="h-5 w-5 text-secondary-400" />
             </div>
-            <motion.div 
+            <motion.div
               className="mx-4"
-              animate={{ 
-                opacity: [0.6, 1, 0.6],
-                x: [0, 2, 0]
-              }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              animate={{ x: [0, 4, 0] }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
             >
-              <ArrowRight className="h-6 w-6 text-secondary-400" />
+              <ArrowRight className="h-5 w-5 text-secondary-400/60" />
             </motion.div>
-            <div className="relative w-12 h-12">
-              <motion.div 
-                className="absolute inset-0 rounded-full border-2 border-dashed border-secondary-500/50"
-                animate={{ 
-                  rotate: 360,
-                }}
-                transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
-              />
-              <motion.div
-                className="absolute inset-0 rounded-full bg-primary-800/50 flex items-center justify-center"
-                animate={{ 
-                  opacity: [0.5, 0.7, 0.5]
-                }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <UserCog className="h-6 w-6 text-secondary-400/50" />
-              </motion.div>
-            </div>
+            <motion.div
+              className="w-10 h-10 rounded-lg bg-primary-800 border border-secondary-500/20 flex items-center justify-center"
+              animate={{ opacity: [0.6, 1, 0.6] }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              <UserCog className="h-5 w-5 text-secondary-400/60" />
+            </motion.div>
           </div>
 
           {/* Current Owner */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-white/80 flex items-center gap-2">
-              <FormattedMessage 
-                id="projectCard.transferOwnership.currentOwner" 
+            <label className="text-sm font-medium text-white/80">
+              <FormattedMessage
+                id="projectCard.transferOwnership.currentOwner"
                 defaultMessage="Current Owner"
               />
             </label>
@@ -142,10 +147,12 @@ export function TransferOwnershipDialog({
               <Input
                 value={currentOwner}
                 disabled
-                className="bg-primary-800/50 border-secondary-500/20 text-white/60 pr-24"
+                className="bg-primary-800 border-secondary-500/20 text-white/60 pr-20"
               />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <span className="px-2 py-1 rounded-full bg-secondary-500/10 text-secondary-400 text-xs">Current</span>
+              <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                <span className="px-2 py-1 text-xs text-secondary-400">
+                  Current
+                </span>
               </div>
             </div>
           </div>
@@ -153,98 +160,104 @@ export function TransferOwnershipDialog({
           {/* New Owner */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-white/80">
-              <FormattedMessage 
-                id="projectCard.transferOwnership.newOwner" 
+              <FormattedMessage
+                id="projectCard.transferOwnership.newOwner"
                 defaultMessage="New Owner"
               />
             </label>
-            <div className="relative mt-2">
+            <div className="relative">
               <Input
                 placeholder={intl.formatMessage({
                   id: 'projectCard.transferOwnership.enterAddress',
                   defaultMessage: 'Enter wallet address',
                 })}
                 value={newOwnerAddress}
-                onChange={(e) => setNewOwnerAddress(e.target.value)}
-                className="bg-primary-800 border-secondary-500/20 focus:border-secondary-400 transition-colors duration-200"
+                onChange={handleAddressChange}
+                className={`bg-primary-800 border-secondary-500/20 focus:border-secondary-400 pr-10 ${
+                  addressError
+                    ? 'border-red-500'
+                    : isValidAddress
+                      ? 'border-green-500'
+                      : ''
+                }`}
               />
-              <motion.div 
-                className="absolute right-3 top-1/2 -translate-y-1/2"
-                animate={{ opacity: [0.5, 1, 0.5] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
-                <span className="px-2 py-1 rounded-full bg-secondary-500/10 text-secondary-400 text-xs">New</span>
-              </motion.div>
+              {isValidAddress && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <CheckCircle2 className="h-4 w-4 text-green-500" />
+                </div>
+              )}
             </div>
+            {addressError && (
+              <p className="text-xs text-red-400 mt-1">{addressError}</p>
+            )}
           </div>
 
           {/* Warning Message */}
-          <motion.div 
-            className="rounded-lg bg-red-500/10 p-4 text-sm text-red-400 flex items-start gap-3"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <ShieldAlert className="h-5 w-5 flex-shrink-0 mt-0.5" />
-            <div className="space-y-1">
-              <p className="font-medium">Important Notice:</p>
-              <p className="text-red-400/80 leading-relaxed">
-                <FormattedMessage 
-                  id="projectCard.transferOwnership.warning" 
-                  defaultMessage="This action cannot be undone. The new owner will have full control over the project, including the ability to manage members and delete the site."
-                />
-              </p>
+          <div className="rounded-lg bg-gradient-to-r from-red-500/5 to-transparent p-4 text-sm border border-red-500/10">
+            <div className="flex items-center gap-2 mb-2 text-red-400">
+              <ShieldAlert className="h-4 w-4" />
+              <span className="font-medium">Important Notice</span>
             </div>
-          </motion.div>
+            <p className="text-white/70 leading-relaxed pl-6">
+              <FormattedMessage
+                id="projectCard.transferOwnership.warning"
+                defaultMessage="This action cannot be undone. The new owner will have full control over the project, including the ability to manage members and delete the site."
+              />
+            </p>
+          </div>
         </div>
 
         {/* Actions */}
-        <div className="flex justify-end gap-3 mt-6">
+        <div className="flex justify-end gap-3 mt-4">
           <Button
             variant="outline"
-            onClick={() => onOpenChange(false)}
-            className="border-white/20 text-white hover:bg-white/10"
+            onClick={() => {
+              setShowConfirm(false)
+              onOpenChange(false)
+            }}
+            className="border-white/10 text-white/80 hover:bg-white/5"
           >
-            <FormattedMessage 
-              id="common.cancel" 
-              defaultMessage="Cancel"
-            />
+            <FormattedMessage id="common.cancel" defaultMessage="Cancel" />
           </Button>
-          <Button
-            onClick={handleTransferOwnership}
-            className="bg-secondary-500 hover:bg-secondary-600 text-black font-medium relative overflow-hidden group"
-            disabled={isTransferring}
-          >
-            <motion.div 
-              className="absolute inset-0 bg-secondary-400"
-              initial={false}
-              animate={{ 
-                x: isTransferring ? '100%' : '-100%'
-              }}
-              transition={{ duration: 1, repeat: Infinity }}
-            />
-            <span className="relative flex items-center">
+          {!showConfirm ? (
+            <Button
+              onClick={handleTransferClick}
+              disabled={!isValidAddress || isTransferring}
+              className="bg-secondary-500 hover:bg-secondary-600 text-black font-medium"
+            >
+              <UserCog className="h-4 w-4 mr-2" />
+              <FormattedMessage
+                id="projectCard.transferOwnership.transfer"
+                defaultMessage="Transfer Ownership"
+              />
+            </Button>
+          ) : (
+            <Button
+              onClick={handleConfirmTransfer}
+              disabled={isTransferring}
+              className="bg-red-500 hover:bg-red-600 text-white font-medium"
+            >
               {isTransferring ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  <FormattedMessage 
-                    id="projectCard.transferOwnership.transferring" 
+                  <FormattedMessage
+                    id="projectCard.transferOwnership.transferring"
                     defaultMessage="Transferring..."
                   />
                 </>
               ) : (
                 <>
-                  <UserCog className="h-4 w-4 mr-2" />
-                  <FormattedMessage 
-                    id="projectCard.transferOwnership.transfer" 
-                    defaultMessage="Transfer Ownership"
+                  <ShieldAlert className="h-4 w-4 mr-2" />
+                  <FormattedMessage
+                    id="common.confirm"
+                    defaultMessage="Confirm"
                   />
                 </>
               )}
-            </span>
-          </Button>
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>
   )
-} 
+}

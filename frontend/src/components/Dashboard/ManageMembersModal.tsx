@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { FormattedMessage, useIntl } from 'react-intl'
 import { toast } from 'sonner'
+import { isValidSuiAddress } from '@mysten/sui.js/utils'
 import {
   Dialog,
   DialogContent,
@@ -11,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
-import { Users, UserPlus, Shield, X, Loader2, ChevronDown, ChevronUp, ListChecks } from 'lucide-react'
+import { Users, UserPlus, Shield, X, Loader2, ChevronDown, ChevronUp, ListChecks, CheckCircle2 } from 'lucide-react'
 import { MemberPermissions, ProjectMember } from '@/types/project'
 import {
   Tooltip,
@@ -25,7 +26,12 @@ interface ManageMembersModalProps {
   onOpenChange: (open: boolean) => void
   projectId?: string
   members?: ProjectMember[]
-  onRefetch: () => Promise<void>
+  onAddMember: (address: string, permissions: MemberPermissions) => Promise<void>
+  onRemoveMember: (address: string) => Promise<void>
+  onUpdatePermissions: (address: string, permissions: MemberPermissions) => Promise<void>
+  isAddingMember?: boolean
+  isRemovingMember?: boolean
+  isUpdatingPermissions?: boolean
 }
 
 export function ManageMembersModal({
@@ -33,10 +39,26 @@ export function ManageMembersModal({
   onOpenChange,
   projectId,
   members: initialMembers,
-  onRefetch,
+  onAddMember,
+  onRemoveMember,
+  onUpdatePermissions,
+  isAddingMember = false,
+  isRemovingMember = false,
+  isUpdatingPermissions = false,
 }: ManageMembersModalProps) {
   const intl = useIntl()
   const [members, setMembers] = useState(initialMembers || [])
+  const [newMemberAddress, setNewMemberAddress] = useState('')
+  const [isValidAddress, setIsValidAddress] = useState(false)
+  const [addressError, setAddressError] = useState<string | null>(null)
+  const [newMemberPermissions, setNewMemberPermissions] = useState<MemberPermissions>({
+    update: false,
+    delete: false,
+    generateSite: false,
+    setSuins: false,
+  })
+  const [removingMember, setRemovingMember] = useState<string | null>(null)
+  const [expandedMember, setExpandedMember] = useState<string | null>(null)
 
   useEffect(() => {
     if (initialMembers) {
@@ -44,19 +66,25 @@ export function ManageMembersModal({
     }
   }, [initialMembers])
 
-  const [newMemberAddress, setNewMemberAddress] = useState('')
-  const [newMemberPermissions, setNewMemberPermissions] =
-    useState<MemberPermissions>({
-      update: false,
-      delete: false,
-      generateSite: false,
-      setSuins: false,
-    })
-  const [removingMember, setRemovingMember] = useState<string | null>(null)
-  const [isAddingMember, setIsAddingMember] = useState(false)
-  const [isRemovingMember, setIsRemovingMember] = useState(false)
-  const [isUpdatingPermissions, setIsUpdatingPermissions] = useState(false)
-  const [expandedMember, setExpandedMember] = useState<string | null>(null)
+  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const address = e.target.value
+    setNewMemberAddress(address)
+
+    if (address) {
+      if (isValidSuiAddress(address)) {
+        setAddressError(null)
+        setIsValidAddress(true)
+      } else {
+        setAddressError(
+          intl.formatMessage({ id: 'projectCard.manageMembers.invalidAddress' })
+        )
+        setIsValidAddress(false)
+      }
+    } else {
+      setAddressError(null)
+      setIsValidAddress(false)
+    }
+  }
 
   const handleAddMember = async () => {
     if (!newMemberAddress) {
@@ -66,7 +94,7 @@ export function ManageMembersModal({
       return
     }
 
-    if (!newMemberAddress.startsWith('0x') || newMemberAddress.length !== 66) {
+    if (!isValidSuiAddress(newMemberAddress)) {
       toast.error(
         intl.formatMessage({ id: 'projectCard.manageMembers.invalidAddress' }),
       )
@@ -81,11 +109,7 @@ export function ManageMembersModal({
     }
 
     try {
-      setIsAddingMember(true)
-      // TODO: Add API call to add member
-      toast.success(
-        intl.formatMessage({ id: 'projectCard.manageMembers.memberAdded' }),
-      )
+      await onAddMember(newMemberAddress, newMemberPermissions)
       setNewMemberAddress('')
       setNewMemberPermissions({
         update: false,
@@ -93,65 +117,24 @@ export function ManageMembersModal({
         generateSite: false,
         setSuins: false,
       })
-      onRefetch()
     } catch (error: any) {
-      console.error('Error adding member:', error)
-      toast.error(
-        error?.message || intl.formatMessage({ id: 'common.error.unknown' }),
-      )
-    } finally {
-      setIsAddingMember(false)
-    }
-  }
-
-  const handleRemoveMember = async (address: string) => {
-    try {
-      setIsRemovingMember(true)
-      // TODO: Add API call to remove member
-      toast.success(
-        intl.formatMessage({ id: 'projectCard.manageMembers.memberRemoved' }),
-      )
-      setRemovingMember(null)
-      onRefetch()
-    } catch (error: any) {
-      console.error('Error removing member:', error)
-      toast.error(
-        error?.message || intl.formatMessage({ id: 'common.error.unknown' }),
-      )
-    } finally {
-      setIsRemovingMember(false)
-    }
-  }
-
-  const handleUpdatePermissions = async (
-    address: string,
-    permissions: MemberPermissions,
-  ) => {
-    try {
-      setIsUpdatingPermissions(true)
-      // TODO: Add API call to update permissions
-      toast.success(
-        intl.formatMessage({
-          id: 'projectCard.manageMembers.permissionsUpdated',
-        }),
-      )
-      onRefetch()
-    } catch (error: any) {
-      console.error('Error updating permissions:', error)
-      toast.error(
-        error?.message || intl.formatMessage({ id: 'common.error.unknown' }),
-      )
-    } finally {
-      setIsUpdatingPermissions(false)
+      toast.error(error?.message || 'Failed to add member')
     }
   }
 
   const handleSelectAllPermissions = (address: string, checked: boolean) => {
-    handleUpdatePermissions(address, {
+    onUpdatePermissions(address, {
       update: checked,
       delete: checked,
       generateSite: checked,
       setSuins: checked,
+    })
+  }
+
+  const handleUpdateSinglePermission = (address: string, permissions: MemberPermissions, field: keyof MemberPermissions, value: boolean) => {
+    onUpdatePermissions(address, {
+      ...permissions,
+      [field]: value,
     })
   }
 
@@ -162,40 +145,43 @@ export function ManageMembersModal({
           <DialogHeader>
             <DialogTitle className="text-secondary-400 flex items-center gap-2">
               <Users className="h-5 w-5" />
-              <FormattedMessage 
-                id="projectCard.manageMembers.title" 
-                defaultMessage="Manage Members"
-              />
+              <FormattedMessage id="projectCard.manageMembers.title" />
             </DialogTitle>
             <DialogDescription className="text-white/60">
-              <FormattedMessage 
-                id="projectCard.manageMembers.description" 
-                defaultMessage="Add or remove members and manage their permissions"
-              />
+              <FormattedMessage id="projectCard.manageMembers.description" />
             </DialogDescription>
           </DialogHeader>
 
-          {/* Add New Member Section */}
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <h3 className="text-sm font-medium text-white/80">
-                <FormattedMessage 
-                  id="projectCard.manageMembers.addMember" 
-                  defaultMessage="Add Member"
-                />
+                <FormattedMessage id="projectCard.manageMembers.addMember" />
               </h3>
               <div className="flex gap-2">
-                <Input
-                  placeholder={intl.formatMessage({
-                    id: 'projectCard.manageMembers.enterAddress',
-                  })}
-                  value={newMemberAddress}
-                  onChange={(e) => setNewMemberAddress(e.target.value)}
-                  className="flex-1 bg-primary-800 border-secondary-500/20"
-                />
+                <div className="relative flex-1">
+                  <Input
+                    placeholder={intl.formatMessage({
+                      id: 'projectCard.manageMembers.enterAddress',
+                    })}
+                    value={newMemberAddress}
+                    onChange={handleAddressChange}
+                    className={`flex-1 bg-primary-800 border-secondary-500/20 pr-10 ${
+                      addressError
+                        ? 'border-red-500'
+                        : isValidAddress
+                          ? 'border-green-500'
+                          : ''
+                    }`}
+                  />
+                  {isValidAddress && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    </div>
+                  )}
+                </div>
                 <Button
                   onClick={handleAddMember}
-                  disabled={isAddingMember}
+                  disabled={!isValidAddress || isAddingMember}
                   className="bg-secondary-500 hover:bg-secondary-600"
                 >
                   {isAddingMember ? (
@@ -205,16 +191,15 @@ export function ManageMembersModal({
                   )}
                 </Button>
               </div>
+              {addressError && (
+                <p className="text-xs text-red-400 mt-1">{addressError}</p>
+              )}
             </div>
 
-            {/* New Member Permissions */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-medium text-white/80">
-                  <FormattedMessage 
-                    id="projectCard.manageMembers.permissions" 
-                    defaultMessage="Permissions"
-                  />
+                  <FormattedMessage id="projectCard.manageMembers.permissions" />
                 </h3>
                 <Button
                   variant="ghost"
@@ -228,10 +213,7 @@ export function ManageMembersModal({
                   className="text-xs text-secondary-400 hover:text-secondary-300 hover:bg-secondary-500/10 px-3 h-7 rounded-md border border-secondary-500/20 transition-colors duration-200 flex items-center gap-1 cursor-pointer"
                 >
                   <ListChecks className="h-4 w-4" />
-                  <FormattedMessage 
-                    id="projectCard.manageMembers.selectAll" 
-                    defaultMessage="Select All"
-                  />
+                  <FormattedMessage id="projectCard.manageMembers.selectAll" />
                 </Button>
               </div>
               <div className="grid grid-cols-2 gap-x-4 gap-y-1">
@@ -248,10 +230,7 @@ export function ManageMembersModal({
                     className="rounded border-secondary-500/20 bg-primary-800 h-3.5 w-3.5"
                   />
                   <span className="text-white/80">
-                    <FormattedMessage 
-                      id="projectCard.manageMembers.permissionUpdate" 
-                      defaultMessage="Update"
-                    />
+                    <FormattedMessage id="projectCard.manageMembers.permissionUpdate" />
                   </span>
                 </label>
                 <label className="flex items-center space-x-2 text-sm">
@@ -267,10 +246,7 @@ export function ManageMembersModal({
                     className="rounded border-secondary-500/20 bg-primary-800 h-3.5 w-3.5"
                   />
                   <span className="text-white/80">
-                    <FormattedMessage 
-                      id="projectCard.manageMembers.permissionDelete" 
-                      defaultMessage="Delete"
-                    />
+                    <FormattedMessage id="projectCard.manageMembers.permissionDelete" />
                   </span>
                 </label>
                 <label className="flex items-center space-x-2 text-sm">
@@ -286,10 +262,7 @@ export function ManageMembersModal({
                     className="rounded border-secondary-500/20 bg-primary-800 h-3.5 w-3.5"
                   />
                   <span className="text-white/80">
-                    <FormattedMessage 
-                      id="projectCard.manageMembers.permissionGenerateSite" 
-                      defaultMessage="Generate Site"
-                    />
+                    <FormattedMessage id="projectCard.manageMembers.permissionGenerateSite" />
                   </span>
                 </label>
                 <label className="flex items-center space-x-2 text-sm">
@@ -305,16 +278,12 @@ export function ManageMembersModal({
                     className="rounded border-secondary-500/20 bg-primary-800 h-3.5 w-3.5"
                   />
                   <span className="text-white/80">
-                    <FormattedMessage 
-                      id="projectCard.manageMembers.permissionSetSuins" 
-                      defaultMessage="Set SUINS"
-                    />
+                    <FormattedMessage id="projectCard.manageMembers.permissionSetSuins" />
                   </span>
                 </label>
               </div>
             </div>
 
-            {/* Separator and Current Members List */}
             {members && members.length > 0 && (
               <>
                 <Separator className="bg-secondary-500/20" />
@@ -322,16 +291,10 @@ export function ManageMembersModal({
                   <h3 className="text-sm font-medium text-white/80 flex items-center gap-2 sticky top-0 bg-primary-900 py-2">
                     <Shield className="h-4 w-4" />
                     <span>
-                      <FormattedMessage 
-                        id="projectCard.manageMembers.currentMembers" 
-                        defaultMessage="Current Members"
-                      />
+                      <FormattedMessage id="projectCard.manageMembers.currentMembers" />
                     </span>
                     <span className="text-xs text-secondary-400">
-                      ({members.length} <FormattedMessage 
-                        id="projectCard.manageMembers.membersCount" 
-                        defaultMessage="members"
-                      />)
+                      ({members.length} <FormattedMessage id="projectCard.manageMembers.membersCount" />)
                     </span>
                   </h3>
 
@@ -376,10 +339,7 @@ export function ManageMembersModal({
                                 <ChevronDown className="h-4 w-4" />
                               )}
                               <span className="ml-1">
-                                <FormattedMessage 
-                                  id="projectCard.manageMembers.permissions" 
-                                  defaultMessage="Permissions"
-                                />
+                                <FormattedMessage id="projectCard.manageMembers.permissions" />
                               </span>
                             </Button>
                             <Button
@@ -397,10 +357,7 @@ export function ManageMembersModal({
                           <div className="px-3 pb-3 border-t border-secondary-500/10 pt-3">
                             <div className="flex items-center justify-between mb-2">
                               <span className="text-xs text-secondary-400">
-                                <FormattedMessage 
-                                  id="projectCard.manageMembers.memberPermissions" 
-                                  defaultMessage="Member Permissions"
-                                />
+                                <FormattedMessage id="projectCard.manageMembers.memberPermissions" />
                               </span>
                               <Button
                                 variant="ghost"
@@ -409,10 +366,7 @@ export function ManageMembersModal({
                                 className="text-xs text-secondary-400 hover:text-secondary-300 hover:bg-secondary-500/10 px-3 h-7 rounded-md border border-secondary-500/20 transition-colors duration-200 flex items-center gap-1 cursor-pointer"
                               >
                                 <ListChecks className="h-4 w-4" />
-                                <FormattedMessage 
-                                  id="projectCard.manageMembers.selectAll" 
-                                  defaultMessage="Select All"
-                                />
+                                <FormattedMessage id="projectCard.manageMembers.selectAll" />
                               </Button>
                             </div>
                             <div className="grid grid-cols-2 gap-x-4 gap-y-1">
@@ -420,12 +374,12 @@ export function ManageMembersModal({
                                 <input
                                   type="checkbox"
                                   checked={member.permissions.update}
-                                  onChange={(e) =>
-                                    handleUpdatePermissions(member.address, {
-                                      ...member.permissions,
-                                      update: e.target.checked,
-                                    })
-                                  }
+                                  onChange={(e) => handleUpdateSinglePermission(
+                                    member.address,
+                                    member.permissions,
+                                    'update',
+                                    e.target.checked
+                                  )}
                                   className="rounded border-secondary-500/20 bg-primary-900 h-3.5 w-3.5"
                                 />
                                 <span className="text-white/80">
@@ -436,12 +390,12 @@ export function ManageMembersModal({
                                 <input
                                   type="checkbox"
                                   checked={member.permissions.delete}
-                                  onChange={(e) =>
-                                    handleUpdatePermissions(member.address, {
-                                      ...member.permissions,
-                                      delete: e.target.checked,
-                                    })
-                                  }
+                                  onChange={(e) => handleUpdateSinglePermission(
+                                    member.address,
+                                    member.permissions,
+                                    'delete',
+                                    e.target.checked
+                                  )}
                                   className="rounded border-secondary-500/20 bg-primary-900 h-3.5 w-3.5"
                                 />
                                 <span className="text-white/80">
@@ -452,12 +406,12 @@ export function ManageMembersModal({
                                 <input
                                   type="checkbox"
                                   checked={member.permissions.generateSite}
-                                  onChange={(e) =>
-                                    handleUpdatePermissions(member.address, {
-                                      ...member.permissions,
-                                      generateSite: e.target.checked,
-                                    })
-                                  }
+                                  onChange={(e) => handleUpdateSinglePermission(
+                                    member.address,
+                                    member.permissions,
+                                    'generateSite',
+                                    e.target.checked
+                                  )}
                                   className="rounded border-secondary-500/20 bg-primary-900 h-3.5 w-3.5"
                                 />
                                 <span className="text-white/80">
@@ -468,12 +422,12 @@ export function ManageMembersModal({
                                 <input
                                   type="checkbox"
                                   checked={member.permissions.setSuins}
-                                  onChange={(e) =>
-                                    handleUpdatePermissions(member.address, {
-                                      ...member.permissions,
-                                      setSuins: e.target.checked,
-                                    })
-                                  }
+                                  onChange={(e) => handleUpdateSinglePermission(
+                                    member.address,
+                                    member.permissions,
+                                    'setSuins',
+                                    e.target.checked
+                                  )}
                                   className="rounded border-secondary-500/20 bg-primary-900 h-3.5 w-3.5"
                                 />
                                 <span className="text-white/80">
@@ -493,7 +447,6 @@ export function ManageMembersModal({
         </DialogContent>
       </Dialog>
 
-      {/* Remove Member Confirmation Dialog */}
       <Dialog
         open={!!removingMember}
         onOpenChange={() => setRemovingMember(null)}
@@ -501,16 +454,10 @@ export function ManageMembersModal({
         <DialogContent className="bg-primary-900 border-red-500/20 text-white">
           <DialogHeader>
             <DialogTitle className="text-red-400">
-              <FormattedMessage 
-                id="projectCard.manageMembers.removeMember" 
-                defaultMessage="Remove Member"
-              />
+              <FormattedMessage id="projectCard.manageMembers.removeMember" />
             </DialogTitle>
             <DialogDescription className="text-white/60">
-              <FormattedMessage 
-                id="projectCard.manageMembers.removeConfirm" 
-                defaultMessage="Are you sure you want to remove this member?"
-              />
+              <FormattedMessage id="projectCard.manageMembers.removeConfirm" />
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-3 mt-6">
@@ -519,15 +466,10 @@ export function ManageMembersModal({
               onClick={() => setRemovingMember(null)}
               className="border-white/20 text-white hover:bg-white/10"
             >
-              <FormattedMessage 
-                id="projectCard.cancel" 
-                defaultMessage="Cancel"
-              />
+              <FormattedMessage id="projectCard.cancel" />
             </Button>
             <Button
-              onClick={() =>
-                removingMember && handleRemoveMember(removingMember)
-              }
+              onClick={() => removingMember && onRemoveMember(removingMember)}
               className="bg-red-500 hover:bg-red-600 text-white"
               disabled={isRemovingMember}
             >
@@ -536,10 +478,7 @@ export function ManageMembersModal({
               ) : (
                 <X className="h-4 w-4 mr-2" />
               )}
-              <FormattedMessage 
-                id="projectCard.manageMembers.removeMember" 
-                defaultMessage="Remove Member"
-              />
+              <FormattedMessage id="projectCard.manageMembers.removeMember" />
             </Button>
           </div>
         </DialogContent>
