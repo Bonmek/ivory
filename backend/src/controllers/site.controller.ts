@@ -1,4 +1,3 @@
-// src/controllers/site.controller.ts
 import { Request, Response } from 'express';
 import { SiteService } from '../services/site.service';
 import { FileService } from '../services/file.service';
@@ -24,7 +23,6 @@ export class SiteController {
             const result = await this.siteService.handlePreview(req);
             res.download(result.outputZipPath, "output.zip", async (err) => {
                 if (err) {
-                    console.error("Error sending file:", err);
                     await this.fileService.cleanupFiles(result.extractPath, req.file?.path ?? null, result.outputZipPath);
                     await this.fileService.cleanupAllDirectories();
                     res.status(500).json({
@@ -35,8 +33,7 @@ export class SiteController {
                 await this.fileService.cleanupFiles(result.extractPath, req.file?.path ?? null, result.outputZipPath);
                 await this.fileService.cleanupAllDirectories();
             });
-        } catch (error) {
-            console.error("Preview processing error:", error);
+        } catch {
             await this.fileService.cleanupFiles(null, req.file?.path ?? null, null);
             await this.fileService.cleanupAllDirectories();
             res.status(500).json({
@@ -60,6 +57,72 @@ export class SiteController {
             res.status(500).json({
                 statusCode: 0,
                 error: "Internal server error during site processing"
+            });
+        }
+    }
+
+    updateSite = async (req: Request, res: Response) => {
+        try {
+            const result = await this.siteService.handleUpdateSite(req);
+            res.status(200).json({
+                statusCode: 1,
+                objectId: result.blob_object_id,    
+            });
+        } catch {
+            res.status(500).json({
+                statusCode: 0,
+                error: "Internal server error during site processing"
+            });
+        }
+    }
+
+    updateAttribute= async (req: Request, res: Response) => {
+        try {
+            const result = await this.siteService.handleUpdateAttributes(req);
+            res.status(200).json({
+                statusCode: 1,
+                objectId: result,    
+            });
+        } catch {
+            res.status(500).json({
+                statusCode: 0,
+                error: "Internal server error during site processing"
+            });
+        }
+    }
+
+    transferOwner = async (req: Request, res: Response) => {
+        try {
+            await this.siteService.handleTransferOwner(req);
+            res.status(200).json({
+                statusCode: 1,
+                message: "Change owner to blob attributes successfully",
+            });
+        } catch (error) {
+            res.status(502).json({
+                statusCode: 0,
+                error: {
+                    error_message: "Failed to change owner to blob attributes",
+                    error_details: error,
+                },
+            });
+        }
+    }
+
+    grantAccess = async (req: Request, res: Response) => {
+        try {
+            await this.siteService.handleGrantAccess(req);
+            res.status(200).json({
+                statusCode: 1,
+                message: "grant access to blob attributes successfully",
+            });
+        } catch (error) {
+            res.status(502).json({
+                statusCode: 0,
+                error: {
+                    error_message: "Failed to grant access to blob attributes",
+                    error_details: error,
+                },
             });
         }
     }
