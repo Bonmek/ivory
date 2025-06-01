@@ -327,20 +327,13 @@ export const ProjectCard = ({ fieldKey, value, index }: ProjectCardProps) => {
                                                     hour12: true,
                                                     timeZone: 'Asia/Bangkok'
                                                 };
-                                                
+
                                                 const formattedDate = date.toLocaleDateString('en-US', options);
-                                                const time = date.toLocaleTimeString('en-US', { 
-                                                    hour: '2-digit', 
-                                                    minute: '2-digit',
-                                                    hour12: true,
-                                                    timeZone: 'Asia/Bangkok'
-                                                });
-                                                
+
                                                 // Format: May 30, 2024 at 1:23 PM
                                                 return (
                                                     <div className="flex flex-col">
                                                         <span>{formattedDate}</span>
-                                                        <span className="text-sm text-muted-foreground">at {time}</span>
                                                     </div>
                                                 );
                                             } catch (e) {
@@ -355,7 +348,7 @@ export const ProjectCard = ({ fieldKey, value, index }: ProjectCardProps) => {
                         ) : (
                             <motion.em
                                 key="empty-state"
-                                className="text-secondary-500 italic text-sm inline-flex items-center gap-1"
+                                className="text-secondary-500 italic text-sm"
                                 initial={{ opacity: 0.6 }}
                                 animate={{
                                     opacity: [0.6, 0.8, 0.6],
@@ -367,8 +360,7 @@ export const ProjectCard = ({ fieldKey, value, index }: ProjectCardProps) => {
                                     ease: 'easeInOut'
                                 }}
                             >
-                                <span>Click to add</span>
-                                <span className="font-medium">{fieldKey.replace(/_/g, ' ').toLowerCase()}</span>
+                                No data found
                             </motion.em>
                         )}
                     </AnimatePresence>
