@@ -12,6 +12,7 @@ import { transformMetadataToProject } from '@/utils/metadataUtils'
 import { useAuth } from '@/context/AuthContext'
 import ProjectCard from '@/components/Dashboard/ProjectCard'
 import { FormattedMessage, useIntl } from 'react-intl'
+import { useSearchParams } from 'react-router-dom'
 
 const formatDate = (date: Date) => {
   return date.toLocaleDateString('en-GB', {
@@ -69,6 +70,7 @@ function getPageList(current: number, total: number) {
 
 export default function Dashboard() {
   const { address } = useAuth()
+  const [searchParams] = useSearchParams()
   const [searchQuery, setSearchQuery] = useState('')
   const intl = useIntl()
   const [date, setDate] = useState<Date | undefined>(undefined)
@@ -81,6 +83,19 @@ export default function Dashboard() {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [lastRefreshTime, setLastRefreshTime] = useState<Date>(new Date())
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const [showLimitWarning, setShowLimitWarning] = useState(false)
+
+  // Check URL parameters on component mount
+  useEffect(() => {
+    const limitWarning = searchParams.get('limitWarning')
+    if (limitWarning === 'true') {
+      setShowLimitWarning(true)
+      // Remove the parameter from URL without page reload
+      const newSearchParams = new URLSearchParams(searchParams)
+      newSearchParams.delete('limitWarning')
+      window.history.replaceState({}, '', `${window.location.pathname}${newSearchParams.toString() ? '?' + newSearchParams.toString() : ''}`)
+    }
+  }, [searchParams])
 
   const { metadata, isLoading, refetch } = useSuiData(address || '')
   // Get all projects before filtering by tab
@@ -250,6 +265,8 @@ export default function Dashboard() {
             activeTab={activeTab}
             projectType={projectType}
             setProjectType={setProjectType}
+            showLimitWarning={showLimitWarning}
+            setShowLimitWarning={setShowLimitWarning}
           />
 
           <DashboardTabs activeTab={activeTab} setActiveTab={setActiveTab} />

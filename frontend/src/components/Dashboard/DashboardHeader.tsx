@@ -109,6 +109,8 @@ interface DashboardHeaderProps {
   activeTab: string
   projectType: 'all' | 'site' | '.zip'
   setProjectType: (type: 'all' | 'site' | '.zip') => void
+  showLimitWarning: boolean
+  setShowLimitWarning: (show: boolean) => void
 }
 
 const DashboardHeader = ({
@@ -125,10 +127,11 @@ const DashboardHeader = ({
   activeTab,
   projectType,
   setProjectType,
+  showLimitWarning,
+  setShowLimitWarning,
 }: DashboardHeaderProps) => {
   const intl = useIntl()
   const [searchExpanded, setSearchExpanded] = useState(false)
-  const [showLimitWarning, setShowLimitWarning] = useState(false)
   const [isInCooldown, setIsInCooldown] = useState(false)
   const [cooldownSeconds, setCooldownSeconds] = useState(0)
   const COOLDOWN_PERIOD = 5
@@ -210,7 +213,6 @@ const DashboardHeader = ({
     }
   }, [searchExpanded])
 
-  // ปิดช่องค้นหาเมื่อกดปุ่ม Escape
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && searchExpanded) {
