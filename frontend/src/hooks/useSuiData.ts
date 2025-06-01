@@ -115,7 +115,6 @@ export const useSuiData = (userAddress: string) => {
     queryFn: async () => {
       const metadataPromises = dynamicFields.flatMap((fields) =>
         fields.map((field) => {
-          // Use parentId from dynamic field
           const fieldWithParent = field as any
           return suiService.getMetadata(
             field.objectId,
@@ -205,7 +204,6 @@ export const useSuiData = (userAddress: string) => {
         queryClient.invalidateQueries({ queryKey: ['metadata'] }),
       ])
     } catch (error) {
-      console.error('Error refetching data:', error)
     } finally {
       setIsManualRefetching(false) // Reset loading state
     }
@@ -224,7 +222,6 @@ export const useSuiData = (userAddress: string) => {
         queryKey: ['suins', userAddress || ''],
       })
     } catch (error) {
-      console.error('Error refetching SUINS data:', error)
     } finally {
       setIsManualRefetching(false)
     }
