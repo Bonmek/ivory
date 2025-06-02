@@ -621,7 +621,7 @@ export class SiteService {
     await this.walrusClient.executeWriteBlobAttributesTransaction({
       blobObjectId: attributes_data.data.object_id,
       signer: this.keypair,
-      attributes: { site_status: "0", status: "0" },
+      attributes: { site_status: "0"},
     });
 
     const [response] = await this.taskService.createTask(
