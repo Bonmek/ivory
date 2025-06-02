@@ -81,6 +81,7 @@ import { createMemberString, joinMemberStrings } from '@/utils/memberUtils'
 import { createMemberStrings } from '@/utils/memberUtils'
 import { useMemberManagement } from '@/hooks/useMemberManagement'
 import { useSiteManagement } from '@/hooks/useSiteManagement'
+import { useOwnershipTransfer } from '@/hooks/useOwnershipTransfer'
 
 const ProjectCard = memo(
   ({
@@ -98,17 +99,13 @@ const ProjectCard = memo(
       addMember,
       removeMember,
       updateMemberPermissions,
-      transferOwnership,
       isAddingMember,
       isRemovingMember,
       isUpdatingPermissions,
     } = useMemberManagement()
-    const {
-      generateSiteId,
-      deleteSite,
-      isGenerating,
-      isDeleting
-    } = useSiteManagement()
+    const { transferOwnership, isProcessing } = useOwnershipTransfer(userAddress || '')
+    const { generateSiteId, deleteSite, isGenerating, isDeleting } =
+      useSiteManagement()
     const remaining = calculateTimeBetween(new Date(), project.expiredDate)
     const [startDateOpen, setStartDateOpen] = useState(false)
     const [expiredDateOpen, setExpiredDateOpen] = useState(false)
@@ -171,11 +168,6 @@ const ProjectCard = memo(
     const colors = getStatusColor(project.status)
     const userPermissions = getUserPermissions(userAddress, project)
 
-    const delayAndRefetch = async () => {
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      onRefetch()
-    }
-
     const handleCopy = async (text: string) => {
       try {
         await navigator.clipboard.writeText(text)
@@ -226,16 +218,14 @@ const ProjectCard = memo(
           `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_SET_ATTRIBUTES!}?object_id=${project.parentId}&sui_ns=${selectedSuins}`,
         )
         setOpen(false)
-        if (result.status === 'success') {
+        if (result.status === 'success' && response.status === 200) {
           toast.success(<FormattedMessage id="projectCard.suinsLinked" />, {
             description: intl.formatMessage({
               id: 'projectCard.suinsLinkedDesc',
             }),
             duration: 5000,
           })
-          if (result.status === 'success' && response.status === 200) {
-            await delayAndRefetch()
-          }
+          onRefetch()
         }
       } catch (error: any) {
         console.error('Error linking SUINS:', error)
@@ -261,7 +251,6 @@ const ProjectCard = memo(
       try {
         await generateSiteId(project.parentId)
         setGenerateDialogOpen(false)
-        await delayAndRefetch()
       } catch (error: any) {
         console.error('Error generating site ID:', error)
       }
@@ -275,7 +264,6 @@ const ProjectCard = memo(
       try {
         await deleteSite(project.parentId)
         setDeleteDialogOpen(false)
-        await delayAndRefetch()
       } catch (error: any) {
         console.error('Error deleting site:', error)
       }
@@ -966,8 +954,17 @@ const ProjectCard = memo(
           onOpenChange={setManageMembersOpen}
           projectId={project.parentId || ''}
           members={project.members}
-          onAddMember={(address, permissions) => addMember(project.parentId || '', address, permissions, project.members || [])}
-          onRemoveMember={(address) => removeMember(project.parentId || '', address, project.members || [])}
+          onAddMember={(address, permissions) =>
+            addMember(
+              project.parentId || '',
+              address,
+              permissions,
+              project.members || [],
+            )
+          }
+          onRemoveMember={(address) =>
+            removeMember(project.parentId || '', address, project.members || [])
+          }
           onUpdatePermissions={(address, permissions) => {
             const memberString = createMemberString(address, permissions)
             return updateMemberPermissions(project.parentId || '', memberString)
@@ -975,7 +972,7 @@ const ProjectCard = memo(
           isAddingMember={isAddingMember}
           isRemovingMember={isRemovingMember}
           isUpdatingPermissions={isUpdatingPermissions}
-          onRefetch={delayAndRefetch}
+          onRefetch={onRefetch}
         />
 
         <RemoveMemberDialog
@@ -984,7 +981,11 @@ const ProjectCard = memo(
           isRemoving={isRemovingMember}
           onConfirm={async () => {
             if (removingMember && project.parentId) {
-              await removeMember(project.parentId, removingMember, project.members || [])
+              await removeMember(
+                project.parentId,
+                removingMember,
+                project.members || [],
+              )
             }
           }}
         />
@@ -995,6 +996,7 @@ const ProjectCard = memo(
           onOpenChange={setTransferOwnershipOpen}
           projectId={project.parentId || ''}
           currentOwner={project.owner}
+          members={project.members}
           onRefetch={onRefetch}
           onTransferOwnership={transferOwnership}
         />

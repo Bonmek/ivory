@@ -16,15 +16,19 @@ import {
   ArrowRight,
   ShieldAlert,
   CheckCircle2,
+  AlertTriangle,
 } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { isValidSuiAddress } from '@mysten/sui.js/utils'
+import { PixelLoading } from '@/components/ui/loading-pixel'
+import { ProjectMember } from '@/types/project'
 
 interface TransferOwnershipDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   projectId?: string
   currentOwner: string
+  members?: ProjectMember[]
   onRefetch: () => Promise<void>
   onTransferOwnership: (
     objectId: string,
@@ -37,6 +41,7 @@ export function TransferOwnershipDialog({
   onOpenChange,
   projectId,
   currentOwner,
+  members = [],
   onRefetch,
   onTransferOwnership,
 }: TransferOwnershipDialogProps) {
@@ -94,9 +99,42 @@ export function TransferOwnershipDialog({
     }
   }
 
+  // Check if the new owner address is already a member
+  const isMember = members.some(member => member.address === newOwnerAddress)
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(newOpen) => {
+      if (isTransferring) return 
+      onOpenChange(newOpen)
+    }}>
       <DialogContent className="bg-primary-900 border-secondary-500/20 text-white max-w-lg">
+        <AnimatePresence>
+          {isTransferring && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-primary-900/95 z-50 flex flex-col items-center justify-center gap-4"
+            >
+              <PixelLoading />
+              <div className="text-center space-y-2">
+                <p className="text-secondary-400 font-medium">
+                  <FormattedMessage 
+                    id="dialog.transferring"
+                    defaultMessage="Transferring ownership..."
+                  />
+                </p>
+                <p className="text-sm text-white/60">
+                  <FormattedMessage 
+                    id="dialog.pleaseWait"
+                    defaultMessage="Please don't close this window"
+                  />
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <DialogHeader>
           <DialogTitle className="text-secondary-400 flex items-center gap-2">
             <UserCog className="h-5 w-5" />
@@ -177,13 +215,20 @@ export function TransferOwnershipDialog({
                   addressError
                     ? 'border-red-500'
                     : isValidAddress
-                      ? 'border-green-500'
+                      ? isMember
+                        ? 'border-yellow-500'
+                        : 'border-green-500'
                       : ''
                 }`}
               />
-              {isValidAddress && (
+              {isValidAddress && !isMember && (
                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
                   <CheckCircle2 className="h-4 w-4 text-green-500" />
+                </div>
+              )}
+              {isValidAddress && isMember && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <AlertTriangle className="h-4 w-4 text-yellow-400" />
                 </div>
               )}
             </div>
@@ -191,6 +236,22 @@ export function TransferOwnershipDialog({
               <p className="text-xs text-red-400 mt-1">{addressError}</p>
             )}
           </div>
+
+          {/* Member Warning */}
+          {isMember && isValidAddress && (
+            <div className="rounded-lg bg-gradient-to-r from-yellow-500/5 to-transparent p-4 text-sm border border-yellow-500/10">
+              <div className="flex items-center gap-2 mb-2 text-yellow-400">
+                <AlertTriangle className="h-4 w-4" />
+                <span className="font-medium">Member Status</span>
+              </div>
+              <p className="text-white/70 leading-relaxed pl-6">
+                <FormattedMessage
+                  id="projectCard.transferOwnership.memberWarning"
+                  defaultMessage="This address is currently a member of the project. Consider removing their member status before transferring ownership to avoid potential conflicts."
+                />
+              </p>
+            </div>
+          )}
 
           {/* Warning Message */}
           <div className="rounded-lg bg-gradient-to-r from-red-500/5 to-transparent p-4 text-sm border border-red-500/10">
@@ -215,15 +276,15 @@ export function TransferOwnershipDialog({
               setShowConfirm(false)
               onOpenChange(false)
             }}
-            className="border-white/10 text-white/80 hover:bg-white/5"
+            className="border-white/10 text-white/80 hover:bg-white/5 cursor-pointer"
           >
             <FormattedMessage id="common.cancel" defaultMessage="Cancel" />
           </Button>
           {!showConfirm ? (
             <Button
               onClick={handleTransferClick}
-              disabled={!isValidAddress || isTransferring}
-              className="bg-secondary-500 hover:bg-secondary-600 text-black font-medium"
+              disabled={!isValidAddress || isTransferring || isMember}
+              className="bg-secondary-500 hover:bg-secondary-600 text-black font-medium cursor-pointer"
             >
               <UserCog className="h-4 w-4 mr-2" />
               <FormattedMessage
@@ -234,8 +295,8 @@ export function TransferOwnershipDialog({
           ) : (
             <Button
               onClick={handleConfirmTransfer}
-              disabled={isTransferring}
-              className="bg-red-500 hover:bg-red-600 text-white font-medium"
+              disabled={isTransferring || isMember}
+              className="bg-red-500 hover:bg-red-600 text-white font-medium cursor-pointer"
             >
               {isTransferring ? (
                 <>

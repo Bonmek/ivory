@@ -445,5 +445,6 @@ export default {
   'projectCard.transferOwnership.error': '转让所有权失败',
   'projectCard.transferOwnership.invalidAddress': '无效的钱包地址',
   'projectCard.transferOwnership.confirm': '您确定要转让所有权吗？',
-  'projectCard.transferOwnership.warning': '此操作无法撤消。您将失去对此项目的所有控制权。'
+  'projectCard.transferOwnership.warning': '此操作无法撤消。您将失去对此项目的所有控制权。',
+  'projectCard.transferOwnership.memberWarning': '此地址目前是项目成员。建议在转让所有权之前先移除其成员身份，以避免潜在冲突。'
 } as const;

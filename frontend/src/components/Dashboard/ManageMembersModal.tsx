@@ -76,7 +76,7 @@ export function ManageMembersModal({
     updateMemberPermissions,
     isAddingMember: isAdding,
     isRemovingMember: isRemoving,
-    isUpdatingPermissions: isUpdating
+    isUpdatingPermissions: isUpdating,
   } = useMemberManagement()
   const [members, setMembers] = useState(initialMembers || [])
   const [newMemberAddress, setNewMemberAddress] = useState('')
@@ -157,7 +157,12 @@ export function ManageMembersModal({
     }
 
     try {
-      await addMember(projectId, newMemberAddress, newMemberPermissions, members)
+      await addMember(
+        projectId,
+        newMemberAddress,
+        newMemberPermissions,
+        members,
+      )
       setNewMemberAddress('')
       setNewMemberPermissions({
         update: false,
@@ -212,22 +217,20 @@ export function ManageMembersModal({
       const updatedMembers = members.map((member) =>
         member.address === address
           ? { ...member, permissions: pendingPermissions[address] }
-          : member
+          : member,
       )
 
       const memberString = createMemberStrings(updatedMembers)
-      
+
       await updateMemberPermissions(projectId, memberString, () => {
         setHasChanges((prev) => ({
           ...prev,
           [address]: false,
         }))
       })
-      
+
       await onRefetch()
-    } catch (error) {
-      // Error is already handled in the hook
-    }
+    } catch (error) {}
   }
 
   const handleApplyAllChanges = async () => {
@@ -240,15 +243,13 @@ export function ManageMembersModal({
       }))
 
       const memberString = createMemberStrings(updatedMembers)
-      
+
       await updateMemberPermissions(projectId, memberString, () => {
         setHasChanges({})
       })
-      
+
       await onRefetch()
-    } catch (error) {
-      // Error is already handled in the hook
-    }
+    } catch (error) {}
   }
 
   const handleSelectAllPermissions = (address: string, checked: boolean) => {
@@ -334,14 +335,11 @@ export function ManageMembersModal({
 
   const handleRemoveMember = async (addressToRemove: string) => {
     if (!projectId) return
-    
+
     try {
       await removeMember(projectId, addressToRemove, members)
       setRemovingMember(null)
-      await onRefetch()
-    } catch (error: any) {
-      // Error is already handled in the hook
-    }
+    } catch (error: any) {}
   }
 
   return (
@@ -509,7 +507,9 @@ export function ManageMembersModal({
                       </span>
                     </h3>
                     <div className="flex items-center gap-2">
-                      {Object.keys(hasChanges).some(key => hasChanges[key]) && (
+                      {Object.keys(hasChanges).some(
+                        (key) => hasChanges[key],
+                      ) && (
                         <Button
                           variant="secondary"
                           size="sm"
@@ -610,10 +610,9 @@ export function ManageMembersModal({
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleSelectAllPermissions(
-                                member.address,
-                                true,
-                              )}
+                              onClick={() =>
+                                handleSelectAllPermissions(member.address, true)
+                              }
                               className="text-xs text-secondary-400 hover:text-secondary-300 hover:bg-secondary-500/10 px-3 h-7 rounded-md border border-secondary-500/20 transition-colors duration-200 flex items-center gap-1 cursor-pointer"
                             >
                               <ListChecks className="h-4 w-4" />
@@ -725,7 +724,9 @@ export function ManageMembersModal({
               <FormattedMessage id="projectCard.cancel" />
             </Button>
             <Button
-              onClick={() => removingMember && handleRemoveMember(removingMember)}
+              onClick={() =>
+                removingMember && handleRemoveMember(removingMember)
+              }
               className="bg-red-500 hover:bg-red-600 text-white cursor-pointer"
               disabled={isRemoving}
             >

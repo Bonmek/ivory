@@ -436,6 +436,7 @@ export default {
   'projectCard.transferOwnership.invalidAddress': 'Invalid wallet address',
   'projectCard.transferOwnership.confirm': 'Are you sure you want to transfer ownership?',
   'projectCard.transferOwnership.warning': 'This action cannot be undone. You will lose all control over this project.',
+  'projectCard.transferOwnership.memberWarning': 'This address is currently a member of the project. Consider removing their member status before transferring ownership to avoid potential conflicts.',
 
   // Project Type Filters
   'dashboard.filter.projectType': 'Project Type',

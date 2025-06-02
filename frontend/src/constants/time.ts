@@ -18,11 +18,11 @@ export const EXPIRING_SOON_THRESHOLD = TWO_WEEKS // 2 weeks
 export const RECENT_THRESHOLD = TWO_WEEKS // 2 weeks
 
 // Set appropriate staleTime and cacheTime to reduce API calls
-export const STALE_TIME = 5 * 60 * 1000 // 5 minutes - data considered fresh
-export const CACHE_TIME = 10 * 60 * 1000 // 10 minutes - how long to keep in cache
+export const STALE_TIME = 1000 * 60 * 5 // 5 minutes
+export const CACHE_TIME = 1000 * 60 * 60 // 1 hour
 
 // Retry configuration constants
-export const MAX_RETRIES_RATE_LIMIT = 5 // Maximum retries for rate limiting errors
-export const MAX_RETRIES_OTHER_ERRORS = 3 // Maximum retries for other errors
-export const RETRY_BASE_DELAY_MS = 1000 // Base delay for exponential backoff (1 second)
-export const MAX_RETRY_DELAY_MS = 10000 // Maximum retry delay (10 seconds)
+export const MAX_RETRIES_RATE_LIMIT = 3
+export const MAX_RETRIES_OTHER_ERRORS = 3
+export const RETRY_BASE_DELAY_MS = 2000 // เริ่มต้นที่ 2 วินาที
+export const MAX_RETRY_DELAY_MS = 10000 // สูงสุด 10 วินาที
