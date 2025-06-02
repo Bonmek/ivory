@@ -328,8 +328,8 @@ const DashboardHeader = ({
                   <PlusCircle className="h-4 w-4 text-secondary-500 relative z-10" />
                   <span className="relative z-10">
                     <FormattedMessage
-                      id="dashboard.createProject"
-                      defaultMessage="Create Project"
+                      id="dashboard.deployProject"
+                      defaultMessage="Deploy Project"
                     />
                   </span>
                   <ChevronDown className="h-4 w-4 text-secondary-500 ml-1 relative z-10" />
@@ -354,7 +354,7 @@ const DashboardHeader = ({
                     <span className="group-hover:translate-x-0.5 transition-transform duration-200">
                       <FormattedMessage
                         id="dashboard.deploySite"
-                        defaultMessage="Deploy Site"
+                        defaultMessage="Website"
                       />
                     </span>
                   </div>
@@ -375,7 +375,7 @@ const DashboardHeader = ({
                     <span className="group-hover:translate-x-0.5 transition-transform duration-200">
                       <FormattedMessage
                         id="dashboard.uploadZip"
-                        defaultMessage="Upload ZIP"
+                        defaultMessage="ZIP File"
                       />
                     </span>
                   </div>

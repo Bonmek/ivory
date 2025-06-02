@@ -417,6 +417,7 @@ export default {
   'projectCard.manageMembers.noMembers': 'No members yet',
   'projectCard.manageMembers.memberPermissions': 'Member Permissions',
   'projectCard.manageMembers.applyChanges': 'Apply Changes',
+  'projectCard.manageMembers.applyAllChanges': 'Apply All Changes',
 
   // Project Types
   'projectCard.type.site': 'Website',

@@ -79,6 +79,8 @@ import {
 import { useNavigate } from 'react-router'
 import { createMemberString, joinMemberStrings } from '@/utils/memberUtils'
 import { createMemberStrings } from '@/utils/memberUtils'
+import { useMemberManagement } from '@/hooks/useMemberManagement'
+import { useSiteManagement } from '@/hooks/useSiteManagement'
 
 const ProjectCard = memo(
   ({
@@ -92,6 +94,21 @@ const ProjectCard = memo(
     const intl = useIntl()
     const { signAndExecuteTransactionBlock } = useWalletKit()
     const navigate = useNavigate()
+    const {
+      addMember,
+      removeMember,
+      updateMemberPermissions,
+      transferOwnership,
+      isAddingMember,
+      isRemovingMember,
+      isUpdatingPermissions,
+    } = useMemberManagement()
+    const {
+      generateSiteId,
+      deleteSite,
+      isGenerating,
+      isDeleting
+    } = useSiteManagement()
     const remaining = calculateTimeBetween(new Date(), project.expiredDate)
     const [startDateOpen, setStartDateOpen] = useState(false)
     const [expiredDateOpen, setExpiredDateOpen] = useState(false)
@@ -117,9 +134,7 @@ const ProjectCard = memo(
     const [isLinking, setIsLinking] = useState(false)
     const [open, setOpen] = useState(false)
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-    const [isDeleting, setIsDeleting] = useState(false)
     const [generateDialogOpen, setGenerateDialogOpen] = useState(false)
-    const [isGenerating, setIsGenerating] = useState(false)
     const [manageMembersOpen, setManageMembersOpen] = useState(false)
     const [newMemberAddress, setNewMemberAddress] = useState('')
     const [newMemberPermissions, setNewMemberPermissions] =
@@ -130,9 +145,6 @@ const ProjectCard = memo(
         setSuins: false,
       })
     const [removingMember, setRemovingMember] = useState<string | null>(null)
-    const [isAddingMember, setIsAddingMember] = useState(false)
-    const [isRemovingMember, setIsRemovingMember] = useState(false)
-    const [isUpdatingPermissions, setIsUpdatingPermissions] = useState(false)
     const [transferOwnershipOpen, setTransferOwnershipOpen] = useState(false)
 
     useEffect(() => {
@@ -241,35 +253,31 @@ const ProjectCard = memo(
       }
     }
 
+    const handleGenerateSiteId = async (): Promise<void> => {
+      if (!project.parentId) {
+        toast.error('Project ID is missing')
+        return
+      }
+      try {
+        await generateSiteId(project.parentId)
+        setGenerateDialogOpen(false)
+        await delayAndRefetch()
+      } catch (error: any) {
+        console.error('Error generating site ID:', error)
+      }
+    }
+
     const handleDeleteSite = async (): Promise<void> => {
       if (!project.parentId) {
         toast.error('Project Parent ID is missing. Cannot delete site.')
         return
       }
       try {
-        setIsDeleting(true)
-        const response = await apiClient.delete(
-          `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_DELETE_WEBSITE!}?object_id=${project.parentId}`,
-        )
-        if (response.status === 200) {
-          toast.success(<FormattedMessage id="projectCard.siteDeleted" />, {
-            description: intl.formatMessage({
-              id: 'projectCard.siteDeletedDesc',
-            }),
-            duration: 5000,
-          })
-          setDeleteDialogOpen(false)
-          await delayAndRefetch()
-        }
+        await deleteSite(project.parentId)
+        setDeleteDialogOpen(false)
+        await delayAndRefetch()
       } catch (error: any) {
         console.error('Error deleting site:', error)
-        toast.error(
-          error.response?.data?.message || (
-            <FormattedMessage id="projectCard.failedToDelete" />
-          ),
-        )
-      } finally {
-        setIsDeleting(false)
       }
     }
 
@@ -279,144 +287,6 @@ const ProjectCard = memo(
         await refetchSuiNS()
       } finally {
         setIsRefreshing(false)
-      }
-    }
-
-    const handleGenerateSiteId = async (): Promise<void> => {
-      setIsGenerating(true)
-      try {
-        await apiClient.put(
-          `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_ADD_SITE_ID!}?object_id=${project.parentId}`,
-        )
-        toast.success('Site ID generated successfully', {
-          description: 'Please wait a moment',
-          duration: 5000,
-        })
-        setGenerateDialogOpen(false)
-        await delayAndRefetch()
-      } catch (error: any) {
-        toast.error(error?.message || 'Failed to generate Site ID')
-      } finally {
-        setIsGenerating(false)
-      }
-    }
-
-    const handleAddMember = async (
-      address: string,
-      permissions: MemberPermissions,
-    ) => {
-      try {
-        setIsAddingMember(true)
-
-        const allMembers = [
-          ...(project.members || []),
-          { address, permissions },
-        ]
-
-        const memberString = createMemberStrings(allMembers)
-        await apiClient.put(
-          `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_GRANT_ACCESS!}?object_id=${project.parentId}&member_address_n_access=${memberString}`,
-        )
-
-        toast.success(
-          intl.formatMessage({ id: 'projectCard.manageMembers.memberAdded' }),
-        )
-
-        await delayAndRefetch()
-      } catch (error: any) {
-        console.error('Error adding member:', error)
-        toast.error(
-          error?.message || intl.formatMessage({ id: 'common.error.unknown' }),
-        )
-      } finally {
-        setIsAddingMember(false)
-      }
-    }
-
-    const handleRemoveMember = async (addressToRemove: string) => {
-      try {
-        setIsRemovingMember(true)
-
-        const remainingMembers =
-          project.members?.filter(
-            (member) => member.address !== addressToRemove,
-          ) || []
-
-        const memberString = createMemberStrings(remainingMembers)
-
-        await apiClient.put(
-          `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_GRANT_ACCESS!}?object_id=${project.parentId}&member_address_n_access=${memberString}`,
-        )
-
-        toast.success(
-          intl.formatMessage({ id: 'projectCard.manageMembers.memberRemoved' }),
-        )
-
-        await delayAndRefetch()
-      } catch (error: any) {
-        console.error('Error removing member:', error)
-        toast.error(
-          error?.message || intl.formatMessage({ id: 'common.error.unknown' }),
-        )
-      } finally {
-        setIsRemovingMember(false)
-      }
-    }
-
-    const handleUpdateMemberPermissions = async (
-      addressToUpdate: string,
-      newPermissions: MemberPermissions,
-    ) => {
-      try {
-        setIsUpdatingPermissions(true)
-
-        const updatedMembers =
-          project.members?.map((member) =>
-            member.address === addressToUpdate
-              ? { ...member, permissions: newPermissions }
-              : member,
-          ) || []
-
-        const memberString = createMemberStrings(updatedMembers)
-        console.log(memberString)
-        await apiClient.put(
-          `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_GRANT_ACCESS!}?object_id=${project.parentId}&member_address_n_access=${memberString}`,
-        )
-
-        toast.success(
-          intl.formatMessage({
-            id: 'projectCard.manageMembers.permissionsUpdated',
-          }),
-        )
-
-        await delayAndRefetch()
-      } catch (error: any) {
-        console.error('Error updating permissions:', error)
-        toast.error(
-          error?.message || intl.formatMessage({ id: 'common.error.unknown' }),
-        )
-      } finally {
-        setIsUpdatingPermissions(false)
-      }
-    }
-
-    const handleTransferOwnership = async (
-      objectId: string,
-      newOwnerAddress: string,
-    ): Promise<void> => {
-      try {
-        await apiClient.put(
-          `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_TRANSFER_OWNER!}?object_id=${objectId}&new_owner_address=${newOwnerAddress}`,
-        )
-        toast.success('Ownership transferred successfully', {
-          description: 'Please wait a moment for the changes to take effect',
-          duration: 5000,
-        })
-        await delayAndRefetch()
-        return Promise.resolve()
-      } catch (error: any) {
-        toast.error(error?.message || 'Failed to transfer ownership')
-        return Promise.reject(error)
       }
     }
 
@@ -1096,9 +966,12 @@ const ProjectCard = memo(
           onOpenChange={setManageMembersOpen}
           projectId={project.parentId || ''}
           members={project.members}
-          onAddMember={handleAddMember}
-          onRemoveMember={handleRemoveMember}
-          onUpdatePermissions={handleUpdateMemberPermissions}
+          onAddMember={(address, permissions) => addMember(project.parentId || '', address, permissions, project.members || [])}
+          onRemoveMember={(address) => removeMember(project.parentId || '', address, project.members || [])}
+          onUpdatePermissions={(address, permissions) => {
+            const memberString = createMemberString(address, permissions)
+            return updateMemberPermissions(project.parentId || '', memberString)
+          }}
           isAddingMember={isAddingMember}
           isRemovingMember={isRemovingMember}
           isUpdatingPermissions={isUpdatingPermissions}
@@ -1110,8 +983,8 @@ const ProjectCard = memo(
           onOpenChange={(open) => !open && setRemovingMember(null)}
           isRemoving={isRemovingMember}
           onConfirm={async () => {
-            if (removingMember) {
-              await handleRemoveMember(removingMember)
+            if (removingMember && project.parentId) {
+              await removeMember(project.parentId, removingMember, project.members || [])
             }
           }}
         />
@@ -1123,7 +996,7 @@ const ProjectCard = memo(
           projectId={project.parentId || ''}
           currentOwner={project.owner}
           onRefetch={onRefetch}
-          onTransferOwnership={handleTransferOwnership}
+          onTransferOwnership={transferOwnership}
         />
 
         <Toaster />

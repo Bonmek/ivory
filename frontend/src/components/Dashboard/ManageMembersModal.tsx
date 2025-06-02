@@ -33,6 +33,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { useMemberManagement } from '@/hooks/useMemberManagement'
+import { createMemberStrings } from '@/utils/memberUtils'
 
 interface ManageMembersModalProps {
   open: boolean
@@ -68,6 +70,14 @@ export function ManageMembersModal({
   onRefetch,
 }: ManageMembersModalProps) {
   const intl = useIntl()
+  const {
+    addMember,
+    removeMember,
+    updateMemberPermissions,
+    isAddingMember: isAdding,
+    isRemovingMember: isRemoving,
+    isUpdatingPermissions: isUpdating
+  } = useMemberManagement()
   const [members, setMembers] = useState(initialMembers || [])
   const [newMemberAddress, setNewMemberAddress] = useState('')
   const [isValidAddress, setIsValidAddress] = useState(false)
@@ -125,7 +135,7 @@ export function ManageMembersModal({
   }
 
   const handleAddMember = async () => {
-    if (!newMemberAddress) {
+    if (!newMemberAddress || !projectId) {
       toast.error(
         intl.formatMessage({ id: 'projectCard.manageMembers.enterAddress' }),
       )
@@ -147,7 +157,7 @@ export function ManageMembersModal({
     }
 
     try {
-      await onAddMember(newMemberAddress, newMemberPermissions)
+      await addMember(projectId, newMemberAddress, newMemberPermissions, members)
       setNewMemberAddress('')
       setNewMemberPermissions({
         update: false,
@@ -155,8 +165,9 @@ export function ManageMembersModal({
         generateSite: false,
         setSuins: false,
       })
+      await onRefetch()
     } catch (error: any) {
-      toast.error(error?.message || 'Failed to add member')
+      // Error is already handled in the hook
     }
   }
 
@@ -195,24 +206,48 @@ export function ManageMembersModal({
   }
 
   const handleSavePermissions = async (address: string) => {
-    if (!pendingPermissions[address]) return
+    if (!pendingPermissions[address] || !projectId) return
 
     try {
-      await onUpdatePermissions(address, pendingPermissions[address])
-      setHasChanges((prev) => ({
-        ...prev,
-        [address]: false,
-      }))
+      const updatedMembers = members.map((member) =>
+        member.address === address
+          ? { ...member, permissions: pendingPermissions[address] }
+          : member
+      )
+
+      const memberString = createMemberStrings(updatedMembers)
+      
+      await updateMemberPermissions(projectId, memberString, () => {
+        setHasChanges((prev) => ({
+          ...prev,
+          [address]: false,
+        }))
+      })
+      
+      await onRefetch()
     } catch (error) {
-      setPendingPermissions((prev) => ({
-        ...prev,
-        [address]: members.find((m) => m.address === address)?.permissions || {
-          update: false,
-          delete: false,
-          generateSite: false,
-          setSuins: false,
-        },
+      // Error is already handled in the hook
+    }
+  }
+
+  const handleApplyAllChanges = async () => {
+    if (!projectId) return
+
+    try {
+      const updatedMembers = members.map((member) => ({
+        ...member,
+        permissions: pendingPermissions[member.address] || member.permissions,
       }))
+
+      const memberString = createMemberStrings(updatedMembers)
+      
+      await updateMemberPermissions(projectId, memberString, () => {
+        setHasChanges({})
+      })
+      
+      await onRefetch()
+    } catch (error) {
+      // Error is already handled in the hook
     }
   }
 
@@ -297,6 +332,18 @@ export function ManageMembersModal({
     }
   }
 
+  const handleRemoveMember = async (addressToRemove: string) => {
+    if (!projectId) return
+    
+    try {
+      await removeMember(projectId, addressToRemove, members)
+      setRemovingMember(null)
+      await onRefetch()
+    } catch (error: any) {
+      // Error is already handled in the hook
+    }
+  }
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -340,10 +387,10 @@ export function ManageMembersModal({
                 </div>
                 <Button
                   onClick={handleAddMember}
-                  disabled={!isValidAddress || isAddingMember}
+                  disabled={!isValidAddress || isAdding}
                   className="bg-secondary-500 hover:bg-secondary-600 cursor-pointer"
                 >
-                  {isAddingMember ? (
+                  {isAdding ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <UserPlus className="h-4 w-4" />
@@ -461,46 +508,64 @@ export function ManageMembersModal({
                         )
                       </span>
                     </h3>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={handleRefresh}
-                              disabled={isRefreshing || isInCooldown}
-                              className={`text-xs text-secondary-400 hover:text-secondary-300 hover:bg-secondary-500/10 px-2 h-7 rounded-md transition-colors duration-200 relative overflow-hidden cursor-pointer
-                                ${isInCooldown ? 'bg-primary-800/50' : ''}
-                                ${isRefreshing ? 'bg-secondary-500/10' : ''}
-                              `}
-                            >
-                              <RefreshCw
-                                className={`h-3.5 w-3.5 transition-all duration-200
-                                  ${isRefreshing ? 'animate-spin text-secondary-400' : ''}
-                                  ${isInCooldown ? 'text-secondary-600' : ''}
-                                `}
-                              />
-                              {isInCooldown && (
-                                <div
-                                  className="absolute bottom-0 left-0 h-1 bg-secondary-500/30"
-                                  style={{
-                                    width: `${(cooldownSeconds / COOLDOWN_PERIOD) * 100}%`,
-                                    transition: 'width 1s linear',
-                                  }}
-                                />
-                              )}
-                            </Button>
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent
-                          side="top"
-                          className="bg-primary-900/95 border-secondary-500/20 text-white text-xs"
+                    <div className="flex items-center gap-2">
+                      {Object.keys(hasChanges).some(key => hasChanges[key]) && (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={handleApplyAllChanges}
+                          disabled={isUpdating}
+                          className="text-xs px-3 h-7 bg-secondary-500 hover:bg-secondary-600 text-black flex items-center gap-1 cursor-pointer"
                         >
-                          {getTooltipMessage()}
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                          {isUpdating ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Save className="h-3.5 w-3.5" />
+                          )}
+                          <FormattedMessage id="projectCard.manageMembers.applyAllChanges" />
+                        </Button>
+                      )}
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={handleRefresh}
+                                disabled={isRefreshing || isInCooldown}
+                                className={`text-xs text-secondary-400 hover:text-secondary-300 hover:bg-secondary-500/10 px-2 h-7 rounded-md transition-colors duration-200 relative overflow-hidden cursor-pointer
+                                  ${isInCooldown ? 'bg-primary-800/50' : ''}
+                                  ${isRefreshing ? 'bg-secondary-500/10' : ''}
+                                `}
+                              >
+                                <RefreshCw
+                                  className={`h-3.5 w-3.5 transition-all duration-200
+                                    ${isRefreshing ? 'animate-spin text-secondary-400' : ''}
+                                    ${isInCooldown ? 'text-secondary-600' : ''}
+                                  `}
+                                />
+                                {isInCooldown && (
+                                  <div
+                                    className="absolute bottom-0 left-0 h-1 bg-secondary-500/30"
+                                    style={{
+                                      width: `${(cooldownSeconds / COOLDOWN_PERIOD) * 100}%`,
+                                      transition: 'width 1s linear',
+                                    }}
+                                  />
+                                )}
+                              </Button>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent
+                            side="top"
+                            className="bg-primary-900/95 border-secondary-500/20 text-white text-xs"
+                          >
+                            {getTooltipMessage()}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
                   </div>
 
                   <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 -mr-2">
@@ -545,23 +610,14 @@ export function ManageMembersModal({
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() =>
-                                setExpandedMember(
-                                  expandedMember === member.address
-                                    ? null
-                                    : member.address,
-                                )
-                              }
-                              className="text-xs text-secondary-400 hover:text-secondary-300 px-2 h-7 cursor-pointer"
-                            >
-                              {expandedMember === member.address ? (
-                                <ChevronUp className="h-4 w-4" />
-                              ) : (
-                                <ChevronDown className="h-4 w-4" />
+                              onClick={() => handleSelectAllPermissions(
+                                member.address,
+                                true,
                               )}
-                              <span className="ml-1">
-                                <FormattedMessage id="projectCard.manageMembers.permissions" />
-                              </span>
+                              className="text-xs text-secondary-400 hover:text-secondary-300 hover:bg-secondary-500/10 px-3 h-7 rounded-md border border-secondary-500/20 transition-colors duration-200 flex items-center gap-1 cursor-pointer"
+                            >
+                              <ListChecks className="h-4 w-4" />
+                              <FormattedMessage id="projectCard.manageMembers.selectAll" />
                             </Button>
                             <Button
                               variant="ghost"
@@ -580,40 +636,20 @@ export function ManageMembersModal({
                               <span className="text-xs text-secondary-400">
                                 <FormattedMessage id="projectCard.manageMembers.memberPermissions" />
                               </span>
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() =>
-                                    handleSelectAllPermissions(
-                                      member.address,
-                                      true,
-                                    )
-                                  }
-                                  className="text-xs text-secondary-400 hover:text-secondary-300 hover:bg-secondary-500/10 px-3 h-7 rounded-md border border-secondary-500/20 transition-colors duration-200 flex items-center gap-1 cursor-pointer"
-                                >
-                                  <ListChecks className="h-4 w-4" />
-                                  <FormattedMessage id="projectCard.manageMembers.selectAll" />
-                                </Button>
-                                {hasChanges[member.address] && (
-                                  <Button
-                                    variant="secondary"
-                                    size="sm"
-                                    onClick={() =>
-                                      handleSavePermissions(member.address)
-                                    }
-                                    disabled={isUpdatingPermissions}
-                                    className="text-xs px-3 h-7 bg-secondary-500 hover:bg-secondary-600 text-white flex items-center gap-1 cursor-pointer"
-                                  >
-                                    {isUpdatingPermissions ? (
-                                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                    ) : (
-                                      <Save className="h-3.5 w-3.5" />
-                                    )}
-                                    <FormattedMessage id="projectCard.manageMembers.applyChanges" />
-                                  </Button>
-                                )}
-                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() =>
+                                  handleSelectAllPermissions(
+                                    member.address,
+                                    true,
+                                  )
+                                }
+                                className="text-xs text-secondary-400 hover:text-secondary-300 hover:bg-secondary-500/10 px-3 h-7 rounded-md border border-secondary-500/20 transition-colors duration-200 flex items-center gap-1 cursor-pointer"
+                              >
+                                <ListChecks className="h-4 w-4" />
+                                <FormattedMessage id="projectCard.manageMembers.selectAll" />
+                              </Button>
                             </div>
                             <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                               {Object.entries({
@@ -689,11 +725,11 @@ export function ManageMembersModal({
               <FormattedMessage id="projectCard.cancel" />
             </Button>
             <Button
-              onClick={() => removingMember && onRemoveMember(removingMember)}
+              onClick={() => removingMember && handleRemoveMember(removingMember)}
               className="bg-red-500 hover:bg-red-600 text-white cursor-pointer"
-              disabled={isRemovingMember}
+              disabled={isRemoving}
             >
-              {isRemovingMember ? (
+              {isRemoving ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
               ) : (
                 <X className="h-4 w-4 mr-2" />
