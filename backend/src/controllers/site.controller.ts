@@ -22,20 +22,16 @@ export class SiteController {
         try {
             const result = await this.siteService.handlePreview(req);
             res.download(result.outputZipPath, "output.zip", async (err) => {
+            await this.fileService.cleanupFiles();
                 if (err) {
-                    await this.fileService.cleanupFiles(result.extractPath, req.file?.path ?? null, result.outputZipPath);
-                    await this.fileService.cleanupAllDirectories();
                     res.status(500).json({
                         statusCode: 0,
                         error: "Failed to send ZIP file",
                     });
                 }
-                await this.fileService.cleanupFiles(result.extractPath, req.file?.path ?? null, result.outputZipPath);
-                await this.fileService.cleanupAllDirectories();
             });
         } catch {
-            await this.fileService.cleanupFiles(null, req.file?.path ?? null, null);
-            await this.fileService.cleanupAllDirectories();
+            await this.fileService.cleanupFiles();
             res.status(500).json({
                 statusCode: 0,
                 error: "Internal server error during preview processing"
@@ -46,14 +42,14 @@ export class SiteController {
     createSite = async (req: Request, res: Response) => {
         try {
             const result = await this.siteService.handleCreateSite(req);
+            await this.fileService.cleanupFiles();
             res.status(200).json({
                 statusCode: 1,
                 objectId: result.blob_object_id,
                 taskName: `Created task ${result.taskName}`,
             });
         } catch {
-            await this.fileService.cleanupFiles(null, req.file?.path ?? null, null);
-            await this.fileService.cleanupAllDirectories();
+            await this.fileService.cleanupFiles();
             res.status(500).json({
                 statusCode: 0,
                 error: "Internal server error during site processing"
@@ -64,6 +60,7 @@ export class SiteController {
     updateSite = async (req: Request, res: Response) => {
         try {
             const result = await this.siteService.handleUpdateSite(req);
+            await this.fileService.cleanupFiles();
             res.status(200).json({
                 statusCode: 1,
                 objectId: result.blob_object_id,    

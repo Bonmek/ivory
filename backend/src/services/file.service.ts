@@ -22,34 +22,25 @@ export class FileService {
     zip.writeZip(outputPath);
   }
 
-  async cleanupFiles(
-    extractPath: string | null,
-    zipPath: string | null,
-    outputPath: string | null
-  ) {
-    if (extractPath) await fs.remove(extractPath);
-    if (zipPath) await fs.remove(zipPath);
-    if (outputPath) await fs.remove(outputPath);
-  }
+  async cleanupFiles() {
+    const deleteFilesInDir = async (dirPath: string) => {
+      try {
+      const exists = await fs.pathExists(dirPath);
+      if (!exists) return;
 
-  async cleanupAllDirectories() {
-    try {
-      const dirs = ["outputs", "outputs", "temp", "uploads"];
-      await Promise.all(
-        dirs.map(async (dir) => {
-          const dirPath = path.join(__dirname, dir);
-          if (await fs.pathExists(dirPath)) {
-            const files = await fs.readdir(dirPath);
-            await Promise.all(
-              files.map((file) => fs.remove(path.join(dirPath, file)))
-            );
-            await fs.remove(dirPath);
-          }
-        })
-      );
-    } catch (error) {
-      console.error("Error cleaning up directories:", error);
+      const stat = await fs.stat(dirPath);
+      if (stat.isDirectory()) {
+        await fs.emptyDir(dirPath);
+      } else {
+        console.warn(`${dirPath} is not a directory. Skipping.`);
+      }
+    } catch (err) {
+      console.error(`Error cleaning up files in ${dirPath}:`, err);
     }
+  };
+    await deleteFilesInDir("./src/temp/");
+    await deleteFilesInDir("./uploads/");
+    await deleteFilesInDir("./src/outputs/");
   }
 
   async containsJavaScriptFiles(dirPath: string): Promise<boolean> {
