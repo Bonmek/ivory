@@ -4,7 +4,7 @@ echo "🔁 Starting environment variable replacement..."
 
 # Loop through a list of env vars you care about
 for VAR in \
-  SUI_Hex \
+  SUI_HEX \
   GITHUB_CLIENT_ID \
   GITHUB_CLIENT_SECRET \
   CALLBACK_URL \
