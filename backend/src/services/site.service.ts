@@ -50,7 +50,7 @@ export class SiteService {
     let indexDir: string | null = null;
 
     if (!req.file) {
-      await this.fileService.cleanupAllDirectories();
+      await this.fileService.cleanupFiles();
       throw new Error("No file uploaded");
     }
 
@@ -69,15 +69,13 @@ export class SiteService {
       const attributes_data = inputPreviewSiteScheme.safeParse(attributes);
 
       if (!attributes_data.success) {
-        await this.fileService.cleanupFiles(extractPath, zipFile.path, null);
-        await this.fileService.cleanupAllDirectories();
+        await this.fileService.cleanupFiles();
         throw new Error(JSON.stringify(attributes_data.error.errors));
       }
 
       if (attributes_data.data.is_build === "1") {
         if (await this.fileService.containsJavaScriptFiles(extractPath)) {
-          await this.fileService.cleanupFiles(extractPath, zipFile.path, null);
-          await this.fileService.cleanupAllDirectories();
+          await this.fileService.cleanupFiles();
           throw new Error(
             "JavaScript files found in the uploaded zip. Only static files are allowed."
           );
@@ -88,8 +86,7 @@ export class SiteService {
         const packageJsonPath = path.join(buildDir, "package.json");
 
         if (!(await fs.pathExists(packageJsonPath))) {
-          await this.fileService.cleanupFiles(extractPath, zipFile.path, null);
-          await this.fileService.cleanupAllDirectories();
+          await this.fileService.cleanupFiles();
           throw new Error("package.json not found in specified root directory");
         }
 
@@ -130,26 +127,19 @@ export class SiteService {
           const indexPath = path.join(distPath, "index.html");
 
           if (!(await fs.pathExists(indexPath))) {
-            await this.fileService.cleanupFiles(
-              extractPath,
-              zipFile.path,
-              null
-            );
-            await this.fileService.cleanupAllDirectories();
+            await this.fileService.cleanupFiles();
             throw new Error("index.html not found in dist folder");
           }
 
           indexDir = distPath;
         } catch {
-          await this.fileService.cleanupFiles(extractPath, zipFile.path, null);
-          await this.fileService.cleanupAllDirectories();
+          await this.fileService.cleanupFiles();
           throw new Error("Build process failed");
         }
       }
 
       if (!indexDir) {
-        await this.fileService.cleanupFiles(extractPath, zipFile.path, null);
-        await this.fileService.cleanupAllDirectories();
+        await this.fileService.cleanupFiles();
         throw new Error("index.html not found");
       }
 
@@ -164,19 +154,12 @@ export class SiteService {
       };
     } catch {
       throw new Error();
-    } finally {
-      await this.fileService.cleanupFiles(
-        extractPath,
-        req.file?.path,
-        outputZipPath
-      );
-      await this.fileService.cleanupAllDirectories();
     }
   }
 
   async handleCreateSite(req: Request) {
     if (!req.file) {
-      await this.fileService.cleanupAllDirectories();
+      await this.fileService.cleanupFiles();
       throw new Error("No file uploaded");
     }
 
@@ -309,19 +292,12 @@ export class SiteService {
       };
     } catch {
       throw new Error();
-    } finally {
-      await this.fileService.cleanupFiles(
-        extractPath,
-        zipFile.path,
-        outputZipPath
-      );
-      await this.fileService.cleanupAllDirectories();
     }
   }
 
   async handleUpdateSite(req: Request) {
     if (!req.file) {
-      await this.fileService.cleanupAllDirectories();
+      await this.fileService.cleanupFiles();
       throw new Error("No file uploaded");
     }
 
@@ -476,13 +452,6 @@ export class SiteService {
       };
     } catch {
       throw new Error();
-    } finally {
-      await this.fileService.cleanupFiles(
-        extractPath,
-        zipFile.path,
-        outputZipPath
-      );
-      await this.fileService.cleanupAllDirectories();
     }
   }
 
