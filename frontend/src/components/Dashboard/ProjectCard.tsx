@@ -66,7 +66,6 @@ import { linkSuinsToSite } from '@/utils/suinsUtils'
 import { ManageMembersModal } from './ManageMembersModal'
 import { DeleteConfirmationDialog } from './DeleteConfirmationDialog'
 import { GenerateSiteIdDialog } from './GenerateSiteIdDialog'
-import { RemoveMemberDialog } from './RemoveMemberDialog'
 import { TransferOwnershipDialog } from './TransferOwnershipDialog'
 import {
   formatDate,
@@ -973,21 +972,6 @@ const ProjectCard = memo(
           isRemovingMember={isRemovingMember}
           isUpdatingPermissions={isUpdatingPermissions}
           onRefetch={onRefetch}
-        />
-
-        <RemoveMemberDialog
-          open={!!removingMember}
-          onOpenChange={(open) => !open && setRemovingMember(null)}
-          isRemoving={isRemovingMember}
-          onConfirm={async () => {
-            if (removingMember && project.parentId) {
-              await removeMember(
-                project.parentId,
-                removingMember,
-                project.members || [],
-              )
-            }
-          }}
         />
 
         {/* Transfer Ownership Dialog */}

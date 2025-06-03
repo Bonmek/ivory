@@ -90,6 +90,7 @@ export function ManageMembersModal({
       setSuins: false,
     })
   const [removingMember, setRemovingMember] = useState<string | null>(null)
+  const [confirmingRemoval, setConfirmingRemoval] = useState<string | null>(null)
   const [expandedMember, setExpandedMember] = useState<string | null>(null)
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null)
   const [pendingPermissions, setPendingPermissions] = useState<{
@@ -170,9 +171,7 @@ export function ManageMembersModal({
         generateSite: false,
         setSuins: false,
       })
-      await onRefetch()
     } catch (error: any) {
-      // Error is already handled in the hook
     }
   }
 
@@ -229,7 +228,6 @@ export function ManageMembersModal({
         }))
       })
 
-      await onRefetch()
     } catch (error) {}
   }
 
@@ -248,7 +246,6 @@ export function ManageMembersModal({
         setHasChanges({})
       })
 
-      await onRefetch()
     } catch (error) {}
   }
 
@@ -618,14 +615,78 @@ export function ManageMembersModal({
                               <ListChecks className="h-4 w-4" />
                               <FormattedMessage id="projectCard.manageMembers.selectAll" />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setRemovingMember(member.address)}
-                              className="text-red-400 hover:text-red-300 hover:bg-red-500/10 h-7 w-7 p-0 cursor-pointer"
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
+                            {confirmingRemoval === member.address ? (
+                              <div className="flex items-center gap-1.5 bg-primary-900/50 p-1 rounded-md border border-white/10">
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setConfirmingRemoval(null)}
+                                        className="text-white/80 hover:text-white hover:bg-white/10 h-7 w-7 p-0 cursor-pointer rounded-md"
+                                      >
+                                        <X className="h-4 w-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent
+                                      side="top"
+                                      className="bg-primary-900/95 border-white/20 text-white text-xs"
+                                    >
+                                      <FormattedMessage id="common.cancel" defaultMessage="Cancel" />
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleRemoveMember(member.address)}
+                                        disabled={isRemoving}
+                                        className="text-green-400 hover:text-green-300 hover:bg-green-500/10 h-7 w-7 p-0 cursor-pointer rounded-md"
+                                      >
+                                        {isRemoving ? (
+                                          <Loader2 className="h-4 w-4 animate-spin" />
+                                        ) : (
+                                          <Check className="h-4 w-4" />
+                                        )}
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent
+                                      side="top"
+                                      className="bg-primary-900/95 border-green-500/20 text-white text-xs"
+                                    >
+                                      <FormattedMessage id="common.confirm" defaultMessage="Confirm" />
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </div>
+                            ) : (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => setConfirmingRemoval(member.address)}
+                                      className="text-red-400 hover:text-red-300 hover:bg-red-500/10 h-7 w-7 p-0 cursor-pointer group relative rounded-md"
+                                    >
+                                      <X className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
+                                      <span className="sr-only">Remove member</span>
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent
+                                    side="top"
+                                    className="bg-primary-900/95 border-red-500/20 text-white text-xs"
+                                  >
+                                    <FormattedMessage id="projectCard.manageMembers.removeMember" defaultMessage="Remove member" />
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
                           </div>
                         </div>
 
@@ -698,45 +759,6 @@ export function ManageMembersModal({
                 </div>
               </>
             )}
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog
-        open={!!removingMember}
-        onOpenChange={() => setRemovingMember(null)}
-      >
-        <DialogContent className="bg-primary-900 border-red-500/20 text-white">
-          <DialogHeader>
-            <DialogTitle className="text-red-400">
-              <FormattedMessage id="projectCard.manageMembers.removeMember" />
-            </DialogTitle>
-            <DialogDescription className="text-white/60">
-              <FormattedMessage id="projectCard.manageMembers.removeConfirm" />
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-end gap-3 mt-6">
-            <Button
-              variant="outline"
-              onClick={() => setRemovingMember(null)}
-              className="border-white/20 text-white hover:bg-white/10 cursor-pointer"
-            >
-              <FormattedMessage id="projectCard.cancel" />
-            </Button>
-            <Button
-              onClick={() =>
-                removingMember && handleRemoveMember(removingMember)
-              }
-              className="bg-red-500 hover:bg-red-600 text-white cursor-pointer"
-              disabled={isRemoving}
-            >
-              {isRemoving ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : (
-                <X className="h-4 w-4 mr-2" />
-              )}
-              <FormattedMessage id="projectCard.manageMembers.removeMember" />
-            </Button>
           </div>
         </DialogContent>
       </Dialog>

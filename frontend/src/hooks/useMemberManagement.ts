@@ -57,7 +57,9 @@ export const useMemberManagement = () => {
       const remainingMembers = currentMembers.filter(
         (member) => member.address !== addressToRemove,
       )
-      const memberString = createMemberStrings(remainingMembers)
+
+      // Handle case when removing last member
+      const memberString = remainingMembers.length === 0 ? "" : createMemberStrings(remainingMembers)
 
       const response = await apiClient.put(
         `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_GRANT_ACCESS!}?object_id=${objectId}&member_address_n_access=${memberString}`,
