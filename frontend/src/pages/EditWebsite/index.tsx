@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from '@/components/ui/input'
 import { ExternalLink, Globe, Copy, Check, Eye, EyeOff, Layout, XCircle, CheckCircle, X, Edit3, Upload, Archive, CircleAlert, HelpCircle, Github, CirclePlus } from 'lucide-react'
 import ProjectCard from '@/components/EditWebsite/ProjectCard'
-import { handleUpdateSite } from '@/api/editWebsiteApi'
+import { handleUpdateSite, UpdateSiteAttributes } from '@/api/editWebsiteApi'
 import { EditAllFieldsDialog } from '@/components/EditWebsite/EditAllFieldsDialog'
 import FileUploadPreview, { FileItem } from '@/components/CreateWebsite/FileUploadPreview'
 import { FormattedMessage, useIntl } from 'react-intl'
@@ -31,6 +31,7 @@ import { useQuery } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
 import JSZip from 'jszip'
 import { frameworks } from '@/constants/frameworks'
+import { PreviewSiteAttributes } from '@/api/createWebsiteApi'
 
 type WithFields = { fields: Record<string, unknown> };
 
@@ -665,19 +666,80 @@ function EditWebsitePage() {
     const showcaseUrl = projectContents?.["showcase_url"]
     const fullShowcaseUrl = showcaseUrl ? `https://kursui.wal.app/${showcaseUrl}/index.html` : null
 
-    console.log(projectContents)
+    const handleUpdateWebsite = async () => {
+        setIsUpdating(true);
+        setUpdateError(null);
 
+        let rootDirectory = advancedOptions.rootDirectory
+        if (showBuildOutputSettings) {
+            rootDirectory = buildOutputSettings.rootDirectory
+        }
 
+        const attributes: UpdateSiteAttributes = {
+            old_object_id: params.id,
+            'site-name': name,
+            output_dir: showBuildOutputSettings && buildOutputSettings.outputDirectory
+                ? buildOutputSettings.outputDirectory
+                : '',
+            status: '0',
+            cache: advancedOptions.cacheControl,
+            root: rootDirectory || '/',
+            install_command: buildOutputSettings.installCommand || 'npm install',
+            build_command: buildOutputSettings.buildCommand || 'npm run build',
+            default_route: advancedOptions.defaultPath || '/index.html',
+            is_build: showBuildOutputSettings ? '0' : '1',
+        }
+
+        try {
+            const result = await handleUpdateSite({
+                file: uploadMethod === UploadMethod.GitHub ? selectedRepoFile || undefined : selectedFile || undefined,
+                attributes: attributes
+            });
+
+            if (result.success) {
+                // Update local state immediately for better UX
+                setProjectContents(prev => ({
+                    ...prev,
+                    ...attributes
+                } as ProjectContents));
+
+                // Show success toast
+                setToast({
+                    type: 'success',
+                    message: 'All fields updated successfully'
+                });
+            } else {
+                const errorMsg = result.message || 'Failed to update fields';
+                setUpdateError(errorMsg);
+                setToast({
+                    type: 'error',
+                    message: `Failed to update fields: ${errorMsg}`
+                });
+            }
+        } catch (error) {
+            console.error('Error updating fields:', error);
+            const errorMsg = error instanceof Error ? error.message : 'An unexpected error occurred';
+            setUpdateError(errorMsg);
+            setToast({
+                type: 'error',
+                message: `Failed to update fields: ${errorMsg}`
+            });
+        } finally {
+            setIsUpdating(false);
+        }
+    };
 
     const handleSaveAllFields = async (updatedFields: Record<string, string>) => {
-        if (!project?.parentId) return;
-
         setIsUpdating(true);
         setUpdateError(null);
 
         try {
             const result = await handleUpdateSite({
-                attributes: updatedFields
+                file: uploadMethod === UploadMethod.GitHub ? selectedRepoFile || undefined : selectedFile || undefined,
+                attributes: {
+                    old_object_id: params.id,
+                    ...updatedFields
+                }
             });
 
             if (result.success) {
@@ -1286,15 +1348,8 @@ function EditWebsitePage() {
                                                                     />
                                                                 </p>
                                                             </div>
-                                                            <div className="flex items-center justify-center w-5/6 my-4">
-                                                                <Separator className="flex-1" />
-                                                                <span className="mx-4 text-sm text-gray-400 font-semibold select-none">
-                                                                    <FormattedMessage id="createWebsite.or" />
-                                                                </span>
-                                                                <Separator className="flex-1" />
-                                                            </div>
                                                             <Button
-                                                                className="bg-secondary-500 hover:bg-secondary-700 text-black font-semibold py-2 px-6 rounded-lg shadow-md"
+                                                                className="bg-secondary-500 hover:bg-secondary-700 text-black font-semibold mt-5 py-2 px-6 rounded-lg shadow-md"
                                                                 onClick={(e) => {
                                                                     e.stopPropagation()
                                                                     handleBrowseClick()
@@ -1394,10 +1449,10 @@ function EditWebsitePage() {
                                 <Separator className="mb-4" />
                                 <section className="pt-2 flex justify-end">
                                     <Button
-                                        // onClick={handlePreview}
+                                        onClick={handleUpdateWebsite}
                                         className="bg-secondary-500 hover:bg-secondary-700 text-black p-6 rounded-md text-base transform transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-secondary-500/20"
                                     >
-                                        <FormattedMessage id="createWebsite.createWebsite" />
+                                        <FormattedMessage id="editWebsite.updateWebsite" />
                                     </Button>
                                 </section>
                             </motion.div>

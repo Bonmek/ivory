@@ -2,6 +2,7 @@ import apiClient from '@/lib/axiosConfig';
 import axios from 'axios';
 
 export interface UpdateSiteAttributes {
+    old_object_id?: string;
     'site-name'?: string;
     owner?: string;
     ownership?: '0' | '1';

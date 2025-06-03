@@ -345,6 +345,9 @@ export default {
   'dashboard.projectLimit.epoch': '周期',
   'dashboard.projectLimit.fairAccess': '以确保公平访问',
 
+  // EditWebsite
+  'editWebsite.updateWebsite': '更新网站',
+
   // ProjectCard
   'projectCard.linkSuins': '链接 SUINS',
   'projectCard.initialSetup': '(初始设置)',
