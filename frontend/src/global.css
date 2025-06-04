@@ -46,6 +46,7 @@
   color utility to any element that depends on these defaults.
 */
 @layer base {
+
   *,
   ::after,
   ::before,
@@ -123,6 +124,7 @@ code {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -168,6 +170,34 @@ code {
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: color-mix(in srgb, var(--color-primary-800) 30%, transparent);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--color-secondary-500) 50%, transparent);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--color-secondary-400) 70%, transparent);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--color-secondary-500) 50%, transparent) color-mix(in srgb, var(--color-primary-800) 30%, transparent);
 }
 
 /*
@@ -255,6 +285,7 @@ code {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -270,6 +301,7 @@ code {
   from {
     transform: translateX(0);
   }
+
   to {
     transform: translateX(-100%);
   }
@@ -284,7 +316,7 @@ code {
 /* Custom scrollbar for repo contents */
 .repo-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: rgba(34,211,238,0.5) rgba(16,21,28,0.3);
+  scrollbar-color: rgba(34, 211, 238, 0.5) rgba(16, 21, 28, 0.3);
 }
 
 .repo-scrollbar::-webkit-scrollbar {
@@ -297,12 +329,12 @@ code {
 }
 
 .repo-scrollbar::-webkit-scrollbar-thumb {
-  background: linear-gradient(120deg, rgba(34,211,238,0.5), rgba(59,130,246,0.4));
+  background: linear-gradient(120deg, rgba(34, 211, 238, 0.5), rgba(59, 130, 246, 0.4));
   border-radius: 4px;
 }
 
 .repo-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(120deg, rgba(34,211,238,0.8), rgba(59,130,246,0.7));
+  background: linear-gradient(120deg, rgba(34, 211, 238, 0.8), rgba(59, 130, 246, 0.7));
 }
 
 .dot-animate {
@@ -311,11 +343,22 @@ code {
   height: 0.25rem;
   margin-left: 0.1rem;
   border-radius: 9999px;
-  background: #facc15; /* สีเหลือง */
+  background: #facc15;
+  /* สีเหลือง */
   animation: dot-bounce 1s infinite both;
 }
 
 @keyframes dot-bounce {
-  0%, 80%, 100% { opacity: 0.2; transform: translateY(0); }
-  40% { opacity: 1; transform: translateY(-2px); }
+
+  0%,
+  80%,
+  100% {
+    opacity: 0.2;
+    transform: translateY(0);
+  }
+
+  40% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
 }

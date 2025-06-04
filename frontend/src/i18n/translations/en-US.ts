@@ -296,6 +296,10 @@ export default {
   'dashboard.projectLimit.epoch': 'epoch',
   'dashboard.projectLimit.fairAccess': 'to ensure fair access',
 
+
+  // EditWebsite
+  'editWebsite.updateWebsite': 'Update Website',
+
   // ProjectCard
   'projectCard.linkSuins': 'Link SUINS',
 
