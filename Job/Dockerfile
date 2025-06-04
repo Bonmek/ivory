@@ -97,10 +97,6 @@ RUN printf '%s\n' \
   'default_context: mainnet' \
   > ~/.config/walrus/sites-config.yaml
 
-# ติดตั้ง Python Requirements
-COPY requirements.txt .
-RUN python3 -m pip install -r requirements.txt
-
 # คัดลอกโค้ดแอป
 COPY app /app
 WORKDIR /app

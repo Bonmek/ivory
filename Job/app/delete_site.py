@@ -96,7 +96,7 @@ def dlete_walrus_site(object_id, showcase_obj_id, showcase_blob_id):
             epochs = attributes["epochs"]
 
             subprocess.run(
-                ["site-builder", "update", showcase_root, showcase_site_id, "--epochs", "2"],
+                ["site-builder", "update", "--check-extend", showcase_root, showcase_site_id, "--epochs", "2"],
                 check=True, capture_output=True, text=True
             )
             print(f"✅ STEP 5 DONE: Site updated with site-builder in ./{showcase_root}")
