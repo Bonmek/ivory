@@ -3,6 +3,7 @@ import subprocess
 import zipfile, os
 from google.cloud import firestore
 from get_site_id import get_site_id
+import json
 
 def publish_walrus_site(object_id, showcase_obj_id, showcase_blob_id):
     status = "2"  # Default status
@@ -131,19 +132,34 @@ def publish_walrus_site(object_id, showcase_obj_id, showcase_blob_id):
                 client_error_description = "Failed to move static site into showcase structure."
                 raise RuntimeError(f"STEP 5 Error: {str(e)}")
         else :
-            site_name = site_name + ".zip"
+            template_folder = "IVORY-ZIP-TEMPLATE"
+            if not os.path.exists(template_folder):
+                raise RuntimeError(f"template folder '{template_folder}' does not exist.")
+            
             target_dir = os.path.join(destination_dir, site_name)
 
-            if not os.path.exists(site_name):
-                raise RuntimeError(f"Source folder '{site_name}' does not exist.")
+            if not os.path.exists(zip_filename):
+                raise RuntimeError(f"Source folder '{zip_filename}' does not exist.")
+            print("found {zip_filename}")
             
             try:
                 os.makedirs(destination_dir, exist_ok=True)
 
                 if os.path.exists(target_dir):
-                    os.remove(target_dir)
+                    shutil.rmtree(target_dir)
 
-                shutil.move(site_name, target_dir)
+                shutil.copytree(template_folder, target_dir)
+
+                shutil.move("./"+zip_filename, target_dir)
+
+                config = {
+                    "zipFilePath": zip_filename  # หรือค่าที่ต้องการ
+                }
+
+                config_path = os.path.join(target_dir, "config.json")
+                with open(config_path, "w", encoding="utf-8") as f:
+                    json.dump(config, f, indent=2)
+
 
                 print(f"✅ STEP 5 DONE: Moved {site_name} to {target_dir}")
             except Exception as e:
