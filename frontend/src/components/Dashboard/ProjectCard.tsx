@@ -1,7 +1,6 @@
 import { memo, useState, useEffect } from 'react'
 import { useAuth } from '@/context/AuthContext'
-import { useSignAndExecuteTransaction } from '@mysten/dapp-kit'
-import { useWalletKit } from '@mysten/wallet-kit'
+import { useSignAndExecuteTransaction, useCurrentWallet } from '@mysten/dapp-kit'
 import {
   MoreHorizontal,
   Users,
@@ -81,6 +80,7 @@ import { createMemberStrings } from '@/utils/memberUtils'
 import { useMemberManagement } from '@/hooks/useMemberManagement'
 import { useSiteManagement } from '@/hooks/useSiteManagement'
 import { useOwnershipTransfer } from '@/hooks/useOwnershipTransfer'
+import { useSuinsManagement } from '@/hooks/useSuinsManagement'
 
 const ProjectCard = memo(
   ({
@@ -92,7 +92,7 @@ const ProjectCard = memo(
     onRefetch,
   }: ProjectCardProps) => {
     const intl = useIntl()
-    const { signAndExecuteTransactionBlock } = useWalletKit()
+    const signAndExecute = useSignAndExecuteTransaction()
     const navigate = useNavigate()
     const {
       addMember,
@@ -102,9 +102,14 @@ const ProjectCard = memo(
       isRemovingMember,
       isUpdatingPermissions,
     } = useMemberManagement()
-    const { transferOwnership, isProcessing } = useOwnershipTransfer(userAddress || '')
+    const { transferOwnership, isProcessing } = useOwnershipTransfer(
+      userAddress || '',
+    )
     const { generateSiteId, deleteSite, isGenerating, isDeleting } =
       useSiteManagement()
+    const { linkSuinsToSite, isLinking, setIsLinking } = useSuinsManagement(
+      userAddress || '',
+    )
     const remaining = calculateTimeBetween(new Date(), project.expiredDate)
     const [startDateOpen, setStartDateOpen] = useState(false)
     const [expiredDateOpen, setExpiredDateOpen] = useState(false)
@@ -127,7 +132,6 @@ const ProjectCard = memo(
       userAddress || '',
     )
     const [isRefreshing, setIsRefreshing] = useState(false)
-    const [isLinking, setIsLinking] = useState(false)
     const [open, setOpen] = useState(false)
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
     const [generateDialogOpen, setGenerateDialogOpen] = useState(false)
@@ -198,7 +202,6 @@ const ProjectCard = memo(
 
       try {
         setIsLinking(true)
-
         const selectedSuinsData = suins.find(
           (s) => s.data?.content?.fields?.domain_name === selectedSuins,
         )
@@ -206,25 +209,39 @@ const ProjectCard = memo(
           throw new Error('SUINS NFT not found')
         }
 
-        const result = await linkSuinsToSite(
+        // 1. Call blockchain transaction through suinsUtils
+        const txResult = await linkSuinsToSite(
           selectedSuinsData.data.objectId,
           project.siteId || '',
           userAddress,
-          signAndExecuteTransactionBlock,
+          async (input) => {
+            const result = await signAndExecute.mutateAsync({
+              transaction: input.transactionBlock,
+              chain: `sui:${process.env.REACT_APP_SUI_NETWORK}`
+            })
+            return result
+          },
           process.env.REACT_APP_SUI_NETWORK as 'mainnet' | 'testnet',
         )
-        const response = await apiClient.put(
-          `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_SET_ATTRIBUTES!}?object_id=${project.parentId}&sui_ns=${selectedSuins}`,
-        )
-        setOpen(false)
-        if (result.status === 'success' && response.status === 200) {
-          toast.success(<FormattedMessage id="projectCard.suinsLinked" />, {
-            description: intl.formatMessage({
-              id: 'projectCard.suinsLinkedDesc',
-            }),
-            duration: 5000,
-          })
-          onRefetch()
+
+        // 2. If blockchain transaction successful, update our API
+        if (txResult.status === 'success') {
+          const apiResponse = await apiClient.put(
+            `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_SET_ATTRIBUTES!}?object_id=${project.parentId}&sui_ns=${selectedSuins}`,
+          )
+
+          if (apiResponse.status === 200) {
+            setOpen(false)
+            toast.success(<FormattedMessage id="projectCard.suinsLinked" />, {
+              description: intl.formatMessage({
+                id: 'projectCard.suinsLinkedDesc',
+              }),
+              duration: 5000,
+            })
+            onRefetch()
+          } else {
+            throw new Error('Failed to update API')
+          }
         }
       } catch (error: any) {
         console.error('Error linking SUINS:', error)

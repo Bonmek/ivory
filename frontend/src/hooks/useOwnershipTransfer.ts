@@ -3,12 +3,10 @@ import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import apiClient from '@/lib/axiosConfig'
 import { handleMemberStateUpdate } from '@/utils/statePolling'
-import { useSuiData } from './useSuiData'
 
 export const useOwnershipTransfer = (userAddress: string) => {
   const queryClient = useQueryClient()
   const [isProcessing, setIsProcessing] = useState(false)
-  const { refetch } = useSuiData(userAddress)
 
   const transferOwnership = async (objectId: string, newOwnerAddress: string) => {
     try {
@@ -22,8 +20,7 @@ export const useOwnershipTransfer = (userAddress: string) => {
       }
 
       await handleMemberStateUpdate(objectId, newOwnerAddress)
-      queryClient.invalidateQueries({ queryKey: ['project', objectId] })
-      await refetch()
+      await queryClient.refetchQueries({ queryKey: ['metadata'] })
 
       toast.success('Ownership transferred successfully')
     } catch (error: any) {

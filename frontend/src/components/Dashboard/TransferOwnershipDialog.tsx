@@ -19,7 +19,7 @@ import {
   AlertTriangle,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { isValidSuiAddress } from '@mysten/sui.js/utils'
+import { isValidSuiAddress } from '@mysten/sui/utils'
 import { PixelLoading } from '@/components/ui/loading-pixel'
 import { ProjectMember } from '@/types/project'
 

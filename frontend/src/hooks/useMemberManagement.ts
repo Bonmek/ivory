@@ -3,7 +3,6 @@ import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { suiService } from '@/service/suiService'
 import apiClient from '@/lib/axiosConfig'
-import { SuiObjectResponse } from '@mysten/sui.js/client'
 import { MemberPermissions } from '@/types/project'
 import { createMemberStrings } from '@/utils/memberUtils'
 import { handleMemberStateUpdate } from '@/utils/statePolling'
@@ -66,7 +65,7 @@ export const useMemberManagement = () => {
       if (!response.data || response.data.statusCode !== 1) {
         throw new Error(response.data?.error || 'Failed to remove member')
       }
-
+      
       await handleMemberStateUpdate(objectId, memberString)
       await queryClient.refetchQueries({ queryKey: ['metadata'] })
       toast.success('Member removed successfully')

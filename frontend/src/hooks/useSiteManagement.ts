@@ -17,7 +17,7 @@ export const useSiteManagement = () => {
       )
 
       await handleSiteStateUpdate(objectId)
-      queryClient.invalidateQueries({ queryKey: ['project', objectId] })
+      queryClient.invalidateQueries({ queryKey: ['metadata'] })
 
       toast.success('Site ID generated successfully')
     } catch (error: any) {
@@ -37,7 +37,7 @@ export const useSiteManagement = () => {
       )
 
       await handleDeletionStateUpdate(objectId)
-      queryClient.invalidateQueries({ queryKey: ['project', objectId] })
+      await queryClient.refetchQueries({ queryKey: ['metadata'] })
 
       toast.success('Site deleted successfully')
     } catch (error: any) {

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { FormattedMessage, useIntl } from 'react-intl'
 import { toast } from 'sonner'
-import { isValidSuiAddress } from '@mysten/sui.js/utils'
+import { isValidSuiAddress } from '@mysten/sui/utils'
 import {
   Dialog,
   DialogContent,
