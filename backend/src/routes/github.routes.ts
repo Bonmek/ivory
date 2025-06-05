@@ -40,7 +40,7 @@ router.get(
 );
 
 // User endpoint
-router.get("/api/user", ((req, res) => {
+router.get("/user", ((req, res) => {
   const authReq = req as AuthenticatedRequest;
   if (authReq.isAuthenticated() && authReq.user) {
     res.json({ user: authReq.user.username });
@@ -50,7 +50,7 @@ router.get("/api/user", ((req, res) => {
 }) as import("express").RequestHandler);
 
 // Repositories endpoint
-router.get("/api/repositories", (async (req, res) => {
+router.get("/repositories", (async (req, res) => {
   const authReq = req as AuthenticatedRequest;
   if (!authReq.isAuthenticated() || !authReq.user) {
     return res.status(401).send("Unauthorized");
@@ -61,7 +61,7 @@ router.get("/api/repositories", (async (req, res) => {
   try {
     const response: AxiosResponse<unknown[]> = await axios.get(
       "https://api.github.com/user/repos",
-      {
+      { 
         headers: {
           Authorization: `token ${accessToken}`,
           Accept: "application/vnd.github.v3+json",
@@ -110,7 +110,7 @@ router.get("/api/repositories", (async (req, res) => {
 }) as import("express").RequestHandler);
 
 // Repository download endpoint
-router.get("/api/repositories/:owner/:repo/download", (async (req, res) => {
+router.get("/repositories/:owner/:repo/download", (async (req, res) => {
   const authReq = req as AuthenticatedRequest;
   if (!authReq.isAuthenticated() || !authReq.user) {
     return res.status(401).send("Unauthorized");
@@ -218,7 +218,7 @@ interface GitHubUser {
 }
 
 // Get branches for a repository
-router.get("/api/repositories/:owner/:repo/branches", (async (req, res) => {
+router.get("/repositories/:owner/:repo/branches", (async (req, res) => {
   const authReq = req as AuthenticatedRequest;
   if (!authReq.isAuthenticated() || !authReq.user) {
     return res.status(401).send("Unauthorized");
@@ -260,7 +260,7 @@ router.get("/api/repositories/:owner/:repo/branches", (async (req, res) => {
 }) as import("express").RequestHandler);
 
 // Fetch directory contents endpoint
-router.get("/api/repositories/:owner/:repo/contents", (async (req, res) => {
+router.get("/repositories/:owner/:repo/contents", (async (req, res) => {
   const authReq = req as AuthenticatedRequest;
   if (!authReq.isAuthenticated() || !authReq.user) {
     return res.status(401).send("Unauthorized");
