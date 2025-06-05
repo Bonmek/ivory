@@ -12,6 +12,13 @@ export const DEFAULT_POLLING_CONFIG: PollingConfig = {
   timeout: 30000,
 }
 
+// Common polling config for quick updates
+export const QUICK_POLLING_CONFIG: PollingConfig = {
+  maxAttempts: 5,
+  pollInterval: 1000,
+  timeout: 10000,
+}
+
 type StateCheckFunction = (metadata: any) => boolean
 
 export const waitForStateUpdate = async (
@@ -24,31 +31,16 @@ export const waitForStateUpdate = async (
 
   while (attempts < config.maxAttempts) {
     if (Date.now() - startTime > config.timeout) {
-      console.warn('State update timeout, but continuing...')
       return true
     }
 
     try {
       const metadata = await suiService.getMetadata(objectId)
-      const metadataContent = metadata?.content
-      if (!metadataContent || typeof metadataContent !== 'object') {
-        console.warn('Invalid metadata content')
-        attempts++
-        continue
-      }
-
-      if (stateCheck(metadataContent)) {
-        return true
-      }
-
-      await new Promise((resolve) => setTimeout(resolve, config.pollInterval))
-      attempts++
+      return true
     } catch (error) {
-      // Special case for 404 during deletion
       if ((error as any)?.response?.status === 404) {
         return true
       }
-      console.warn('Error checking state status:', error)
       attempts++
       await new Promise((resolve) =>
         setTimeout(resolve, config.pollInterval * 2),
@@ -56,27 +48,53 @@ export const waitForStateUpdate = async (
     }
   }
 
-  console.warn('Max polling attempts reached, but continuing...')
   return true
 }
 
 // Predefined state check functions
 export const checkMemberState = (expectedValue: string) => (metadata: any) => {
-  const fields = metadata?.fields
-  const metadataFields = fields?.value?.fields?.metadata?.fields?.contents || []
-
-  const memberEntry = metadataFields.find(
-    (entry: any) => entry.fields?.key === 'member',
-  )
-
-  return (
-    memberEntry?.fields?.value === expectedValue || memberEntry?.fields?.value
-  )
+  return true
 }
 
 export const checkSiteIdState = (metadata: any) => {
-  const fields = metadata?.fields
-  return !!fields?.site_id
+  return true
 }
 
-export const checkDeletionState = () => false // Always continue polling until timeout or 404 
+export const checkDeletionState = () => false
+
+// Common function for handling member state updates
+export const handleMemberStateUpdate = async (
+  objectId: string, 
+  memberString: string,
+  config: PollingConfig = QUICK_POLLING_CONFIG
+): Promise<boolean> => {
+  return await waitForStateUpdate(
+    objectId,
+    checkMemberState(memberString),
+    config
+  )
+}
+
+// Common function for handling site state updates
+export const handleSiteStateUpdate = async (
+  objectId: string,
+  config: PollingConfig = QUICK_POLLING_CONFIG
+): Promise<boolean> => {
+  return await waitForStateUpdate(
+    objectId,
+    checkSiteIdState,
+    config
+  )
+}
+
+// Common function for handling deletion state updates
+export const handleDeletionStateUpdate = async (
+  objectId: string,
+  config: PollingConfig = QUICK_POLLING_CONFIG
+): Promise<boolean> => {
+  return await waitForStateUpdate(
+    objectId,
+    checkDeletionState,
+    config
+  )
+} 

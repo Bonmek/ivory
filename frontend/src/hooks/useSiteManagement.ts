@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import apiClient from '@/lib/axiosConfig'
-import { waitForStateUpdate, checkSiteIdState, checkDeletionState } from '@/utils/statePolling'
+import { handleSiteStateUpdate, handleDeletionStateUpdate } from '@/utils/statePolling'
 
 export const useSiteManagement = () => {
   const queryClient = useQueryClient()
@@ -16,7 +16,7 @@ export const useSiteManagement = () => {
         `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_ADD_SITE_ID!}?object_id=${objectId}`,
       )
 
-      await waitForStateUpdate(objectId, checkSiteIdState)
+      await handleSiteStateUpdate(objectId)
       queryClient.invalidateQueries({ queryKey: ['project', objectId] })
 
       toast.success('Site ID generated successfully')
@@ -36,7 +36,7 @@ export const useSiteManagement = () => {
         `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_DELETE_WEBSITE!}?object_id=${objectId}`,
       )
 
-      await waitForStateUpdate(objectId, checkDeletionState)
+      await handleDeletionStateUpdate(objectId)
       queryClient.invalidateQueries({ queryKey: ['project', objectId] })
 
       toast.success('Site deleted successfully')

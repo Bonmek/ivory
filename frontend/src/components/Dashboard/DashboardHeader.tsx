@@ -612,6 +612,21 @@ const DashboardHeader = ({
       {/* Warning Dialog for 1 project per wallet limit */}
       <Dialog open={showLimitWarning} onOpenChange={setShowLimitWarning}>
         <DialogContent className="bg-primary-900 border-amber-500/20 text-white max-w-xs p-0 overflow-hidden rounded-xl shadow-xl">
+          <DialogHeader>
+            <DialogTitle>
+              <FormattedMessage
+                id="dashboard.projectLimit.title"
+                defaultMessage="Beta Testing Limit"
+              />
+            </DialogTitle>
+            <DialogDescription>
+              <FormattedMessage
+                id="dashboard.projectLimit.description"
+                defaultMessage="During our beta testing phase, we're limiting each wallet to one project per epoch to ensure everyone gets a chance to try the platform."
+              />
+            </DialogDescription>
+          </DialogHeader>
+          
           {/* Top decorative banner */}
           <div className="bg-gradient-to-r from-amber-600 to-amber-500 p-3 relative overflow-hidden">
             <div className="absolute -right-4 -top-4 w-16 h-16 rounded-full bg-amber-400/20 blur-sm"></div>

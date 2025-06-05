@@ -6,7 +6,7 @@ import apiClient from '@/lib/axiosConfig'
 import { SuiObjectResponse } from '@mysten/sui.js/client'
 import { MemberPermissions } from '@/types/project'
 import { createMemberStrings } from '@/utils/memberUtils'
-import { waitForStateUpdate, checkMemberState } from '@/utils/statePolling'
+import { handleMemberStateUpdate } from '@/utils/statePolling'
 
 export const useMemberManagement = () => {
   const queryClient = useQueryClient()
@@ -33,10 +33,8 @@ export const useMemberManagement = () => {
         throw new Error(response.data?.error || 'Failed to add member')
       }
 
-      await waitForStateUpdate(objectId, checkMemberState(memberString))
-      queryClient.invalidateQueries({ queryKey: ['project', objectId] })
-      queryClient.invalidateQueries({ queryKey: ['members', objectId] })
-
+      await handleMemberStateUpdate(objectId, memberString)
+      await queryClient.refetchQueries({ queryKey: ['metadata'] })
       toast.success('Member added successfully')
     } catch (error: any) {
       console.error('Error adding member:', error)
@@ -69,10 +67,8 @@ export const useMemberManagement = () => {
         throw new Error(response.data?.error || 'Failed to remove member')
       }
 
-      await waitForStateUpdate(objectId, checkMemberState(memberString))
-      queryClient.invalidateQueries({ queryKey: ['project', objectId] })
-      queryClient.invalidateQueries({ queryKey: ['members', objectId] })
-
+      await handleMemberStateUpdate(objectId, memberString)
+      await queryClient.refetchQueries({ queryKey: ['metadata'] })
       toast.success('Member removed successfully')
     } catch (error: any) {
       console.error('Error removing member:', error)
@@ -102,10 +98,8 @@ export const useMemberManagement = () => {
         throw new Error(response.data?.error || 'Failed to update permissions')
       }
 
-      await waitForStateUpdate(objectId, checkMemberState(memberString))
-      queryClient.invalidateQueries({ queryKey: ['project', objectId] })
-      queryClient.invalidateQueries({ queryKey: ['members', objectId] })
-
+      await handleMemberStateUpdate(objectId, memberString)
+      await queryClient.refetchQueries({ queryKey: ['metadata'] })
       toast.success('Permissions updated successfully')
       onSuccess?.()
     } catch (error: any) {

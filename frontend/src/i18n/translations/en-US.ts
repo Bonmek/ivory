@@ -49,6 +49,12 @@ export default {
   'action.save': 'Save',
   'action.edit': 'Edit',
   'action.delete': 'Delete',
+  'common.cancel': 'Cancel',
+  'common.confirm': 'Confirm',
+  'dialog.pleaseWait': 'Please do not close this window',
+  'dashboard.deployProject': 'Deploy Project',
+  'dashboard.deploySite': 'Website',
+  'dashboard.uploadZip': 'ZIP File',
 
   // Wallet
   'wallet.connect': 'Connect Wallet',
@@ -447,5 +453,4 @@ export default {
   'dashboard.filter.all': 'All Projects',
   'dashboard.filter.sites': 'Websites Only',
   'dashboard.filter.zips': 'ZIP Files Only'
-
 } as const;
