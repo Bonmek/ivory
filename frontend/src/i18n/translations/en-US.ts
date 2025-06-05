@@ -228,6 +228,9 @@ export default {
   'createWebsite.preview.ariaLabel': 'Preview not loading? Click for help',
   'createWebsite.preview.pathRecommendation': 'For best compatibility, we recommend using relative paths (starting with \'./\') for all local assets and links in your website.',
 
+  'createWebsite.deployFailed': 'Service temporarily unavailable',
+  'createWebsite.deployFailedDescription': 'The Walrus node is currently experiencing high traffic. Please try again later. We apologize for the inconvenience.',
+
   // Homepage
   'homepage.hero.title1': 'Launch Your Site In Few Clicks',
   'homepage.hero.title2': '',
