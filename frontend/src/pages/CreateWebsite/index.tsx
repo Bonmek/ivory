@@ -519,10 +519,6 @@ export default function CreateWebsitePage() {
         root: rootDirectory || '/'
       }
 
-      console.log('Attributes:', attributes)
-      console.log('Selected File:', selectedFile)
-      console.log('Selected Repo File:', selectedRepoFile)
-
       setDeployingState(DeployingState.Deploying)
 
       const response = await writeBlobAndRunJob({
@@ -726,7 +722,7 @@ export default function CreateWebsitePage() {
             clearInterval(interval)
           }
         })
-      }, 30000)
+      }, 60000)
     }
 
     return () => {

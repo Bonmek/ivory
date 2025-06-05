@@ -34,6 +34,7 @@ export default defineConfig({
       'REACT_APP_API_TRANSFER_OWNER',
       'REACT_APP_API_GRANT_ACCESS',
       
+      'REACT_APP_API_UPDATE_SITE',
     ]),
   ],
   publicDir: 'public',
