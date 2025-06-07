@@ -428,6 +428,18 @@ export default {
   'projectCard.manageMembers.permissionsUpdated': '权限更新成功',
   'projectCard.manageMembers.ownerNote': '您是此项目的所有者',
   'projectCard.manageMembers.memberPermissions': '成员权限',
+  'projectCard.manageMembers.applyChanges': '应用更改',
+  'projectCard.manageMembers.hidePermissions': '隐藏权限',
+  'projectCard.manageMembers.showPermissions': '显示权限',
+  'projectCard.manageMembers.selectAll': '全选',
+  'projectCard.manageMembers.currentMembers': '当前成员',
+  'projectCard.manageMembers.membersCount': '成员',
+  'projectCard.manageMembers.markedForRemoval': '已标记为删除',
+  'projectCard.manageMembers.undoRemoval': '取消删除',
+
+  // Project Types
+  'projectCard.type.site': '网站',
+  'projectCard.type.zip': '压缩文件',
 
   // Common
   'common.error.unknown': '发生意外错误，请重试',
@@ -446,5 +458,6 @@ export default {
   'projectCard.transferOwnership.error': '转让所有权失败',
   'projectCard.transferOwnership.invalidAddress': '无效的钱包地址',
   'projectCard.transferOwnership.confirm': '您确定要转让所有权吗？',
-  'projectCard.transferOwnership.warning': '此操作无法撤消。您将失去对此项目的所有控制权。'
+  'projectCard.transferOwnership.warning': '此操作无法撤消。您将失去对此项目的所有控制权。',
+  'projectCard.transferOwnership.memberWarning': '此地址目前是项目成员。建议在转让所有权之前先移除其成员身份，以避免潜在冲突。'
 } as const;

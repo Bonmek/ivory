@@ -1,6 +1,9 @@
 import { memo, useState, useEffect } from 'react'
 import { useAuth } from '@/context/AuthContext'
-import { useSignAndExecuteTransaction } from '@mysten/dapp-kit'
+import {
+  useSignAndExecuteTransaction,
+  useCurrentWallet,
+} from '@mysten/dapp-kit'
 import { useWalletKit } from '@mysten/wallet-kit'
 import {
   MoreHorizontal,
@@ -60,12 +63,11 @@ import {
   ProjectCardProps,
   MemberPermissions,
   ProjectStatus,
+  ProjectType,
 } from '@/types/project'
-import { linkSuinsToSite } from '@/utils/suinsUtils'
 import { ManageMembersModal } from './ManageMembersModal'
 import { DeleteConfirmationDialog } from './DeleteConfirmationDialog'
 import { GenerateSiteIdDialog } from './GenerateSiteIdDialog'
-import { RemoveMemberDialog } from './RemoveMemberDialog'
 import { TransferOwnershipDialog } from './TransferOwnershipDialog'
 import {
   formatDate,
@@ -76,6 +78,12 @@ import {
   getUserPermissions,
 } from '@/utils/projectUtils'
 import { useNavigate } from 'react-router'
+import { createMemberString, joinMemberStrings } from '@/utils/memberUtils'
+import { createMemberStrings } from '@/utils/memberUtils'
+import { useMemberManagement } from '@/hooks/useMemberManagement'
+import { useSiteManagement } from '@/hooks/useSiteManagement'
+import { useOwnershipTransfer } from '@/hooks/useOwnershipTransfer'
+import { useSuinsManagement } from '@/hooks/useSuinsManagement'
 
 const ProjectCard = memo(
   ({
@@ -87,8 +95,26 @@ const ProjectCard = memo(
     onRefetch,
   }: ProjectCardProps) => {
     const intl = useIntl()
-    const { signAndExecuteTransactionBlock } = useWalletKit()
+    const signAndExecute = useSignAndExecuteTransaction()
+    const { currentWallet } = useCurrentWallet()
+    const { connect } = useWalletKit()
     const navigate = useNavigate()
+    const {
+      addMember,
+      removeMember,
+      updateMemberPermissions,
+      isAddingMember,
+      isRemovingMember,
+      isUpdatingPermissions,
+    } = useMemberManagement()
+    const { transferOwnership, isProcessing } = useOwnershipTransfer(
+      userAddress || '',
+    )
+    const { generateSiteId, deleteSite, isGenerating, isDeleting } =
+      useSiteManagement()
+    const { linkSuinsToSite, isLinking } = useSuinsManagement(userAddress || '')
+    const { signAndExecuteTransactionBlock } = useWalletKit()
+
     const remaining = calculateTimeBetween(new Date(), project.expiredDate)
     const [startDateOpen, setStartDateOpen] = useState(false)
     const [expiredDateOpen, setExpiredDateOpen] = useState(false)
@@ -111,12 +137,9 @@ const ProjectCard = memo(
       userAddress || '',
     )
     const [isRefreshing, setIsRefreshing] = useState(false)
-    const [isLinking, setIsLinking] = useState(false)
     const [open, setOpen] = useState(false)
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-    const [isDeleting, setIsDeleting] = useState(false)
     const [generateDialogOpen, setGenerateDialogOpen] = useState(false)
-    const [isGenerating, setIsGenerating] = useState(false)
     const [manageMembersOpen, setManageMembersOpen] = useState(false)
     const [newMemberAddress, setNewMemberAddress] = useState('')
     const [newMemberPermissions, setNewMemberPermissions] =
@@ -127,9 +150,6 @@ const ProjectCard = memo(
         setSuins: false,
       })
     const [removingMember, setRemovingMember] = useState<string | null>(null)
-    const [isAddingMember, setIsAddingMember] = useState(false)
-    const [isRemovingMember, setIsRemovingMember] = useState(false)
-    const [isUpdatingPermissions, setIsUpdatingPermissions] = useState(false)
     const [transferOwnershipOpen, setTransferOwnershipOpen] = useState(false)
 
     useEffect(() => {
@@ -186,9 +206,6 @@ const ProjectCard = memo(
       }
 
       try {
-        setIsLinking(true)
-
-        // Get the NFT ID for the selected SUINS
         const selectedSuinsData = suins.find(
           (s) => s.data?.content?.fields?.domain_name === selectedSuins,
         )
@@ -197,40 +214,35 @@ const ProjectCard = memo(
         }
 
         const result = await linkSuinsToSite(
-          selectedSuinsData.data.objectId,
-          project.siteId || '',
+          {
+            objectId: selectedSuinsData.data.objectId,
+            name: selectedSuins
+          },
+          project.parentId || '',
           userAddress,
           signAndExecuteTransactionBlock,
           process.env.REACT_APP_SUI_NETWORK as 'mainnet' | 'testnet',
         )
-        const response = await apiClient.put(
-          `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_SET_ATTRIBUTES!}?object_id=${project.parentId}&sui_ns=${selectedSuins}`,
-        )
-        setOpen(false)
+
         if (result.status === 'success') {
-          toast.success(<FormattedMessage id="projectCard.suinsLinked" />, {
-            description: intl.formatMessage({
-              id: 'projectCard.suinsLinkedDesc',
-            }),
-            duration: 5000,
-          })
-          if (result.status === 'success' && response.status === 200) {
-            onRefetch()
-          }
+          setOpen(false)
+          onRefetch()
         }
       } catch (error: any) {
-        console.error('Error linking SUINS:', error)
-        toast.error(
-          error.message || <FormattedMessage id="projectCard.failedToLink" />,
-          {
-            description: intl.formatMessage({
-              id: 'projectCard.failedToLinkDesc',
-            }),
-            duration: 5000,
-          },
-        )
-      } finally {
-        setIsLinking(false)
+        console.error('Error in handleLinkSuins:', error)
+      }
+    }
+
+    const handleGenerateSiteId = async (): Promise<void> => {
+      if (!project.parentId) {
+        toast.error('Project ID is missing')
+        return
+      }
+      try {
+        await generateSiteId(project.parentId)
+        setGenerateDialogOpen(false)
+      } catch (error: any) {
+        console.error('Error generating site ID:', error)
       }
     }
 
@@ -240,31 +252,10 @@ const ProjectCard = memo(
         return
       }
       try {
-        setIsDeleting(true)
-        const response = await apiClient.delete(
-          `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_DELETE_WEBSITE!}?object_id=${project.parentId}`,
-        )
-        if (response.status === 200) {
-          toast.success(<FormattedMessage id="projectCard.siteDeleted" />, {
-            description: intl.formatMessage({
-              id: 'projectCard.siteDeletedDesc',
-            }),
-            duration: 5000,
-          })
-          setDeleteDialogOpen(false)
-          if (onRefetch) {
-            await onRefetch()
-          }
-        }
+        await deleteSite(project.parentId)
+        setDeleteDialogOpen(false)
       } catch (error: any) {
         console.error('Error deleting site:', error)
-        toast.error(
-          error.response?.data?.message || (
-            <FormattedMessage id="projectCard.failedToDelete" />
-          ),
-        )
-      } finally {
-        setIsDeleting(false)
       }
     }
 
@@ -274,124 +265,6 @@ const ProjectCard = memo(
         await refetchSuiNS()
       } finally {
         setIsRefreshing(false)
-      }
-    }
-
-    const handleGenerateSiteId = async (): Promise<void> => {
-      setIsGenerating(true)
-      try {
-        await apiClient.put(
-          `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_ADD_SITE_ID!}?object_id=${project.parentId}`,
-        )
-        toast.success('Site ID generated successfully', {
-          description: 'Please wait a moment',
-          duration: 5000,
-        })
-        setGenerateDialogOpen(false)
-        if (onRefetch) {
-          await onRefetch()
-        }
-      } catch (error: any) {
-        toast.error(error?.message || 'Failed to generate Site ID')
-      } finally {
-        setIsGenerating(false)
-      }
-    }
-
-    const handleAddMember = async () => {
-      if (!newMemberAddress) {
-        toast.error(
-          intl.formatMessage({ id: 'projectCard.manageMembers.enterAddress' }),
-        )
-        return
-      }
-
-      if (
-        !newMemberAddress.startsWith('0x') ||
-        newMemberAddress.length !== 66
-      ) {
-        toast.error(
-          intl.formatMessage({
-            id: 'projectCard.manageMembers.invalidAddress',
-          }),
-        )
-        return
-      }
-
-      if (
-        project.members?.some((member) => member.address === newMemberAddress)
-      ) {
-        toast.error(
-          intl.formatMessage({ id: 'projectCard.manageMembers.addressExists' }),
-        )
-        return
-      }
-
-      try {
-        setIsAddingMember(true)
-        // TODO: Add API call to add member
-        toast.success(
-          intl.formatMessage({ id: 'projectCard.manageMembers.memberAdded' }),
-        )
-        setNewMemberAddress('')
-        setNewMemberPermissions({
-          update: false,
-          delete: false,
-          generateSite: false,
-          setSuins: false,
-        })
-        onRefetch()
-      } catch (error: any) {
-        console.error('Error adding member:', error)
-        toast.error(
-          error?.message || intl.formatMessage({ id: 'common.error.unknown' }),
-        )
-      } finally {
-        setIsAddingMember(false)
-      }
-    }
-
-    const handleRemoveMember = async (address: string): Promise<void> => {
-      try {
-        setIsRemovingMember(true)
-        // TODO: Add API call to remove member
-        toast.success(
-          intl.formatMessage({ id: 'projectCard.manageMembers.memberRemoved' }),
-        )
-        setRemovingMember(null)
-        if (onRefetch) {
-          await onRefetch()
-        }
-      } catch (error: any) {
-        console.error('Error removing member:', error)
-        toast.error(
-          error?.message || intl.formatMessage({ id: 'common.error.unknown' }),
-        )
-      } finally {
-        setIsRemovingMember(false)
-      }
-    }
-
-    const handleUpdatePermissions = async (
-      address: string,
-      permissions: MemberPermissions,
-    ) => {
-      try {
-        setIsUpdatingPermissions(true)
-        // TODO: Add API call to update permissions
-        toast.success(
-          intl.formatMessage({
-            id: 'projectCard.manageMembers.permissionsUpdated',
-          }),
-        )
-        onRefetch()
-      } catch (error: any) {
-        console.error('Error updating permissions:', error)
-        toast.error(
-          error?.message || intl.formatMessage({ id: 'common.error.unknown' }),
-        )
-      } finally {
-        setIsUpdatingPermissions(false)
       }
     }
 
@@ -437,8 +310,8 @@ const ProjectCard = memo(
                       <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
                           {isLoadingSuins ? (
-                            <div className="flex items-center justify-center py-4">
-                              <Loader2 className="h-6 w-6 animate-spin text-secondary-400" />
+                            <div className="flex flex-col gap-2">
+                              <div className="h-9 w-full rounded-md bg-primary-800/50 animate-pulse" />
                             </div>
                           ) : (
                             <>
@@ -476,7 +349,7 @@ const ProjectCard = memo(
                                 <Button
                                   onClick={handleRefreshSuins}
                                   variant="outline"
-                                  className="border-secondary-500/20 text-white hover:bg-primary-800 ${isLoadingSuins || isRefreshing ? '' : 'cursor-pointer'}"
+                                  className="border-secondary-500/20 text-white hover:bg-primary-800"
                                   disabled={isLoadingSuins || isRefreshing}
                                 >
                                   {isRefreshing ? (
@@ -545,98 +418,118 @@ const ProjectCard = memo(
                       >
                         {project.status === ProjectStatus.ACTIVE && (
                           <>
-                            {/* Owner-only actions */}
-                            {project.owner === userAddress && (
-                              <>
-                                <DropdownMenuItem
-                                  className="focus:bg-primary-800 cursor-pointer group"
-                                  onClick={() => setTransferOwnershipOpen(true)}
-                                  disabled={true}
-                                >
-                                  <div className="flex items-center w-full">
-                                    <div className="relative">
-                                      <UserCog className="mr-2 h-4 w-4 group-hover:rotate-45 transition-all duration-300" />
-                                    </div>
-                                    <span className="group-hover:translate-x-0.5 transition-all duration-200">
-                                      <FormattedMessage id="projectCard.transferOwnership" />
-                                    </span>
-                                  </div>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  className="focus:bg-primary-800 cursor-pointer group"
-                                  onClick={() => setManageMembersOpen(true)}
-                                  disabled={true}
-                                >
-                                  <div className="flex items-center w-full">
-                                    <div className="relative">
-                                      <Users className="mr-2 h-4 w-4 group-hover:scale-110 group-hover:text-secondary-400 transition-all duration-200" />
-                                    </div>
-                                    <span className="group-hover:translate-x-0.5 transition-all duration-200">
-                                      <FormattedMessage id="projectCard.manageMembers" />
-                                    </span>
-                                  </div>
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator className="bg-secondary-500/20" />
-                              </>
-                            )}
-
-                            {/* Member permissions */}
-                            {userPermissions?.update && (
+                            {project.type === ProjectType.ZIP ? (
+                              // For ZIP files, only show delete option
                               <DropdownMenuItem
-                                className="focus:bg-primary-800 cursor-pointer group"
-                                onClick={() =>
-                                  navigate(`/edit-website/${project.parentId}`)
-                                }
+                                className="text-red-400 focus:text-red-400 focus:bg-primary-800 cursor-pointer group"
+                                onClick={() => setDeleteDialogOpen(true)}
                               >
                                 <div className="flex items-center w-full">
-                                  <RefreshCw className="mr-2 h-4 w-4 group-hover:rotate-180 transition-transform duration-300" />
-                                  <span>
-                                    <FormattedMessage id="projectCard.updateSite" />
-                                  </span>
+                                  <Trash className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
+                                  <span>Delete ZIP file</span>
                                 </div>
                               </DropdownMenuItem>
-                            )}
-                            {userPermissions?.generateSite &&
-                              !project.siteId && (
+                            ) : (
+                              // For non-ZIP files, show all options
+                              <>
+                                {/* Owner-only actions */}
+                                {project.owner === userAddress && (
+                                  <>
+                                    <DropdownMenuItem
+                                      className="focus:bg-primary-800 cursor-pointer group"
+                                      onClick={() =>
+                                        setTransferOwnershipOpen(true)
+                                      }
+                                    >
+                                      <div className="flex items-center w-full">
+                                        <div className="relative">
+                                          <UserCog className="mr-2 h-4 w-4 group-hover:rotate-45 transition-all duration-300" />
+                                        </div>
+                                        <span className="group-hover:translate-x-0.5 transition-all duration-200">
+                                          <FormattedMessage id="projectCard.transferOwnership" />
+                                        </span>
+                                      </div>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      className="focus:bg-primary-800 cursor-pointer group"
+                                      onClick={() => setManageMembersOpen(true)}
+                                    >
+                                      <div className="flex items-center w-full">
+                                        <div className="relative">
+                                          <Users className="mr-2 h-4 w-4 group-hover:scale-110 group-hover:text-secondary-400 transition-all duration-200" />
+                                        </div>
+                                        <span className="group-hover:translate-x-0.5 transition-all duration-200">
+                                          <FormattedMessage id="projectCard.manageMembers" />
+                                        </span>
+                                      </div>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator className="bg-secondary-500/20" />
+                                  </>
+                                )}
+
+                                {/* Member permissions */}
+                                {userPermissions?.update && (
+                                  <DropdownMenuItem
+                                    className="focus:bg-primary-800 cursor-pointer group"
+                                    onClick={() =>
+                                      navigate(
+                                        `/edit-website/${project.parentId}`,
+                                      )
+                                    }
+                                  >
+                                    <div className="flex items-center w-full">
+                                      <RefreshCw className="mr-2 h-4 w-4 group-hover:rotate-180 transition-transform duration-300" />
+                                      <span>
+                                        <FormattedMessage id="projectCard.updateSite" />
+                                      </span>
+                                    </div>
+                                  </DropdownMenuItem>
+                                )}
+                                {userPermissions?.generateSite &&
+                                  !project.siteId && (
+                                    <DropdownMenuItem
+                                      className="focus:bg-primary-800 cursor-pointer group"
+                                      onClick={() =>
+                                        setGenerateDialogOpen(true)
+                                      }
+                                    >
+                                      <div className="flex items-center w-full">
+                                        <Key className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
+                                        <span>
+                                          <FormattedMessage id="projectCard.generateSiteId" />
+                                        </span>
+                                      </div>
+                                    </DropdownMenuItem>
+                                  )}
                                 <DropdownMenuItem
-                                  className="focus:bg-primary-800 cursor-pointer group"
-                                  onClick={() => setGenerateDialogOpen(true)}
+                                  className="focus:bg-primary-800 cursor-pointer group relative"
+                                  onClick={() => {}}
+                                  disabled
                                 >
-                                  <div className="flex items-center w-full">
-                                    <Key className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
+                                  <div className="flex items-center w-full opacity-50">
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
                                     <span>
-                                      <FormattedMessage id="projectCard.generateSiteId" />
+                                      <FormattedMessage id="projectCard.extendSite" />
+                                    </span>
+                                    <span className="ml-2 text-xs px-1.5 py-0.5 rounded-full bg-secondary-500/10 border border-secondary-500/20">
+                                      <FormattedMessage id="projectCard.comingSoon" />
                                     </span>
                                   </div>
                                 </DropdownMenuItem>
-                              )}
-                            <DropdownMenuItem
-                              className="focus:bg-primary-800 cursor-pointer group relative"
-                              onClick={() => {}}
-                              disabled
-                            >
-                              <div className="flex items-center w-full opacity-50">
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                <span>
-                                  <FormattedMessage id="projectCard.extendSite" />
-                                </span>
-                                <span className="ml-2 text-xs px-1.5 py-0.5 rounded-full bg-secondary-500/10 border border-secondary-500/20">
-                                  <FormattedMessage id="projectCard.comingSoon" />
-                                </span>
-                              </div>
-                            </DropdownMenuItem>
-                            {userPermissions?.delete && (
-                              <>
-                                <DropdownMenuSeparator className="bg-secondary-500/20" />
-                                <DropdownMenuItem
-                                  className="text-red-400 focus:text-red-400 focus:bg-primary-800 cursor-pointer group"
-                                  onClick={() => setDeleteDialogOpen(true)}
-                                >
-                                  <div className="flex items-center w-full">
-                                    <Trash className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
-                                    <span>Delete site</span>
-                                  </div>
-                                </DropdownMenuItem>
+                                {userPermissions?.delete && (
+                                  <>
+                                    <DropdownMenuSeparator className="bg-secondary-500/20" />
+                                    <DropdownMenuItem
+                                      className="text-red-400 focus:text-red-400 focus:bg-primary-800 cursor-pointer group"
+                                      onClick={() => setDeleteDialogOpen(true)}
+                                    >
+                                      <div className="flex items-center w-full">
+                                        <Trash className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
+                                        <span>Delete site</span>
+                                      </div>
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
                               </>
                             )}
                           </>
@@ -651,7 +544,11 @@ const ProjectCard = memo(
                             >
                               <div className="flex items-center w-full">
                                 <Trash className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
-                                <span>Delete site</span>
+                                <span>
+                                  {project.type === ProjectType.ZIP
+                                    ? 'Delete ZIP file'
+                                    : 'Delete site'}
+                                </span>
                               </div>
                             </DropdownMenuItem>
                           )}
@@ -683,10 +580,16 @@ const ProjectCard = memo(
                       ? '/images/walrus_fail.png'
                       : project.status === 3
                         ? '/images/walrus_fail.png'
-                        : '/images/walrus.png'
+                        : project.type === ProjectType.ZIP
+                          ? '/images/zip.png'
+                          : '/images/walrus.png'
                 }
                 alt="project avatar"
-                className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border-2 ${colors.avatar} shadow transition-all duration-300 group-hover:scale-105`}
+                className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full ${
+                  project.type === ProjectType.ZIP
+                    ? 'p-3 sm:p-2 object-contain'
+                    : 'object-cover'
+                } border-2 ${colors.avatar} shadow transition-all duration-300 group-hover:scale-105`}
               />
             </div>
 
@@ -699,6 +602,11 @@ const ProjectCard = memo(
                 >
                   {project.name}
                 </div>
+                {project.type === ProjectType.ZIP && (
+                  <div className="px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-blue-500/20 text-blue-300 border border-blue-500/20">
+                    <FormattedMessage id="projectCard.type.zip" />
+                  </div>
+                )}
                 {project.status === 3 ? (
                   <div
                     className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${colors.badge} flex items-center gap-1`}
@@ -1056,24 +964,31 @@ const ProjectCard = memo(
           onConfirm={handleGenerateSiteId}
         />
 
-        {/* Manage Members Modal */}
+        {/* Manage Members Dialog */}
         <ManageMembersModal
           open={manageMembersOpen}
           onOpenChange={setManageMembersOpen}
           projectId={project.parentId || ''}
           members={project.members}
-          onRefetch={onRefetch}
-        />
-
-        <RemoveMemberDialog
-          open={!!removingMember}
-          onOpenChange={(open) => !open && setRemovingMember(null)}
-          isRemoving={isRemovingMember}
-          onConfirm={async () => {
-            if (removingMember) {
-              await handleRemoveMember(removingMember)
-            }
+          onAddMember={(address, permissions) =>
+            addMember(
+              project.parentId || '',
+              address,
+              permissions,
+              project.members || [],
+            )
+          }
+          onRemoveMember={(address) =>
+            removeMember(project.parentId || '', address, project.members || [])
+          }
+          onUpdatePermissions={(address, permissions) => {
+            const memberString = createMemberString(address, permissions)
+            return updateMemberPermissions(project.parentId || '', memberString)
           }}
+          isAddingMember={isAddingMember}
+          isRemovingMember={isRemovingMember}
+          isUpdatingPermissions={isUpdatingPermissions}
+          onRefetch={onRefetch}
         />
 
         {/* Transfer Ownership Dialog */}
@@ -1082,7 +997,9 @@ const ProjectCard = memo(
           onOpenChange={setTransferOwnershipOpen}
           projectId={project.parentId || ''}
           currentOwner={project.owner}
+          members={project.members}
           onRefetch={onRefetch}
+          onTransferOwnership={transferOwnership}
         />
 
         <Toaster />

@@ -1,5 +1,6 @@
 import { DEFAULT_EXPIRY_BUFFER } from '@/constants/time'
 import { MetadataMap, MemberInfo, SingleMemberInfo } from '@/types/metadata'
+import { ProjectType } from '@/types/project'
 
 export const parseMemberInfo = (memberString: string): SingleMemberInfo[] => {
   if (!memberString) return []
@@ -13,17 +14,14 @@ export const parseMemberInfo = (memberString: string): SingleMemberInfo[] => {
         const address = memberPart.substring(0, memberPart.length - 4)
         const roleCode = memberPart.substring(memberPart.length - 4)
 
-        const roleNum = parseInt(roleCode, 10)
-        const permissions = {
-          update: (roleNum & 1000) === 1000,
-          delete: (roleNum & 100) === 100,
-          generateSite: (roleNum & 10) === 10,
-          setSuins: (roleNum & 1) === 1,
-        }
-
         return {
           address,
-          permissions,
+          permissions: {
+            update: roleCode[0] === '1',
+            delete: roleCode[1] === '1',
+            generateSite: roleCode[2] === '1',
+            setSuins: roleCode[3] === '1'
+          }
         }
       })
       .filter((member) => member.address) // Filter out any invalid members
@@ -90,6 +88,7 @@ export const transformMetadataToProject = (metadata: any, index: number) => {
       color: '#97f0e5',
       urlImg: '/walrus.png',
       status: 0,
+      type: ProjectType.SITE,
       owner: '',
     }
   }
@@ -137,6 +136,7 @@ export const transformMetadataToProject = (metadata: any, index: number) => {
     urlImg: '/walrus.png',
     description: metadataMap['description'] || '',
     status,
+    type: (metadataMap['type'] as ProjectType) || ProjectType.SITE,
     ...(status === 1 && metadataMap['site_id']
       ? { siteId: metadataMap['site_id'] }
       : {}),

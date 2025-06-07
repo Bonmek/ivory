@@ -26,7 +26,7 @@ export const inputGrantAccessScheme = z.object({
     .regex(/^(0x[a-fA-F0-9]{64}[01]{4})(\|0x[a-fA-F0-9]{64}[01]{4})*$/, {
       message:
         "Invalid format for member — every address must have a 4-bit binary suffix, and no final |binary is allowed.",
-    }),
+    }).nullish(),
 });
 
 export const inputSetDeleteErrorScheme = z.object({

@@ -43,7 +43,6 @@ class SuiService {
 
       return allData
     } catch (error) {
-      console.error('Error fetching blobs:', error)
       throw error
     }
   }
@@ -75,7 +74,6 @@ class SuiService {
 
       return allData
     } catch (error) {
-      console.error('Error fetching dynamic fields:', error)
       throw error
     }
   }
@@ -91,7 +89,6 @@ class SuiService {
         parentId: parentId || '',
       }
     } catch (error) {
-      console.error('Error fetching metadata:', error)
       throw error
     }
   }

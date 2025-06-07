@@ -17,6 +17,11 @@ export enum ProjectStatus {
   DELETING = 3
 }
 
+export enum ProjectType {
+  SITE = 'site',
+  ZIP = '.zip'
+}
+
 export interface Project {
   id: number
   name: string
@@ -27,6 +32,7 @@ export interface Project {
   urlImg: string
   description?: string
   status: ProjectStatus
+  type: ProjectType
   siteId?: string
   suins?: string
   blobId?: string

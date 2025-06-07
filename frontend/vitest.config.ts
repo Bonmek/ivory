@@ -19,6 +19,8 @@ export default defineConfig({
       'REACT_APP_API_DELETE_WEBSITE',
       'REACT_APP_API_SET_ATTRIBUTES',
       'REACT_APP_API_ADD_SITE_ID',
+      'REACT_APP_API_TRANSFER_OWNER',
+      'REACT_APP_API_GRANT_ACCESS',
       'REACT_APP_API_UPDATE_SITE',
     ]) as any,
   ],
