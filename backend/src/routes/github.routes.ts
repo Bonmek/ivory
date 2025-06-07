@@ -32,7 +32,7 @@ router.get("/api/auth/github/logout", (req: Request, res: Response) => {
       res.clearCookie("connect.sid", {
         path: "/",
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: true,
         sameSite: "lax",
         domain: "dev-ivory.bonmek.com",
       });
