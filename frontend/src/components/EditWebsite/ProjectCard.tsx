@@ -284,6 +284,35 @@ export const ProjectCard = ({ fieldKey, value, index }: ProjectCardProps) => {
                                     )}
                                 >
                                     {(() => {
+                                        // Handle status display
+                                        if (fieldKey === 'status') {
+                                            const statusMap = {
+                                                '0': { text: 'Pending' },
+                                                '1': { text: 'Active' },
+                                                '2': { text: 'Failed' }
+                                            };
+                                            const status = statusMap[value as keyof typeof statusMap] || { text: 'Unknown' };
+                                            return (
+                                                <span className="font-medium">
+                                                    {status.text}
+                                                </span>
+                                            );
+                                        }
+                                        
+                                        // Handle type display
+                                        if (fieldKey === 'type') {
+                                            const typeMap = {
+                                                'site': 'Site',
+                                                '.zip': 'Zip'
+                                            };
+                                            const displayType = typeMap[value as keyof typeof typeMap] || value;
+                                            return (
+                                                <span className="font-medium">
+                                                    {displayType}
+                                                </span>
+                                            );
+                                        }
+
                                         if (['owner', 'send_to'].includes(fieldKey) && value.length > 30) {
                                             return (
                                                 <TooltipProvider>

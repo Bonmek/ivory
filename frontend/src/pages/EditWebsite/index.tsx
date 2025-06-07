@@ -6,18 +6,14 @@ import Loading from '@/components/Loading'
 import { SuiParsedData } from '@mysten/sui/client'
 import { Button } from '@/components/ui/button'
 import { motion } from 'framer-motion'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { ExternalLink, Globe, Copy, Check, Eye, EyeOff, Layout, XCircle, CheckCircle, X, Edit3, Upload, Archive, CircleAlert, HelpCircle, Github, CirclePlus } from 'lucide-react'
+import { ExternalLink, Globe, Copy, Check, Eye, EyeOff, Layout, XCircle, CheckCircle, X, Upload, Archive, CircleAlert, HelpCircle, Github } from 'lucide-react'
 import ProjectCard from '@/components/EditWebsite/ProjectCard'
 import { handleUpdateSite, UpdateSiteAttributes } from '@/api/editWebsiteApi'
-import { EditAllFieldsDialog } from '@/components/EditWebsite/EditAllFieldsDialog'
 import FileUploadPreview, { FileItem } from '@/components/CreateWebsite/FileUploadPreview'
 import { FormattedMessage, useIntl } from 'react-intl'
 import { Separator } from '@radix-ui/react-dropdown-menu'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import GithubRepoInput from '@/components/CreateWebsite/GitHubRepoInput'
-import { Label } from '@/components/ui/label'
 import FrameworkPresetSelector from '@/components/CreateWebsite/FrameworkPresetSelector'
 import BuildOutputSetting from '@/components/CreateWebsite/BuildOutputSetting'
 import AdvancedOptions from '@/components/CreateWebsite/AdvancedOptions'
@@ -31,7 +27,6 @@ import { useQuery } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
 import JSZip from 'jszip'
 import { frameworks } from '@/constants/frameworks'
-import { PreviewSiteAttributes } from '@/api/createWebsiteApi'
 
 type WithFields = { fields: Record<string, unknown> };
 
@@ -84,16 +79,10 @@ function EditWebsitePage() {
         rootDirectory: '/',
     })
 
-    // State for create website dialog
-    const [open, setOpen] = useState(false)
-
     // State for deploying
-    const [isLoadingPreview, setIsLoadingPreview] = useState<boolean>(false)
     const [deployingState, setDeployingState] = useState<DeployingState>(
         DeployingState.None,
     )
-    const [deployingResponse, setDeployingResponse] =
-        useState<ApiResponse | null>(null)
     const [buildingState, setBuildingState] = useState<BuildingState>(
         BuildingState.None,
     )
@@ -101,7 +90,6 @@ function EditWebsitePage() {
     const [projectShowcaseUrl, setProjectShowcaseUrl] = useState<string | null>(
         null,
     )
-    const [projectPreview, setProjectPreview] = useState<File>()
 
     // State for file upload
     const [uploadMethod, setUploadMethod] = useState<UploadMethod>(
@@ -159,26 +147,6 @@ function EditWebsitePage() {
 
         setNameErrors(errors)
         return errors.length === 0
-    }
-
-    // Validate file
-    const validateFile = () => {
-        const errors: string[] = []
-        if (!selectedFile && uploadMethod === UploadMethod.Upload) {
-            errors.push(intl.formatMessage({ id: 'createWebsite.error.zipFile' }))
-        }
-        if (!selectedRepoFile && uploadMethod === UploadMethod.GitHub) {
-            errors.push(intl.formatMessage({ id: 'createWebsite.error.githubRepo' }))
-        }
-        setFileErrors(errors)
-        return errors.length === 0
-    }
-
-    // Handle name change with validation
-    const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value
-        setName(value)
-        validateName(value)
     }
 
     // GitHub state
@@ -416,7 +384,6 @@ function EditWebsitePage() {
     const [isUpdating, setIsUpdating] = useState(false)
     const [updateError, setUpdateError] = useState<string | null>(null)
     const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
-    const [isEditAllDialogOpen, setIsEditAllDialogOpen] = useState(false)
     const [isUpdateState, setIsUpdateState] = useState(false)
 
     // Auto-hide toast after 5 seconds
@@ -896,14 +863,6 @@ function EditWebsitePage() {
                                             className="relative group"
                                         >
                                             <div className="absolute -inset-1 bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 rounded-lg blur opacity-0 group-hover:opacity-30 transition-all duration-500 group-hover:duration-300" />
-                                            <Button
-                                                onClick={() => setIsEditAllDialogOpen(true)}
-                                                variant="outline"
-                                                className="relative bg-emerald-900/50 hover:bg-emerald-800/60 border-emerald-500/60 text-emerald-100 hover:text-white flex items-center gap-2 transition-all duration-300 group-hover:border-emerald-400/70 shadow-lg shadow-emerald-500/20 hover:shadow-emerald-400/40 cursor-pointer"
-                                            >
-                                                <Edit3 className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                                                <span className="font-medium bg-clip-text text-transparent bg-gradient-to-r from-emerald-200 via-teal-200 to-cyan-200 group-hover:via-emerald-200 group-hover:to-teal-200 transition-all duration-300">Edit Fields</span>
-                                            </Button>
                                         </motion.div>
                                         <motion.div
                                             whileHover={{ y: -2 }}
@@ -1107,9 +1066,9 @@ function EditWebsitePage() {
                                 <span className="w-1 h-6 bg-green-500 rounded-full"></span>
                                 Owner Detail
                             </h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-7">
+                            <div className="grid grid-cols-1 sm:grid-cols-1 gap-5 sm:gap-7">
                                 {Object.entries(projectContents)
-                                    .filter(([key]) => ['ownership', 'owner', 'send_to'].includes(key))
+                                    .filter(([key]) => ['owner'].includes(key))
                                     .map(([key, value], index) => (
                                         <ProjectCard
                                             key={key}
@@ -1130,11 +1089,11 @@ function EditWebsitePage() {
                         >
                             <h2 className="text-xl font-semibold text-white flex items-center gap-2">
                                 <span className="w-1 h-6 bg-purple-500 rounded-full"></span>
-                                Epochs Detail
+                                Date Detail
                             </h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-7">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-7">
                                 {Object.entries(projectContents)
-                                    .filter(([key]) => ['epochs', 'start_date', 'end_date'].includes(key))
+                                    .filter(([key]) => ['start_date', 'end_date'].includes(key))
                                     .map(([key, value], index) => (
                                         <ProjectCard
                                             key={key}
@@ -1151,7 +1110,7 @@ function EditWebsitePage() {
                             !['showcase_url', 'client_error_description', 'uuid',
                                 'site-name', 'type', 'blobId', 'status',
                                 'cache', 'root', 'ownership', 'owner', 'send_to',
-                                'epochs', 'start_date', 'end_date'].includes(key)
+                                'epochs', 'start_date', 'end_date', 'is_build'].includes(key)
                         ) && (
                                 <motion.section
                                     initial={{ opacity: 0, y: 20 }}
@@ -1169,7 +1128,7 @@ function EditWebsitePage() {
                                                 'showcase_url', 'client_error_description', 'uuid',
                                                 'site-name', 'type', 'blobId', 'status',
                                                 'cache', 'root', 'ownership', 'owner', 'send_to',
-                                                'epochs', 'start_date', 'end_date'
+                                                'epochs', 'start_date', 'end_date', 'is_build'
                                             ].includes(key))
                                             .map(([key, value], index) => (
                                                 <ProjectCard
@@ -1459,14 +1418,6 @@ function EditWebsitePage() {
                         </article>
                     </>
                 )}
-
-                <EditAllFieldsDialog
-                    open={isEditAllDialogOpen}
-                    onOpenChange={setIsEditAllDialogOpen}
-                    fields={projectContents || {}}
-                    isSaving={isUpdating}
-                    onSave={handleSaveAllFields}
-                />
             </div >
 
             {/* Toast Notification */}
