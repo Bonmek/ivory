@@ -444,96 +444,112 @@ const ProjectCard = memo(
                       >
                         {project.status === ProjectStatus.ACTIVE && (
                           <>
-                            {/* Owner-only actions */}
-                            {project.owner === userAddress && (
-                              <>
-                                <DropdownMenuItem
-                                  className="focus:bg-primary-800 cursor-pointer group"
-                                  onClick={() => setTransferOwnershipOpen(true)}
-                                >
-                                  <div className="flex items-center w-full">
-                                    <div className="relative">
-                                      <UserCog className="mr-2 h-4 w-4 group-hover:rotate-45 transition-all duration-300" />
-                                    </div>
-                                    <span className="group-hover:translate-x-0.5 transition-all duration-200">
-                                      <FormattedMessage id="projectCard.transferOwnership" />
-                                    </span>
-                                  </div>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  className="focus:bg-primary-800 cursor-pointer group"
-                                  onClick={() => setManageMembersOpen(true)}
-                                >
-                                  <div className="flex items-center w-full">
-                                    <div className="relative">
-                                      <Users className="mr-2 h-4 w-4 group-hover:scale-110 group-hover:text-secondary-400 transition-all duration-200" />
-                                    </div>
-                                    <span className="group-hover:translate-x-0.5 transition-all duration-200">
-                                      <FormattedMessage id="projectCard.manageMembers" />
-                                    </span>
-                                  </div>
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator className="bg-secondary-500/20" />
-                              </>
-                            )}
-
-                            {/* Member permissions */}
-                            {userPermissions?.update && (
+                            {project.type === ProjectType.ZIP ? (
+                              // For ZIP files, only show delete option
                               <DropdownMenuItem
-                                className="focus:bg-primary-800 cursor-pointer group"
-                                onClick={() =>
-                                  navigate(`/edit-website/${project.parentId}`)
-                                }
+                                className="text-red-400 focus:text-red-400 focus:bg-primary-800 cursor-pointer group"
+                                onClick={() => setDeleteDialogOpen(true)}
                               >
                                 <div className="flex items-center w-full">
-                                  <RefreshCw className="mr-2 h-4 w-4 group-hover:rotate-180 transition-transform duration-300" />
-                                  <span>
-                                    <FormattedMessage id="projectCard.updateSite" />
-                                  </span>
+                                  <Trash className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
+                                  <span>Delete ZIP file</span>
                                 </div>
                               </DropdownMenuItem>
-                            )}
-                            {userPermissions?.generateSite &&
-                              !project.siteId && (
+                            ) : (
+                              // For non-ZIP files, show all options
+                              <>
+                                {/* Owner-only actions */}
+                                {project.owner === userAddress && (
+                                  <>
+                                    <DropdownMenuItem
+                                      className="focus:bg-primary-800 cursor-pointer group"
+                                      onClick={() => setTransferOwnershipOpen(true)}
+                                    >
+                                      <div className="flex items-center w-full">
+                                        <div className="relative">
+                                          <UserCog className="mr-2 h-4 w-4 group-hover:rotate-45 transition-all duration-300" />
+                                        </div>
+                                        <span className="group-hover:translate-x-0.5 transition-all duration-200">
+                                          <FormattedMessage id="projectCard.transferOwnership" />
+                                        </span>
+                                      </div>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      className="focus:bg-primary-800 cursor-pointer group"
+                                      onClick={() => setManageMembersOpen(true)}
+                                    >
+                                      <div className="flex items-center w-full">
+                                        <div className="relative">
+                                          <Users className="mr-2 h-4 w-4 group-hover:scale-110 group-hover:text-secondary-400 transition-all duration-200" />
+                                        </div>
+                                        <span className="group-hover:translate-x-0.5 transition-all duration-200">
+                                          <FormattedMessage id="projectCard.manageMembers" />
+                                        </span>
+                                      </div>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator className="bg-secondary-500/20" />
+                                  </>
+                                )}
+
+                                {/* Member permissions */}
+                                {userPermissions?.update && (
+                                  <DropdownMenuItem
+                                    className="focus:bg-primary-800 cursor-pointer group"
+                                    onClick={() =>
+                                      navigate(`/edit-website/${project.parentId}`)
+                                    }
+                                  >
+                                    <div className="flex items-center w-full">
+                                      <RefreshCw className="mr-2 h-4 w-4 group-hover:rotate-180 transition-transform duration-300" />
+                                      <span>
+                                        <FormattedMessage id="projectCard.updateSite" />
+                                      </span>
+                                    </div>
+                                  </DropdownMenuItem>
+                                )}
+                                {userPermissions?.generateSite &&
+                                  !project.siteId && (
+                                    <DropdownMenuItem
+                                      className="focus:bg-primary-800 cursor-pointer group"
+                                      onClick={() => setGenerateDialogOpen(true)}
+                                    >
+                                      <div className="flex items-center w-full">
+                                        <Key className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
+                                        <span>
+                                          <FormattedMessage id="projectCard.generateSiteId" />
+                                        </span>
+                                      </div>
+                                    </DropdownMenuItem>
+                                  )}
                                 <DropdownMenuItem
-                                  className="focus:bg-primary-800 cursor-pointer group"
-                                  onClick={() => setGenerateDialogOpen(true)}
+                                  className="focus:bg-primary-800 cursor-pointer group relative"
+                                  onClick={() => {}}
+                                  disabled
                                 >
-                                  <div className="flex items-center w-full">
-                                    <Key className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
+                                  <div className="flex items-center w-full opacity-50">
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
                                     <span>
-                                      <FormattedMessage id="projectCard.generateSiteId" />
+                                      <FormattedMessage id="projectCard.extendSite" />
+                                    </span>
+                                    <span className="ml-2 text-xs px-1.5 py-0.5 rounded-full bg-secondary-500/10 border border-secondary-500/20">
+                                      <FormattedMessage id="projectCard.comingSoon" />
                                     </span>
                                   </div>
                                 </DropdownMenuItem>
-                              )}
-                            <DropdownMenuItem
-                              className="focus:bg-primary-800 cursor-pointer group relative"
-                              onClick={() => {}}
-                              disabled
-                            >
-                              <div className="flex items-center w-full opacity-50">
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                <span>
-                                  <FormattedMessage id="projectCard.extendSite" />
-                                </span>
-                                <span className="ml-2 text-xs px-1.5 py-0.5 rounded-full bg-secondary-500/10 border border-secondary-500/20">
-                                  <FormattedMessage id="projectCard.comingSoon" />
-                                </span>
-                              </div>
-                            </DropdownMenuItem>
-                            {userPermissions?.delete && (
-                              <>
-                                <DropdownMenuSeparator className="bg-secondary-500/20" />
-                                <DropdownMenuItem
-                                  className="text-red-400 focus:text-red-400 focus:bg-primary-800 cursor-pointer group"
-                                  onClick={() => setDeleteDialogOpen(true)}
-                                >
-                                  <div className="flex items-center w-full">
-                                    <Trash className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
-                                    <span>Delete site</span>
-                                  </div>
-                                </DropdownMenuItem>
+                                {userPermissions?.delete && (
+                                  <>
+                                    <DropdownMenuSeparator className="bg-secondary-500/20" />
+                                    <DropdownMenuItem
+                                      className="text-red-400 focus:text-red-400 focus:bg-primary-800 cursor-pointer group"
+                                      onClick={() => setDeleteDialogOpen(true)}
+                                    >
+                                      <div className="flex items-center w-full">
+                                        <Trash className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
+                                        <span>Delete site</span>
+                                      </div>
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
                               </>
                             )}
                           </>
@@ -548,7 +564,7 @@ const ProjectCard = memo(
                             >
                               <div className="flex items-center w-full">
                                 <Trash className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
-                                <span>Delete site</span>
+                                <span>{project.type === ProjectType.ZIP ? 'Delete ZIP file' : 'Delete site'}</span>
                               </div>
                             </DropdownMenuItem>
                           )}

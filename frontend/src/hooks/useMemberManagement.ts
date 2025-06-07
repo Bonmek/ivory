@@ -89,9 +89,10 @@ export const useMemberManagement = () => {
       setIsUpdatingPermissions(true)
       previousData = queryClient.getQueryData(['project', objectId])
 
-      const response = await apiClient.put(
-        `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_GRANT_ACCESS!}?object_id=${objectId}&member_address_n_access=${memberString}`,
-      )
+      const baseUrl = `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_GRANT_ACCESS!}?object_id=${objectId}`
+      const url = memberString ? `${baseUrl}&member_address_n_access=${memberString}` : baseUrl
+
+      const response = await apiClient.put(url)
 
       if (!response.data || response.data.statusCode !== 1) {
         throw new Error(response.data?.error || 'Failed to update permissions')
@@ -99,14 +100,14 @@ export const useMemberManagement = () => {
 
       await handleMemberStateUpdate(objectId, memberString)
       await queryClient.refetchQueries({ queryKey: ['metadata'] })
-      toast.success('Permissions updated successfully')
+      toast.success('Changes applied successfully')
       onSuccess?.()
     } catch (error: any) {
       console.error('Error updating permissions:', error)
       if (previousData) {
         queryClient.setQueryData(['project', objectId], previousData)
       }
-      toast.error(error.message || 'Failed to update permissions')
+      toast.error(error.message || 'Failed to apply changes')
       throw error
     } finally {
       setIsUpdatingPermissions(false)

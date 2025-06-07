@@ -439,67 +439,75 @@ export function ManageMembersModal({
                 </Button>
               </div>
               <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-                <label className="flex items-center space-x-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={newMemberPermissions.update}
-                    onChange={(e) =>
-                      setNewMemberPermissions((prev) => ({
-                        ...prev,
-                        update: e.target.checked,
-                      }))
-                    }
-                    className="rounded border-secondary-500/20 bg-primary-800 h-3.5 w-3.5"
-                  />
-                  <span className="text-white/80">
+                <label className="flex items-center space-x-2 text-sm group cursor-pointer">
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      checked={newMemberPermissions.update}
+                      onChange={(e) =>
+                        setNewMemberPermissions((prev) => ({
+                          ...prev,
+                          update: e.target.checked,
+                        }))
+                      }
+                      className="appearance-none w-5 h-5 border-2 border-[#30cfd0] rounded-md bg-transparent relative mr-2 cursor-pointer checked:bg-[#30cfd0]/20 checked:border-[#30cfd0] transition-all duration-300 ease-in-out hover:border-[#30cfd0] hover:shadow-[0_0_10px_rgba(48,207,208,0.3)]"
+                    />
+                  </div>
+                  <span className="text-[11px] text-white/80 group-hover:text-white transition-colors duration-200">
                     <FormattedMessage id="projectCard.manageMembers.permissionUpdate" />
                   </span>
                 </label>
-                <label className="flex items-center space-x-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={newMemberPermissions.delete}
-                    onChange={(e) =>
-                      setNewMemberPermissions((prev) => ({
-                        ...prev,
-                        delete: e.target.checked,
-                      }))
-                    }
-                    className="rounded border-secondary-500/20 bg-primary-800 h-3.5 w-3.5"
-                  />
-                  <span className="text-white/80">
+                <label className="flex items-center space-x-2 text-sm group cursor-pointer">
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      checked={newMemberPermissions.delete}
+                      onChange={(e) =>
+                        setNewMemberPermissions((prev) => ({
+                          ...prev,
+                          delete: e.target.checked,
+                        }))
+                      }
+                      className="appearance-none w-5 h-5 border-2 border-[#30cfd0] rounded-md bg-transparent relative mr-2 cursor-pointer checked:bg-[#30cfd0]/20 checked:border-[#30cfd0] transition-all duration-300 ease-in-out hover:border-[#30cfd0] hover:shadow-[0_0_10px_rgba(48,207,208,0.3)]"
+                    />
+                  </div>
+                  <span className="text-[11px] text-white/80 group-hover:text-white transition-colors duration-200">
                     <FormattedMessage id="projectCard.manageMembers.permissionDelete" />
                   </span>
                 </label>
-                <label className="flex items-center space-x-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={newMemberPermissions.generateSite}
-                    onChange={(e) =>
-                      setNewMemberPermissions((prev) => ({
-                        ...prev,
-                        generateSite: e.target.checked,
-                      }))
-                    }
-                    className="rounded border-secondary-500/20 bg-primary-800 h-3.5 w-3.5"
-                  />
-                  <span className="text-white/80">
+                <label className="flex items-center space-x-2 text-sm group cursor-pointer">
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      checked={newMemberPermissions.generateSite}
+                      onChange={(e) =>
+                        setNewMemberPermissions((prev) => ({
+                          ...prev,
+                          generateSite: e.target.checked,
+                        }))
+                      }
+                      className="appearance-none w-5 h-5 border-2 border-[#30cfd0] rounded-md bg-transparent relative mr-2 cursor-pointer checked:bg-[#30cfd0]/20 checked:border-[#30cfd0] transition-all duration-300 ease-in-out hover:border-[#30cfd0] hover:shadow-[0_0_10px_rgba(48,207,208,0.3)]"
+                    />
+                  </div>
+                  <span className="text-[11px] text-white/80 group-hover:text-white transition-colors duration-200">
                     <FormattedMessage id="projectCard.manageMembers.permissionGenerateSite" />
                   </span>
                 </label>
-                <label className="flex items-center space-x-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={newMemberPermissions.setSuins}
-                    onChange={(e) =>
-                      setNewMemberPermissions((prev) => ({
-                        ...prev,
-                        setSuins: e.target.checked,
-                      }))
-                    }
-                    className="rounded border-secondary-500/20 bg-primary-800 h-3.5 w-3.5"
-                  />
-                  <span className="text-white/80">
+                <label className="flex items-center space-x-2 text-sm group cursor-pointer">
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      checked={newMemberPermissions.setSuins}
+                      onChange={(e) =>
+                        setNewMemberPermissions((prev) => ({
+                          ...prev,
+                          setSuins: e.target.checked,
+                        }))
+                      }
+                      className="appearance-none w-5 h-5 border-2 border-[#30cfd0] rounded-md bg-transparent relative mr-2 cursor-pointer checked:bg-[#30cfd0]/20 checked:border-[#30cfd0] transition-all duration-300 ease-in-out hover:border-[#30cfd0] hover:shadow-[0_0_10px_rgba(48,207,208,0.3)]"
+                    />
+                  </div>
+                  <span className="text-[11px] text-white/80 group-hover:text-white transition-colors duration-200">
                     <FormattedMessage id="projectCard.manageMembers.permissionSetSuins" />
                   </span>
                 </label>
@@ -738,11 +746,8 @@ export function ManageMembersModal({
                                           e.target.checked,
                                         )
                                       }
-                                      className="peer sr-only"
+                                      className="appearance-none w-5 h-5 border-2 border-[#30cfd0] rounded-md bg-transparent relative mr-2 cursor-pointer checked:bg-[#30cfd0]/20 checked:border-[#30cfd0] transition-all duration-300 ease-in-out hover:border-[#30cfd0] hover:shadow-[0_0_10px_rgba(48,207,208,0.3)]"
                                     />
-                                    <div className="h-4 w-4 rounded border border-secondary-500/20 bg-primary-900 peer-checked:bg-secondary-500 peer-checked:border-secondary-500 transition-all duration-200 flex items-center justify-center">
-                                      <Check className="h-3 w-3 text-black scale-0 peer-checked:scale-100 transition-transform duration-200" />
-                                    </div>
                                   </div>
                                   <span className="text-[11px] text-white/80 group-hover:text-white transition-colors duration-200">
                                     <FormattedMessage id={label} />
