@@ -20,9 +20,17 @@ app.use(
 
 app.use(
   session({
+    name: "connect.sid",
     secret: "session-secret",
     resave: false,
     saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      path: "/",
+      domain: "dev-ivory.bonmek.com",
+    },
   })
 );
 
