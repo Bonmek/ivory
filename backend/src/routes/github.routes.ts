@@ -21,6 +21,9 @@ router.get("/api/auth/github/logout", (req: Request, res: Response) => {
     req.session.destroy(() => {
       res.clearCookie("connect.sid", {
         path: "/",
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
       });
       res.redirect(`${process.env.FRONTEND_URL}/create-website`);
     });

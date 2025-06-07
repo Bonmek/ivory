@@ -20,9 +20,16 @@ app.use(
 
 app.use(
   session({
+    name: "connect.sid",
     secret: "session-secret",
     resave: false,
     saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+    },
   })
 );
 
