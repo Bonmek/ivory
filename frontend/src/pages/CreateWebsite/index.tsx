@@ -320,7 +320,8 @@ export default function CreateWebsitePage() {
   }
 
   const handleGithubSignIn = () => {
-    window.location.href = `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_GITHUB_AUTH}`
+    window.location.href = `${process.env.REACT_APP_SERVER_URL}/api/auth/github`
+
   }
 
   const fetchRepositories = async () => {
@@ -541,7 +542,7 @@ export default function CreateWebsitePage() {
 
   const handleLogout = async () => {
     try {
-      const response = await apiClient.get('/auth/github/logout')
+      const response = await apiClient.get('/api/auth/github/logout')
       if (response.status !== 200) {
         throw new Error('Logout failed')
       }

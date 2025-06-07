@@ -467,7 +467,7 @@ function EditWebsitePage() {
 
     const handleLogout = async () => {
         try {
-            const response = await apiClient.get('/auth/github/logout')
+            const response = await apiClient.get('/api/auth/github/logout')
             if (response.status !== 200) {
                 throw new Error('Logout failed')
             }

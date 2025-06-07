@@ -1,18 +1,18 @@
-import express from 'express';
-import cors from 'cors';
-import siteRoutes from './routes/site.routes';
-import {githubRoutes} from './routes/github.routes';
+import express from "express";
+import cors from "cors";
+import siteRoutes from "./routes/site.routes";
+import { githubRoutes } from "./routes/github.routes";
 import "./github/githubAuth";
-import session from 'express-session';
-import passport from 'passport';
-import path from 'path';
-import config from './config/config';
+import session from "express-session";
+import passport from "passport";
+import path from "path";
+import config from "./config/config";
 
 const app = express();
 app.use(express.json());
 app.use(
   cors({
-    origin: config.urls.frontend ,
+    origin: config.urls.frontend,
     credentials: true,
     exposedHeaders: ["Content-Disposition", "Content-Length"],
   })
@@ -26,15 +26,14 @@ app.use(
   })
 );
 
-app.use(express.static(path.join(__dirname, '../../frontend/dist')));
+app.use(express.static(path.join(__dirname, "../../frontend/dist")));
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(githubRoutes);
 
 // Routes
-app.use('/api', siteRoutes);
+app.use("/api", siteRoutes);
 
 app.listen(5000, () => {
-  console.log('Server is running on port 5000');
+  console.log("Server is running on port 5000");
 });
-
