@@ -1,45 +1,72 @@
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { suiService } from '@/service/suiService'
 import apiClient from '@/lib/axiosConfig'
-import { Transaction } from '@mysten/sui/transactions'
+import { linkSuinsToSite as linkSuinsToSiteBlockchain } from '@/utils/suinsUtils'
 
-import { linkSuinsToSite as linkSuinsToSiteBlockchain } from '../utils/suinsUtils'
+const MAX_RETRIES = 10
+const POLLING_INTERVAL = 2000
+
+const waitForSuinsUpdate = async (objectId: string, suinsName: string) => {
+  let retries = 0
+  
+  while (retries < MAX_RETRIES) {
+    try {
+      const metadata = await suiService.getMetadata(objectId)
+      // Type assertion for the nested structure
+      const suiNs = (metadata as any)?.data?.content?.fields?.sui_ns
+      if (suiNs === suinsName) {
+        return true
+      }
+      await new Promise(resolve => setTimeout(resolve, POLLING_INTERVAL))
+      retries++
+    } catch (error) {
+      console.error('Error polling SUINS state:', error)
+      throw error
+    }
+  }
+  
+  throw new Error('Timeout waiting for SUINS update')
+}
 
 export const useSuinsManagement = (userAddress: string) => {
   const queryClient = useQueryClient()
   const [isLinking, setIsLinking] = useState(false)
 
   const linkSuinsToSite = async (
-    suinsObjectId: string,
-    siteId: string,
+    suinsData: { objectId: string; name: string },
+    parentId: string,
     walletAddress: string,
-    signAndExecuteTransactionBlock: (input: { transactionBlock: Transaction }) => Promise<any>,
+    signAndExecuteTransactionBlock: any,
     network: 'mainnet' | 'testnet',
   ) => {
     try {
       setIsLinking(true)
 
-      // 1. Call blockchain transaction
+      // 1. Call blockchain transaction with objectId
       const txResult = await linkSuinsToSiteBlockchain(
-        suinsObjectId,
-        siteId,
+        suinsData.objectId, // Use objectId for blockchain
+        parentId,
         walletAddress,
         signAndExecuteTransactionBlock,
         network
       )
 
-      // 2. If blockchain transaction successful, update our API
+      // 2. If blockchain transaction successful, update our API with name
       if (txResult.status === 'success') {
         const response = await apiClient.put(
-          `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_SET_ATTRIBUTES!}?object_id=${siteId}&sui_ns=${suinsObjectId}`,
+          `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_SET_ATTRIBUTES!}?object_id=${parentId}&sui_ns=${suinsData.name}`, // Use name for server
         )
 
         if (!response.data || response.data.statusCode !== 1) {
           throw new Error(response.data?.error || 'Failed to link SUINS')
         }
 
-        // Refetch metadata to update UI
+        // 3. Poll for state update with name
+        await waitForSuinsUpdate(parentId, suinsData.name)
+
+        // 4. Refetch metadata to update UI
         await queryClient.refetchQueries({ queryKey: ['metadata'] })
         toast.success('SUINS linked successfully')
 

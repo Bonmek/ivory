@@ -1,6 +1,10 @@
 import { memo, useState, useEffect } from 'react'
 import { useAuth } from '@/context/AuthContext'
-import { useSignAndExecuteTransaction, useCurrentWallet } from '@mysten/dapp-kit'
+import {
+  useSignAndExecuteTransaction,
+  useCurrentWallet,
+} from '@mysten/dapp-kit'
+import { useWalletKit } from '@mysten/wallet-kit'
 import {
   MoreHorizontal,
   Users,
@@ -61,7 +65,6 @@ import {
   ProjectStatus,
   ProjectType,
 } from '@/types/project'
-import { linkSuinsToSite } from '@/utils/suinsUtils'
 import { ManageMembersModal } from './ManageMembersModal'
 import { DeleteConfirmationDialog } from './DeleteConfirmationDialog'
 import { GenerateSiteIdDialog } from './GenerateSiteIdDialog'
@@ -93,6 +96,8 @@ const ProjectCard = memo(
   }: ProjectCardProps) => {
     const intl = useIntl()
     const signAndExecute = useSignAndExecuteTransaction()
+    const { currentWallet } = useCurrentWallet()
+    const { connect } = useWalletKit()
     const navigate = useNavigate()
     const {
       addMember,
@@ -107,9 +112,9 @@ const ProjectCard = memo(
     )
     const { generateSiteId, deleteSite, isGenerating, isDeleting } =
       useSiteManagement()
-    const { linkSuinsToSite, isLinking, setIsLinking } = useSuinsManagement(
-      userAddress || '',
-    )
+    const { linkSuinsToSite, isLinking } = useSuinsManagement(userAddress || '')
+    const { signAndExecuteTransactionBlock } = useWalletKit()
+
     const remaining = calculateTimeBetween(new Date(), project.expiredDate)
     const [startDateOpen, setStartDateOpen] = useState(false)
     const [expiredDateOpen, setExpiredDateOpen] = useState(false)
@@ -201,7 +206,6 @@ const ProjectCard = memo(
       }
 
       try {
-        setIsLinking(true)
         const selectedSuinsData = suins.find(
           (s) => s.data?.content?.fields?.domain_name === selectedSuins,
         )
@@ -209,53 +213,23 @@ const ProjectCard = memo(
           throw new Error('SUINS NFT not found')
         }
 
-        // 1. Call blockchain transaction through suinsUtils
-        const txResult = await linkSuinsToSite(
-          selectedSuinsData.data.objectId,
-          project.siteId || '',
-          userAddress,
-          async (input) => {
-            const result = await signAndExecute.mutateAsync({
-              transaction: input.transactionBlock,
-              chain: `sui:${process.env.REACT_APP_SUI_NETWORK}`
-            })
-            return result
+        const result = await linkSuinsToSite(
+          {
+            objectId: selectedSuinsData.data.objectId,
+            name: selectedSuins
           },
+          project.parentId || '',
+          userAddress,
+          signAndExecuteTransactionBlock,
           process.env.REACT_APP_SUI_NETWORK as 'mainnet' | 'testnet',
         )
 
-        // 2. If blockchain transaction successful, update our API
-        if (txResult.status === 'success') {
-          const apiResponse = await apiClient.put(
-          `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_SET_ATTRIBUTES!}?object_id=${project.parentId}&sui_ns=${selectedSuins}`,
-        )
-
-          if (apiResponse.status === 200) {
-        setOpen(false)
-          toast.success(<FormattedMessage id="projectCard.suinsLinked" />, {
-            description: intl.formatMessage({
-              id: 'projectCard.suinsLinkedDesc',
-            }),
-            duration: 5000,
-          })
+        if (result.status === 'success') {
+          setOpen(false)
           onRefetch()
-          } else {
-            throw new Error('Failed to update API')
-          }
         }
       } catch (error: any) {
-        console.error('Error linking SUINS:', error)
-        toast.error(
-          error.message || <FormattedMessage id="projectCard.failedToLink" />,
-          {
-            description: intl.formatMessage({
-              id: 'projectCard.failedToLinkDesc',
-            }),
-            duration: 5000,
-          },
-        )
-      } finally {
-        setIsLinking(false)
+        console.error('Error in handleLinkSuins:', error)
       }
     }
 
@@ -336,8 +310,8 @@ const ProjectCard = memo(
                       <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
                           {isLoadingSuins ? (
-                            <div className="flex items-center justify-center py-4">
-                              <Loader2 className="h-6 w-6 animate-spin text-secondary-400" />
+                            <div className="flex flex-col gap-2">
+                              <div className="h-9 w-full rounded-md bg-primary-800/50 animate-pulse" />
                             </div>
                           ) : (
                             <>
@@ -375,7 +349,7 @@ const ProjectCard = memo(
                                 <Button
                                   onClick={handleRefreshSuins}
                                   variant="outline"
-                                  className="border-secondary-500/20 text-white hover:bg-primary-800 ${isLoadingSuins || isRefreshing ? '' : 'cursor-pointer'}"
+                                  className="border-secondary-500/20 text-white hover:bg-primary-800"
                                   disabled={isLoadingSuins || isRefreshing}
                                 >
                                   {isRefreshing ? (
@@ -463,7 +437,9 @@ const ProjectCard = memo(
                                   <>
                                     <DropdownMenuItem
                                       className="focus:bg-primary-800 cursor-pointer group"
-                                      onClick={() => setTransferOwnershipOpen(true)}
+                                      onClick={() =>
+                                        setTransferOwnershipOpen(true)
+                                      }
                                     >
                                       <div className="flex items-center w-full">
                                         <div className="relative">
@@ -496,7 +472,9 @@ const ProjectCard = memo(
                                   <DropdownMenuItem
                                     className="focus:bg-primary-800 cursor-pointer group"
                                     onClick={() =>
-                                      navigate(`/edit-website/${project.parentId}`)
+                                      navigate(
+                                        `/edit-website/${project.parentId}`,
+                                      )
                                     }
                                   >
                                     <div className="flex items-center w-full">
@@ -511,7 +489,9 @@ const ProjectCard = memo(
                                   !project.siteId && (
                                     <DropdownMenuItem
                                       className="focus:bg-primary-800 cursor-pointer group"
-                                      onClick={() => setGenerateDialogOpen(true)}
+                                      onClick={() =>
+                                        setGenerateDialogOpen(true)
+                                      }
                                     >
                                       <div className="flex items-center w-full">
                                         <Key className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
@@ -564,7 +544,11 @@ const ProjectCard = memo(
                             >
                               <div className="flex items-center w-full">
                                 <Trash className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
-                                <span>{project.type === ProjectType.ZIP ? 'Delete ZIP file' : 'Delete site'}</span>
+                                <span>
+                                  {project.type === ProjectType.ZIP
+                                    ? 'Delete ZIP file'
+                                    : 'Delete site'}
+                                </span>
                               </div>
                             </DropdownMenuItem>
                           )}

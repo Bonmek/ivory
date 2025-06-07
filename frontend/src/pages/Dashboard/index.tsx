@@ -105,6 +105,7 @@ export default function Dashboard() {
       : []
   }, [metadata])
 
+
   const filteredProjects = useMemo(() => {
     const projects = [...allProjects]
     if (!projects || projects.length === 0) return []
