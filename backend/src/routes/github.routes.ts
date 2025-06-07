@@ -21,7 +21,15 @@ router.get("/api/auth/github/logout", (req: Request, res: Response) => {
     // Clear the session cookie
     res.clearCookie("connect.sid", {
       path: "/",
+      secure: true, // ใช้เฉพาะกับ HTTPS
+      httpOnly: true,
     });
+    res.setHeader(
+      "Cache-Control",
+      "no-store, no-cache, must-revalidate, proxy-revalidate"
+    );
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
     res.redirect(`${process.env.FRONTEND_URL}/create-website`);
   });
 });
