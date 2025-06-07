@@ -29,6 +29,7 @@ app.use(
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
+      domain: "dev-ivory.bonmek.com",
     },
   })
 );
