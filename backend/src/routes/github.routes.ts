@@ -18,30 +18,11 @@ router.get("/api/auth/github/logout", (req: Request, res: Response) => {
     if (err) {
       return res.status(500).json({ error: "Logout failed" });
     }
-
-    // Destroy session
-    req.session.destroy((err) => {
-      if (err) {
-        return res.status(500).json({ error: "Session destroy failed" });
-      }
-
-      // 🔧 ลอง log cookie ดูก่อนลบ
-      console.log("Cookie before clearing:", req.cookies);
-
-      // ✅ ลบ cookie ให้ match กับที่ set
+    req.session.destroy(() => {
       res.clearCookie("connect.sid", {
         path: "/",
-        httpOnly: true,
-        secure: true,
-        sameSite: "lax",
-        domain: "dev-ivory.bonmek.com",
       });
-
-      // ✅ ลองส่ง JSON ก่อน redirect เพื่อ debug ได้ง่าย
-      res.status(200).json({ message: "Logged out" });
-
-      // หรือ redirect
-      // res.redirect(`${process.env.FRONTEND_URL}/create-website`);
+      res.redirect(`${process.env.FRONTEND_URL}/create-website`);
     });
   });
 });
