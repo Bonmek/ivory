@@ -114,6 +114,7 @@ export default function CreateWebsitePage() {
   const [open, setOpen] = useState(false)
 
   // State for deploying
+  const [failedToDeployCount, setFailedToDeployCount] = useState(0)
   const [isLoadingPreview, setIsLoadingPreview] = useState<boolean>(false)
   const [deployingState, setDeployingState] = useState<DeployingState>(
     DeployingState.None,
@@ -532,6 +533,7 @@ export default function CreateWebsitePage() {
     } catch (error) {
       console.error('Error:', error)
       setDeployingState(DeployingState.Failed)
+      setFailedToDeployCount((prev) => prev + 1)
       setDeployingResponse(error as ApiResponseError)
       throw error
     }
@@ -1126,6 +1128,7 @@ export default function CreateWebsitePage() {
                 projectShowcaseUrl={projectShowcaseUrl}
                 selectedBranch={selectedBranch}
                 projectPreview={projectPreview}
+                failedToDeployCount={failedToDeployCount}
               />
             </motion.div>
           </>

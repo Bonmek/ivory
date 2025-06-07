@@ -258,6 +258,9 @@ export default {
   'createWebsite.preview.ariaLabel': '预览未加载？点击获取帮助',
   'createWebsite.preview.pathRecommendation': '为了最佳兼容性，我们建议您使用相对路径（以 \'./\' 开始）为网站中的所有本地资产和链接。',
 
+  'createWebsite.deployFailed': '服务暂时不可用',
+  'createWebsite.deployFailedDescription': 'Walrus 节点当前正经历高流量。请稍后重试。我们对不便表示歉意。',
+
   // 导航和页面导航
   'howtouse.onThisPage': '在本页',
   'howtouse.backToTop': '返回顶部',

@@ -87,7 +87,7 @@ StatusMotionCard.displayName = "StatusMotionCard";
 import { Card, CardContent } from "@/components/ui/card";
 import { buildOutputSettingsType, advancedOptionsType } from "@/types/CreateWebstie/types";
 import { frameworks } from "@/constants/frameworks";
-import { Check, AlertCircle, Info, Sparkles, RefreshCw, X, GitBranch, Upload, Folder, Cpu, UploadCloud, Terminal, FolderOpen, Package, Shield, FileText, FolderInput } from "lucide-react";
+import { Check, AlertCircle, Info, Sparkles, RefreshCw, X, GitBranch, Upload, Folder, Cpu, UploadCloud, Terminal, FolderOpen, Package, Shield, FileText, FolderInput, AlertTriangle, MessageCircleQuestion } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormattedMessage } from 'react-intl';
 import { useIntl } from 'react-intl';
@@ -108,6 +108,7 @@ interface PreviewSummaryProps {
   selectedBranch?: string;
   setShowPreview: (showPreview: boolean) => void;
   projectPreview?: File;
+  failedToDeployCount: number;
   selectedRepoFile?: File | null;
   showBuildOutputSettings: boolean;
   deployingState: DeployingState;
@@ -278,6 +279,7 @@ export const PreviewSummary: React.FC<PreviewSummaryProps> = ({
   selectedRepoFile,
   showBuildOutputSettings,
   projectPreview,
+  failedToDeployCount,
   deployingResponse,
   buildingState,
 }) => {
@@ -396,6 +398,44 @@ export const PreviewSummary: React.FC<PreviewSummaryProps> = ({
               );
             }
             if (deployingState === DeployingState.Failed && deployingResponse) {
+              if (failedToDeployCount > 3) {
+                return (
+                  <>
+                    <StatusMotionCard
+                      key="warning"
+                      icon={<AlertTriangle className="w-6 h-6 text-yellow-500" />}
+                      color="yellow"
+                      title={<FormattedMessage id="createWebsite.deployFailed" defaultMessage="Deploy failed" />}
+                      description={<FormattedMessage id="createWebsite.deployFailedDescription" defaultMessage="Please try again or contact support for assistance." />}
+                      ariaLive="assertive"
+                    />
+                    <StatusMotionCard
+                      key="failed"
+                      icon={<X className="w-6 h-6 text-red-400" />}
+                      color="red"
+                      title={<FormattedMessage id="createWebsite.failedToDeploy" defaultMessage="Failed to deploy" />}
+                      description={<>
+                        <FormattedMessage id="createWebsite.failedToDeployDescription" defaultMessage="Please try again or contact support for assistance." />
+                        {deployingResponse.statusCode === 0 && deployingResponse.error && (
+                          <span className="block mt-1">{deployingResponse.error.error_message}</span>
+                        )}
+                      </>}
+                      ariaLive="assertive"
+                      className="bg-gradient-to-br from-red-900/30 to-red-800/20 border border-red-500/20"
+                    >
+                      <div className="mt-4 flex flex-col sm:flex-row gap-3">
+                        <Button
+                          onClick={() => setOpen(true)}
+                          className="group flex-1 items-center justify-center gap-2.5 bg-gradient-to-r from-red-500 to-amber-500 hover:from-red-600 hover:to-amber-600 text-white hover:text-white/90 px-6 py-2.5 rounded-xl font-semibold text-base transition-all duration-300 transform hover:scale-[1.02] focus:ring-2 focus:ring-offset-2 focus:ring-amber-400/50 shadow-lg shadow-red-500/20 hover:shadow-red-500/30"
+                        >
+                          <RefreshCw className="w-4 h-4 group-hover:animate-spin transition-transform duration-500 group-hover:rotate-180" />
+                          <FormattedMessage id="createWebsite.redeploy" defaultMessage="Try Again" />
+                        </Button>
+                      </div>
+                    </StatusMotionCard>
+                  </>
+                );
+              }
               return (
                 <StatusMotionCard
                   key="failed"
@@ -409,15 +449,17 @@ export const PreviewSummary: React.FC<PreviewSummaryProps> = ({
                     )}
                   </>}
                   ariaLive="assertive"
+                  className="bg-gradient-to-br from-red-900/30 to-red-800/20 border border-red-500/20"
                 >
-                  <Button
-                    className="mt-2 flex items-center gap-2 bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 hover:from-pink-600 hover:to-yellow-600 text-white px-6 py-2 rounded-lg font-semibold text-base shadow-lg shadow-red-100/30 dark:shadow-red-900/40 transition-all duration-300 hover:scale-105 focus:ring-2 focus:ring-offset-2 focus:ring-red-400"
-                    style={{ boxShadow: '0 2px 16px 0 rgba(255, 76, 76, 0.15)' }}
-                    onClick={() => setOpen(true)}
-                  >
-                    <RefreshCw className="w-5 h-5 mr-1 -ml-1 animate-spin-slow" />
-                    <FormattedMessage id="createWebsite.redeploy" defaultMessage="Redeploy" />
-                  </Button>
+                  <div className="mt-4 flex flex-col sm:flex-row gap-3">
+                    <Button
+                      onClick={() => setOpen(true)}
+                      className="group flex-1 items-center justify-center gap-2.5 bg-gradient-to-r from-red-500 to-amber-500 hover:from-red-600 hover:to-amber-600 text-white hover:text-white/90 px-6 py-2.5 rounded-xl font-semibold text-base transition-all duration-300 transform hover:scale-[1.02] focus:ring-2 focus:ring-offset-2 focus:ring-amber-400/50 shadow-lg shadow-red-500/20 hover:shadow-red-500/30"
+                    >
+                      <RefreshCw className="w-4 h-4 group-hover:animate-spin transition-transform duration-500 group-hover:rotate-180" />
+                      <FormattedMessage id="createWebsite.redeploy" defaultMessage="Try Again" />
+                    </Button>
+                  </div>
                 </StatusMotionCard>
               );
             }

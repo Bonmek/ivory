@@ -84,18 +84,18 @@ function CreateWebsiteDialog({
                   Login with Google
                 </span>
               </Button>
-            <div
-              className="w-full h-16 flex items-center justify-start space-x-3 bg-blue-600/60 shadow-inner p-4 mb-4 rounded-xl opacity-60 cursor-not-allowed select-none"
-            >
-              <img
-                src="https://upload.wikimedia.org/wikipedia/commons/6/6c/Facebook_Logo_2023.png"
-                className="w-10 h-10 rounded-full opacity-80"
-                alt="Facebook Logo"
-              />
-              <span className="text-lg font-bold tracking-wide text-white">
-                Coming Soon
-              </span>
-            </div>
+              <div
+                className="w-full h-16 flex items-center justify-start space-x-3 bg-blue-600/60 shadow-inner p-4 mb-4 rounded-xl opacity-60 cursor-not-allowed select-none"
+              >
+                <img
+                  src="https://upload.wikimedia.org/wikipedia/commons/6/6c/Facebook_Logo_2023.png"
+                  className="w-10 h-10 rounded-full opacity-80"
+                  alt="Facebook Logo"
+                />
+                <span className="text-lg font-bold tracking-wide text-white">
+                  Coming Soon
+                </span>
+              </div>
             </article>
           ) : (
             <article className="flex flex-col items-center justify-center">
@@ -110,7 +110,7 @@ function CreateWebsiteDialog({
                     variant="secondary"
                     className="h-12 bg-secondary-500 hover:bg-secondary-700 text-black cursor-pointer"
                     onClick={() => {
-                      window.open('/guide', '_blank')
+                      window.open('/how-to-use', '_blank')
                     }}
                   >
                     How to buy Sui NS
