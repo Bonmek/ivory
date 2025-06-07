@@ -557,7 +557,7 @@ export default function CreateWebsitePage() {
 
       toast.success('Successfully logged out')
 
-      window.location.href = '/create-website'
+      // window.location.href = '/create-website'
     } catch (error) {
       console.error('Logout error:', error)
       toast.error('Failed to log out. Please try again.')
@@ -569,7 +569,7 @@ export default function CreateWebsitePage() {
       setRepoContents(null)
       setRepoContentsError(null)
       setRepoContentsLoading(false)
-      window.location.href = '/create-website'
+      // window.location.href = '/create-website'
     }
   }
 
