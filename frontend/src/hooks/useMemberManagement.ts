@@ -65,7 +65,7 @@ export const useMemberManagement = () => {
       if (!response.data || response.data.statusCode !== 1) {
         throw new Error(response.data?.error || 'Failed to remove member')
       }
-      
+
       await handleMemberStateUpdate(objectId, memberString)
       await queryClient.refetchQueries({ queryKey: ['metadata'] })
       toast.success('Member removed successfully')

@@ -36,7 +36,7 @@ export const waitForStateUpdate = async (
 
     try {
       const metadata = await suiService.getMetadata(objectId)
-      return true
+        return true
     } catch (error) {
       if ((error as any)?.response?.status === 404) {
         return true

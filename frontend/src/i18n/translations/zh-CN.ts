@@ -426,6 +426,13 @@ export default {
   'projectCard.manageMembers.ownerNote': '您是此项目的所有者',
   'projectCard.manageMembers.memberPermissions': '成员权限',
   'projectCard.manageMembers.applyChanges': '应用更改',
+  'projectCard.manageMembers.hidePermissions': '隐藏权限',
+  'projectCard.manageMembers.showPermissions': '显示权限',
+  'projectCard.manageMembers.selectAll': '全选',
+  'projectCard.manageMembers.currentMembers': '当前成员',
+  'projectCard.manageMembers.membersCount': '成员',
+  'projectCard.manageMembers.markedForRemoval': '已标记为删除',
+  'projectCard.manageMembers.undoRemoval': '取消删除',
 
   // Project Types
   'projectCard.type.site': '网站',

@@ -428,6 +428,10 @@ export default {
   'projectCard.manageMembers.memberPermissions': 'Member Permissions',
   'projectCard.manageMembers.applyChanges': 'Apply Changes',
   'projectCard.manageMembers.applyAllChanges': 'Apply All Changes',
+  'projectCard.manageMembers.hidePermissions': 'Hide Permissions',
+  'projectCard.manageMembers.showPermissions': 'Show Permissions',
+  'projectCard.manageMembers.markedForRemoval': 'Marked for removal',
+  'projectCard.manageMembers.undoRemoval': 'Undo removal',
 
   // Project Types
   'projectCard.type.site': 'Website',

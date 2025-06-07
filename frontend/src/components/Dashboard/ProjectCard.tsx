@@ -227,18 +227,18 @@ const ProjectCard = memo(
         // 2. If blockchain transaction successful, update our API
         if (txResult.status === 'success') {
           const apiResponse = await apiClient.put(
-            `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_SET_ATTRIBUTES!}?object_id=${project.parentId}&sui_ns=${selectedSuins}`,
-          )
+          `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_SET_ATTRIBUTES!}?object_id=${project.parentId}&sui_ns=${selectedSuins}`,
+        )
 
           if (apiResponse.status === 200) {
-            setOpen(false)
-            toast.success(<FormattedMessage id="projectCard.suinsLinked" />, {
-              description: intl.formatMessage({
-                id: 'projectCard.suinsLinkedDesc',
-              }),
-              duration: 5000,
-            })
-            onRefetch()
+        setOpen(false)
+          toast.success(<FormattedMessage id="projectCard.suinsLinked" />, {
+            description: intl.formatMessage({
+              id: 'projectCard.suinsLinkedDesc',
+            }),
+            duration: 5000,
+          })
+          onRefetch()
           } else {
             throw new Error('Failed to update API')
           }

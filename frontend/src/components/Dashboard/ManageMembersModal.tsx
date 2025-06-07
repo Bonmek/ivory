@@ -25,6 +25,9 @@ import {
   Copy,
   Check,
   Save,
+  AlertCircle,
+  Undo2,
+  Trash2,
 } from 'lucide-react'
 import { MemberPermissions, ProjectMember } from '@/types/project'
 import {
@@ -89,7 +92,6 @@ export function ManageMembersModal({
       generateSite: false,
       setSuins: false,
     })
-  const [removingMember, setRemovingMember] = useState<string | null>(null)
   const [confirmingRemoval, setConfirmingRemoval] = useState<string | null>(null)
   const [expandedMember, setExpandedMember] = useState<string | null>(null)
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null)
@@ -97,6 +99,7 @@ export function ManageMembersModal({
     [key: string]: MemberPermissions
   }>({})
   const [hasChanges, setHasChanges] = useState<{ [key: string]: boolean }>({})
+  const [membersToRemove, setMembersToRemove] = useState<string[]>([])
 
   // Add refresh states
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -110,6 +113,7 @@ export function ManageMembersModal({
       // Reset pending permissions when members change
       setPendingPermissions({})
       setHasChanges({})
+      setMembersToRemove([])
     }
   }, [initialMembers])
 
@@ -231,22 +235,46 @@ export function ManageMembersModal({
     } catch (error) {}
   }
 
+  const handleMarkForRemoval = (address: string) => {
+    setMembersToRemove(prev => [...prev, address])
+    setHasChanges(prev => ({
+      ...prev,
+      [address]: true
+    }))
+    setConfirmingRemoval(null)
+  }
+
+  const handleUnmarkForRemoval = (address: string) => {
+    setMembersToRemove(prev => prev.filter(a => a !== address))
+    setHasChanges(prev => ({
+      ...prev,
+      [address]: false
+    }))
+  }
+
   const handleApplyAllChanges = async () => {
     if (!projectId) return
 
     try {
-      const updatedMembers = members.map((member) => ({
+      // Filter out members marked for removal and apply pending permission changes
+      const remainingMembers = members
+        .filter(member => !membersToRemove.includes(member.address))
+        .map(member => ({
         ...member,
         permissions: pendingPermissions[member.address] || member.permissions,
       }))
 
-      const memberString = createMemberStrings(updatedMembers)
+      const memberString = remainingMembers.length === 0 ? "" : createMemberStrings(remainingMembers)
 
       await updateMemberPermissions(projectId, memberString, () => {
         setHasChanges({})
+        setMembersToRemove([])
+        setPendingPermissions({})
       })
 
-    } catch (error) {}
+    } catch (error) {
+      console.error('Error applying changes:', error)
+    }
   }
 
   const handleSelectAllPermissions = (address: string, checked: boolean) => {
@@ -328,15 +356,6 @@ export function ManageMembersModal({
           defaultMessage: 'Refresh data',
         })
     }
-  }
-
-  const handleRemoveMember = async (addressToRemove: string) => {
-    if (!projectId) return
-
-    try {
-      await removeMember(projectId, addressToRemove, members)
-      setRemovingMember(null)
-    } catch (error: any) {}
   }
 
   return (
@@ -504,9 +523,7 @@ export function ManageMembersModal({
                       </span>
                     </h3>
                     <div className="flex items-center gap-2">
-                      {Object.keys(hasChanges).some(
-                        (key) => hasChanges[key],
-                      ) && (
+                      {(Object.keys(hasChanges).some(key => hasChanges[key]) || membersToRemove.length > 0) && (
                         <Button
                           variant="secondary"
                           size="sm"
@@ -569,7 +586,9 @@ export function ManageMembersModal({
                     {members.map((member) => (
                       <div
                         key={member.address}
-                        className="bg-primary-800/50 rounded-lg"
+                        className={`bg-primary-800/50 rounded-lg ${
+                          membersToRemove.includes(member.address) ? 'opacity-50' : ''
+                        }`}
                       >
                         <div className="p-3 flex items-center justify-between">
                           <div className="flex items-center space-x-2">
@@ -607,59 +626,43 @@ export function ManageMembersModal({
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() =>
-                                handleSelectAllPermissions(member.address, true)
-                              }
-                              className="text-xs text-secondary-400 hover:text-secondary-300 hover:bg-secondary-500/10 px-3 h-7 rounded-md border border-secondary-500/20 transition-colors duration-200 flex items-center gap-1 cursor-pointer"
+                              onClick={() => setExpandedMember(expandedMember === member.address ? null : member.address)}
+                              className={`text-xs text-secondary-400 hover:text-secondary-300 hover:bg-secondary-500/10 px-2 h-6 rounded-md transition-colors duration-200 flex items-center gap-1 cursor-pointer ${
+                                expandedMember === member.address ? 'bg-secondary-500/10' : ''
+                              }`}
                             >
-                              <ListChecks className="h-4 w-4" />
-                              <FormattedMessage id="projectCard.manageMembers.selectAll" />
+                              {expandedMember === member.address ? (
+                                <ChevronUp className="h-3.5 w-3.5" />
+                              ) : (
+                                <ChevronDown className="h-3.5 w-3.5" />
+                              )}
+                              <span className="text-[11px] font-medium">
+                                Permissions
+                              </span>
                             </Button>
-                            {confirmingRemoval === member.address ? (
-                              <div className="flex items-center gap-1.5 bg-primary-900/50 p-1 rounded-md border border-white/10">
+                            {membersToRemove.includes(member.address) ? (
+                              <div className="flex items-center gap-1.5">
+                                <div className="flex items-center gap-1 bg-red-500/10 pl-1.5 pr-2 py-0.5 rounded-full border border-red-400/20">
+                                  <AlertCircle className="h-3 w-3 text-red-400" />
+                                  <span className="text-[10px] font-medium text-red-400/90">Removing</span>
+                                </div>
                                 <TooltipProvider>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
                                       <Button
                                         variant="ghost"
                                         size="sm"
-                                        onClick={() => setConfirmingRemoval(null)}
-                                        className="text-white/80 hover:text-white hover:bg-white/10 h-7 w-7 p-0 cursor-pointer rounded-md"
+                                        onClick={() => handleUnmarkForRemoval(member.address)}
+                                        className="text-green-400 hover:text-green-300 hover:bg-green-500/10 h-6 w-6 p-0 cursor-pointer rounded-full"
                                       >
-                                        <X className="h-4 w-4" />
-                                      </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent
-                                      side="top"
-                                      className="bg-primary-900/95 border-white/20 text-white text-xs"
-                                    >
-                                      <FormattedMessage id="common.cancel" defaultMessage="Cancel" />
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => handleRemoveMember(member.address)}
-                                        disabled={isRemoving}
-                                        className="text-green-400 hover:text-green-300 hover:bg-green-500/10 h-7 w-7 p-0 cursor-pointer rounded-md"
-                                      >
-                                        {isRemoving ? (
-                                          <Loader2 className="h-4 w-4 animate-spin" />
-                                        ) : (
-                                          <Check className="h-4 w-4" />
-                                        )}
+                                        <Undo2 className="h-3.5 w-3.5" />
                                       </Button>
                                     </TooltipTrigger>
                                     <TooltipContent
                                       side="top"
                                       className="bg-primary-900/95 border-green-500/20 text-white text-xs"
                                     >
-                                      <FormattedMessage id="common.confirm" defaultMessage="Confirm" />
+                                      <FormattedMessage id="projectCard.manageMembers.undoRemoval" />
                                     </TooltipContent>
                                   </Tooltip>
                                 </TooltipProvider>
@@ -671,10 +674,10 @@ export function ManageMembersModal({
                                     <Button
                                       variant="ghost"
                                       size="sm"
-                                      onClick={() => setConfirmingRemoval(member.address)}
-                                      className="text-red-400 hover:text-red-300 hover:bg-red-500/10 h-7 w-7 p-0 cursor-pointer group relative rounded-md"
+                                      onClick={() => handleMarkForRemoval(member.address)}
+                                      className="text-red-400 hover:text-red-300 hover:bg-red-500/10 h-6 w-6 p-0 cursor-pointer group relative rounded-full transition-all duration-200"
                                     >
-                                      <X className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
+                                      <Trash2 className="h-3.5 w-3.5 transition-transform duration-200 group-hover:scale-110" />
                                       <span className="sr-only">Remove member</span>
                                     </Button>
                                   </TooltipTrigger>
@@ -682,7 +685,7 @@ export function ManageMembersModal({
                                     side="top"
                                     className="bg-primary-900/95 border-red-500/20 text-white text-xs"
                                   >
-                                    <FormattedMessage id="projectCard.manageMembers.removeMember" defaultMessage="Remove member" />
+                                    <FormattedMessage id="projectCard.manageMembers.removeMember" />
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
@@ -693,59 +696,55 @@ export function ManageMembersModal({
                         {expandedMember === member.address && (
                           <div className="px-3 pb-3 border-t border-secondary-500/10 pt-3">
                             <div className="flex items-center justify-between mb-2">
-                              <span className="text-xs text-secondary-400">
+                              <span className="text-[11px] text-secondary-400 font-medium">
                                 <FormattedMessage id="projectCard.manageMembers.memberPermissions" />
                               </span>
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() =>
-                                  handleSelectAllPermissions(
-                                    member.address,
-                                    true,
-                                  )
-                                }
-                                className="text-xs text-secondary-400 hover:text-secondary-300 hover:bg-secondary-500/10 px-3 h-7 rounded-md border border-secondary-500/20 transition-colors duration-200 flex items-center gap-1 cursor-pointer"
+                                onClick={() => handleSelectAllPermissions(member.address, true)}
+                                className="text-[11px] text-secondary-400 hover:text-secondary-300 hover:bg-secondary-500/10 px-2 h-6 rounded-md border border-secondary-500/20 transition-colors duration-200 flex items-center gap-1 cursor-pointer"
                               >
-                                <ListChecks className="h-4 w-4" />
+                                <ListChecks className="h-3.5 w-3.5" />
                                 <FormattedMessage id="projectCard.manageMembers.selectAll" />
                               </Button>
                             </div>
                             <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                               {Object.entries({
-                                update:
-                                  'projectCard.manageMembers.permissionUpdate',
-                                delete:
-                                  'projectCard.manageMembers.permissionDelete',
-                                generateSite:
-                                  'projectCard.manageMembers.permissionGenerateSite',
-                                setSuins:
-                                  'projectCard.manageMembers.permissionSetSuins',
+                                update: 'projectCard.manageMembers.permissionUpdate',
+                                delete: 'projectCard.manageMembers.permissionDelete',
+                                generateSite: 'projectCard.manageMembers.permissionGenerateSite',
+                                setSuins: 'projectCard.manageMembers.permissionSetSuins',
                               }).map(([permission, label]) => (
                                 <label
                                   key={permission}
-                                  className="flex items-center space-x-2 text-sm"
+                                  className="flex items-center space-x-2 text-sm group cursor-pointer"
                                 >
-                                  <input
-                                    type="checkbox"
-                                    checked={
-                                      pendingPermissions[member.address]?.[
-                                        permission as keyof MemberPermissions
-                                      ] ??
-                                      member.permissions[
-                                        permission as keyof MemberPermissions
-                                      ]
-                                    }
-                                    onChange={(e) =>
-                                      handlePermissionChange(
-                                        member.address,
-                                        permission as keyof MemberPermissions,
-                                        e.target.checked,
-                                      )
-                                    }
-                                    className="cursor-pointer rounded border-secondary-500/20 bg-primary-900 h-3.5 w-3.5"
-                                  />
-                                  <span className="text-white/80">
+                                  <div className="relative">
+                                    <input
+                                      type="checkbox"
+                                      checked={
+                                        pendingPermissions[member.address]?.[
+                                          permission as keyof MemberPermissions
+                                        ] ??
+                                        member.permissions[
+                                          permission as keyof MemberPermissions
+                                        ]
+                                      }
+                                      onChange={(e) =>
+                                        handlePermissionChange(
+                                          member.address,
+                                          permission as keyof MemberPermissions,
+                                          e.target.checked,
+                                        )
+                                      }
+                                      className="peer sr-only"
+                                    />
+                                    <div className="h-4 w-4 rounded border border-secondary-500/20 bg-primary-900 peer-checked:bg-secondary-500 peer-checked:border-secondary-500 transition-all duration-200 flex items-center justify-center">
+                                      <Check className="h-3 w-3 text-black scale-0 peer-checked:scale-100 transition-transform duration-200" />
+                                    </div>
+                                  </div>
+                                  <span className="text-[11px] text-white/80 group-hover:text-white transition-colors duration-200">
                                     <FormattedMessage id={label} />
                                   </span>
                                 </label>
