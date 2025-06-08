@@ -202,6 +202,15 @@ export default function Dashboard() {
     try {
       await refetch()
       setLastRefreshTime(new Date())
+      return { success: true }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: {
+          type: error?.message?.includes('Rate limit exceeded') ? 'network' : 'unknown',
+          message: error?.message || 'Failed to refresh data'
+        }
+      }
     } finally {
       setIsRefreshing(false)
     }

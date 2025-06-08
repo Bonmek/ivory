@@ -18,10 +18,21 @@ import {
  * @returns Boolean indicating whether to retry the request
  */
 const handleRetryLogic = (failureCount: number, error: any): boolean => {
-  if (error?.message?.includes('too many requests')) {
-    return failureCount < MAX_RETRIES_RATE_LIMIT // Retry for rate limiting errors
+  const isRateLimit = error?.message?.includes('too many requests')
+  const isNodeError = error?.message?.includes('node') || error?.message?.includes('connection')
+  const maxRetries = isRateLimit ? MAX_RETRIES_RATE_LIMIT : MAX_RETRIES_OTHER_ERRORS
+  
+  if (failureCount >= maxRetries) {
+    throw new Error(
+      isRateLimit 
+        ? 'Rate limit exceeded. Please wait a moment before trying again.'
+        : isNodeError
+          ? 'Network or node issues detected. Please wait a few minutes before trying again as continuous retries may not help.'
+          : 'Maximum retry attempts reached. The service might be temporarily unavailable, please try again later.'
+    )
   }
-  return failureCount < MAX_RETRIES_OTHER_ERRORS // Retry for other errors
+  
+  return true
 }
 
 /**

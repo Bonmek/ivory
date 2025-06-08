@@ -309,6 +309,7 @@ export default {
   // Dashboard
   'dashboard.title': '仪表板',
   'dashboard.search': '搜索项目...',
+  'dashboard.sort.title': '排序方式',
   'dashboard.sort.latest': '最新',
   'dashboard.sort.nameAZ': '名称 A-Z',
   'dashboard.sort.nameZA': '名称 Z-A',
@@ -459,5 +460,11 @@ export default {
   'projectCard.transferOwnership.invalidAddress': '无效的钱包地址',
   'projectCard.transferOwnership.confirm': '您确定要转让所有权吗？',
   'projectCard.transferOwnership.warning': '此操作无法撤消。您将失去对此项目的所有控制权。',
-  'projectCard.transferOwnership.memberWarning': '此地址目前是项目成员。建议在转让所有权之前先移除其成员身份，以避免潜在冲突。'
+  'projectCard.transferOwnership.memberWarning': '此地址目前是项目成员。建议在转让所有权之前先移除其成员身份，以避免潜在冲突。',
+
+  // Dashboard errors
+  'dashboard.error.rateLimit': '超出速率限制。请稍后再试。',
+  'dashboard.error.maxRetries': '多次尝试刷新失败。请稍后重试。',
+  'dashboard.error.unknown': '发生意外错误。请重试。',
+  'dashboard.error.node': '检测到网络或节点问题。由于持续重试可能无助于解决问题，请等待几分钟后再试。'
 } as const;

@@ -1,38 +1,75 @@
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { suiService } from '@/service/suiService'
 import apiClient from '@/lib/axiosConfig'
 import { linkSuinsToSite as linkSuinsToSiteBlockchain } from '@/utils/suinsUtils'
-
-const MAX_RETRIES = 10
-const POLLING_INTERVAL = 2000
-
-const waitForSuinsUpdate = async (objectId: string, suinsName: string) => {
-  let retries = 0
-  
-  while (retries < MAX_RETRIES) {
-    try {
-      const metadata = await suiService.getMetadata(objectId)
-      // Type assertion for the nested structure
-      const suiNs = (metadata as any)?.data?.content?.fields?.sui_ns
-      if (suiNs === suinsName) {
-        return true
-      }
-      await new Promise(resolve => setTimeout(resolve, POLLING_INTERVAL))
-      retries++
-    } catch (error) {
-      console.error('Error polling SUINS state:', error)
-      throw error
-    }
-  }
-  
-  throw new Error('Timeout waiting for SUINS update')
-}
+import { getFullnodeUrl, SuiClient } from '@mysten/sui/client'
+import { SuinsClient, SuinsTransaction, ALLOWED_METADATA } from '@mysten/suins'
+import { Transaction } from '@mysten/sui/transactions'
+import { handleSuinsStateUpdate } from '@/utils/statePolling'
 
 export const useSuinsManagement = (userAddress: string) => {
   const queryClient = useQueryClient()
   const [isLinking, setIsLinking] = useState(false)
+  const [estimatedFee, setEstimatedFee] = useState<{
+    gasFee: string;
+    linkFee: string;
+    total: string;
+  } | null>(null)
+
+  const estimateTransactionFee = async (
+    suinsData: { objectId: string; name: string },
+    parentId: string,
+    network: 'mainnet' | 'testnet' = 'mainnet'
+  ) => {
+    try {
+      // Create Sui client
+      const client = new SuiClient({ url: getFullnodeUrl(network) })
+      
+      // Create SUINS client
+      const suinsClient = new SuinsClient({
+        client,
+        network,
+      })
+
+      // Create transaction for estimation
+      const tx = new Transaction()
+      const suinsTx = new SuinsTransaction(suinsClient, tx)
+
+      // Set data same as actual transaction
+      suinsTx.setUserData({
+        nft: suinsData.objectId,
+        key: ALLOWED_METADATA.walrusSiteId,
+        value: parentId,
+        isSubname: false,
+      })
+
+      // Set sender
+      tx.setSender(userAddress)
+
+      // Build transaction
+      const txBytes = await tx.build({ client: suinsClient.client })
+
+      // Get gas estimate
+      const gasEstimate = await client.dryRunTransactionBlock({
+        transactionBlock: txBytes,
+      })
+
+      // Convert gas units to SUI (1 SUI = 1,000,000,000 units)
+      const gasFee = Number(gasEstimate.effects?.gasUsed?.computationCost || 0) / 1000000000
+      
+      setEstimatedFee({
+        gasFee: gasFee.toFixed(5),
+        linkFee: '0.00',
+        total: gasFee.toFixed(5)
+      })
+
+      return true
+    } catch (error) {
+      console.error('Error estimating fee:', error)
+      return false
+    }
+  }
 
   const linkSuinsToSite = async (
     suinsData: { objectId: string; name: string },
@@ -46,25 +83,25 @@ export const useSuinsManagement = (userAddress: string) => {
 
       // 1. Call blockchain transaction with objectId
       const txResult = await linkSuinsToSiteBlockchain(
-        suinsData.objectId, // Use objectId for blockchain
+        suinsData.objectId,
         parentId,
         walletAddress,
         signAndExecuteTransactionBlock,
         network
       )
 
-      // 2. If blockchain transaction successful, update our API with name
+      // 2. If blockchain transaction successful, update our API
       if (txResult.status === 'success') {
         const response = await apiClient.put(
-          `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_SET_ATTRIBUTES!}?object_id=${parentId}&sui_ns=${suinsData.name}`, // Use name for server
+          `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_SET_ATTRIBUTES!}?object_id=${parentId}&sui_ns=${suinsData.name}`,
         )
 
         if (!response.data || response.data.statusCode !== 1) {
           throw new Error(response.data?.error || 'Failed to link SUINS')
         }
 
-        // 3. Poll for state update with name
-        await waitForSuinsUpdate(parentId, suinsData.name)
+        // 3. Poll for state update using common handler
+        await handleSuinsStateUpdate(parentId, suinsData.name)
 
         // 4. Refetch metadata to update UI
         await queryClient.refetchQueries({ queryKey: ['metadata'] })
@@ -86,6 +123,7 @@ export const useSuinsManagement = (userAddress: string) => {
   return {
     linkSuinsToSite,
     isLinking,
-    setIsLinking
+    estimatedFee,
+    estimateTransactionFee
   }
 } 

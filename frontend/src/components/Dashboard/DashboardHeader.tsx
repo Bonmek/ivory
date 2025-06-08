@@ -17,6 +17,7 @@ import {
   Archive,
   LayoutGrid,
   Upload,
+  AlertTriangle,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -102,7 +103,7 @@ interface DashboardHeaderProps {
   setDate: (date: Date | undefined) => void
   sortType: string
   setSortType: (type: string) => void
-  onRefresh: () => Promise<void>
+  onRefresh: () => Promise<{ success: boolean; error?: { type: string; message: string } }>
   isRefreshing: boolean
   lastRefreshTime?: Date
   hasProjects?: boolean
@@ -134,16 +135,22 @@ const DashboardHeader = ({
   const [searchExpanded, setSearchExpanded] = useState(false)
   const [isInCooldown, setIsInCooldown] = useState(false)
   const [cooldownSeconds, setCooldownSeconds] = useState(0)
+  const [refreshError, setRefreshError] = useState<{
+    type: 'timeout' | 'network' | 'node' | 'unknown' | null
+    message: string
+  } | null>(null)
   const COOLDOWN_PERIOD = 5
 
   const handleRefresh = async () => {
     if (isRefreshing || isInCooldown) return
 
     try {
-      await onRefresh()
+      setRefreshError(null)
       setIsInCooldown(true)
       setCooldownSeconds(COOLDOWN_PERIOD)
-
+      
+      await onRefresh()
+      
       const timer = setInterval(() => {
         setCooldownSeconds((prev) => {
           if (prev <= 1) {
@@ -156,10 +163,25 @@ const DashboardHeader = ({
       }, 1000)
 
       return () => clearInterval(timer)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Refresh failed:', error)
-      setIsInCooldown(false)
-      setCooldownSeconds(0)
+      const isNodeError = error.message?.includes('node') || error.message?.includes('connection')
+      setRefreshError({
+        type: error.message?.includes('too many requests') 
+          ? 'network'
+          : isNodeError 
+            ? 'node' 
+            : 'unknown',
+        message: error.message
+      })
+      // For node errors, set a longer cooldown
+      if (isNodeError) {
+        setIsInCooldown(true)
+        setCooldownSeconds(30) // 30 seconds cooldown for node errors
+      } else {
+        setIsInCooldown(false)
+        setCooldownSeconds(0)
+      }
     }
   }
 
@@ -171,12 +193,41 @@ const DashboardHeader = ({
   // Get refresh button state
   const getRefreshButtonState = () => {
     if (isRefreshing) return 'refreshing'
+    if (refreshError) return 'error'
     if (isInCooldown) return 'cooldown'
     return 'ready'
   }
 
+  // Get refresh button color based on state
+  const getRefreshButtonColor = () => {
+    switch (getRefreshButtonState()) {
+      case 'error':
+        return refreshError?.type === 'node'
+          ? 'bg-orange-500/10 hover:bg-orange-500/20 border-orange-500/30'
+          : 'bg-red-500/10 hover:bg-red-500/20 border-red-500/30'
+      case 'refreshing':
+        return 'bg-secondary-500/10'
+      case 'cooldown':
+        return 'bg-primary-800/50'
+      default:
+        return 'bg-primary-900/80 border-secondary-500/20'
+    }
+  }
+
   // Get tooltip message based on button state
   const getTooltipMessage = () => {
+    if (refreshError) {
+      return (
+        <div className="flex items-center gap-2">
+          {refreshError.type === 'node' ? (
+            <AlertTriangle className="h-4 w-4 text-orange-400" />
+          ) : (
+            <AlertCircle className="h-4 w-4" />
+          )}
+          {refreshError.message}
+        </div>
+      )
+    }
     switch (getRefreshButtonState()) {
       case 'refreshing':
         return intl.formatMessage({
@@ -312,19 +363,19 @@ const DashboardHeader = ({
                   {/* Inner pulse animations */}
                   <div className="absolute inset-0 bg-secondary-500/10 animate-pulse-slow rounded-md pointer-events-none"></div>
                   <div className="absolute -inset-1 bg-secondary-500/5 blur-sm animate-pulse-slow rounded-md pointer-events-none"></div>
-                  
+
                   {/* Flowing animation elements */}
                   <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-secondary-500/70 to-transparent animate-flow-right pointer-events-none"></div>
                   <div className="absolute bottom-0 right-0 w-full h-0.5 bg-gradient-to-r from-transparent via-secondary-500/70 to-transparent animate-flow-left pointer-events-none"></div>
                   <div className="absolute left-0 top-0 w-0.5 h-full bg-gradient-to-b from-transparent via-secondary-500/70 to-transparent animate-flow-down pointer-events-none"></div>
                   <div className="absolute right-0 bottom-0 w-0.5 h-full bg-gradient-to-b from-transparent via-secondary-500/70 to-transparent animate-flow-up pointer-events-none"></div>
-                  
+
                   {/* Corner glows */}
                   <div className="absolute top-0 left-0 w-2 h-2 bg-secondary-500/40 rounded-full blur-sm animate-pulse-slow pointer-events-none"></div>
                   <div className="absolute top-0 right-0 w-2 h-2 bg-secondary-500/40 rounded-full blur-sm animate-pulse-slow pointer-events-none"></div>
                   <div className="absolute bottom-0 left-0 w-2 h-2 bg-secondary-500/40 rounded-full blur-sm animate-pulse-slow pointer-events-none"></div>
                   <div className="absolute bottom-0 right-0 w-2 h-2 bg-secondary-500/40 rounded-full blur-sm animate-pulse-slow pointer-events-none"></div>
-                  
+
                   <PlusCircle className="h-4 w-4 text-secondary-500 relative z-10" />
                   <span className="relative z-10">
                     <FormattedMessage
@@ -335,11 +386,11 @@ const DashboardHeader = ({
                   <ChevronDown className="h-4 w-4 text-secondary-500 ml-1 relative z-10" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent 
-                align="end" 
+              <DropdownMenuContent
+                align="end"
                 className="w-56 bg-primary-900/95 backdrop-blur-sm border-secondary-500/20 text-white"
               >
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={() => {
                     if (hasProjects) {
                       setShowLimitWarning(true)
@@ -360,7 +411,7 @@ const DashboardHeader = ({
                   </div>
                 </DropdownMenuItem>
 
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={() => {
                     if (hasProjects) {
                       setShowLimitWarning(true)
@@ -552,18 +603,16 @@ const DashboardHeader = ({
                         size="icon"
                         onClick={handleRefresh}
                         disabled={isRefreshing || isInCooldown}
-                        className={`h-9 w-9 cursor-pointer relative overflow-hidden
-                        ${isInCooldown ? 'bg-primary-800/50' : ''}
-                        ${isRefreshing ? 'bg-secondary-500/10' : ''}
-                      `}
+                        className={`h-9 w-9 cursor-pointer relative overflow-hidden ${getRefreshButtonColor()}`}
                       >
                         <RefreshCw
                           className={`h-4 w-4 transition-all duration-200
-                          ${isRefreshing ? 'animate-spin text-secondary-400' : ''}
-                          ${isInCooldown ? 'text-secondary-600' : ''}
-                        `}
+                            ${isRefreshing ? 'animate-spin text-secondary-400' : ''}
+                            ${isInCooldown ? 'text-secondary-600' : ''}
+                            ${refreshError ? 'text-red-400' : ''}
+                          `}
                         />
-                        {isInCooldown && (
+                        {isInCooldown && !refreshError && (
                           <div
                             className="absolute bottom-0 left-0 h-1 bg-secondary-500/30"
                             style={{
@@ -572,14 +621,24 @@ const DashboardHeader = ({
                             }}
                           />
                         )}
+                        {refreshError && (
+                          <div className="absolute inset-0 bg-red-500/10 animate-pulse" />
+                        )}
                       </Button>
                     </div>
                   </TooltipTrigger>
                   <TooltipContent
                     side="bottom"
-                    className="bg-primary-900/95 border-secondary-500/20 text-white text-xs"
+                    className={`text-xs ${
+                      refreshError 
+                        ? 'bg-red-900/95 border-red-500/20 text-white'
+                        : 'bg-primary-900/95 border-secondary-500/20 text-white'
+                    }`}
                   >
-                    {getTooltipMessage()}
+                    <div className="flex items-center gap-1.5">
+                      {refreshError && <AlertCircle className="h-3.5 w-3.5" />}
+                      {getTooltipMessage()}
+                    </div>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -626,7 +685,7 @@ const DashboardHeader = ({
               />
             </DialogDescription>
           </DialogHeader>
-          
+
           {/* Top decorative banner */}
           <div className="bg-gradient-to-r from-amber-600 to-amber-500 p-3 relative overflow-hidden">
             <div className="absolute -right-4 -top-4 w-16 h-16 rounded-full bg-amber-400/20 blur-sm"></div>
@@ -634,11 +693,11 @@ const DashboardHeader = ({
             <div className="absolute left-12 top-6 w-3 h-3 rounded-full bg-amber-400/30 blur-sm"></div>
             <div className="relative flex items-center gap-2.5">
               <div className="bg-white/20 backdrop-blur-sm p-1.5 rounded-full flex items-center justify-center border border-white/30">
-              <img
-                src="/images/logos/Ivory.png"
-                alt="Ivory Logo"
-                className="h-4 w-4 object-contain"
-              />
+                <img
+                  src="/images/logos/Ivory.png"
+                  alt="Ivory Logo"
+                  className="h-4 w-4 object-contain"
+                />
               </div>
               <div>
                 <h2 className="text-white font-bold text-sm tracking-wide">
@@ -651,7 +710,7 @@ const DashboardHeader = ({
               </div>
             </div>
           </div>
-          
+
           <div className="px-3.5 py-3 bg-gradient-to-b from-primary-800 to-primary-900">
             <div className="space-y-3">
               {/* Important message first */}
@@ -663,8 +722,8 @@ const DashboardHeader = ({
                   <FormattedMessage
                     id="dashboard.projectLimit.deleteInfo"
                     defaultMessage="If you encounter issues, you can"
-                />{' '}
-                <TooltipProvider>
+                  />{' '}
+                  <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <span className="text-amber-400 font-semibold cursor-help border-b border-dashed border-amber-400/50">
@@ -681,14 +740,14 @@ const DashboardHeader = ({
                         />
                       </TooltipContent>
                     </Tooltip>
-                </TooltipProvider>{' '}
+                  </TooltipProvider>{' '}
                   <FormattedMessage
                     id="dashboard.projectLimit.createNew"
                     defaultMessage="and create a new one"
                   />
                 </p>
               </div>
-              
+
               {/* Key points with icons */}
               <div className="grid grid-cols-2 gap-2.5 mt-1">
                 <div className="flex gap-2 items-center bg-primary-800/50 rounded-lg p-2 border border-secondary-800">
@@ -713,14 +772,14 @@ const DashboardHeader = ({
                           />
                         </TooltipContent>
                       </Tooltip>
-                  </TooltipProvider>{' '}
+                    </TooltipProvider>{' '}
                     <FormattedMessage
                       id="dashboard.projectLimit.duringBeta"
                       defaultMessage="during beta testing"
                     />
                   </p>
                 </div>
-                
+
                 <div className="flex gap-2 items-center bg-primary-800/50 rounded-lg p-2 border border-secondary-800">
                   <div className="bg-amber-500 p-1.5 rounded-full flex-shrink-0 flex items-center justify-center">
                     <Clock className="h-3 w-3 text-white" />
@@ -729,10 +788,10 @@ const DashboardHeader = ({
                     <FormattedMessage
                       id="dashboard.projectLimit.limitRefreshes"
                       defaultMessage="Limit refreshes each"
-                  />{' '}
-                    <a 
-                      href="https://docs.wal.app/print.html" 
-                      target="_blank" 
+                    />{' '}
+                    <a
+                      href="https://docs.wal.app/print.html"
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="font-medium text-amber-400 cursor-pointer border-b border-dashed border-amber-400/50 hover:text-amber-300 transition-colors"
                       onClick={(e) => e.stopPropagation()}
@@ -741,7 +800,7 @@ const DashboardHeader = ({
                         id="dashboard.projectLimit.epoch"
                         defaultMessage="epoch"
                       />
-                  </a>{' '}
+                    </a>{' '}
                     <FormattedMessage
                       id="dashboard.projectLimit.fairAccess"
                       defaultMessage="to ensure fair access"
@@ -749,7 +808,7 @@ const DashboardHeader = ({
                   </p>
                 </div>
               </div>
-              
+
               <div className="bg-primary-800/30 rounded-lg p-2.5 text-xs text-secondary-300 border border-secondary-800/50">
                 <p className="leading-relaxed">
                   <FormattedMessage
@@ -760,7 +819,7 @@ const DashboardHeader = ({
               </div>
             </div>
           </div>
-          
+
           <DialogFooter className="px-3.5 pb-3.5 pt-0 bg-primary-900">
             <Button
               variant="default"
