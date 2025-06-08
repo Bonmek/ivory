@@ -22,7 +22,8 @@ router.get("/api/auth/github/logout", (req: Request, res: Response) => {
       res.clearCookie("connect.sid", {
         path: "/",
       });
-      res.redirect(`${process.env.FRONTEND_URL}/create-website`);
+      // Return success response
+      return res.status(200).json({ success: true, message: "Successfully logged out" });
     });
   });
 });

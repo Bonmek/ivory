@@ -543,8 +543,8 @@ export default function CreateWebsitePage() {
   const handleLogout = async () => {
     try {
       const response = await apiClient.get('/api/auth/github/logout')
-      if (response.status !== 200) {
-        throw new Error('Logout failed')
+      if (response.status !== 200 || !response.data?.success) {
+        throw new Error(response.data?.message || 'Logout failed')
       }
 
       setUser(null)
@@ -556,8 +556,7 @@ export default function CreateWebsitePage() {
       setRepoContentsLoading(false)
 
       toast.success('Successfully logged out')
-
-      // window.location.href = '/create-website'
+      window.location.href = '/create-website'
     } catch (error) {
       console.error('Logout error:', error)
       toast.error('Failed to log out. Please try again.')
@@ -569,7 +568,6 @@ export default function CreateWebsitePage() {
       setRepoContents(null)
       setRepoContentsError(null)
       setRepoContentsLoading(false)
-      // window.location.href = '/create-website'
     }
   }
 
