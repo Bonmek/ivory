@@ -1,6 +1,8 @@
 import { memo, useState, useEffect } from 'react'
-import { useAuth } from '@/context/AuthContext'
-import { useSignAndExecuteTransaction } from '@mysten/dapp-kit'
+import {
+  useSignAndExecuteTransaction,
+  useCurrentWallet,
+} from '@mysten/dapp-kit'
 import { useWalletKit } from '@mysten/wallet-kit'
 import {
   MoreHorizontal,
@@ -19,6 +21,7 @@ import {
   X,
   Shield,
   UserCog,
+  Crown,
 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import {
@@ -53,19 +56,17 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useSuiData } from '@/hooks/useSuiData'
-import apiClient from '@/lib/axiosConfig'
 import { FormattedMessage, useIntl } from 'react-intl'
 import {
   Project,
   ProjectCardProps,
   MemberPermissions,
   ProjectStatus,
+  ProjectType,
 } from '@/types/project'
-import { linkSuinsToSite } from '@/utils/suinsUtils'
 import { ManageMembersModal } from './ManageMembersModal'
 import { DeleteConfirmationDialog } from './DeleteConfirmationDialog'
 import { GenerateSiteIdDialog } from './GenerateSiteIdDialog'
-import { RemoveMemberDialog } from './RemoveMemberDialog'
 import { TransferOwnershipDialog } from './TransferOwnershipDialog'
 import {
   formatDate,
@@ -76,6 +77,11 @@ import {
   getUserPermissions,
 } from '@/utils/projectUtils'
 import { useNavigate } from 'react-router'
+import { createMemberString } from '@/utils/memberUtils'
+import { useMemberManagement } from '@/hooks/useMemberManagement'
+import { useSiteManagement } from '@/hooks/useSiteManagement'
+import { useOwnershipTransfer } from '@/hooks/useOwnershipTransfer'
+import { useSuinsManagement } from '@/hooks/useSuinsManagement'
 
 const ProjectCard = memo(
   ({
@@ -87,8 +93,27 @@ const ProjectCard = memo(
     onRefetch,
   }: ProjectCardProps) => {
     const intl = useIntl()
-    const { signAndExecuteTransactionBlock } = useWalletKit()
+    const signAndExecute = useSignAndExecuteTransaction()
+    const { currentWallet } = useCurrentWallet()
+    const { connect } = useWalletKit()
     const navigate = useNavigate()
+    const {
+      addMember,
+      removeMember,
+      updateMemberPermissions,
+      isAddingMember,
+      isRemovingMember,
+      isUpdatingPermissions,
+    } = useMemberManagement()
+    const { transferOwnership, isProcessing } = useOwnershipTransfer(
+      userAddress || '',
+    )
+    const { generateSiteId, deleteSite, isGenerating, isDeleting } =
+      useSiteManagement()
+    const { linkSuinsToSite, isLinking, estimatedFee, estimateTransactionFee } =
+      useSuinsManagement(userAddress || '')
+    const { signAndExecuteTransactionBlock } = useWalletKit()
+
     const remaining = calculateTimeBetween(new Date(), project.expiredDate)
     const [startDateOpen, setStartDateOpen] = useState(false)
     const [expiredDateOpen, setExpiredDateOpen] = useState(false)
@@ -106,30 +131,16 @@ const ProjectCard = memo(
     })
     const [dots, setDots] = useState('.')
     const [selectedSuins, setSelectedSuins] = useState<string>('')
-    const [otherSuins, setOtherSuins] = useState<string>('')
     const { suins, isLoadingSuins, refetchSuiNS } = useSuiData(
       userAddress || '',
     )
     const [isRefreshing, setIsRefreshing] = useState(false)
-    const [isLinking, setIsLinking] = useState(false)
     const [open, setOpen] = useState(false)
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-    const [isDeleting, setIsDeleting] = useState(false)
     const [generateDialogOpen, setGenerateDialogOpen] = useState(false)
-    const [isGenerating, setIsGenerating] = useState(false)
     const [manageMembersOpen, setManageMembersOpen] = useState(false)
-    const [newMemberAddress, setNewMemberAddress] = useState('')
-    const [newMemberPermissions, setNewMemberPermissions] =
-      useState<MemberPermissions>({
-        update: false,
-        delete: false,
-        generateSite: false,
-        setSuins: false,
-      })
+
     const [removingMember, setRemovingMember] = useState<string | null>(null)
-    const [isAddingMember, setIsAddingMember] = useState(false)
-    const [isRemovingMember, setIsRemovingMember] = useState(false)
-    const [isUpdatingPermissions, setIsUpdatingPermissions] = useState(false)
     const [transferOwnershipOpen, setTransferOwnershipOpen] = useState(false)
 
     useEffect(() => {
@@ -152,6 +163,24 @@ const ProjectCard = memo(
       }, 400)
       return () => clearInterval(interval)
     }, [project.status])
+
+    useEffect(() => {
+      if (selectedSuins && project.parentId) {
+        const selectedSuinsData = suins.find(
+          (s) => s.data?.content?.fields?.domain_name === selectedSuins,
+        )
+        if (selectedSuinsData?.data?.objectId) {
+          estimateTransactionFee(
+            {
+              objectId: selectedSuinsData.data.objectId,
+              name: selectedSuins
+            },
+            project.parentId,
+            process.env.REACT_APP_SUI_NETWORK as 'mainnet' | 'testnet'
+          )
+        }
+      }
+    }, [selectedSuins, project.parentId])
 
     const colors = getStatusColor(project.status)
     const userPermissions = getUserPermissions(userAddress, project)
@@ -186,9 +215,6 @@ const ProjectCard = memo(
       }
 
       try {
-        setIsLinking(true)
-
-        // Get the NFT ID for the selected SUINS
         const selectedSuinsData = suins.find(
           (s) => s.data?.content?.fields?.domain_name === selectedSuins,
         )
@@ -197,40 +223,35 @@ const ProjectCard = memo(
         }
 
         const result = await linkSuinsToSite(
-          selectedSuinsData.data.objectId,
-          project.siteId || '',
+          {
+            objectId: selectedSuinsData.data.objectId,
+            name: selectedSuins
+          },
+          project.parentId || '',
           userAddress,
           signAndExecuteTransactionBlock,
           process.env.REACT_APP_SUI_NETWORK as 'mainnet' | 'testnet',
         )
-        const response = await apiClient.put(
-          `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_SET_ATTRIBUTES!}?object_id=${project.parentId}&sui_ns=${selectedSuins}`,
-        )
-        setOpen(false)
+
         if (result.status === 'success') {
-          toast.success(<FormattedMessage id="projectCard.suinsLinked" />, {
-            description: intl.formatMessage({
-              id: 'projectCard.suinsLinkedDesc',
-            }),
-            duration: 5000,
-          })
-          if (result.status === 'success' && response.status === 200) {
-            onRefetch()
-          }
+          setOpen(false)
+          onRefetch()
         }
       } catch (error: any) {
-        console.error('Error linking SUINS:', error)
-        toast.error(
-          error.message || <FormattedMessage id="projectCard.failedToLink" />,
-          {
-            description: intl.formatMessage({
-              id: 'projectCard.failedToLinkDesc',
-            }),
-            duration: 5000,
-          },
-        )
-      } finally {
-        setIsLinking(false)
+        console.error('Error in handleLinkSuins:', error)
+      }
+    }
+
+    const handleGenerateSiteId = async (): Promise<void> => {
+      if (!project.parentId) {
+        toast.error('Project ID is missing')
+        return
+      }
+      try {
+        await generateSiteId(project.parentId)
+        setGenerateDialogOpen(false)
+      } catch (error: any) {
+        console.error('Error generating site ID:', error)
       }
     }
 
@@ -240,31 +261,10 @@ const ProjectCard = memo(
         return
       }
       try {
-        setIsDeleting(true)
-        const response = await apiClient.delete(
-          `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_DELETE_WEBSITE!}?object_id=${project.parentId}`,
-        )
-        if (response.status === 200) {
-          toast.success(<FormattedMessage id="projectCard.siteDeleted" />, {
-            description: intl.formatMessage({
-              id: 'projectCard.siteDeletedDesc',
-            }),
-            duration: 5000,
-          })
-          setDeleteDialogOpen(false)
-          if (onRefetch) {
-            await onRefetch()
-          }
-        }
+        await deleteSite(project.parentId)
+        setDeleteDialogOpen(false)
       } catch (error: any) {
         console.error('Error deleting site:', error)
-        toast.error(
-          error.response?.data?.message || (
-            <FormattedMessage id="projectCard.failedToDelete" />
-          ),
-        )
-      } finally {
-        setIsDeleting(false)
       }
     }
 
@@ -277,124 +277,6 @@ const ProjectCard = memo(
       }
     }
 
-    const handleGenerateSiteId = async (): Promise<void> => {
-      setIsGenerating(true)
-      try {
-        await apiClient.put(
-          `${process.env.REACT_APP_SERVER_URL}${process.env.REACT_APP_API_ADD_SITE_ID!}?object_id=${project.parentId}`,
-        )
-        toast.success('Site ID generated successfully', {
-          description: 'Please wait a moment',
-          duration: 5000,
-        })
-        setGenerateDialogOpen(false)
-        if (onRefetch) {
-          await onRefetch()
-        }
-      } catch (error: any) {
-        toast.error(error?.message || 'Failed to generate Site ID')
-      } finally {
-        setIsGenerating(false)
-      }
-    }
-
-    const handleAddMember = async () => {
-      if (!newMemberAddress) {
-        toast.error(
-          intl.formatMessage({ id: 'projectCard.manageMembers.enterAddress' }),
-        )
-        return
-      }
-
-      if (
-        !newMemberAddress.startsWith('0x') ||
-        newMemberAddress.length !== 66
-      ) {
-        toast.error(
-          intl.formatMessage({
-            id: 'projectCard.manageMembers.invalidAddress',
-          }),
-        )
-        return
-      }
-
-      if (
-        project.members?.some((member) => member.address === newMemberAddress)
-      ) {
-        toast.error(
-          intl.formatMessage({ id: 'projectCard.manageMembers.addressExists' }),
-        )
-        return
-      }
-
-      try {
-        setIsAddingMember(true)
-        // TODO: Add API call to add member
-        toast.success(
-          intl.formatMessage({ id: 'projectCard.manageMembers.memberAdded' }),
-        )
-        setNewMemberAddress('')
-        setNewMemberPermissions({
-          update: false,
-          delete: false,
-          generateSite: false,
-          setSuins: false,
-        })
-        onRefetch()
-      } catch (error: any) {
-        console.error('Error adding member:', error)
-        toast.error(
-          error?.message || intl.formatMessage({ id: 'common.error.unknown' }),
-        )
-      } finally {
-        setIsAddingMember(false)
-      }
-    }
-
-    const handleRemoveMember = async (address: string): Promise<void> => {
-      try {
-        setIsRemovingMember(true)
-        // TODO: Add API call to remove member
-        toast.success(
-          intl.formatMessage({ id: 'projectCard.manageMembers.memberRemoved' }),
-        )
-        setRemovingMember(null)
-        if (onRefetch) {
-          await onRefetch()
-        }
-      } catch (error: any) {
-        console.error('Error removing member:', error)
-        toast.error(
-          error?.message || intl.formatMessage({ id: 'common.error.unknown' }),
-        )
-      } finally {
-        setIsRemovingMember(false)
-      }
-    }
-
-    const handleUpdatePermissions = async (
-      address: string,
-      permissions: MemberPermissions,
-    ) => {
-      try {
-        setIsUpdatingPermissions(true)
-        // TODO: Add API call to update permissions
-        toast.success(
-          intl.formatMessage({
-            id: 'projectCard.manageMembers.permissionsUpdated',
-          }),
-        )
-        onRefetch()
-      } catch (error: any) {
-        console.error('Error updating permissions:', error)
-        toast.error(
-          error?.message || intl.formatMessage({ id: 'common.error.unknown' }),
-        )
-      } finally {
-        setIsUpdatingPermissions(false)
-      }
-    }
-
     return (
       <div className="flex flex-col">
         <div
@@ -403,278 +285,12 @@ const ProjectCard = memo(
           onMouseEnter={() => onHoverStart(project.id)}
           onMouseLeave={() => onHoverEnd()}
         >
+          {/* Project card content */}
           <Card
             className={`flex flex-row items-center p-3 sm:p-4 ${colors.card} ${colors.shadow} shadow-lg backdrop-blur-sm h-full min-h-[160px] relative transition-all duration-300`}
           >
-            {/* Dropdown Menu: Top Right */}
-            <div className="absolute top-2 right-2 z-10 opacity-80 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-2">
-              {!project.suins &&
-                project.status === 1 &&
-                project.siteId &&
-                project.site_status === 1 &&
-                userPermissions?.setSuins && (
-                  <Dialog open={open} onOpenChange={setOpen}>
-                    <DialogTrigger asChild>
-                      <button
-                        className={`h-8 px-3 flex items-center justify-center rounded-full ${colors.dropdown} transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer`}
-                      >
-                        <Link className="h-4 w-4 mr-1.5" />
-                        <span className="text-sm">Link SUINS</span>
-                        <span className="text-[10px] opacity-60 ml-1">
-                          (initial setup)
-                        </span>
-                      </button>
-                    </DialogTrigger>
-                    <DialogContent className="bg-primary-900 border-secondary-500/20 text-white">
-                      <DialogHeader>
-                        <DialogTitle className="text-secondary-400">
-                          Link SUINS
-                        </DialogTitle>
-                        <DialogDescription className="text-white/60">
-                          Select your SUINS name to link it with this project
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="grid gap-4 py-4">
-                        <div className="grid gap-2">
-                          {isLoadingSuins ? (
-                            <div className="flex items-center justify-center py-4">
-                              <Loader2 className="h-6 w-6 animate-spin text-secondary-400" />
-                            </div>
-                          ) : (
-                            <>
-                              <div className="flex gap-2 items-center">
-                                <Select
-                                  value={selectedSuins}
-                                  onValueChange={setSelectedSuins}
-                                >
-                                  <SelectTrigger className="bg-primary-800 border-secondary-500/20 text-white w-full flex-1">
-                                    <SelectValue placeholder="Select SUINS domain" />
-                                  </SelectTrigger>
-                                  <SelectContent className="bg-primary-800 border-secondary-500/20 text-white">
-                                    {suins.map((sui) => {
-                                      const domainName =
-                                        sui.data?.content?.fields
-                                          ?.domain_name || ''
-                                      const displayName = domainName.endsWith(
-                                        '.sui',
-                                      )
-                                        ? domainName.slice(0, -4)
-                                        : domainName
-
-                                      return (
-                                        <SelectItem
-                                          key={sui.data?.objectId}
-                                          value={domainName}
-                                          className="hover:bg-primary-700"
-                                        >
-                                          {displayName}
-                                        </SelectItem>
-                                      )
-                                    })}
-                                  </SelectContent>
-                                </Select>
-                                <Button
-                                  onClick={handleRefreshSuins}
-                                  variant="outline"
-                                  className="border-secondary-500/20 text-white hover:bg-primary-800 ${isLoadingSuins || isRefreshing ? '' : 'cursor-pointer'}"
-                                  disabled={isLoadingSuins || isRefreshing}
-                                >
-                                  {isRefreshing ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                  ) : (
-                                    <RefreshCw className="h-4 w-4" />
-                                  )}
-                                </Button>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                        {project.status === 1 && (
-                          <div className="flex gap-2">
-                            <Button
-                              onClick={() => handleLinkSuins()}
-                              className="bg-secondary-500 hover:bg-secondary-600 text-white flex-1 relative ${isLinking || isLoadingSuins || !selectedSuins ? '' : 'cursor-pointer'}"
-                              disabled={
-                                isLinking || isLoadingSuins || !selectedSuins
-                              }
-                            >
-                              {isLinking ? (
-                                <div className="flex items-center justify-center">
-                                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                  <span>Linking SUINS...</span>
-                                </div>
-                              ) : (
-                                <div className="flex items-center justify-center">
-                                  <Link className="h-4 w-4 mr-2" />
-                                  <span>Link SUINS</span>
-                                </div>
-                              )}
-                            </Button>
-                          </div>
-                        )}
-                        {project.status !== 1 && (
-                          <div className="text-sm text-white/60 italic">
-                            SUINS linking is only available for active projects
-                          </div>
-                        )}
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                )}
-              {project.status !== ProjectStatus.BUILDING && (
-                <>
-                  {/* Show dropdown if user has any permissions or is owner */}
-                  {((project.status === ProjectStatus.ACTIVE &&
-                    (project.owner === userAddress || userPermissions)) ||
-                    (project.status === ProjectStatus.FAILED &&
-                      userPermissions?.delete) ||
-                    project.status === ProjectStatus.DELETING) && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button
-                          className={`h-8 w-8 flex items-center justify-center rounded-full ${colors.dropdown} transition-all duration-200 hover:scale-110 active:scale-95 ${project.status === ProjectStatus.DELETING ? '' : 'cursor-pointer'}`}
-                          disabled={project.status === ProjectStatus.DELETING}
-                        >
-                          <MoreHorizontal className="h-5 w-5" />
-                          <span className="sr-only">Open menu</span>
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        align="end"
-                        className="w-56 bg-primary-900 border-secondary-500/20 text-white backdrop-blur-sm"
-                      >
-                        {project.status === ProjectStatus.ACTIVE && (
-                          <>
-                            {/* Owner-only actions */}
-                            {project.owner === userAddress && (
-                              <>
-                                <DropdownMenuItem
-                                  className="focus:bg-primary-800 cursor-pointer group"
-                                  onClick={() => setTransferOwnershipOpen(true)}
-                                  disabled={true}
-                                >
-                                  <div className="flex items-center w-full">
-                                    <div className="relative">
-                                      <UserCog className="mr-2 h-4 w-4 group-hover:rotate-45 transition-all duration-300" />
-                                    </div>
-                                    <span className="group-hover:translate-x-0.5 transition-all duration-200">
-                                      <FormattedMessage id="projectCard.transferOwnership" />
-                                    </span>
-                                  </div>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  className="focus:bg-primary-800 cursor-pointer group"
-                                  onClick={() => setManageMembersOpen(true)}
-                                  disabled={true}
-                                >
-                                  <div className="flex items-center w-full">
-                                    <div className="relative">
-                                      <Users className="mr-2 h-4 w-4 group-hover:scale-110 group-hover:text-secondary-400 transition-all duration-200" />
-                                    </div>
-                                    <span className="group-hover:translate-x-0.5 transition-all duration-200">
-                                      <FormattedMessage id="projectCard.manageMembers" />
-                                    </span>
-                                  </div>
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator className="bg-secondary-500/20" />
-                              </>
-                            )}
-
-                            {/* Member permissions */}
-                            {userPermissions?.update && (
-                              <DropdownMenuItem
-                                className="focus:bg-primary-800 cursor-pointer group"
-                                onClick={() =>
-                                  navigate(`/edit-website/${project.parentId}`)
-                                }
-                              >
-                                <div className="flex items-center w-full">
-                                  <RefreshCw className="mr-2 h-4 w-4 group-hover:rotate-180 transition-transform duration-300" />
-                                  <span>
-                                    <FormattedMessage id="projectCard.updateSite" />
-                                  </span>
-                                </div>
-                              </DropdownMenuItem>
-                            )}
-                            {userPermissions?.generateSite &&
-                              !project.siteId && (
-                                <DropdownMenuItem
-                                  className="focus:bg-primary-800 cursor-pointer group"
-                                  onClick={() => setGenerateDialogOpen(true)}
-                                >
-                                  <div className="flex items-center w-full">
-                                    <Key className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
-                                    <span>
-                                      <FormattedMessage id="projectCard.generateSiteId" />
-                                    </span>
-                                  </div>
-                                </DropdownMenuItem>
-                              )}
-                            <DropdownMenuItem
-                              className="focus:bg-primary-800 cursor-pointer group relative"
-                              onClick={() => {}}
-                              disabled
-                            >
-                              <div className="flex items-center w-full opacity-50">
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                <span>
-                                  <FormattedMessage id="projectCard.extendSite" />
-                                </span>
-                                <span className="ml-2 text-xs px-1.5 py-0.5 rounded-full bg-secondary-500/10 border border-secondary-500/20">
-                                  <FormattedMessage id="projectCard.comingSoon" />
-                                </span>
-                              </div>
-                            </DropdownMenuItem>
-                            {userPermissions?.delete && (
-                              <>
-                                <DropdownMenuSeparator className="bg-secondary-500/20" />
-                                <DropdownMenuItem
-                                  className="text-red-400 focus:text-red-400 focus:bg-primary-800 cursor-pointer group"
-                                  onClick={() => setDeleteDialogOpen(true)}
-                                >
-                                  <div className="flex items-center w-full">
-                                    <Trash className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
-                                    <span>Delete site</span>
-                                  </div>
-                                </DropdownMenuItem>
-                              </>
-                            )}
-                          </>
-                        )}
-
-                        {/* Failed status actions */}
-                        {project.status === ProjectStatus.FAILED &&
-                          userPermissions?.delete && (
-                            <DropdownMenuItem
-                              className="text-red-400 focus:text-red-400 focus:bg-primary-800 cursor-pointer group"
-                              onClick={() => setDeleteDialogOpen(true)}
-                            >
-                              <div className="flex items-center w-full">
-                                <Trash className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
-                                <span>Delete site</span>
-                              </div>
-                            </DropdownMenuItem>
-                          )}
-
-                        {/* Deleting status indicator */}
-                        {project.status === ProjectStatus.DELETING && (
-                          <div className="px-4 py-2 text-purple-400 flex items-center gap-2 text-sm">
-                            <Loader2 className="ml-1 h-3 w-3 text-purple-300 animate-spin" />
-                            <FormattedMessage
-                              id="projectCard.deleting"
-                              defaultMessage="Deleting project..."
-                            />
-                          </div>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
-                </>
-              )}
-            </div>
-
             {/* Left: Project Image */}
-            <div className="flex-shrink-0 opacity-80 group-hover:opacity-100 transition-opacity duration-200">
+            <div className="flex-shrink-0 opacity-80 group-hover:opacity-100 transition-opacity duration-200 relative">
               <img
                 src={
                   project.status === 0
@@ -683,15 +299,21 @@ const ProjectCard = memo(
                       ? '/images/walrus_fail.png'
                       : project.status === 3
                         ? '/images/walrus_fail.png'
-                        : '/images/walrus.png'
+                        : project.type === ProjectType.ZIP
+                          ? '/images/zip.png'
+                          : '/images/walrus.png'
                 }
                 alt="project avatar"
-                className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border-2 ${colors.avatar} shadow transition-all duration-300 group-hover:scale-105`}
+                className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full ${
+                  project.type === ProjectType.ZIP
+                    ? 'p-3 sm:p-2 object-contain'
+                    : 'object-cover'
+                } border-2 ${colors.avatar} shadow transition-all duration-300 group-hover:scale-105`}
               />
             </div>
 
             {/* Middle: Project Info */}
-            <div className="flex flex-col flex-1 min-w-0 opacity-80 group-hover:opacity-100 transition-opacity duration-200">
+            <div className="flex flex-col flex-1 min-w-0 ml-3 sm:ml-4 opacity-80 group-hover:opacity-100 transition-opacity duration-200">
               {/* Project Name with Status */}
               <div className="flex items-center gap-2 mb-0.5">
                 <div
@@ -699,166 +321,77 @@ const ProjectCard = memo(
                 >
                   {project.name}
                 </div>
-                {project.status === 3 ? (
+                {project.type === ProjectType.ZIP && (
+                  <div className="px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-blue-500/20 text-blue-300 border border-blue-500/20">
+                    <FormattedMessage id="projectCard.type.zip" />
+                  </div>
+                )}
+                {project.status === 3 && (
                   <div
                     className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${colors.badge} flex items-center gap-1`}
                   >
-                    <FormattedMessage
-                      id="projectCard.deleting"
-                      defaultMessage="Deleting"
-                    />
+                    <FormattedMessage id="projectCard.deleting" defaultMessage="Deleting" />
                     <span className="ml-1">
                       <span className="inline-block w-2 h-2 bg-purple-300 rounded-full animate-pulse" />
                     </span>
                   </div>
-                ) : project.status === 2 && project.client_error_description ? (
-                  <Popover open={errorOpen} onOpenChange={setErrorOpen}>
-                    <PopoverTrigger asChild>
-                      <div
-                        className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${colors.badge} flex items-center gap-1 cursor-pointer hover:bg-red-500/30 transition-colors duration-200`}
-                        onMouseEnter={() => setErrorOpen(true)}
-                        onMouseLeave={() => setErrorOpen(false)}
-                        title="Click to view error details"
-                      >
-                        <FormattedMessage id="projectCard.failed" />
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="w-3 h-3"
-                        >
-                          <circle cx="12" cy="12" r="10" />
-                          <line x1="12" y1="8" x2="12" y2="12" />
-                          <line x1="12" y1="16" x2="12.01" y2="16" />
-                        </svg>
-                      </div>
-                    </PopoverTrigger>
-                    <PopoverContent
-                      className="w-72 p-3 bg-primary-900 border-red-500/20 text-white backdrop-blur-sm"
-                      onMouseEnter={() => setErrorOpen(true)}
-                      onMouseLeave={() => setErrorOpen(false)}
-                    >
-                      <div className="flex items-start gap-2">
-                        <div className="flex-shrink-0 mt-0.5">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="w-4 h-4 text-red-400"
-                          >
-                            <circle cx="12" cy="12" r="10" />
-                            <line x1="12" y1="8" x2="12" y2="12" />
-                            <line x1="12" y1="16" x2="12.01" y2="16" />
-                          </svg>
-                        </div>
-                        <div className="flex-1">
-                          <div className="text-sm font-medium text-red-400 mb-1">
-                            <FormattedMessage id="projectCard.deploymentFailed" />
-                          </div>
-                          <div className="text-xs text-white/80 leading-relaxed">
-                            {project.client_error_description}
-                          </div>
-                        </div>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                ) : project.status === 0 ? (
-                  <Popover open={statusOpen} onOpenChange={setStatusOpen}>
-                    <PopoverTrigger asChild>
-                      <div
-                        className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${colors.badge} flex items-center gap-1 cursor-help`}
-                        onMouseEnter={() => setStatusOpen(true)}
-                        onMouseLeave={() => setStatusOpen(false)}
-                      >
-                        <FormattedMessage id="projectCard.building" />
-                        <span className="ml-1">
-                          <span className="inline-block w-2 h-2 bg-yellow-300 rounded-full animate-pulse" />
-                        </span>
-                      </div>
-                    </PopoverTrigger>
-                    <PopoverContent
-                      className="w-72 p-3 bg-primary-900 border-secondary-500/20 text-white backdrop-blur-sm"
-                      sideOffset={5}
-                      onMouseEnter={() => setStatusOpen(true)}
-                      onMouseLeave={() => setStatusOpen(false)}
-                    >
-                      <div className="flex items-start gap-2">
-                        <div className="flex-shrink-0 mt-0.5">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="w-4 h-4 text-yellow-400"
-                          >
-                            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
-                          </svg>
-                        </div>
-                        <div className="flex-1">
-                          <div className="text-sm font-medium text-yellow-400 mb-1">
-                            <FormattedMessage id="projectCard.buildingInProgress" />
-                          </div>
-                          <div className="text-xs text-white/80 leading-relaxed">
-                            <FormattedMessage id="projectCard.buildingDesc" />
-                          </div>
-                        </div>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                ) : (
-                  <div
-                    className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${colors.badge} flex items-center`}
-                  >
+                )}
+                {project.status === 2 && project.client_error_description && (
+                  <div className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${colors.badge} flex items-center gap-1`}>
+                    <FormattedMessage id="projectCard.failed" />
+                  </div>
+                )}
+                {project.status === 0 && (
+                  <div className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${colors.badge} flex items-center gap-1`}>
+                    <FormattedMessage id="projectCard.building" />
+                    <span className="ml-1">
+                      <span className="inline-block w-2 h-2 bg-yellow-300 rounded-full animate-pulse" />
+                    </span>
+                  </div>
+                )}
+                {project.status === 1 && (
+                  <div className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${colors.badge} flex items-center`}>
                     <FormattedMessage id="projectCard.active" />
                   </div>
                 )}
               </div>
 
               {/* Project Link */}
-              <div className="flex items-center text-sm group-hover:translate-x-0.5 transition-transform duration-200">
-                {project.suins ? (
-                  <a
-                    href={`https://${project.suins?.endsWith('.sui') ? project.suins.slice(0, -4) : project.suins}.wal.app`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center h-[28px] hover:underline truncate transition-colors duration-200 text-secondary-200/80 hover:text-secondary-100/90 max-w-[340px] cursor-pointer"
-                  >
-                    {project.suins?.endsWith('.sui')
-                      ? project.suins.slice(0, -4)
-                      : project.suins}
-                    .wal.app
-                    <span className="ml-1 group-hover:translate-x-0.5 transition-transform duration-200">
-                      <ExternalLink className="h-4 w-4 flex-shrink-0" />
-                    </span>
-                  </a>
-                ) : project.showcase_url ? (
-                  <a
-                    href={`https://kursui.wal.app/${project.showcase_url}/index.html`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center h-[24px] hover:underline transition-colors duration-200 text-secondary-200/80 hover:text-secondary-100/90 max-w-[340px] cursor-pointer"
-                    title={`https://kursui.wal.app/${project.showcase_url}/index.html`}
-                  >
-                    <span className="flex-shrink-0">https://</span>
-                    <span className="truncate" style={{ minWidth: 0 }}>
-                      kursui.wal.app/{project.showcase_url}/index.html
-                    </span>
-                    <span className="ml-1 group-hover:translate-x-0.5 transition-transform duration-200">
-                      <ExternalLink className="h-4 w-4 flex-shrink-0" />
-                    </span>
-                  </a>
-                ) : null}
+              <div className="flex flex-col">
+                <div className="flex items-center text-sm group-hover:translate-x-0.5 transition-transform duration-200">
+                  {project.suins ? (
+                    <a
+                      href={`https://${project.suins?.endsWith('.sui') ? project.suins.slice(0, -4) : project.suins}.wal.app`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center h-[28px] hover:underline truncate transition-colors duration-200 text-secondary-200/80 hover:text-secondary-100/90 max-w-[340px] cursor-pointer"
+                    >
+                      {project.suins?.endsWith('.sui')
+                        ? project.suins.slice(0, -4)
+                        : project.suins}
+                      .wal.app
+                      <span className="ml-1 group-hover:translate-x-0.5 transition-transform duration-200">
+                        <ExternalLink className="h-4 w-4 flex-shrink-0" />
+                      </span>
+                    </a>
+                  ) : project.showcase_url ? (
+                    <a
+                      href={`https://kursui.wal.app/${project.showcase_url}/index.html`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center h-[24px] hover:underline transition-colors duration-200 text-secondary-200/80 hover:text-secondary-100/90 max-w-[340px] cursor-pointer"
+                      title={`https://kursui.wal.app/${project.showcase_url}/index.html`}
+                    >
+                      <span className="flex-shrink-0">https://</span>
+                      <span className="truncate" style={{ minWidth: 0 }}>
+                        kursui.wal.app/{project.showcase_url}/index.html
+                      </span>
+                      <span className="ml-1 group-hover:translate-x-0.5 transition-transform duration-200">
+                        <ExternalLink className="h-4 w-4 flex-shrink-0" />
+                      </span>
+                    </a>
+                  ) : null}
+                </div>
               </div>
 
               {/* Site ID with Copy Button */}
@@ -1037,6 +570,341 @@ const ProjectCard = memo(
                 </div>
               </div>
             </div>
+
+            {/* Dropdown Menu: Top Right */}
+            <div className="absolute top-2 right-2 z-10 opacity-80 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-2">
+              {userAddress && project.owner && userAddress !== project.owner && (
+                <div className="flex items-center px-2 py-1 rounded-full bg-primary-800/50 border border-secondary-500/10 shadow-sm backdrop-blur-sm">
+                  <span className="text-[11px] font-medium text-secondary-300/70">
+                    shared by{' '}
+                  </span>
+                  <span 
+                    className="text-[11px] font-medium text-emerald-400/80 hover:text-emerald-400 cursor-pointer ml-1 transition-colors duration-200" 
+                    onClick={() => handleCopy(project.owner)} 
+                    title="Click to copy address"
+                  >
+                    {`${project.owner.slice(0, 4)}...${project.owner.slice(-4)}`}
+                  </span>
+                </div>
+              )}
+
+              {!project.suins &&
+                project.status === 1 &&
+                project.siteId &&
+                project.site_status === 1 &&
+                userPermissions?.setSuins && (
+                  <Dialog open={open} onOpenChange={setOpen}>
+                    <DialogTrigger asChild>
+                      <button
+                        className={`h-8 px-3 flex items-center justify-center rounded-full ${colors.dropdown} transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer`}
+                      >
+                        <Link className="h-4 w-4 mr-1.5" />
+                        <span className="text-sm">Link SUINS</span>
+                        <span className="text-[10px] opacity-60 ml-1">
+                          (initial setup)
+                        </span>
+                      </button>
+                    </DialogTrigger>
+                    <DialogContent className="bg-primary-900 border-secondary-500/20 text-white">
+                      <DialogHeader>
+                        <DialogTitle className="text-secondary-400">
+                          Link SUINS
+                        </DialogTitle>
+                        <DialogDescription className="text-white/60">
+                          Select your SUINS name to link it with this project
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                          {isLoadingSuins ? (
+                            <div className="flex flex-col gap-2">
+                              <div className="h-9 w-full rounded-md bg-primary-800/50 animate-pulse" />
+                            </div>
+                          ) : (
+                            <>
+                              <div className="flex gap-2 items-center">
+                                <Select
+                                  value={selectedSuins}
+                                  onValueChange={setSelectedSuins}
+                                >
+                                  <SelectTrigger className="bg-primary-800 border-secondary-500/20 text-white w-full flex-1">
+                                    <SelectValue placeholder="Select SUINS domain" />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-primary-800 border-secondary-500/20 text-white">
+                                    {suins.map((sui) => {
+                                      const domainName =
+                                        sui.data?.content?.fields
+                                          ?.domain_name || ''
+                                      const displayName = domainName.endsWith(
+                                        '.sui',
+                                      )
+                                        ? domainName.slice(0, -4)
+                                        : domainName
+
+                                      return (
+                                        <SelectItem
+                                          key={sui.data?.objectId}
+                                          value={domainName}
+                                          className="hover:bg-primary-700"
+                                        >
+                                          {displayName}
+                                        </SelectItem>
+                                      )
+                                    })}
+                                  </SelectContent>
+                                </Select>
+                                <Button
+                                  onClick={handleRefreshSuins}
+                                  variant="outline"
+                                  className="border-secondary-500/20 text-white hover:bg-primary-800"
+                                  disabled={isLoadingSuins || isRefreshing}
+                                >
+                                  {isRefreshing ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <RefreshCw className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </div>
+                              {selectedSuins && (
+                                <div className="mt-4 p-3 rounded-lg bg-primary-800/50 border border-secondary-500/20">
+                                  <div className="text-sm font-medium mb-2 text-secondary-400">Transaction Details</div>
+                                  <div className="space-y-2 text-sm">
+                                    <div className="flex justify-between items-center">
+                                      <span className="text-white/60">Gas Fee (estimated)</span>
+                                      <span className="font-medium text-white">
+                                        {estimatedFee ? `~${estimatedFee.gasFee} SUI` : (
+                                          <div className="h-4 w-16 bg-primary-700/50 rounded animate-pulse" />
+                                        )}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                      <span className="text-white/60">Link Fee</span>
+                                      <span className="font-medium text-white">0.00 SUI</span>
+                                    </div>
+                                    <div className="h-px bg-secondary-500/20 my-2" />
+                                    <div className="flex justify-between items-center">
+                                      <span className="text-white/60">Total</span>
+                                      <span className="font-medium text-white">
+                                        {estimatedFee ? `~${estimatedFee.total} SUI` : (
+                                          <div className="h-4 w-16 bg-primary-700/50 rounded animate-pulse" />
+                                        )}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <div className="mt-3 text-xs text-white/40">
+                                    * Gas fee may vary depending on network conditions
+                                  </div>
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+                        {project.status === 1 && (
+                          <div className="flex gap-2 mt-4">
+                            <Button
+                              onClick={() => handleLinkSuins()}
+                              className="bg-secondary-500 hover:bg-secondary-600 text-white flex-1 relative"
+                              disabled={isLinking || isLoadingSuins || !selectedSuins}
+                            >
+                              {isLinking ? (
+                                <div className="flex items-center justify-center">
+                                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                  <span>Linking SUINS...</span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center justify-center">
+                                  <Link className="h-4 w-4 mr-2" />
+                                  <span>Link SUINS</span>
+                                </div>
+                              )}
+                            </Button>
+                          </div>
+                        )}
+                        {project.status !== 1 && (
+                          <div className="text-sm text-white/60 italic">
+                            SUINS linking is only available for active projects
+                          </div>
+                        )}
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                )}
+              {project.status !== ProjectStatus.BUILDING && (
+                <>
+                  {/* Show dropdown if user has any permissions or is owner */}
+                  {((project.status === ProjectStatus.ACTIVE &&
+                    (project.owner === userAddress || userPermissions)) ||
+                    (project.status === ProjectStatus.FAILED &&
+                      userPermissions?.delete) ||
+                    project.status === ProjectStatus.DELETING) && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          className={`h-8 w-8 flex items-center justify-center rounded-full ${colors.dropdown} transition-all duration-200 hover:scale-110 active:scale-95 ${project.status === ProjectStatus.DELETING ? '' : 'cursor-pointer'}`}
+                          disabled={project.status === ProjectStatus.DELETING}
+                        >
+                          <MoreHorizontal className="h-5 w-5" />
+                          <span className="sr-only">Open menu</span>
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        align="end"
+                        className="w-56 bg-primary-900 border-secondary-500/20 text-white backdrop-blur-sm"
+                      >
+                        {project.status === ProjectStatus.ACTIVE && (
+                          <>
+                            {project.type === ProjectType.ZIP ? (
+                              // For ZIP files, only show delete option
+                              <DropdownMenuItem
+                                className="text-red-400 focus:text-red-400 focus:bg-primary-800 cursor-pointer group"
+                                onClick={() => setDeleteDialogOpen(true)}
+                              >
+                                <div className="flex items-center w-full">
+                                  <Trash className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
+                                  <span>Delete ZIP file</span>
+                                </div>
+                              </DropdownMenuItem>
+                            ) : (
+                              // For non-ZIP files, show all options
+                              <>
+                                {/* Owner-only actions */}
+                                {project.owner === userAddress && (
+                                  <>
+                                    <DropdownMenuItem
+                                      className="focus:bg-primary-800 cursor-pointer group"
+                                      onClick={() =>
+                                        setTransferOwnershipOpen(true)
+                                      }
+                                    >
+                                      <div className="flex items-center w-full">
+                                        <div className="relative">
+                                          <UserCog className="mr-2 h-4 w-4 group-hover:rotate-45 transition-all duration-300" />
+                                        </div>
+                                        <span className="group-hover:translate-x-0.5 transition-all duration-200">
+                                          <FormattedMessage id="projectCard.transferOwnership" />
+                                        </span>
+                                      </div>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      className="focus:bg-primary-800 cursor-pointer group"
+                                      onClick={() => setManageMembersOpen(true)}
+                                    >
+                                      <div className="flex items-center w-full">
+                                        <div className="relative">
+                                          <Users className="mr-2 h-4 w-4 group-hover:scale-110 group-hover:text-secondary-400 transition-all duration-200" />
+                                        </div>
+                                        <span className="group-hover:translate-x-0.5 transition-all duration-200">
+                                          <FormattedMessage id="projectCard.manageMembers" />
+                                        </span>
+                                      </div>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator className="bg-secondary-500/20" />
+                                  </>
+                                )}
+
+                                {/* Member permissions */}
+                                {userPermissions?.update && (
+                                  <DropdownMenuItem
+                                    className="focus:bg-primary-800 cursor-pointer group"
+                                    onClick={() =>
+                                      navigate(
+                                        `/edit-website/${project.parentId}`,
+                                      )
+                                    }
+                                  >
+                                    <div className="flex items-center w-full">
+                                      <RefreshCw className="mr-2 h-4 w-4 group-hover:rotate-180 transition-transform duration-300" />
+                                      <span>
+                                        <FormattedMessage id="projectCard.updateSite" />
+                                      </span>
+                                    </div>
+                                  </DropdownMenuItem>
+                                )}
+                                {userPermissions?.generateSite &&
+                                  !project.siteId && (
+                                    <DropdownMenuItem
+                                      className="focus:bg-primary-800 cursor-pointer group"
+                                      onClick={() =>
+                                        setGenerateDialogOpen(true)
+                                      }
+                                    >
+                                      <div className="flex items-center w-full">
+                                        <Key className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
+                                        <span>
+                                          <FormattedMessage id="projectCard.generateSiteId" />
+                                        </span>
+                                      </div>
+                                    </DropdownMenuItem>
+                                  )}
+                                <DropdownMenuItem
+                                  className="focus:bg-primary-800 cursor-pointer group relative"
+                                  onClick={() => {}}
+                                  disabled
+                                >
+                                  <div className="flex items-center w-full opacity-50">
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    <span>
+                                      <FormattedMessage id="projectCard.extendSite" />
+                                    </span>
+                                    <span className="ml-2 text-xs px-1.5 py-0.5 rounded-full bg-secondary-500/10 border border-secondary-500/20">
+                                      <FormattedMessage id="projectCard.comingSoon" />
+                                    </span>
+                                  </div>
+                                </DropdownMenuItem>
+                                {userPermissions?.delete && (
+                                  <>
+                                    <DropdownMenuSeparator className="bg-secondary-500/20" />
+                                    <DropdownMenuItem
+                                      className="text-red-400 focus:text-red-400 focus:bg-primary-800 cursor-pointer group"
+                                      onClick={() => setDeleteDialogOpen(true)}
+                                    >
+                                      <div className="flex items-center w-full">
+                                        <Trash className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
+                                        <span>Delete site</span>
+                                      </div>
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+                              </>
+                            )}
+                          </>
+                        )}
+
+                        {/* Failed status actions */}
+                        {project.status === ProjectStatus.FAILED &&
+                          userPermissions?.delete && (
+                            <DropdownMenuItem
+                              className="text-red-400 focus:text-red-400 focus:bg-primary-800 cursor-pointer group"
+                              onClick={() => setDeleteDialogOpen(true)}
+                            >
+                              <div className="flex items-center w-full">
+                                <Trash className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
+                                <span>
+                                  {project.type === ProjectType.ZIP
+                                    ? 'Delete ZIP file'
+                                    : 'Delete site'}
+                                </span>
+                              </div>
+                            </DropdownMenuItem>
+                          )}
+
+                        {/* Deleting status indicator */}
+                        {project.status === ProjectStatus.DELETING && (
+                          <div className="px-4 py-2 text-purple-400 flex items-center gap-2 text-sm">
+                            <Loader2 className="ml-1 h-3 w-3 text-purple-300 animate-spin" />
+                            <FormattedMessage
+                              id="projectCard.deleting"
+                              defaultMessage="Deleting project..."
+                            />
+                          </div>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                </>
+              )}
+            </div>
           </Card>
         </div>
 
@@ -1056,24 +924,31 @@ const ProjectCard = memo(
           onConfirm={handleGenerateSiteId}
         />
 
-        {/* Manage Members Modal */}
+        {/* Manage Members Dialog */}
         <ManageMembersModal
           open={manageMembersOpen}
           onOpenChange={setManageMembersOpen}
           projectId={project.parentId || ''}
           members={project.members}
-          onRefetch={onRefetch}
-        />
-
-        <RemoveMemberDialog
-          open={!!removingMember}
-          onOpenChange={(open) => !open && setRemovingMember(null)}
-          isRemoving={isRemovingMember}
-          onConfirm={async () => {
-            if (removingMember) {
-              await handleRemoveMember(removingMember)
-            }
+          onAddMember={(address, permissions) =>
+            addMember(
+              project.parentId || '',
+              address,
+              permissions,
+              project.members || [],
+            )
+          }
+          onRemoveMember={(address) =>
+            removeMember(project.parentId || '', address, project.members || [])
+          }
+          onUpdatePermissions={(address, permissions) => {
+            const memberString = createMemberString(address, permissions)
+            return updateMemberPermissions(project.parentId || '', memberString)
           }}
+          isAddingMember={isAddingMember}
+          isRemovingMember={isRemovingMember}
+          isUpdatingPermissions={isUpdatingPermissions}
+          onRefetch={onRefetch}
         />
 
         {/* Transfer Ownership Dialog */}
@@ -1082,7 +957,9 @@ const ProjectCard = memo(
           onOpenChange={setTransferOwnershipOpen}
           projectId={project.parentId || ''}
           currentOwner={project.owner}
+          members={project.members}
           onRefetch={onRefetch}
+          onTransferOwnership={transferOwnership}
         />
 
         <Toaster />

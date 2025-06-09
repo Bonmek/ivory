@@ -528,10 +528,9 @@ export class SiteService {
     const object_id = req.query.object_id;
     const member_address_n_access = req.query.member_address_n_access;
 
-    if (!object_id || !member_address_n_access) {
-      throw new Error("Object ID and SuiNS are required in query parameters");
+    if (!object_id) {
+      throw new Error("Object ID are required in query parameters");
     }
-
     const attributes_data = inputGrantAccessScheme.safeParse({
       object_id,
       member_address_n_access,
@@ -540,12 +539,13 @@ export class SiteService {
     if (!attributes_data.success) {
       throw new Error(JSON.stringify(attributes_data.error.errors));
     }
-
+    console.log(
+      "Granting access to member_address_n_access:",)
     await this.walrusClient.executeWriteBlobAttributesTransaction({
       blobObjectId: attributes_data.data.object_id,
       signer: this.keypair,
       attributes: {
-        member: attributes_data.data.member_address_n_access,
+        member: attributes_data.data.member_address_n_access||"",
       },
     });
   }

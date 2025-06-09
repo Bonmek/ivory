@@ -2,7 +2,6 @@
 
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import ThreeJSBackground from '@/components/ThreeJsBackground'
 import DashboardHeader from '@/components/Dashboard/DashboardHeader'
 import DashboardTabs from '@/components/Dashboard/DashboardTabs'
 import EmptyState from '@/components/Dashboard/EmptyState'
@@ -10,14 +9,10 @@ import Loading from '@/components/Loading'
 import { Helmet } from 'react-helmet'
 import { useSuiData } from '@/hooks/useSuiData'
 import { transformMetadataToProject } from '@/utils/metadataUtils'
-import { useWalletKit } from '@mysten/wallet-kit'
 import { useAuth } from '@/context/AuthContext'
-import { RefreshCw, PlusCircle } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { mockProjects } from '@/mocks/projectData'
-import { Project } from '@/types/project'
 import ProjectCard from '@/components/Dashboard/ProjectCard'
 import { FormattedMessage, useIntl } from 'react-intl'
+import { useSearchParams } from 'react-router-dom'
 
 const formatDate = (date: Date) => {
   return date.toLocaleDateString('en-GB', {
@@ -75,17 +70,32 @@ function getPageList(current: number, total: number) {
 
 export default function Dashboard() {
   const { address } = useAuth()
+  const [searchParams] = useSearchParams()
   const [searchQuery, setSearchQuery] = useState('')
   const intl = useIntl()
   const [date, setDate] = useState<Date | undefined>(undefined)
   const [activeTab, setActiveTab] = useState('all')
   const [hoveredCard, setHoveredCard] = useState<number | null>(null)
   const [sortType, setSortType] = useState('latest')
+  const [projectType, setProjectType] = useState<'all' | 'site' | '.zip'>('all')
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 6
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [lastRefreshTime, setLastRefreshTime] = useState<Date>(new Date())
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const [showLimitWarning, setShowLimitWarning] = useState(false)
+
+  // Check URL parameters on component mount
+  useEffect(() => {
+    const limitWarning = searchParams.get('limitWarning')
+    if (limitWarning === 'true') {
+      setShowLimitWarning(true)
+      // Remove the parameter from URL without page reload
+      const newSearchParams = new URLSearchParams(searchParams)
+      newSearchParams.delete('limitWarning')
+      window.history.replaceState({}, '', `${window.location.pathname}${newSearchParams.toString() ? '?' + newSearchParams.toString() : ''}`)
+    }
+  }, [searchParams])
 
   const { metadata, isLoading, refetch } = useSuiData(address || '')
   // Get all projects before filtering by tab
@@ -94,6 +104,7 @@ export default function Dashboard() {
       ? metadata.map((meta, index) => transformMetadataToProject(meta, index))
       : []
   }, [metadata])
+
 
   const filteredProjects = useMemo(() => {
     const projects = [...allProjects]
@@ -120,7 +131,9 @@ export default function Dashboard() {
         (activeTab === 'active' && project.status === 1) ||
         (activeTab === 'failed' && project.status === 2)
 
-      return matchesSearch && matchesDate && matchesTab
+      const matchesType = projectType === 'all' || project.type === projectType
+
+      return matchesSearch && matchesDate && matchesTab && matchesType
     })
 
     if (activeTab === 'building') {
@@ -132,7 +145,7 @@ export default function Dashboard() {
     }
 
     return filtered
-  }, [searchQuery, date, activeTab, metadata])
+  }, [searchQuery, date, activeTab, projectType, metadata])
 
   const sortedProjects = useMemo(() => {
     return [...filteredProjects].sort((a, b) => {
@@ -189,6 +202,15 @@ export default function Dashboard() {
     try {
       await refetch()
       setLastRefreshTime(new Date())
+      return { success: true }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: {
+          type: error?.message?.includes('Rate limit exceeded') ? 'network' : 'unknown',
+          message: error?.message || 'Failed to refresh data'
+        }
+      }
     } finally {
       setIsRefreshing(false)
     }
@@ -250,6 +272,10 @@ export default function Dashboard() {
             lastRefreshTime={lastRefreshTime}
             hasProjects={allProjects.length > 0}
             activeTab={activeTab}
+            projectType={projectType}
+            setProjectType={setProjectType}
+            showLimitWarning={showLimitWarning}
+            setShowLimitWarning={setShowLimitWarning}
           />
 
           <DashboardTabs activeTab={activeTab} setActiveTab={setActiveTab} />
@@ -306,40 +332,59 @@ export default function Dashboard() {
                     </AnimatePresence>
                   </div>
                   {totalPages > 1 && (
-                    <div className="flex justify-center items-center gap-2 mt-8">
-                      <button
+                    <motion.div 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="flex justify-center items-center gap-3 mt-8"
+                    >
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                         onClick={() => handlePageChange(currentPage - 1)}
                         disabled={currentPage === 1}
-                        className="px-3 py-1.5 rounded-lg bg-primary-700 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary-600 active:scale-95 transition-all duration-200 cursor-pointer"
+                        className="px-4 py-2 rounded-lg bg-primary-800/80 text-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-primary-700 transition-all duration-200 cursor-pointer"
                       >
                         <FormattedMessage id="dashboard.pagination.previous" />
-                      </button>
-                      {pageNumbers.map((page, index) => (
-                        <button
-                          key={index}
-                          onClick={() =>
-                            typeof page === 'number' && handlePageChange(page)
-                          }
-                          disabled={page === '...'}
-                          className={`px-3 py-1.5 rounded-lg transition-all duration-200 ${
-                            page === currentPage
-                              ? 'bg-secondary-500 text-black font-medium scale-105'
-                              : page === '...'
-                                ? 'bg-transparent text-white cursor-default'
-                                : 'bg-primary-700 text-white hover:bg-primary-600 active:scale-95 cursor-pointer'
-                          }`}
-                        >
-                          {page}
-                        </button>
-                      ))}
-                      <button
+                      </motion.button>
+
+                      <div className="flex gap-2 items-center">
+                        {pageNumbers.map((page, index) => (
+                          <motion.button
+                            key={index}
+                            onClick={() => typeof page === 'number' && handlePageChange(page)}
+                            disabled={page === '...'}
+                            whileHover={page !== '...' ? { scale: 1.05 } : {}}
+                            whileTap={page !== '...' ? { scale: 0.95 } : {}}
+                            className={`relative min-w-[40px] h-10 rounded-lg flex items-center justify-center transition-all duration-200 ${
+                              page === currentPage
+                                ? 'bg-secondary-500 text-black font-medium'
+                                : page === '...'
+                                  ? 'bg-transparent text-white/60 cursor-default'
+                                  : 'bg-primary-800/80 text-white hover:bg-primary-700 cursor-pointer'
+                            }`}
+                          >
+                            {page === currentPage && (
+                              <motion.div
+                                layoutId="activePage"
+                                className="absolute inset-0 bg-secondary-500 rounded-lg -z-10"
+                                transition={{ type: "spring", duration: 0.5 }}
+                              />
+                            )}
+                            {page}
+                          </motion.button>
+                        ))}
+                      </div>
+
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                         onClick={() => handlePageChange(currentPage + 1)}
                         disabled={currentPage === totalPages}
-                        className="px-3 py-1.5 rounded-lg bg-primary-700 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary-600 active:scale-95 transition-all duration-200 cursor-pointer"
+                        className="px-4 py-2 rounded-lg bg-primary-800/80 text-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-primary-700 transition-all duration-200 cursor-pointer"
                       >
                         <FormattedMessage id="dashboard.pagination.next" />
-                      </button>
-                    </div>
+                      </motion.button>
+                    </motion.div>
                   )}
                 </section>
               )}
