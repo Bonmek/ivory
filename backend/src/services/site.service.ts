@@ -531,8 +531,6 @@ export class SiteService {
     if (!object_id) {
       throw new Error("Object ID are required in query parameters");
     }
-    console.log(
-      "member_address_n_access:",)
     const attributes_data = inputGrantAccessScheme.safeParse({
       object_id,
       member_address_n_access,
